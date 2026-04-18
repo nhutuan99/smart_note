@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useEventListener } from '@/composables/useEventListener'
 import { useRouter } from 'vue-router'
 import { useFinanceStore } from '@/stores/finance'
@@ -20,6 +20,8 @@ import {
 
 const router = useRouter()
 const finance = useFinanceStore()
+
+onMounted(() => finance.fetchAll())
 
 // Group transactions by date
 const groupedTransactions = computed(() => {

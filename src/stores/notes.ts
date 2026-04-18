@@ -1,11 +1,10 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { Note, NoteListItem, NoteFilter, ViewMode } from '@/types'
-import { useApi } from '@/composables/useApi'
+import { httpClient } from '@/shared/api/httpClient'
 import { useObsidianSync } from '@/composables/useObsidianSync'
 
 export const useNotesStore = defineStore('notes', () => {
-  const api = useApi()
   const obsidian = useObsidianSync()
 
   const notes = ref<NoteListItem[]>([])
@@ -59,7 +58,7 @@ export const useNotesStore = defineStore('notes', () => {
   async function fetchNotes() {
     loading.value = true
     try {
-      const data = await api.get<NoteListItem[]>('/api/notes')
+      const data = await httpClient.get<NoteListItem[]>('/api/notes')
       notes.value = data || []
     } catch (err) {
       console.error('Failed to fetch notes:', err)
@@ -71,7 +70,7 @@ export const useNotesStore = defineStore('notes', () => {
   async function fetchNote(id: string) {
     loading.value = true
     try {
-      const data = await api.get<Note>(`/api/notes/${id}`)
+      const data = await httpClient.get<Note>(`/api/notes/${id}`)
       currentNote.value = data || null
       return data
     } catch (err) {
@@ -84,7 +83,7 @@ export const useNotesStore = defineStore('notes', () => {
 
   async function createNote(note: Partial<Note>): Promise<Note | null> {
     try {
-      const data = await api.post<Note>('/api/notes', note)
+      const data = await httpClient.post<Note>('/api/notes', note)
       if (data) {
         await fetchNotes()
         // Sync to Obsidian vault
@@ -99,7 +98,7 @@ export const useNotesStore = defineStore('notes', () => {
 
   async function updateNote(id: string, updates: Partial<Note>): Promise<Note | null> {
     try {
-      const data = await api.put<Note>(`/api/notes/${id}`, updates)
+      const data = await httpClient.put<Note>(`/api/notes/${id}`, updates)
       if (data) {
         currentNote.value = data
         const idx = notes.value.findIndex((n) => n.id === id)
@@ -125,7 +124,7 @@ export const useNotesStore = defineStore('notes', () => {
 
   async function deleteNote(id: string): Promise<boolean> {
     try {
-      await api.del(`/api/notes/${id}`)
+      await httpClient.del(`/api/notes/${id}`)
       notes.value = notes.value.filter((n) => n.id !== id)
       if (currentNote.value?.id === id) {
         currentNote.value = null

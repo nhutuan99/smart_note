@@ -8,46 +8,19 @@ import type {
   CategoryStat,
   DailyStat
 } from '@/types'
-import {
-  DEFAULT_WALLETS,
-  getCategoryConfig,
-  EXPENSE_CATEGORIES,
-  INCOME_CATEGORIES
-} from '@/constants/finance'
-
-function generateId(): string {
-  return Date.now().toString(36) + Math.random().toString(36).substring(2, 9)
-}
-
-function loadJSON<T>(key: string, fallback: T): T {
-  const raw = localStorage.getItem(key)
-  return raw ? JSON.parse(raw) : fallback
-}
-
-function saveJSON(key: string, data: unknown) {
-  localStorage.setItem(key, JSON.stringify(data))
-}
+import { getCategoryConfig } from '@/constants/finance'
+import { httpClient } from '@/shared/api/httpClient'
 
 export const useFinanceStore = defineStore('finance', () => {
   // ── State ──
 
-  const wallets = ref<Wallet[]>(loadJSON('sn_wallets', []))
-  const transactions = ref<Transaction[]>(loadJSON('sn_transactions', []))
+  const wallets = ref<Wallet[]>([])
+  const transactions = ref<Transaction[]>([])
   const loading = ref(false)
   const filter = ref<TransactionFilter>({ type: 'all' })
   const selectedMonth = ref(
     new Date().toISOString().substring(0, 7) // "2026-04"
   )
-
-  // ── Init default wallets if empty ──
-
-  if (wallets.value.length === 0) {
-    wallets.value = DEFAULT_WALLETS.map((w) => ({
-      ...w,
-      id: generateId()
-    }))
-    saveJSON('sn_wallets', wallets.value)
-  }
 
   // ── Computed: Totals ──
 
@@ -158,6 +131,35 @@ export const useFinanceStore = defineStore('finance', () => {
       .slice(0, 10)
   )
 
+  // ── Actions: Fetch from API ──
+
+  async function fetchWallets() {
+    try {
+      const data = await httpClient.get<Wallet[]>('/api/wallets')
+      wallets.value = data || []
+    } catch (err) {
+      console.error('Failed to fetch wallets:', err)
+    }
+  }
+
+  async function fetchTransactions() {
+    try {
+      const data = await httpClient.get<Transaction[]>('/api/transactions')
+      transactions.value = data || []
+    } catch (err) {
+      console.error('Failed to fetch transactions:', err)
+    }
+  }
+
+  async function fetchAll() {
+    loading.value = true
+    try {
+      await Promise.all([fetchWallets(), fetchTransactions()])
+    } finally {
+      loading.value = false
+    }
+  }
+
   // ── Actions: Wallets ──
 
   function getWallet(id: string) {
@@ -168,66 +170,64 @@ export const useFinanceStore = defineStore('finance', () => {
     return getWallet(id)?.name || 'Unknown'
   }
 
-  function addWallet(data: Omit<Wallet, 'id'>) {
-    const wallet: Wallet = { ...data, id: generateId() }
-    wallets.value.push(wallet)
-    saveJSON('sn_wallets', wallets.value)
-    return wallet
-  }
-
-  function updateWallet(id: string, updates: Partial<Wallet>) {
-    const idx = wallets.value.findIndex((w) => w.id === id)
-    if (idx !== -1) {
-      wallets.value[idx] = { ...wallets.value[idx], ...updates }
-      saveJSON('sn_wallets', wallets.value)
+  async function addWallet(data: Omit<Wallet, 'id'>) {
+    try {
+      const wallet = await httpClient.post<Wallet>('/api/wallets', data)
+      if (wallet) wallets.value.push(wallet)
+      return wallet
+    } catch (err) {
+      console.error('Failed to add wallet:', err)
+      return null
     }
   }
 
-  function deleteWallet(id: string) {
-    wallets.value = wallets.value.filter((w) => w.id !== id)
-    saveJSON('sn_wallets', wallets.value)
+  async function updateWallet(id: string, updates: Partial<Wallet>) {
+    try {
+      const updated = await httpClient.put<Wallet>(`/api/wallets/${id}`, updates)
+      if (updated) {
+        const idx = wallets.value.findIndex((w) => w.id === id)
+        if (idx !== -1) wallets.value[idx] = updated
+      }
+    } catch (err) {
+      console.error('Failed to update wallet:', err)
+    }
+  }
+
+  async function deleteWallet(id: string) {
+    try {
+      await httpClient.del(`/api/wallets/${id}`)
+      wallets.value = wallets.value.filter((w) => w.id !== id)
+    } catch (err) {
+      console.error('Failed to delete wallet:', err)
+    }
   }
 
   // ── Actions: Transactions ──
 
-  function addTransaction(data: Omit<Transaction, 'id' | 'createdAt'>) {
-    const tx: Transaction = {
-      ...data,
-      id: generateId(),
-      createdAt: new Date().toISOString()
-    }
-    transactions.value.push(tx)
-
-    // Update wallet balance
-    const wallet = getWallet(tx.walletId)
-    if (wallet) {
-      wallet.balance += tx.type === 'income' ? tx.amount : -tx.amount
-      saveJSON('sn_wallets', wallets.value)
-    }
-
-    saveJSON('sn_transactions', transactions.value)
-    return tx
-  }
-
-  function deleteTransaction(id: string) {
-    const tx = transactions.value.find((t) => t.id === id)
-    if (tx) {
-      // Revert wallet balance
-      const wallet = getWallet(tx.walletId)
-      if (wallet) {
-        wallet.balance += tx.type === 'income' ? -tx.amount : tx.amount
-        saveJSON('sn_wallets', wallets.value)
+  async function addTransaction(data: Omit<Transaction, 'id' | 'createdAt'>) {
+    try {
+      const tx = await httpClient.post<Transaction>('/api/transactions', data)
+      if (tx) {
+        transactions.value.push(tx)
+        // Refresh wallets to get updated balance from server
+        await fetchWallets()
       }
-      transactions.value = transactions.value.filter((t) => t.id !== id)
-      saveJSON('sn_transactions', transactions.value)
+      return tx
+    } catch (err) {
+      console.error('Failed to add transaction:', err)
+      return null
     }
   }
 
-  // ── Persist ──
-
-  function save() {
-    saveJSON('sn_wallets', wallets.value)
-    saveJSON('sn_transactions', transactions.value)
+  async function deleteTransaction(id: string) {
+    try {
+      await httpClient.del(`/api/transactions/${id}`)
+      transactions.value = transactions.value.filter((t) => t.id !== id)
+      // Refresh wallets to get reverted balance from server
+      await fetchWallets()
+    } catch (err) {
+      console.error('Failed to delete transaction:', err)
+    }
   }
 
   return {
@@ -252,6 +252,8 @@ export const useFinanceStore = defineStore('finance', () => {
     deleteWallet,
     addTransaction,
     deleteTransaction,
-    save
+    fetchWallets,
+    fetchTransactions,
+    fetchAll
   }
 })

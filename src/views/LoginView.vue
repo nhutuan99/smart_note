@@ -2,13 +2,13 @@
 import { ref, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
-import { useApi } from '@/composables/useApi'
+import { httpClient } from '@/shared/api/httpClient'
 import { useRouter } from 'vue-router'
 import { Sparkles, Mail, Lock, User, Eye, EyeOff, ArrowRight } from 'lucide-vue-next'
 
 const auth = useAuthStore()
 const ui = useUiStore()
-const api = useApi()
+
 const router = useRouter()
 
 const isLogin = ref(true)
@@ -29,7 +29,7 @@ async function handleSubmit() {
   error.value = ''
   try {
     const endpoint = isLogin.value ? '/api/auth/login' : '/api/auth/register'
-    const result = await api.post<{ token: string; user: any }>(endpoint, form.value)
+    const result = await httpClient.post<{ token: string; user: any }>(endpoint, form.value)
     if (result) {
       auth.setAuth(result.token, result.user)
       ui.showToast('success', `Welcome${isLogin.value ? ' back' : ''}, ${result.user.name}!`)

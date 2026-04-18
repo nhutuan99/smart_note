@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useFinanceStore } from '@/stores/finance'
 import { formatVND } from '@/constants/finance'
 import { Plus, Trash2, Edit3, X, Check } from 'lucide-vue-next'
 
 const finance = useFinanceStore()
+
+onMounted(() => finance.fetchWallets())
 
 const showAdd = ref(false)
 const editId = ref<string | null>(null)
@@ -24,9 +26,9 @@ const COLORS = [
   '#ef4444'
 ]
 
-function addWallet() {
+async function addWallet() {
   if (!newWallet.value.name.trim()) return
-  finance.addWallet({
+  await finance.addWallet({
     name: newWallet.value.name.trim(),
     balance: 0,
     currency: 'VND',
@@ -38,9 +40,9 @@ function addWallet() {
   showAdd.value = false
 }
 
-function deleteWallet(id: string) {
+async function deleteWallet(id: string) {
   if (confirm('Xóa ví này? Các giao dịch liên quan sẽ không bị xóa.')) {
-    finance.deleteWallet(id)
+    await finance.deleteWallet(id)
   }
 }
 
@@ -48,9 +50,9 @@ function startEdit(id: string) {
   editId.value = id
 }
 
-function saveEdit(id: string, newBalance: string) {
+async function saveEdit(id: string, newBalance: string) {
   const bal = parseInt(newBalance.replace(/[^0-9-]/g, '') || '0')
-  finance.updateWallet(id, { balance: bal })
+  await finance.updateWallet(id, { balance: bal })
   editId.value = null
 }
 </script>

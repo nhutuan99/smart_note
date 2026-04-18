@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useFinanceStore } from '@/stores/finance'
 import {
@@ -13,6 +13,8 @@ import { ArrowLeft, Check, ChevronDown, ArrowUpRight, ArrowDownRight } from 'luc
 
 const router = useRouter()
 const finance = useFinanceStore()
+
+onMounted(() => finance.fetchWallets())
 
 const type = ref<TransactionType>('expense')
 const amount = ref('')
@@ -45,11 +47,11 @@ function formattedAmount() {
   return num > 0 ? new Intl.NumberFormat('vi-VN').format(num) : ''
 }
 
-function submit() {
+async function submit() {
   if (!isValid.value) return
   const amt = parseInt(amount.value.replace(/[,.]/g, ''))
 
-  finance.addTransaction({
+  await finance.addTransaction({
     type: type.value,
     amount: amt,
     category: category.value,

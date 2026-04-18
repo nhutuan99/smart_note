@@ -1,18 +1,18 @@
 /**
- * Smart Note - Cloudflare Worker API
+ * Smart Note - Cloudflare Worker API (KV Storage)
  *
  * Includes: Auth, Notes CRUD, Finance CRUD, Telegram Webhook (OpenClaw)
  *
  * Setup:
- * 1. Create R2 bucket: `npx wrangler r2 bucket create smart-note-data`
- * 2. Set secrets:
+ * 1. Create KV namespace: `npx wrangler kv namespace create "SMART_NOTE_KV"`
+ * 2. Deploy first: `npx wrangler deploy`
+ * 3. Set secrets:
  *    - `npx wrangler secret put JWT_SECRET`
  *    - `npx wrangler secret put TELEGRAM_WEBHOOK_SECRET`
- * 3. Deploy: `npx wrangler deploy`
  */
 
 interface Env {
-  NOTES_BUCKET: R2Bucket
+  SMART_NOTE_KV: KVNamespace
   JWT_SECRET: string
   TELEGRAM_WEBHOOK_SECRET: string
 }
@@ -56,6 +56,17 @@ interface WalletData {
   color: string
   order: number
 }
+
+// ====== Default Wallets (created on register) ======
+
+const DEFAULT_WALLETS: Omit<WalletData, 'id'>[] = [
+  { name: 'Techcombank', balance: 0, currency: 'VND', icon: '🏦', color: '#e62e2e', order: 0 },
+  { name: 'TPBank', balance: 0, currency: 'VND', icon: '🏧', color: '#7b2d8e', order: 1 },
+  { name: 'MoMo', balance: 0, currency: 'VND', icon: '📱', color: '#d82d8b', order: 2 },
+  { name: 'ZaloPay', balance: 0, currency: 'VND', icon: '💙', color: '#0068ff', order: 3 },
+  { name: 'Visa', balance: 0, currency: 'VND', icon: '💳', color: '#1a1f71', order: 4 },
+  { name: 'Tiền mặt', balance: 0, currency: 'VND', icon: '💵', color: '#10b981', order: 5 }
+]
 
 // ====== Utility Functions ======
 
@@ -142,22 +153,14 @@ async function verifyJWT(
   }
 }
 
-// ====== R2 Helpers ======
+// ====== KV Helpers ======
 
-async function getJSON<T>(bucket: R2Bucket, key: string): Promise<T | null> {
-  const obj = await bucket.get(key)
-  if (!obj) return null
-  return obj.json() as Promise<T>
+async function getJSON<T>(kv: KVNamespace, key: string): Promise<T | null> {
+  return kv.get<T>(key, 'json')
 }
 
-async function putJSON(
-  bucket: R2Bucket,
-  key: string,
-  data: unknown
-): Promise<void> {
-  await bucket.put(key, JSON.stringify(data), {
-    httpMetadata: { contentType: 'application/json' }
-  })
+async function putJSON(kv: KVNamespace, key: string, data: unknown): Promise<void> {
+  await kv.put(key, JSON.stringify(data))
 }
 
 // ====== Auth Handlers ======
@@ -167,10 +170,7 @@ async function handleRegister(request: Request, env: Env): Promise<Response> {
   if (!email || !password) return errorResponse('Email and password required')
 
   const usersIndex =
-    (await getJSON<Record<string, string>>(
-      env.NOTES_BUCKET,
-      'users/_index.json'
-    )) || {}
+    (await getJSON<Record<string, string>>(env.SMART_NOTE_KV, 'users/_index')) || {}
   if (usersIndex[email]) return errorResponse('Email already registered')
 
   const id = generateId()
@@ -182,14 +182,18 @@ async function handleRegister(request: Request, env: Env): Promise<Response> {
     createdAt: new Date().toISOString()
   }
 
-  await putJSON(env.NOTES_BUCKET, `users/${id}/profile.json`, user)
+  await putJSON(env.SMART_NOTE_KV, `users/${id}/profile`, user)
   usersIndex[email] = id
-  await putJSON(env.NOTES_BUCKET, 'users/_index.json', usersIndex)
-  await putJSON(env.NOTES_BUCKET, `users/${id}/notes/_index.json`, {
-    notes: []
-  })
-  await putJSON(env.NOTES_BUCKET, `users/${id}/finance/wallets.json`, [])
-  await putJSON(env.NOTES_BUCKET, `users/${id}/finance/transactions.json`, [])
+  await putJSON(env.SMART_NOTE_KV, 'users/_index', usersIndex)
+  await putJSON(env.SMART_NOTE_KV, `users/${id}/notes/_index`, { notes: [] })
+
+  // Create default wallets with generated IDs
+  const defaultWallets: WalletData[] = DEFAULT_WALLETS.map((w) => ({
+    ...w,
+    id: generateId()
+  }))
+  await putJSON(env.SMART_NOTE_KV, `users/${id}/finance/wallets`, defaultWallets)
+  await putJSON(env.SMART_NOTE_KV, `users/${id}/finance/transactions`, [])
 
   const token = await createJWT({ userId: id }, env.JWT_SECRET)
   return jsonResponse({
@@ -206,22 +210,15 @@ async function handleLogin(request: Request, env: Env): Promise<Response> {
   if (!email || !password) return errorResponse('Email and password required')
 
   const usersIndex =
-    (await getJSON<Record<string, string>>(
-      env.NOTES_BUCKET,
-      'users/_index.json'
-    )) || {}
+    (await getJSON<Record<string, string>>(env.SMART_NOTE_KV, 'users/_index')) || {}
   const userId = usersIndex[email]
   if (!userId) return errorResponse('Invalid credentials', 401)
 
-  const user = await getJSON<UserData>(
-    env.NOTES_BUCKET,
-    `users/${userId}/profile.json`
-  )
+  const user = await getJSON<UserData>(env.SMART_NOTE_KV, `users/${userId}/profile`)
   if (!user) return errorResponse('User not found', 404)
 
   const hash = await hashPassword(password)
-  if (hash !== user.passwordHash)
-    return errorResponse('Invalid credentials', 401)
+  if (hash !== user.passwordHash) return errorResponse('Invalid credentials', 401)
 
   const token = await createJWT({ userId: user.id }, env.JWT_SECRET)
   return jsonResponse({
@@ -242,30 +239,19 @@ async function handleLogin(request: Request, env: Env): Promise<Response> {
 
 async function handleListNotes(userId: string, env: Env): Promise<Response> {
   const index = await getJSON<{ notes: any[] }>(
-    env.NOTES_BUCKET,
-    `users/${userId}/notes/_index.json`
+    env.SMART_NOTE_KV,
+    `users/${userId}/notes/_index`
   )
   return jsonResponse({ success: true, data: index?.notes || [] })
 }
 
-async function handleGetNote(
-  userId: string,
-  noteId: string,
-  env: Env
-): Promise<Response> {
-  const note = await getJSON<NoteData>(
-    env.NOTES_BUCKET,
-    `users/${userId}/notes/${noteId}.json`
-  )
+async function handleGetNote(userId: string, noteId: string, env: Env): Promise<Response> {
+  const note = await getJSON<NoteData>(env.SMART_NOTE_KV, `users/${userId}/notes/${noteId}`)
   if (!note) return errorResponse('Note not found', 404)
   return jsonResponse({ success: true, data: note })
 }
 
-async function handleCreateNote(
-  userId: string,
-  request: Request,
-  env: Env
-): Promise<Response> {
+async function handleCreateNote(userId: string, request: Request, env: Env): Promise<Response> {
   const body = (await request.json()) as any
   const id = generateId()
   const now = new Date().toISOString()
@@ -279,11 +265,11 @@ async function handleCreateNote(
     updatedAt: now
   }
 
-  await putJSON(env.NOTES_BUCKET, `users/${userId}/notes/${id}.json`, note)
+  await putJSON(env.SMART_NOTE_KV, `users/${userId}/notes/${id}`, note)
 
   const index = (await getJSON<{ notes: any[] }>(
-    env.NOTES_BUCKET,
-    `users/${userId}/notes/_index.json`
+    env.SMART_NOTE_KV,
+    `users/${userId}/notes/_index`
   )) || { notes: [] }
   index.notes.push({
     id: note.id,
@@ -293,11 +279,7 @@ async function handleCreateNote(
     pinned: note.pinned,
     updatedAt: note.updatedAt
   })
-  await putJSON(
-    env.NOTES_BUCKET,
-    `users/${userId}/notes/_index.json`,
-    index
-  )
+  await putJSON(env.SMART_NOTE_KV, `users/${userId}/notes/_index`, index)
 
   return jsonResponse({ success: true, data: note }, 201)
 }
@@ -309,8 +291,8 @@ async function handleUpdateNote(
   env: Env
 ): Promise<Response> {
   const existing = await getJSON<NoteData>(
-    env.NOTES_BUCKET,
-    `users/${userId}/notes/${noteId}.json`
+    env.SMART_NOTE_KV,
+    `users/${userId}/notes/${noteId}`
   )
   if (!existing) return errorResponse('Note not found', 404)
 
@@ -322,15 +304,11 @@ async function handleUpdateNote(
     updatedAt: new Date().toISOString()
   }
 
-  await putJSON(
-    env.NOTES_BUCKET,
-    `users/${userId}/notes/${noteId}.json`,
-    updated
-  )
+  await putJSON(env.SMART_NOTE_KV, `users/${userId}/notes/${noteId}`, updated)
 
   const index = (await getJSON<{ notes: any[] }>(
-    env.NOTES_BUCKET,
-    `users/${userId}/notes/_index.json`
+    env.SMART_NOTE_KV,
+    `users/${userId}/notes/_index`
   )) || { notes: [] }
   const idx = index.notes.findIndex((n: any) => n.id === noteId)
   if (idx !== -1) {
@@ -342,48 +320,30 @@ async function handleUpdateNote(
       pinned: updated.pinned,
       updatedAt: updated.updatedAt
     }
-    await putJSON(
-      env.NOTES_BUCKET,
-      `users/${userId}/notes/_index.json`,
-      index
-    )
+    await putJSON(env.SMART_NOTE_KV, `users/${userId}/notes/_index`, index)
   }
 
   return jsonResponse({ success: true, data: updated })
 }
 
-async function handleDeleteNote(
-  userId: string,
-  noteId: string,
-  env: Env
-): Promise<Response> {
-  await env.NOTES_BUCKET.delete(`users/${userId}/notes/${noteId}.json`)
+async function handleDeleteNote(userId: string, noteId: string, env: Env): Promise<Response> {
+  await env.SMART_NOTE_KV.delete(`users/${userId}/notes/${noteId}`)
 
   const index = (await getJSON<{ notes: any[] }>(
-    env.NOTES_BUCKET,
-    `users/${userId}/notes/_index.json`
+    env.SMART_NOTE_KV,
+    `users/${userId}/notes/_index`
   )) || { notes: [] }
   index.notes = index.notes.filter((n: any) => n.id !== noteId)
-  await putJSON(
-    env.NOTES_BUCKET,
-    `users/${userId}/notes/_index.json`,
-    index
-  )
+  await putJSON(env.SMART_NOTE_KV, `users/${userId}/notes/_index`, index)
 
   return jsonResponse({ success: true })
 }
 
 // ====== Finance Handlers ======
 
-async function handleListWallets(
-  userId: string,
-  env: Env
-): Promise<Response> {
+async function handleListWallets(userId: string, env: Env): Promise<Response> {
   const wallets =
-    (await getJSON<WalletData[]>(
-      env.NOTES_BUCKET,
-      `users/${userId}/finance/wallets.json`
-    )) || []
+    (await getJSON<WalletData[]>(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`)) || []
   return jsonResponse({ success: true, data: wallets })
 }
 
@@ -394,10 +354,7 @@ async function handleCreateWallet(
 ): Promise<Response> {
   const body = (await request.json()) as any
   const wallets =
-    (await getJSON<WalletData[]>(
-      env.NOTES_BUCKET,
-      `users/${userId}/finance/wallets.json`
-    )) || []
+    (await getJSON<WalletData[]>(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`)) || []
 
   const wallet: WalletData = {
     id: generateId(),
@@ -410,22 +367,44 @@ async function handleCreateWallet(
   }
 
   wallets.push(wallet)
-  await putJSON(
-    env.NOTES_BUCKET,
-    `users/${userId}/finance/wallets.json`,
-    wallets
-  )
+  await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`, wallets)
   return jsonResponse({ success: true, data: wallet }, 201)
 }
 
-async function handleListTransactions(
+async function handleUpdateWallet(
   userId: string,
+  walletId: string,
+  request: Request,
   env: Env
 ): Promise<Response> {
+  const wallets =
+    (await getJSON<WalletData[]>(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`)) || []
+  const idx = wallets.findIndex((w) => w.id === walletId)
+  if (idx === -1) return errorResponse('Wallet not found', 404)
+
+  const body = (await request.json()) as any
+  wallets[idx] = { ...wallets[idx], ...body, id: walletId }
+  await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`, wallets)
+  return jsonResponse({ success: true, data: wallets[idx] })
+}
+
+async function handleDeleteWallet(
+  userId: string,
+  walletId: string,
+  env: Env
+): Promise<Response> {
+  const wallets =
+    (await getJSON<WalletData[]>(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`)) || []
+  const filtered = wallets.filter((w) => w.id !== walletId)
+  await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`, filtered)
+  return jsonResponse({ success: true })
+}
+
+async function handleListTransactions(userId: string, env: Env): Promise<Response> {
   const txs =
     (await getJSON<TransactionData[]>(
-      env.NOTES_BUCKET,
-      `users/${userId}/finance/transactions.json`
+      env.SMART_NOTE_KV,
+      `users/${userId}/finance/transactions`
     )) || []
   return jsonResponse({ success: true, data: txs })
 }
@@ -438,14 +417,11 @@ async function handleCreateTransaction(
   const body = (await request.json()) as any
   const txs =
     (await getJSON<TransactionData[]>(
-      env.NOTES_BUCKET,
-      `users/${userId}/finance/transactions.json`
+      env.SMART_NOTE_KV,
+      `users/${userId}/finance/transactions`
     )) || []
   const wallets =
-    (await getJSON<WalletData[]>(
-      env.NOTES_BUCKET,
-      `users/${userId}/finance/wallets.json`
-    )) || []
+    (await getJSON<WalletData[]>(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`)) || []
 
   const tx: TransactionData = {
     id: generateId(),
@@ -460,22 +436,13 @@ async function handleCreateTransaction(
   }
 
   txs.push(tx)
-  await putJSON(
-    env.NOTES_BUCKET,
-    `users/${userId}/finance/transactions.json`,
-    txs
-  )
+  await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/transactions`, txs)
 
   // Update wallet balance
   const walletIdx = wallets.findIndex((w) => w.id === tx.walletId)
   if (walletIdx !== -1) {
-    wallets[walletIdx].balance +=
-      tx.type === 'income' ? tx.amount : -tx.amount
-    await putJSON(
-      env.NOTES_BUCKET,
-      `users/${userId}/finance/wallets.json`,
-      wallets
-    )
+    wallets[walletIdx].balance += tx.type === 'income' ? tx.amount : -tx.amount
+    await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`, wallets)
   }
 
   return jsonResponse({ success: true, data: tx }, 201)
@@ -488,66 +455,31 @@ async function handleDeleteTransaction(
 ): Promise<Response> {
   const txs =
     (await getJSON<TransactionData[]>(
-      env.NOTES_BUCKET,
-      `users/${userId}/finance/transactions.json`
+      env.SMART_NOTE_KV,
+      `users/${userId}/finance/transactions`
     )) || []
   const wallets =
-    (await getJSON<WalletData[]>(
-      env.NOTES_BUCKET,
-      `users/${userId}/finance/wallets.json`
-    )) || []
+    (await getJSON<WalletData[]>(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`)) || []
 
   const tx = txs.find((t) => t.id === txId)
   if (tx) {
     // Revert wallet balance
     const walletIdx = wallets.findIndex((w) => w.id === tx.walletId)
     if (walletIdx !== -1) {
-      wallets[walletIdx].balance +=
-        tx.type === 'income' ? -tx.amount : tx.amount
-      await putJSON(
-        env.NOTES_BUCKET,
-        `users/${userId}/finance/wallets.json`,
-        wallets
-      )
+      wallets[walletIdx].balance += tx.type === 'income' ? -tx.amount : tx.amount
+      await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`, wallets)
     }
   }
 
   const filtered = txs.filter((t) => t.id !== txId)
-  await putJSON(
-    env.NOTES_BUCKET,
-    `users/${userId}/finance/transactions.json`,
-    filtered
-  )
+  await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/transactions`, filtered)
 
   return jsonResponse({ success: true })
 }
 
 // ====== Telegram Webhook (OpenClaw) ======
 
-/**
- * OpenClaw sends parsed transaction data to this endpoint.
- *
- * Expected POST body:
- * {
- *   "userId": "abc123",
- *   "type": "expense",
- *   "amount": 50000,
- *   "category": "food",
- *   "note": "ăn sáng phở",
- *   "wallet": "momo"
- * }
- *
- * OpenClaw skill config:
- * - Trigger: any message in Telegram chat
- * - Action: parse message → extract amount, type, category, wallet
- * - Webhook: POST to https://your-worker.workers.dev/api/webhook/telegram
- * - Header: X-Webhook-Secret: <your-secret>
- */
-async function handleTelegramWebhook(
-  request: Request,
-  env: Env
-): Promise<Response> {
-  // Verify webhook secret
+async function handleTelegramWebhook(request: Request, env: Env): Promise<Response> {
   const secret = request.headers.get('X-Webhook-Secret')
   if (secret !== env.TELEGRAM_WEBHOOK_SECRET) {
     return errorResponse('Unauthorized webhook', 401)
@@ -560,26 +492,19 @@ async function handleTelegramWebhook(
     return errorResponse('Missing required fields: userId, amount, type')
   }
 
-  // Find wallet by name (case-insensitive)
   const wallets =
-    (await getJSON<WalletData[]>(
-      env.NOTES_BUCKET,
-      `users/${userId}/finance/wallets.json`
-    )) || []
+    (await getJSON<WalletData[]>(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`)) || []
 
   let walletId = wallets[0]?.id || ''
   if (wallet) {
-    const found = wallets.find(
-      (w) => w.name.toLowerCase().includes(wallet.toLowerCase())
-    )
+    const found = wallets.find((w) => w.name.toLowerCase().includes(wallet.toLowerCase()))
     if (found) walletId = found.id
   }
 
-  // Create transaction
   const txs =
     (await getJSON<TransactionData[]>(
-      env.NOTES_BUCKET,
-      `users/${userId}/finance/transactions.json`
+      env.SMART_NOTE_KV,
+      `users/${userId}/finance/transactions`
     )) || []
 
   const tx: TransactionData = {
@@ -595,22 +520,12 @@ async function handleTelegramWebhook(
   }
 
   txs.push(tx)
-  await putJSON(
-    env.NOTES_BUCKET,
-    `users/${userId}/finance/transactions.json`,
-    txs
-  )
+  await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/transactions`, txs)
 
-  // Update wallet balance
   const walletIdx = wallets.findIndex((w) => w.id === walletId)
   if (walletIdx !== -1) {
-    wallets[walletIdx].balance +=
-      tx.type === 'income' ? tx.amount : -tx.amount
-    await putJSON(
-      env.NOTES_BUCKET,
-      `users/${userId}/finance/wallets.json`,
-      wallets
-    )
+    wallets[walletIdx].balance += tx.type === 'income' ? tx.amount : -tx.amount
+    await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`, wallets)
   }
 
   return jsonResponse({
@@ -641,10 +556,7 @@ export default {
       }
 
       // Telegram webhook (uses webhook secret, not JWT)
-      if (
-        path === '/api/webhook/telegram' &&
-        request.method === 'POST'
-      ) {
+      if (path === '/api/webhook/telegram' && request.method === 'POST') {
         return handleTelegramWebhook(request, env)
       }
 
@@ -671,12 +583,9 @@ export default {
       const noteMatch = path.match(/^\/api\/notes\/(.+)$/)
       if (noteMatch) {
         const noteId = noteMatch[1]
-        if (request.method === 'GET')
-          return handleGetNote(userId, noteId, env)
-        if (request.method === 'PUT')
-          return handleUpdateNote(userId, noteId, request, env)
-        if (request.method === 'DELETE')
-          return handleDeleteNote(userId, noteId, env)
+        if (request.method === 'GET') return handleGetNote(userId, noteId, env)
+        if (request.method === 'PUT') return handleUpdateNote(userId, noteId, request, env)
+        if (request.method === 'DELETE') return handleDeleteNote(userId, noteId, env)
       }
 
       // Finance: Wallets
@@ -685,6 +594,13 @@ export default {
       }
       if (path === '/api/wallets' && request.method === 'POST') {
         return handleCreateWallet(userId, request, env)
+      }
+
+      const walletMatch = path.match(/^\/api\/wallets\/(.+)$/)
+      if (walletMatch) {
+        const walletId = walletMatch[1]
+        if (request.method === 'PUT') return handleUpdateWallet(userId, walletId, request, env)
+        if (request.method === 'DELETE') return handleDeleteWallet(userId, walletId, env)
       }
 
       // Finance: Transactions
