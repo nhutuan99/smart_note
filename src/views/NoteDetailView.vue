@@ -1,0 +1,221 @@
+<script setup lang="ts">
+import { ref, watch, onMounted, onUnmounted, computed } from 'vue'
+import { useEventListener } from '@/composables/useEventListener'
+import { useRoute, useRouter } from 'vue-router'
+import { useNotesStore } from '@/stores/notes'
+import { useUiStore } from '@/stores/ui'
+import { ArrowLeft, Save, Pin, Trash2, Tag, X, Plus, Check } from 'lucide-vue-next'
+
+const route = useRoute()
+const router = useRouter()
+const notesStore = useNotesStore()
+const ui = useUiStore()
+
+const title = ref('')
+const content = ref('')
+const tags = ref<string[]>([])
+const pinned = ref(false)
+const newTag = ref('')
+const saving = ref(false)
+const lastSaved = ref('')
+const hasChanges = ref(false)
+const showTagInput = ref(false)
+let saveTimeout: ReturnType<typeof setTimeout> | null = null
+const noteId = computed(() => route.params.id as string)
+
+onMounted(async () => {
+  const note = await notesStore.fetchNote(noteId.value)
+  if (note) {
+    title.value = note.title
+    content.value = note.content
+    tags.value = [...note.tags]
+    pinned.value = note.pinned
+    lastSaved.value = new Date(note.updatedAt).toLocaleTimeString()
+  } else {
+    ui.showToast('error', 'Note not found')
+    router.push('/notes')
+  }
+})
+
+// Auto-cleanup keyboard shortcut listener via composable
+useEventListener(document, 'keydown', handleKeydown)
+
+onUnmounted(() => {
+  if (saveTimeout) clearTimeout(saveTimeout)
+  if (hasChanges.value) saveNote()
+})
+
+watch(
+  [title, content, tags, pinned],
+  () => {
+    hasChanges.value = true
+    if (saveTimeout) clearTimeout(saveTimeout)
+    saveTimeout = setTimeout(() => saveNote(), 2000)
+  },
+  { deep: true }
+)
+
+async function saveNote() {
+  if (!noteId.value || saving.value) return
+  saving.value = true
+  try {
+    await notesStore.updateNote(noteId.value, {
+      title: title.value,
+      content: content.value,
+      tags: tags.value,
+      pinned: pinned.value
+    })
+    hasChanges.value = false
+    lastSaved.value = new Date().toLocaleTimeString()
+  } catch {
+    ui.showToast('error', 'Failed to save')
+  } finally {
+    saving.value = false
+  }
+}
+
+async function handleDelete() {
+  if (await notesStore.deleteNote(noteId.value)) {
+    ui.showToast('success', 'Note deleted')
+    router.push('/notes')
+  }
+}
+
+function addTag() {
+  const t = newTag.value.trim().toLowerCase()
+  if (t && !tags.value.includes(t)) {
+    tags.value.push(t)
+    newTag.value = ''
+  }
+}
+
+function handleTagKeydown(e: KeyboardEvent) {
+  if (e.key === 'Enter') {
+    e.preventDefault()
+    addTag()
+  }
+  if (e.key === 'Escape') showTagInput.value = false
+}
+
+function handleKeydown(e: KeyboardEvent) {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    e.preventDefault()
+    saveNote()
+  }
+}
+</script>
+
+<template>
+  <div class="mx-auto flex min-h-[calc(100vh-3.5rem-3rem)] max-w-[56.25rem] flex-col">
+    <!-- Toolbar -->
+    <div
+      class="border-border-default mb-4 flex flex-col items-start justify-between gap-3 border-b pb-4 sm:flex-row sm:items-center"
+    >
+      <div class="flex items-center gap-3">
+        <button
+          id="back-to-notes-btn"
+          @click="router.push('/notes')"
+          class="text-text-secondary hover:bg-bg-hover hover:text-text-primary flex h-[2.125rem] w-[2.125rem] items-center justify-center rounded-lg transition-all duration-150"
+        >
+          <ArrowLeft :size="18" />
+        </button>
+        <div class="flex items-center gap-1 text-sm">
+          <template v-if="saving"><span class="text-warning">Saving...</span></template>
+          <template v-else-if="hasChanges">
+            <span class="text-text-tertiary">Unsaved changes</span>
+          </template>
+          <template v-else-if="lastSaved">
+            <Check
+              :size="14"
+              class="text-success"
+            />
+            <span class="text-text-disabled">Saved {{ lastSaved }}</span>
+          </template>
+        </div>
+      </div>
+      <div class="flex items-center gap-1">
+        <button
+          id="pin-note-btn"
+          :title="pinned ? 'Unpin' : 'Pin'"
+          class="text-text-secondary hover:bg-bg-hover hover:text-text-primary flex h-[2.125rem] w-[2.125rem] items-center justify-center rounded-lg transition-all duration-150"
+          :class="pinned ? 'text-warning' : ''"
+          @click="pinned = !pinned"
+        >
+          <Pin :size="16" />
+        </button>
+        <button
+          id="save-note-btn"
+          title="Save (Ctrl+S)"
+          @click="saveNote"
+          class="text-text-secondary hover:bg-bg-hover hover:text-text-primary flex h-[2.125rem] w-[2.125rem] items-center justify-center rounded-lg transition-all duration-150"
+        >
+          <Save :size="16" />
+        </button>
+        <button
+          id="delete-note-btn"
+          title="Delete"
+          @click="handleDelete"
+          class="text-text-secondary hover:bg-bg-hover hover:text-error flex h-[2.125rem] w-[2.125rem] items-center justify-center rounded-lg transition-all duration-150"
+        >
+          <Trash2 :size="16" />
+        </button>
+      </div>
+    </div>
+
+    <!-- Tags -->
+    <div class="mb-2 flex items-center gap-2 pb-4">
+      <Tag
+        :size="14"
+        class="text-text-disabled shrink-0"
+      />
+      <div class="flex flex-wrap items-center gap-2">
+        <span
+          v-for="tag in tags"
+          :key="tag"
+          class="bg-accent-subtle text-accent flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[0.6875rem] font-medium"
+        >
+          {{ tag }}
+          <button
+            class="text-accent opacity-60 transition-opacity duration-150 hover:opacity-100"
+            @click="tags = tags.filter((t) => t !== tag)"
+          >
+            <X :size="12" />
+          </button>
+        </span>
+        <button
+          v-if="!showTagInput"
+          class="border-border-default text-text-tertiary hover:border-accent hover:text-accent flex items-center gap-1 rounded-full border border-dashed px-2.5 py-0.5 text-[0.6875rem] transition-all duration-150"
+          @click="showTagInput = true"
+        >
+          <Plus :size="12" />
+          Add tag
+        </button>
+        <input
+          v-else
+          v-model="newTag"
+          autofocus
+          class="border-accent bg-accent-subtle text-accent w-[6.25rem] rounded-full border px-2.5 py-0.5 text-[0.6875rem] focus:outline-none"
+          placeholder="Type tag..."
+          @keydown="handleTagKeydown"
+          @blur="showTagInput = false"
+        />
+      </div>
+    </div>
+
+    <!-- Title -->
+    <input
+      id="note-title-input"
+      v-model="title"
+      placeholder="Untitled"
+      class="text-text-primary placeholder:text-text-disabled mb-2 w-full border-none bg-transparent py-2 text-[1.875rem] leading-tight font-bold tracking-tight focus:outline-none"
+    />
+
+    <!-- Content -->
+    <textarea
+      id="note-content-input"
+      v-model="content"
+      placeholder="Start writing... (Markdown supported)"
+      class="text-text-secondary placeholder:text-text-disabled min-h-[31.25rem] flex-1 resize-none border-none bg-transparent py-2 font-sans text-sm leading-[1.8] focus:outline-none"
+    />
+  </div>
+</template>

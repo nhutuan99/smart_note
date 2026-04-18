@@ -1,0 +1,12 @@
+name = "smart-note-api"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+# R2 bucket binding
+[[r2_buckets]]
+binding = "NOTES_BUCKET"
+bucket_name = "smart-note-data"
+
+# Environment variables (set secrets via: npx wrangler secret put JWT_SECRET)
+[vars]
+ENVIRONMENT = "production"

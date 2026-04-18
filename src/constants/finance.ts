@@ -1,0 +1,105 @@
+import type { CategoryConfig, Wallet } from '@/types'
+
+// ── Default Wallets ──
+
+export const DEFAULT_WALLETS: Omit<Wallet, 'id'>[] = [
+  {
+    name: 'Techcombank',
+    balance: 0,
+    currency: 'VND',
+    icon: '🏦',
+    color: '#e62e2e',
+    order: 0
+  },
+  {
+    name: 'TPBank',
+    balance: 0,
+    currency: 'VND',
+    icon: '🏧',
+    color: '#7b2d8e',
+    order: 1
+  },
+  {
+    name: 'MoMo',
+    balance: 0,
+    currency: 'VND',
+    icon: '📱',
+    color: '#d82d8b',
+    order: 2
+  },
+  {
+    name: 'ZaloPay',
+    balance: 0,
+    currency: 'VND',
+    icon: '💙',
+    color: '#0068ff',
+    order: 3
+  },
+  {
+    name: 'Visa',
+    balance: 0,
+    currency: 'VND',
+    icon: '💳',
+    color: '#1a1f71',
+    order: 4
+  },
+  {
+    name: 'Tiền mặt',
+    balance: 0,
+    currency: 'VND',
+    icon: '💵',
+    color: '#10b981',
+    order: 5
+  }
+]
+
+// ── Categories ──
+
+export const EXPENSE_CATEGORIES: CategoryConfig[] = [
+  { key: 'food', label: 'Ăn uống', icon: '🍜', color: '#f59e0b', type: 'expense' },
+  { key: 'transport', label: 'Di chuyển', icon: '🚗', color: '#3b82f6', type: 'expense' },
+  { key: 'shopping', label: 'Shopping', icon: '🛍️', color: '#ec4899', type: 'expense' },
+  { key: 'entertainment', label: 'Giải trí', icon: '🎮', color: '#8b5cf6', type: 'expense' },
+  { key: 'bills', label: 'Hóa đơn', icon: '📄', color: '#ef4444', type: 'expense' },
+  { key: 'health', label: 'Sức khỏe', icon: '💊', color: '#14b8a6', type: 'expense' },
+  { key: 'education', label: 'Học tập', icon: '📚', color: '#6366f1', type: 'expense' },
+  { key: 'rent', label: 'Nhà/Thuê', icon: '🏠', color: '#78716c', type: 'expense' },
+  { key: 'gift', label: 'Quà tặng', icon: '🎁', color: '#f43f5e', type: 'expense' },
+  { key: 'other_expense', label: 'Khác', icon: '📦', color: '#737373', type: 'expense' }
+]
+
+export const INCOME_CATEGORIES: CategoryConfig[] = [
+  { key: 'salary', label: 'Lương', icon: '💰', color: '#10b981', type: 'income' },
+  { key: 'freelance', label: 'Freelance', icon: '💻', color: '#06b6d4', type: 'income' },
+  { key: 'investment', label: 'Đầu tư', icon: '📈', color: '#f59e0b', type: 'income' },
+  { key: 'bonus', label: 'Thưởng', icon: '🎉', color: '#8b5cf6', type: 'income' },
+  { key: 'refund', label: 'Hoàn tiền', icon: '↩️', color: '#3b82f6', type: 'income' },
+  { key: 'other_income', label: 'Thu khác', icon: '📥', color: '#737373', type: 'income' }
+]
+
+export const ALL_CATEGORIES = [...EXPENSE_CATEGORIES, ...INCOME_CATEGORIES]
+
+export function getCategoryConfig(key: string): CategoryConfig {
+  return (
+    ALL_CATEGORIES.find((c) => c.key === key) || {
+      key,
+      label: key,
+      icon: '📦',
+      color: '#737373',
+      type: 'both' as const
+    }
+  )
+}
+
+// ── Format Helpers ──
+
+export function formatVND(amount: number): string {
+  return new Intl.NumberFormat('vi-VN').format(amount) + 'đ'
+}
+
+export function formatVNDShort(amount: number): string {
+  if (amount >= 1_000_000_000) return (amount / 1_000_000_000).toFixed(1) + 'tỷ'
+  if (amount >= 1_000_000) return (amount / 1_000_000).toFixed(1) + 'tr'
+  if (amount >= 1_000) return (amount / 1_000).toFixed(0) + 'k'
+  return amount + 'đ'
+}
