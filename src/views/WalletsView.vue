@@ -61,7 +61,7 @@ function saveEdit(id: string, newBalance: string) {
       <h1 class="text-2xl font-bold tracking-tight">Ví của tôi</h1>
       <button
         @click="showAdd = !showAdd"
-        class="bg-accent hover:bg-accent-hover hover:shadow-glow flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-black transition-all duration-150"
+        class="btn-primary"
       >
         <Plus :size="16" />
         Thêm ví
@@ -122,7 +122,7 @@ function saveEdit(id: string, newBalance: string) {
             <button
               @click="addWallet"
               :disabled="!newWallet.name.trim()"
-              class="bg-accent hover:bg-accent-hover flex-1 rounded-lg py-2 text-sm font-semibold text-black transition-all duration-150 disabled:opacity-40"
+              class="btn-primary flex-1 justify-center py-2 disabled:opacity-40"
             >
               Thêm
             </button>

@@ -97,7 +97,7 @@ function timeSince(dateStr: string) {
       </div>
       <button
         @click="router.push('/transactions/add')"
-        class="bg-accent hover:bg-accent-hover hover:shadow-glow relative z-10 flex items-center gap-2 self-start rounded-lg px-5 py-2.5 text-sm font-semibold text-black transition-all duration-150"
+        class="btn-primary relative z-10 self-start"
       >
         <Plus :size="18" />
         Thêm giao dịch
@@ -355,7 +355,7 @@ function timeSince(dateStr: string) {
         </p>
         <button
           @click="router.push('/transactions/add')"
-          class="bg-accent-subtle text-accent hover:bg-accent-glow flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-medium transition-all duration-150"
+          class="btn-secondary"
         >
           <Plus :size="16" />
           Thêm giao dịch

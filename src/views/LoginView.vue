@@ -194,7 +194,7 @@ async function handleSubmit() {
             id="submit-btn"
             type="submit"
             :disabled="!isValid || loading"
-            class="bg-accent hover:bg-accent-hover hover:shadow-glow flex w-full items-center justify-center gap-2 rounded-lg py-3 text-sm font-semibold text-black transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-50"
+            class="btn-primary w-full justify-center py-3 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <span
               v-if="loading"

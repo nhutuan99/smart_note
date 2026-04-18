@@ -105,7 +105,7 @@ async function createNote() {
       <button
         id="dashboard-new-note-btn"
         @click="createNote"
-        class="bg-accent hover:bg-accent-hover hover:shadow-glow relative z-10 flex items-center gap-2 self-start rounded-lg px-5 py-2.5 text-sm font-semibold whitespace-nowrap text-black transition-all duration-150"
+        class="btn-primary relative z-10 self-start whitespace-nowrap"
       >
         <Plus :size="18" />
         New Note
@@ -201,7 +201,7 @@ async function createNote() {
         <p class="text-text-tertiary mb-6 text-sm">Create your first note to get started</p>
         <button
           @click="createNote"
-          class="bg-accent-subtle text-accent hover:bg-accent-glow flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-medium transition-all duration-150"
+          class="btn-secondary"
         >
           <Plus :size="16" />
           Create Note

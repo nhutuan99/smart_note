@@ -59,7 +59,7 @@ async function handleTogglePin(id: string, e: Event) {
       <button
         id="notes-new-btn"
         @click="createNote"
-        class="bg-accent hover:bg-accent-hover hover:shadow-glow flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-black transition-all duration-150"
+        class="btn-primary"
       >
         <Plus :size="16" />
         New Note
@@ -236,7 +236,7 @@ async function handleTogglePin(id: string, e: Event) {
                 Cancel
               </button>
               <button
-                class="bg-error rounded-lg px-4 py-1.5 text-sm font-medium text-white transition-all duration-150 hover:opacity-90"
+                class="btn-danger"
                 @click="handleDelete(note.id)"
               >
                 Delete
@@ -269,7 +269,7 @@ async function handleTogglePin(id: string, e: Event) {
       <button
         v-if="!notesStore.searchQuery"
         @click="createNote"
-        class="bg-accent-subtle text-accent hover:bg-accent-glow flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-medium transition-all duration-150"
+        class="btn-secondary"
       >
         <Plus :size="16" />
         Create Note

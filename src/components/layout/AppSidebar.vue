@@ -56,7 +56,7 @@ async function quickAdd() {
       <!-- Quick Add Transaction -->
       <button
         @click="quickAdd"
-        class="bg-accent-subtle text-accent hover:bg-accent-glow hover:shadow-glow mb-4 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium whitespace-nowrap transition-all duration-150"
+        class="btn-secondary mb-4 w-full whitespace-nowrap"
         :class="{ 'justify-center px-2': !ui.sidebarOpen }"
       >
         <Plus :size="16" />

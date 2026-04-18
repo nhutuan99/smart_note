@@ -90,7 +90,7 @@ useEventListener(document, 'click', handleClickOutside)
       </div>
       <button
         @click="router.push('/transactions/add')"
-        class="bg-accent hover:bg-accent-hover hover:shadow-glow flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-black transition-all duration-150"
+        class="btn-primary"
       >
         <Plus :size="16" />
         Thêm
@@ -293,7 +293,7 @@ useEventListener(document, 'click', handleClickOutside)
       <p class="text-text-tertiary mb-6 text-sm">Thêm giao dịch thủ công hoặc chat qua Telegram</p>
       <button
         @click="router.push('/transactions/add')"
-        class="bg-accent-subtle text-accent hover:bg-accent-glow flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-medium transition-all duration-150"
+        class="btn-secondary"
       >
         <Plus :size="16" />
         Thêm giao dịch
