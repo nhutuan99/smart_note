@@ -1,47 +1,48 @@
 @import "tailwindcss";
 
 /* ============================================
-   SMART NOTE - Tailwind v4 Theme (TokenTerminal)
+   SMART NOTE - Premium Teal Dark Theme
+   Inspired by modern fintech dashboards
    Mobile-first · rem units
    ============================================ */
 
 @theme {
-  /* Backgrounds */
-  --color-bg-primary: #000000;
-  --color-bg-surface: #0a0a0a;
-  --color-bg-elevated: #111111;
-  --color-bg-hover: #1a1a1a;
-  --color-bg-active: #222222;
+  /* Backgrounds — deep layered darks for depth */
+  --color-bg-primary: #050a0e;
+  --color-bg-surface: #0a1018;
+  --color-bg-elevated: #0f1720;
+  --color-bg-hover: #141e2a;
+  --color-bg-active: #1a2636;
 
-  /* Text */
-  --color-text-primary: #ffffff;
-  --color-text-secondary: #a3a3a3;
-  --color-text-tertiary: #737373;
-  --color-text-disabled: #525252;
+  /* Text — warm whites for readability */
+  --color-text-primary: #f0f4f8;
+  --color-text-secondary: #94a3b8;
+  --color-text-tertiary: #64748b;
+  --color-text-disabled: #475569;
 
-  /* Accent (Emerald) */
-  --color-accent: #10b981;
-  --color-accent-hover: #059669;
-  --color-accent-subtle: rgba(16, 185, 129, 0.12);
-  --color-accent-glow: rgba(16, 185, 129, 0.25);
-  --color-accent-text: #6ee7b7;
+  /* Accent (Premium Teal) */
+  --color-accent: #14b8a6;
+  --color-accent-hover: #0d9488;
+  --color-accent-subtle: rgba(20, 184, 166, 0.10);
+  --color-accent-glow: rgba(20, 184, 166, 0.20);
+  --color-accent-text: #5eead4;
 
-  /* Borders */
-  --color-border-default: #262626;
-  --color-border-subtle: #1c1c1c;
-  --color-border-strong: #404040;
+  /* Borders — subtle blue-tinted */
+  --color-border-default: #1e293b;
+  --color-border-subtle: #162032;
+  --color-border-strong: #334155;
 
   /* Status */
-  --color-success: #10b981;
-  --color-error: #ef4444;
+  --color-success: #22c55e;
+  --color-error: #f43f5e;
   --color-warning: #f59e0b;
   --color-info: #3b82f6;
 
-  /* Shadows */
-  --shadow-card: 0 0.0625rem 0.1875rem rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 0.5rem 2rem rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 1.25rem rgba(16, 185, 129, 0.15);
+  /* Shadows — softer, more premium */
+  --shadow-card: 0 0.0625rem 0.25rem rgba(0, 0, 0, 0.3), 0 0.0625rem 0.125rem rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 0.25rem 1rem rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 0.5rem 2.5rem rgba(0, 0, 0, 0.45);
+  --shadow-glow: 0 0 1.5rem rgba(20, 184, 166, 0.12);
 
   /* Layout */
   --spacing-header: 3.5rem;
@@ -140,11 +141,11 @@ select:-webkit-autofill {
    Inspired by gradientbuttons.colorion.co
    ============================================ */
 
-/* Primary CTA — Deep emerald gradient, subtle for dark theme */
+/* Primary CTA — Premium teal gradient */
 .btn-primary {
-  background: linear-gradient(135deg, #059669, #10b981);
+  background: linear-gradient(135deg, #0d9488, #14b8a6);
   background-size: 200% 200%;
-  color: #000;
+  color: #050a0e;
   font-weight: 600;
   font-size: 0.875rem;
   padding: 0.625rem 1.25rem;
@@ -164,7 +165,7 @@ select:-webkit-autofill {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, #10b981, #059669);
+  background: linear-gradient(135deg, #14b8a6, #0d9488);
   opacity: 0;
   transition: opacity 0.3s ease;
   border-radius: inherit;
@@ -172,7 +173,7 @@ select:-webkit-autofill {
 }
 .btn-primary:hover {
   animation: gradient-shift 3s ease infinite;
-  box-shadow: 0 0 1.25rem rgba(16, 185, 129, 0.25);
+  box-shadow: 0 0 1.5rem rgba(20, 184, 166, 0.3);
   transform: translateY(-1px);
 }
 .btn-primary:hover::before {
@@ -189,9 +190,9 @@ select:-webkit-autofill {
   animation: none;
 }
 
-/* Secondary — Glass/ghost with gradient border on hover */
+/* Secondary — Glassmorphism ghost button */
 .btn-secondary {
-  background: rgba(16, 185, 129, 0.08);
+  background: rgba(20, 184, 166, 0.08);
   color: var(--color-accent-text);
   font-weight: 500;
   font-size: 0.875rem;
@@ -206,9 +207,9 @@ select:-webkit-autofill {
   position: relative;
 }
 .btn-secondary:hover {
-  background: rgba(16, 185, 129, 0.15);
-  border-color: rgba(16, 185, 129, 0.3);
-  box-shadow: 0 0 1rem rgba(16, 185, 129, 0.1);
+  background: rgba(20, 184, 166, 0.15);
+  border-color: rgba(20, 184, 166, 0.3);
+  box-shadow: 0 0 1rem rgba(20, 184, 166, 0.1);
   transform: translateY(-1px);
 }
 .btn-secondary:active {
@@ -261,3 +262,24 @@ select:-webkit-autofill {
   color: var(--color-text-primary);
 }
 
+/* ============================================
+   Glassmorphism Utilities
+   ============================================ */
+
+.glass {
+  background: rgba(10, 16, 24, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+.card-premium {
+  background: linear-gradient(135deg, var(--color-bg-surface) 0%, var(--color-bg-elevated) 100%);
+  border: 1px solid var(--color-border-default);
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
+}
+.card-premium:hover {
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-md);
+}

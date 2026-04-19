@@ -80,10 +80,16 @@ function timeSince(dateStr: string) {
   <div class="max-w-[75rem]">
     <!-- Hero -->
     <div
-      class="bg-bg-surface border-border-default relative mb-6 flex flex-col gap-4 overflow-hidden rounded-2xl border p-5 md:flex-row md:items-start md:justify-between md:p-8"
+      class="relative mb-6 flex flex-col gap-4 overflow-hidden rounded-2xl p-5 md:flex-row md:items-start md:justify-between md:p-8"
+      style="background: linear-gradient(135deg, rgba(20, 184, 166, 0.08) 0%, rgba(10, 16, 24, 0.95) 50%, rgba(13, 148, 136, 0.05) 100%); border: 1px solid rgba(20, 184, 166, 0.15);"
     >
       <div
-        class="pointer-events-none absolute top-0 right-0 h-[18.75rem] w-[18.75rem] translate-x-[30%] -translate-y-[30%] rounded-full bg-[radial-gradient(circle,var(--color-accent-glow)_0%,transparent_70%)]"
+        class="pointer-events-none absolute top-0 right-0 h-[20rem] w-[20rem] translate-x-[20%] -translate-y-[20%] rounded-full"
+        style="background: radial-gradient(circle, rgba(20, 184, 166, 0.15) 0%, transparent 70%);"
+      ></div>
+      <div
+        class="pointer-events-none absolute bottom-0 left-0 h-[12rem] w-[12rem] -translate-x-[30%] translate-y-[30%] rounded-full"
+        style="background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%);"
       ></div>
       <div class="relative z-10">
         <div class="mb-2 flex items-center gap-2">
@@ -110,9 +116,9 @@ function timeSince(dateStr: string) {
     <!-- Balance + Income/Expense Cards -->
     <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
       <!-- Total Balance -->
-      <div class="bg-bg-surface border-border-default rounded-xl border p-5 sm:col-span-1">
+      <div class="card-premium p-5 sm:col-span-1">
         <div class="mb-3 flex items-center gap-2">
-          <div class="bg-accent/10 flex h-9 w-9 items-center justify-center rounded-lg">
+          <div class="flex h-9 w-9 items-center justify-center rounded-lg" style="background: rgba(20, 184, 166, 0.12);">
             <Wallet
               :size="18"
               class="text-accent"
@@ -126,7 +132,7 @@ function timeSince(dateStr: string) {
       </div>
 
       <!-- Month Income -->
-      <div class="bg-bg-surface border-border-default rounded-xl border p-5">
+      <div class="card-premium p-5">
         <div class="mb-3 flex items-center gap-2">
           <div class="bg-success/10 flex h-9 w-9 items-center justify-center rounded-lg">
             <TrendingUp
@@ -142,7 +148,7 @@ function timeSince(dateStr: string) {
       </div>
 
       <!-- Month Expense -->
-      <div class="bg-bg-surface border-border-default rounded-xl border p-5">
+      <div class="card-premium p-5">
         <div class="mb-3 flex items-center gap-2">
           <div class="bg-error/10 flex h-9 w-9 items-center justify-center rounded-lg">
             <TrendingDown

@@ -331,11 +331,8 @@ async function savePin() {
 
     <!-- Footer -->
     <div class="border-border-default mt-8 border-t pt-4 text-center">
-      <p class="text-text-disabled mb-1 text-[0.6875rem]">
-        SmartNote v1.0.0 · Built with Vue 3 + Cloudflare R2
-      </p>
       <p class="text-text-disabled text-[0.6875rem]">
-        Data stored locally. Deploy Worker for cloud sync.
+        SmartNote v1.0.0
       </p>
     </div>
   </div>
