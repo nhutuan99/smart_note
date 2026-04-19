@@ -60,7 +60,7 @@ async function quickAdd() {
         class="btn-secondary mb-4 w-full whitespace-nowrap"
         :class="{ 'justify-center px-2': !ui.sidebarOpen }"
       >
-        <Plus :size="ui.sidebarOpen ? 16 : 22" />
+        <Plus class="shrink-0" :size="ui.sidebarOpen ? 16 : 22" />
         <span v-if="ui.sidebarOpen">Thêm giao dịch</span>
       </button>
 

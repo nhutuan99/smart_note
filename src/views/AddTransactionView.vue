@@ -10,7 +10,7 @@ import {
 } from '@/constants/finance'
 import { getWalletBrand } from '@/constants/walletBrands'
 import type { TransactionType } from '@/types'
-import { ArrowLeft, Check, ChevronDown, ArrowUpRight, ArrowDownRight, Calendar } from 'lucide-vue-next'
+import { ArrowLeft, Check, ChevronDown, ArrowUpRight, ArrowDownRight, Calendar, Plus } from 'lucide-vue-next'
 
 const router = useRouter()
 const finance = useFinanceStore()
