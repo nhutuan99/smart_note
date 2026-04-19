@@ -108,15 +108,8 @@ select:-webkit-autofill {
    Animations
    ============================================ */
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: .5; }
-}
-
 .skeleton {
-  background: var(--color-bg-elevated);
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  @apply rounded-md;
+  @apply animate-pulse bg-bg-elevated rounded-md;
 }
 
 /* ============================================
