@@ -63,9 +63,9 @@ async function handleSubmit() {
       <!-- Logo -->
       <div class="mb-8 text-center">
         <div
-          class="bg-accent-subtle text-accent shadow-glow mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl"
+          class="bg-bg-elevated mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl border border-border-default shadow-sm"
         >
-          <Sparkles :size="28" />
+          <Sparkles :size="28" class="text-accent" />
         </div>
         <h1 class="mb-1 text-2xl font-bold tracking-tight">SmartNote</h1>
         <p class="text-text-tertiary text-sm">Your personal knowledge hub</p>
