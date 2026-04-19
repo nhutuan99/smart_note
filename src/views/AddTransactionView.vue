@@ -10,7 +10,7 @@ import {
 } from '@/constants/finance'
 import { getWalletBrand } from '@/constants/walletBrands'
 import type { TransactionType } from '@/types'
-import { ArrowLeft, Check, ChevronDown, ArrowUpRight, ArrowDownRight } from 'lucide-vue-next'
+import { ArrowLeft, Check, ChevronDown, ArrowUpRight, ArrowDownRight, Calendar } from 'lucide-vue-next'
 
 const router = useRouter()
 const finance = useFinanceStore()
@@ -22,8 +22,23 @@ const amount = ref('')
 const category = ref('food')
 const walletId = ref(finance.wallets[0]?.id || '')
 const note = ref('')
-const date = ref(new Date().toISOString().substring(0, 10))
+
+// Get local date instead of UTC
+function getLocalDateString() {
+  const d = new Date()
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().substring(0, 10)
+}
+const date = ref(getLocalDateString())
 const showCategoryPicker = ref(false)
+
+function getDisplayDate(isoString: string) {
+  if (!isoString) return ''
+  const parts = isoString.split('-')
+  if (parts.length === 3) {
+    return `${parts[2]}/${parts[1]}/${parts[0]}` // dd/mm/yyyy
+  }
+  return isoString
+}
 
 const availableCategories = computed(() =>
   type.value === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES
@@ -221,11 +236,19 @@ async function submit() {
     <!-- Date -->
     <div class="mb-8">
       <label class="text-text-secondary mb-2 block text-sm font-medium">Ngày</label>
-      <input
-        v-model="date"
-        type="date"
-        class="border-border-default bg-bg-surface text-text-primary focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-2.5 text-sm transition-all duration-150 focus:ring-2 focus:outline-none"
-      />
+      <div class="relative w-full overflow-hidden rounded-xl border border-border-default bg-bg-surface focus-within:border-accent focus-within:ring-2 focus-within:ring-accent-subtle transition-all duration-150">
+        <!-- Native string, placed as completely invisible to trigger browser picker only -->
+        <input
+          v-model="date"
+          type="date"
+          class="absolute inset-0 z-10 w-full h-full opacity-0 cursor-pointer"
+        />
+        <!-- Visual display layer masking the ugly browser formatting -->
+        <div class="flex items-center justify-between px-4 py-2.5 pointer-events-none">
+          <span class="text-text-primary text-sm font-medium">{{ getDisplayDate(date) }}</span>
+          <Calendar :size="16" class="text-text-tertiary" />
+        </div>
+      </div>
     </div>
 
     <!-- Submit -->
