@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useEventListener } from '@/composables/useEventListener'
 import { useRouter } from 'vue-router'
 import { useFinanceStore } from '@/stores/finance'
+import { useUiStore } from '@/stores/ui'
 import { formatVND, getCategoryConfig } from '@/constants/finance'
 import { getWalletBrand } from '@/constants/walletBrands'
 import type { Transaction } from '@/types'
@@ -21,6 +22,7 @@ import {
 
 const router = useRouter()
 const finance = useFinanceStore()
+const ui = useUiStore()
 
 onMounted(() => finance.fetchAll())
 
@@ -53,8 +55,17 @@ function dayTotal(txs: Transaction[]) {
   return { income, expense, net: income - expense }
 }
 
-function deleteTx(id: string) {
-  finance.deleteTransaction(id)
+async function deleteTx(id: string) {
+  const confirmed = await ui.requestConfirm({
+    title: 'Xóa giao dịch',
+    message: 'Giao dịch này sẽ bị xóa khỏi hệ thống.\nHành động này không thể hoàn tác.',
+    danger: true,
+    confirmText: 'Xóa giao dịch'
+  })
+  
+  if (confirmed) {
+    finance.deleteTransaction(id)
+  }
 }
 
 // Custom wallet dropdown

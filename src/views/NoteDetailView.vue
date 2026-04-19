@@ -78,9 +78,18 @@ async function saveNote() {
 }
 
 async function handleDelete() {
-  if (await notesStore.deleteNote(noteId.value)) {
-    ui.showToast('success', 'Note deleted')
-    router.push('/notes')
+  const confirmed = await ui.requestConfirm({
+    title: 'Xóa ghi chú',
+    message: 'Ghi chú này sẽ bị xóa khỏi hệ thống.\nHành động này không thể hoàn tác.',
+    danger: true,
+    confirmText: 'Chắc chắn xóa'
+  })
+  
+  if (confirmed) {
+    if (await notesStore.deleteNote(noteId.value)) {
+      ui.showToast('success', 'Note deleted')
+      router.push('/notes')
+    }
   }
 }
 

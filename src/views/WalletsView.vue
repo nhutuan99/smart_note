@@ -6,7 +6,9 @@ import { getWalletBrand } from '@/constants/walletBrands'
 import { httpClient } from '@/shared/api/httpClient'
 import { Plus, Trash2, Edit3, X, Check } from 'lucide-vue-next'
 import PinDialog from '@/components/PinDialog.vue'
+import { useUiStore } from '@/stores/ui'
 
+const ui = useUiStore()
 const finance = useFinanceStore()
 
 onMounted(() => finance.fetchWallets())
@@ -49,12 +51,20 @@ async function addWallet() {
   showAdd.value = false
 }
 
-function requestDelete(id: string) {
+async function requestDelete(id: string) {
   if (hasPin.value) {
     pendingDeleteId.value = id
     showPinDialog.value = true
   } else {
-    if (confirm('Xóa ví này? Các giao dịch liên quan sẽ không bị xóa.')) {
+    // Uses generic custom UI alert popup
+    const confirmed = await ui.requestConfirm({
+      title: 'Xóa ví',
+      message: 'Bạn có chắc chắn muốn xóa ví này?\nCác giao dịch hiện tại sẽ không bị xóa.',
+      danger: true,
+      confirmText: 'Chắc chắn xóa'
+    })
+    
+    if (confirmed) {
       finance.deleteWallet(id)
     }
   }

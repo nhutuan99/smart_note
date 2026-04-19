@@ -2,6 +2,7 @@
 import AppHeader from './AppHeader.vue'
 import AppSidebar from './AppSidebar.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
+import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import { useUiStore } from '@/stores/ui'
 
 const ui = useUiStore()
@@ -27,6 +28,7 @@ const ui = useUiStore()
       </div>
     </main>
     <ToastContainer />
+    <ConfirmDialog />
   </div>
 </template>
 
