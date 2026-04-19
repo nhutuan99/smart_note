@@ -1,16 +1,16 @@
 /**
  * Wallet Brand Configuration
  *
- * Maps wallet names to brand-specific styling (color, abbreviation).
- * Used in WalletsView and other finance components to show
- * recognizable brand badges instead of generic emojis.
+ * Maps wallet names to brand-specific styling and logo URLs.
+ * Logos are sourced from Logo.dev (free tier) with fallback to styled badges.
  */
 
 export interface BrandConfig {
-  abbr: string       // Short abbreviation (1-3 chars)
-  bgColor: string    // Brand primary color
-  textColor: string  // Text color for contrast
-  fullName: string   // Full display name
+  abbr: string
+  bgColor: string
+  textColor: string
+  fullName: string
+  logoUrl: string
 }
 
 export const WALLET_BRANDS: Record<string, BrandConfig> = {
@@ -19,67 +19,78 @@ export const WALLET_BRANDS: Record<string, BrandConfig> = {
     abbr: 'TCB',
     bgColor: '#e62e2e',
     textColor: '#ffffff',
-    fullName: 'Techcombank'
+    fullName: 'Techcombank',
+    logoUrl: 'https://img.logo.dev/techcombank.com.vn?token=pk_a8zHRmHcTi-Fv0L0E8QNRQ&size=80&format=png'
   },
   tpbank: {
     abbr: 'TP',
     bgColor: '#7b2d8e',
     textColor: '#ffffff',
-    fullName: 'TPBank'
+    fullName: 'TPBank',
+    logoUrl: 'https://img.logo.dev/tpb.vn?token=pk_a8zHRmHcTi-Fv0L0E8QNRQ&size=80&format=png'
   },
   vietcombank: {
     abbr: 'VCB',
     bgColor: '#006838',
     textColor: '#ffffff',
-    fullName: 'Vietcombank'
+    fullName: 'Vietcombank',
+    logoUrl: 'https://img.logo.dev/vietcombank.com.vn?token=pk_a8zHRmHcTi-Fv0L0E8QNRQ&size=80&format=png'
   },
   mbbank: {
     abbr: 'MB',
     bgColor: '#1e3765',
     textColor: '#ffffff',
-    fullName: 'MBBank'
+    fullName: 'MBBank',
+    logoUrl: 'https://img.logo.dev/mbbank.com.vn?token=pk_a8zHRmHcTi-Fv0L0E8QNRQ&size=80&format=png'
   },
   bidv: {
     abbr: 'BIDV',
     bgColor: '#00529b',
     textColor: '#ffffff',
-    fullName: 'BIDV'
+    fullName: 'BIDV',
+    logoUrl: 'https://img.logo.dev/bidv.com.vn?token=pk_a8zHRmHcTi-Fv0L0E8QNRQ&size=80&format=png'
   },
   agribank: {
     abbr: 'Agri',
     bgColor: '#d11f26',
     textColor: '#ffffff',
-    fullName: 'Agribank'
+    fullName: 'Agribank',
+    logoUrl: 'https://img.logo.dev/agribank.com.vn?token=pk_a8zHRmHcTi-Fv0L0E8QNRQ&size=80&format=png'
   },
   vietinbank: {
     abbr: 'CTG',
     bgColor: '#003c7d',
     textColor: '#ffffff',
-    fullName: 'VietinBank'
+    fullName: 'VietinBank',
+    logoUrl: 'https://img.logo.dev/vietinbank.vn?token=pk_a8zHRmHcTi-Fv0L0E8QNRQ&size=80&format=png'
   },
   acb: {
     abbr: 'ACB',
     bgColor: '#1a3c6e',
     textColor: '#ffffff',
-    fullName: 'ACB'
+    fullName: 'ACB',
+    logoUrl: 'https://img.logo.dev/acb.com.vn?token=pk_a8zHRmHcTi-Fv0L0E8QNRQ&size=80&format=png'
   },
   vpbank: {
     abbr: 'VP',
     bgColor: '#00843d',
     textColor: '#ffffff',
-    fullName: 'VPBank'
+    fullName: 'VPBank',
+    logoUrl: 'https://img.logo.dev/vpbank.com.vn?token=pk_a8zHRmHcTi-Fv0L0E8QNRQ&size=80&format=png'
   },
   hdbank: {
     abbr: 'HD',
     bgColor: '#e31837',
     textColor: '#ffffff',
-    fullName: 'HDBank'
+    fullName: 'HDBank',
+    logoUrl: 'https://img.logo.dev/hdbank.com.vn?token=pk_a8zHRmHcTi-Fv0L0E8QNRQ&size=80&format=png'
   },
   sacombank: {
     abbr: 'STB',
     bgColor: '#003087',
     textColor: '#ffffff',
-    fullName: 'Sacombank'
+    fullName: 'Sacombank',
+    logoUrl: 'https://img.logo.dev/sacombank.com.vn?token=pk_a8zHRmHcTi-Fv0L0E8QNRQ&size=80&format=png'
   },
 
   // ── E-Wallets ──
@@ -87,25 +98,29 @@ export const WALLET_BRANDS: Record<string, BrandConfig> = {
     abbr: 'M',
     bgColor: '#d82d8b',
     textColor: '#ffffff',
-    fullName: 'MoMo'
+    fullName: 'MoMo',
+    logoUrl: 'https://img.logo.dev/momo.vn?token=pk_a8zHRmHcTi-Fv0L0E8QNRQ&size=80&format=png'
   },
   zalopay: {
     abbr: 'Z',
     bgColor: '#0068ff',
     textColor: '#ffffff',
-    fullName: 'ZaloPay'
+    fullName: 'ZaloPay',
+    logoUrl: 'https://img.logo.dev/zalopay.vn?token=pk_a8zHRmHcTi-Fv0L0E8QNRQ&size=80&format=png'
   },
   vnpay: {
     abbr: 'VN',
     bgColor: '#003087',
     textColor: '#ffffff',
-    fullName: 'VNPay'
+    fullName: 'VNPay',
+    logoUrl: 'https://img.logo.dev/vnpay.vn?token=pk_a8zHRmHcTi-Fv0L0E8QNRQ&size=80&format=png'
   },
   shopee: {
     abbr: 'S',
     bgColor: '#ee4d2d',
     textColor: '#ffffff',
-    fullName: 'ShopeePay'
+    fullName: 'ShopeePay',
+    logoUrl: 'https://img.logo.dev/shopee.vn?token=pk_a8zHRmHcTi-Fv0L0E8QNRQ&size=80&format=png'
   },
 
   // ── International ──
@@ -113,19 +128,15 @@ export const WALLET_BRANDS: Record<string, BrandConfig> = {
     abbr: 'V',
     bgColor: '#1a1f71',
     textColor: '#f7b600',
-    fullName: 'Visa'
+    fullName: 'Visa',
+    logoUrl: 'https://img.logo.dev/visa.com?token=pk_a8zHRmHcTi-Fv0L0E8QNRQ&size=80&format=png'
   },
   mastercard: {
     abbr: 'MC',
     bgColor: '#eb001b',
     textColor: '#ffffff',
-    fullName: 'Mastercard'
-  },
-  paypal: {
-    abbr: 'PP',
-    bgColor: '#003087',
-    textColor: '#ffffff',
-    fullName: 'PayPal'
+    fullName: 'Mastercard',
+    logoUrl: 'https://img.logo.dev/mastercard.com?token=pk_a8zHRmHcTi-Fv0L0E8QNRQ&size=80&format=png'
   },
 
   // ── Cash ──
@@ -133,13 +144,15 @@ export const WALLET_BRANDS: Record<string, BrandConfig> = {
     abbr: '₫',
     bgColor: '#10b981',
     textColor: '#000000',
-    fullName: 'Tiền mặt'
+    fullName: 'Tiền mặt',
+    logoUrl: ''
   },
   cash: {
     abbr: '₫',
     bgColor: '#10b981',
     textColor: '#000000',
-    fullName: 'Cash'
+    fullName: 'Cash',
+    logoUrl: ''
   }
 }
 

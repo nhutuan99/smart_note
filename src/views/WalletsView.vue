@@ -170,23 +170,29 @@ async function saveEdit(id: string, newBalance: string) {
         :key="w.id"
         class="bg-bg-surface border-border-default hover:border-border-strong flex items-center gap-4 rounded-xl border p-5 transition-all duration-150"
       >
-        <!-- Brand Badge or Emoji -->
-        <div
-          v-if="getWalletBrand(w.name)"
-          class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-xs font-bold shadow-sm"
-          :style="{
-            backgroundColor: getWalletBrand(w.name)!.bgColor,
-            color: getWalletBrand(w.name)!.textColor
-          }"
-        >
-          {{ getWalletBrand(w.name)!.abbr }}
-        </div>
-        <div
-          v-else
-          class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl"
-          :style="{ backgroundColor: w.color + '20' }"
-        >
-          {{ w.icon }}
+        <!-- Brand Logo -->
+        <div class="flex h-12 w-12 shrink-0 items-center justify-center">
+          <img
+            v-if="getWalletBrand(w.name)?.logoUrl"
+            :src="getWalletBrand(w.name)!.logoUrl"
+            :alt="w.name"
+            class="h-12 w-12 rounded-xl object-contain"
+            loading="lazy"
+          />
+          <div
+            v-else-if="getWalletBrand(w.name)"
+            class="flex h-12 w-12 items-center justify-center rounded-xl text-sm font-bold shadow-sm"
+            :style="{ backgroundColor: getWalletBrand(w.name)!.bgColor, color: getWalletBrand(w.name)!.textColor }"
+          >
+            {{ getWalletBrand(w.name)!.abbr }}
+          </div>
+          <div
+            v-else
+            class="flex h-12 w-12 items-center justify-center rounded-xl text-2xl"
+            :style="{ backgroundColor: w.color + '20' }"
+          >
+            {{ w.icon }}
+          </div>
         </div>
 
         <div class="min-w-0 flex-1">

@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useFinanceStore } from '@/stores/finance'
 import { useAuthStore } from '@/stores/auth'
 import { formatVND, formatVNDShort, getCategoryConfig } from '@/constants/finance'
+import { getWalletBrand } from '@/constants/walletBrands'
 import {
   Wallet,
   TrendingUp,
@@ -176,7 +177,31 @@ function timeSince(dateStr: string) {
           class="bg-bg-surface border-border-default hover:border-border-strong cursor-pointer rounded-xl border p-4 transition-all duration-150 hover:-translate-y-0.5"
           @click="finance.filter = { walletId: w.id }; router.push('/transactions')"
         >
-          <div class="mb-2 text-xl">{{ w.icon }}</div>
+          <!-- Brand Logo -->
+          <div class="mb-2 h-8 w-8">
+            <img
+              v-if="getWalletBrand(w.name)?.logoUrl"
+              :src="getWalletBrand(w.name)!.logoUrl"
+              :alt="w.name"
+              class="h-8 w-8 rounded-lg object-contain"
+              loading="lazy"
+              @error="($event.target as HTMLImageElement).style.display = 'none'; ($event.target as HTMLImageElement).nextElementSibling!.classList.remove('hidden')"
+            />
+            <div
+              v-if="getWalletBrand(w.name) && !getWalletBrand(w.name)!.logoUrl"
+              class="flex h-8 w-8 items-center justify-center rounded-lg text-xs font-bold"
+              :style="{ backgroundColor: getWalletBrand(w.name)!.bgColor, color: getWalletBrand(w.name)!.textColor }"
+            >
+              {{ getWalletBrand(w.name)!.abbr }}
+            </div>
+            <div
+              v-if="!getWalletBrand(w.name)"
+              class="flex h-8 w-8 items-center justify-center rounded-lg text-xl"
+              :style="{ backgroundColor: w.color + '20' }"
+            >
+              {{ w.icon }}
+            </div>
+          </div>
           <div class="text-text-tertiary mb-1 truncate text-[0.6875rem]">
             {{ w.name }}
           </div>
