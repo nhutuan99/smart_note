@@ -191,10 +191,10 @@ export const WALLET_BRANDS: Record<string, BrandConfig> = {
   },
   'momo': {
     abbr: 'MoMo',
-    bgColor: '#d82d8b',
-    textColor: '#ffffff',
-    fullName: 'MoMo (M-Service)',
-    logoUrl: 'https://cdn.vietqr.io/img/momo.png'
+    bgColor: '#ffffff',
+    textColor: '#d82d8b',
+    fullName: 'MoMo',
+    logoUrl: '/images/wallets/momo.png'
   },
   'pvcombank pay': {
     abbr: 'PVDB',
