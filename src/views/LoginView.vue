@@ -221,7 +221,7 @@ async function handleSubmit() {
       </div>
 
       <p class="text-text-disabled mt-6 text-center text-[0.6875rem]">
-        Data stored securely on Cloudflare R2 · Free tier
+        SmartNote v1.0.0
       </p>
     </div>
   </div>

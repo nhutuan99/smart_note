@@ -78,10 +78,18 @@ function handleLogout() {
         @click="handleLogout"
       >
         <div
+          v-if="!auth.user?.avatarUrl"
           class="bg-accent-subtle text-accent flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold"
         >
           {{ auth.user?.name?.charAt(0)?.toUpperCase() || 'U' }}
         </div>
+        <img
+          v-else
+          :src="auth.user?.avatarUrl"
+          alt="Avatar"
+          class="h-7 w-7 rounded-full object-cover"
+          @error="auth.user.avatarUrl = ''"
+        />
         <LogOut
           :size="14"
           class="text-text-tertiary opacity-0 transition-opacity duration-150 group-hover:opacity-100"

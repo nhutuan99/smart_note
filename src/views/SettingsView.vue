@@ -5,7 +5,8 @@ import { useUiStore } from '@/stores/ui'
 import { useRouter } from 'vue-router'
 import { computed, ref, onMounted } from 'vue'
 import { httpClient } from '@/shared/api/httpClient'
-import { User, Database, Download, LogOut, HardDrive, FileText, Shield, Lock, Eye, EyeOff } from 'lucide-vue-next'
+import type { User } from '@/types'
+import { User as UserIcon, Database, Download, LogOut, HardDrive, FileText, Shield, Lock, Eye, EyeOff, AlertTriangle, Trash2, Camera, Save } from 'lucide-vue-next'
 
 const auth = useAuthStore()
 const notesStore = useNotesStore()
@@ -37,6 +38,62 @@ function exportNotes() {
   a.click()
   URL.revokeObjectURL(a.href)
   ui.showToast('success', 'Notes exported successfully')
+}
+
+// ── Profile Management ──
+const isEditingProfile = ref(false)
+const profileForm = ref({ name: auth.user?.name || '', avatarUrl: auth.user?.avatarUrl || '' })
+const profileLoading = ref(false)
+
+async function saveProfile() {
+  profileLoading.value = true
+  try {
+    const data = await httpClient.put<{ data: User }>('/api/auth/profile', profileForm.value)
+    if (data && data.data) {
+      auth.updateUser(data.data)
+      isEditingProfile.value = false
+      ui.showToast('success', 'Profile updated successfully')
+    }
+  } catch (err: any) {
+    ui.showToast('error', err.message || 'Failed to update profile')
+  } finally {
+    profileLoading.value = false
+  }
+}
+
+// ── Account Deletion ──
+const isDeleteModalOpen = ref(false)
+const deleteLoading = ref(false)
+const otpSent = ref(false)
+const deleteOtpForm = ref({ otp: '' })
+
+async function requestDeleteAccount() {
+  try {
+    deleteLoading.value = true
+    const res = await httpClient.post<{ message: string }>('/api/auth/otp/send')
+    ui.showToast('success', res.message || 'OTP sent to your email')
+    otpSent.value = true
+  } catch (err: any) {
+    ui.showToast('error', err.message || 'Failed to request account deletion')
+  } finally {
+    deleteLoading.value = false
+  }
+}
+
+async function confirmDeleteAccount() {
+  if (!deleteOtpForm.value.otp) return ui.showToast('error', 'Vui lòng nhập OTP')
+  try {
+    deleteLoading.value = true
+    await httpClient.post('/api/auth/account/delete', { otp: deleteOtpForm.value.otp })
+    ui.showToast('success', 'Account deleted successfully')
+    isDeleteModalOpen.value = false
+    auth.logout()
+    router.push('/login')
+  } catch (err: any) {
+    ui.showToast('error', err.message || 'Failed to delete account (Invalid OTP?)')
+  } finally {
+    deleteLoading.value = false
+  }
 }
 
 // ── PIN Management ──
@@ -94,19 +151,78 @@ async function savePin() {
     <!-- Profile -->
     <div class="mb-6">
       <div class="text-text-secondary mb-3 flex items-center gap-2">
-        <User :size="18" />
+        <UserIcon :size="18" />
         <h3 class="text-sm font-semibold">Profile</h3>
       </div>
-      <div class="bg-bg-surface border-border-default rounded-xl border p-5">
-        <div class="flex items-center gap-4">
-          <div
-            class="bg-accent-subtle text-accent flex h-12 w-12 items-center justify-center rounded-full text-xl font-semibold"
+      <div class="card-premium p-5">
+        <div v-if="!isEditingProfile" class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+          <div class="flex items-center gap-4">
+            <div
+              v-if="!auth.user?.avatarUrl"
+              class="bg-accent-subtle text-accent flex h-[3.25rem] w-[3.25rem] items-center justify-center rounded-full text-xl font-semibold"
+            >
+              {{ auth.user?.name?.charAt(0)?.toUpperCase() || 'U' }}
+            </div>
+            <img 
+              v-else 
+              :src="auth.user?.avatarUrl" 
+              alt="Avatar" 
+              class="h-[3.25rem] w-[3.25rem] rounded-full object-cover shadow-sm"
+              @error="auth.user.avatarUrl = ''"
+            />
+            <div>
+              <h4 class="mb-0.5 text-base font-semibold">{{ auth.user?.name || 'User' }}</h4>
+              <p class="text-text-tertiary text-sm">{{ auth.user?.email || 'No email' }}</p>
+            </div>
+          </div>
+          <button
+            @click="isEditingProfile = true"
+            class="btn-secondary whitespace-nowrap"
           >
-            {{ auth.user?.name?.charAt(0)?.toUpperCase() || 'U' }}
+            Edit Profile
+          </button>
+        </div>
+
+        <!-- Edit Profile Form -->
+        <div v-else class="flex flex-col gap-4">
+          <div>
+            <label class="text-text-secondary mb-1 block text-[0.6875rem] font-medium">Display Name</label>
+            <input
+              v-model="profileForm.name"
+              type="text"
+              placeholder="Your name"
+              class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border px-3 py-2 text-sm transition-all focus:ring-2 focus:outline-none"
+            />
           </div>
           <div>
-            <h4 class="mb-0.5 text-base font-semibold">{{ auth.user?.name || 'User' }}</h4>
-            <p class="text-text-tertiary text-sm">{{ auth.user?.email || 'No email' }}</p>
+            <label class="text-text-secondary mb-1 block text-[0.6875rem] font-medium">Avatar URL</label>
+            <div class="flex items-center gap-2">
+              <Camera :size="16" class="text-text-tertiary" />
+              <input
+                v-model="profileForm.avatarUrl"
+                type="url"
+                placeholder="https://example.com/avatar.png"
+                class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle flex-1 rounded-lg border px-3 py-2 text-sm transition-all focus:ring-2 focus:outline-none"
+              />
+            </div>
+            <p class="text-text-tertiary mt-1 text-[0.6875rem]">Paste a public image URL for your avatar.</p>
+          </div>
+          <div class="mt-2 flex items-center justify-end gap-2">
+            <button
+              @click="isEditingProfile = false; profileForm = { name: auth.user?.name || '', avatarUrl: auth.user?.avatarUrl || '' }"
+              class="text-text-secondary hover:text-text-primary rounded-lg px-4 py-2 text-sm transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              @click="saveProfile"
+              :disabled="profileLoading || !profileForm.name"
+              class="btn-primary"
+            >
+              <span v-if="profileLoading" class="h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-l-black"></span>
+              <Save v-else :size="14" />
+              <span>Save Changes</span>
+            </button>
           </div>
         </div>
       </div>
@@ -118,7 +234,7 @@ async function savePin() {
         <Database :size="18" />
         <h3 class="text-sm font-semibold">Storage</h3>
       </div>
-      <div class="bg-bg-surface border-border-default rounded-xl border p-5">
+      <div class="card-premium p-5">
         <div class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div class="flex items-center gap-3">
             <HardDrive
@@ -311,7 +427,7 @@ async function savePin() {
         <Shield :size="18" />
         <h3 class="text-sm font-semibold">Account</h3>
       </div>
-      <div class="bg-bg-surface border-border-default rounded-xl border p-5">
+      <div class="card-premium p-5">
         <div class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
           <div>
             <h4 class="mb-0.5 text-sm font-semibold">Sign Out</h4>
@@ -320,14 +436,101 @@ async function savePin() {
           <button
             id="logout-btn"
             @click="auth.logout(); router.push('/login')"
-            class="border-error/30 text-error hover:bg-error/10 flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-150"
+            class="border-border-default hover:bg-bg-hover hover:text-text-primary rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-150 flex items-center gap-2 text-text-secondary"
           >
             <LogOut :size="16" />
             Sign Out
           </button>
         </div>
+
+        <div class="border-border-default mt-5 border-t pt-5">
+          <div class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+            <div>
+              <h4 class="mb-0.5 text-sm font-semibold text-error">Delete Account</h4>
+              <p class="text-text-tertiary text-[0.8125rem]">Permanently delete your account and all data</p>
+            </div>
+            <button
+              @click="isDeleteModalOpen = true"
+              class="border-error text-error hover:bg-error/10 flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-150"
+            >
+              <Trash2 :size="16" />
+              Delete Account
+            </button>
+          </div>
+        </div>
       </div>
     </div>
+
+    <!-- Delete Account Modal -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="isDeleteModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="isDeleteModalOpen = false"></div>
+          
+          <div class="bg-bg-surface border-border-default relative w-full max-w-[24rem] rounded-2xl border p-6 shadow-xl">
+            <div class="mb-4 flex justify-center">
+              <div class="bg-error/10 flex h-14 w-14 items-center justify-center rounded-full">
+                <AlertTriangle :size="28" class="text-error" />
+              </div>
+            </div>
+            
+            <h3 class="mb-2 text-center text-lg font-bold text-error">Xóa tài khoản</h3>
+            <p class="text-text-secondary mb-6 text-center text-sm">
+              Hành động này <strong class="text-text-primary">không thể hoàn tác</strong>. Mọi dữ liệu (ví, giao dịch, ghi chú) sẽ bị xóa viễn viễn.
+            </p>
+
+            <div v-if="!otpSent" class="flex flex-col gap-3">
+              <button
+                @click="requestDeleteAccount"
+                :disabled="deleteLoading"
+                class="bg-error hover:bg-error/90 flex w-full justify-center rounded-xl py-3 font-semibold text-white transition-colors disabled:opacity-50"
+              >
+                <span v-if="deleteLoading" class="h-5 w-5 animate-spin rounded-full border-2 border-white/20 border-l-white"></span>
+                <span v-else>Gửi OTP xác nhận</span>
+              </button>
+              <button
+                @click="isDeleteModalOpen = false"
+                class="text-text-secondary hover:text-text-primary w-full py-2 text-sm font-medium"
+              >
+                Hủy bỏ
+              </button>
+            </div>
+
+            <div v-else class="flex flex-col gap-4">
+              <div>
+                <label class="text-text-secondary mb-1 block text-sm font-medium">Mã OTP (Đã gửi vào Email)</label>
+                <input
+                  v-model="deleteOtpForm.otp"
+                  type="text"
+                  placeholder="Nhập 6 số OTP"
+                  maxlength="6"
+                  class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-error focus:ring-error/20 w-full rounded-xl border px-4 py-3 text-center text-lg tracking-widest transition-all focus:ring-2 focus:outline-none"
+                />
+              </div>
+              <div class="flex gap-3">
+                <button
+                  @click="isDeleteModalOpen = false; otpSent = false; deleteOtpForm.otp = ''"
+                  class="border-border-default text-text-secondary hover:bg-bg-hover flex-1 rounded-xl border py-2.5 font-medium transition-colors"
+                >
+                  Hủy
+                </button>
+                <button
+                  @click="confirmDeleteAccount"
+                  :disabled="deleteLoading || deleteOtpForm.otp.length < 6"
+                  class="bg-error hover:bg-error/90 flex-1 justify-center rounded-xl py-2.5 font-semibold text-white transition-colors disabled:opacity-50"
+                >
+                  <span v-if="deleteLoading" class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-l-white"></span>
+                  <span v-else>Xóa vĩnh viễn</span>
+                </button>
+              </div>
+              <p class="text-text-tertiary text-center text-[0.6875rem] mt-2">
+                Không nhận được? <button @click="requestDeleteAccount" class="text-accent hover:underline">Gửi lại</button>
+              </p>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
 
     <!-- Footer -->
     <div class="border-border-default mt-8 border-t pt-4 text-center">

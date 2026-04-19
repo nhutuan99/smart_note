@@ -21,6 +21,7 @@ interface UserData {
   id: string
   email: string
   name: string
+  avatarUrl?: string
   passwordHash: string
   createdAt: string
 }
@@ -208,7 +209,13 @@ async function handleRegister(request: Request, env: Env): Promise<Response> {
     success: true,
     data: {
       token,
-      user: { id, email, name: user.name, createdAt: user.createdAt }
+      user: {
+        id,
+        email,
+        name: user.name,
+        avatarUrl: user.avatarUrl,
+        createdAt: user.createdAt
+      }
     }
   })
 }
@@ -237,10 +244,82 @@ async function handleLogin(request: Request, env: Env): Promise<Response> {
         id: user.id,
         email: user.email,
         name: user.name,
+        avatarUrl: user.avatarUrl,
         createdAt: user.createdAt
       }
     }
   })
+}
+
+async function handleUpdateProfile(userId: string, request: Request, env: Env): Promise<Response> {
+  const { name, avatarUrl } = (await request.json()) as any
+  const user = await getJSON<UserData>(env.SMART_NOTE_KV, `users/${userId}/profile`)
+  if (!user) return errorResponse('User not found', 404)
+
+  if (name) user.name = name
+  if (avatarUrl !== undefined) user.avatarUrl = avatarUrl
+
+  await putJSON(env.SMART_NOTE_KV, `users/${userId}/profile`, user)
+
+  return jsonResponse({
+    success: true,
+    data: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      avatarUrl: user.avatarUrl,
+      createdAt: user.createdAt
+    }
+  })
+}
+
+async function handleSendOtp(userId: string, env: Env): Promise<Response> {
+  const user = await getJSON<UserData>(env.SMART_NOTE_KV, `users/${userId}/profile`)
+  if (!user) return errorResponse('User not found', 404)
+
+  // Generate a mock 6-digit OTP
+  const otp = Math.floor(100000 + Math.random() * 900000).toString()
+  
+  // Store OTP in KV with an expiration time of 5 minutes (300 seconds)
+  await env.SMART_NOTE_KV.put(`users/${userId}/otp`, otp, { expirationTtl: 300 })
+
+  // Note: In a real app, integrate Resend, Mailgun, or SendGrid here
+  console.log(`[MOCK EMAIL] To: ${user.email} -> Your OTP for account deletion is: ${otp}`)
+
+  return jsonResponse({ 
+    success: true, 
+    message: 'OTP sent to email successfully. (Dev note: Check worker console for the OTP or use standard dev OTP if configured)'
+  })
+}
+
+async function handleDeleteAccount(userId: string, request: Request, env: Env): Promise<Response> {
+  const { otp } = (await request.json()) as any
+  if (!otp) return errorResponse('OTP is required')
+
+  const storedOtp = await env.SMART_NOTE_KV.get(`users/${userId}/otp`)
+  if (!storedOtp || storedOtp !== otp) {
+    return errorResponse('Invalid or expired OTP', 400)
+  }
+
+  const user = await getJSON<UserData>(env.SMART_NOTE_KV, `users/${userId}/profile`)
+  if (!user) return errorResponse('User not found', 404)
+
+  // Cleanup data
+  // Remove from _index
+  const usersIndex = (await getJSON<Record<string, string>>(env.SMART_NOTE_KV, 'users/_index')) || {}
+  delete usersIndex[user.email]
+  await putJSON(env.SMART_NOTE_KV, 'users/_index', usersIndex)
+
+  // In KV, deleting individual resources or setting expiration is needed.
+  // For simplicity, we just delete the main entry points so data becomes inaccessible.
+  await env.SMART_NOTE_KV.delete(`users/${userId}/profile`)
+  await env.SMART_NOTE_KV.delete(`users/${userId}/notes/_index`)
+  await env.SMART_NOTE_KV.delete(`users/${userId}/finance/wallets`)
+  await env.SMART_NOTE_KV.delete(`users/${userId}/finance/transactions`)
+  await env.SMART_NOTE_KV.delete(`users/${userId}/pin`)
+  await env.SMART_NOTE_KV.delete(`users/${userId}/otp`)
+
+  return jsonResponse({ success: true, message: 'Account deleted successfully' })
 }
 
 // ====== Note Handlers ======
@@ -803,6 +882,17 @@ export default {
       if (!payload) return errorResponse('Invalid token', 401)
 
       const userId = payload.userId
+
+      // User Profile & Account
+      if (path === '/api/auth/profile' && request.method === 'PUT') {
+        return handleUpdateProfile(userId, request, env)
+      }
+      if (path === '/api/auth/otp/send' && request.method === 'POST') {
+        return handleSendOtp(userId, env)
+      }
+      if (path === '/api/auth/account/delete' && request.method === 'POST') {
+        return handleDeleteAccount(userId, request, env)
+      }
 
       // Notes CRUD
       if (path === '/api/notes' && request.method === 'GET') {

@@ -126,7 +126,8 @@ function timeSince(dateStr: string) {
           </div>
           <span class="text-text-tertiary text-sm">Tổng số dư</span>
         </div>
-        <div class="text-2xl font-bold tracking-tight">
+        <div v-if="finance.loading" class="skeleton h-8 w-40 mt-1"></div>
+        <div v-else class="text-2xl font-bold tracking-tight">
           {{ formatVND(finance.totalBalance) }}
         </div>
       </div>
@@ -142,7 +143,8 @@ function timeSince(dateStr: string) {
           </div>
           <span class="text-text-tertiary text-sm">Thu nhập tháng</span>
         </div>
-        <div class="text-success text-2xl font-bold tracking-tight">
+        <div v-if="finance.loading" class="skeleton h-8 w-32 mt-1"></div>
+        <div v-else class="text-success text-2xl font-bold tracking-tight">
           +{{ formatVND(finance.monthIncome) }}
         </div>
       </div>
@@ -158,7 +160,8 @@ function timeSince(dateStr: string) {
           </div>
           <span class="text-text-tertiary text-sm">Chi tiêu tháng</span>
         </div>
-        <div class="text-error text-2xl font-bold tracking-tight">
+        <div v-if="finance.loading" class="skeleton h-8 w-32 mt-1"></div>
+        <div v-else class="text-error text-2xl font-bold tracking-tight">
           -{{ formatVND(finance.monthExpense) }}
         </div>
       </div>
