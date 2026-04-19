@@ -49,6 +49,8 @@ export const WALLET_BRANDS: Record<string, BrandConfig> = {
     let logoValue = bank.logo;
     if (shortNameKey === 'techcombank') {
       logoValue = '/images/wallets/techcombank.svg';
+    } else if (shortNameKey === 'tpbank') {
+      logoValue = '/images/wallets/tpbank.svg';
     }
     
     result += `  '${shortNameKey}': {

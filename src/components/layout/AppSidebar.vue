@@ -60,7 +60,7 @@ async function quickAdd() {
         class="btn-secondary mb-4 w-full whitespace-nowrap"
         :class="{ 'justify-center px-2': !ui.sidebarOpen }"
       >
-        <Plus :size="16" />
+        <Plus :size="ui.sidebarOpen ? 16 : 22" />
         <span v-if="ui.sidebarOpen">Thêm giao dịch</span>
       </button>
 
@@ -84,7 +84,7 @@ async function quickAdd() {
         >
           <component
             :is="item.icon"
-            :size="18"
+            :size="ui.sidebarOpen ? 18 : 22"
           />
           <span v-if="ui.sidebarOpen">{{ item.label }}</span>
         </router-link>

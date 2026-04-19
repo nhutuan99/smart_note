@@ -82,7 +82,7 @@ export const WALLET_BRANDS: Record<string, BrandConfig> = {
     bgColor: '#7b2d8e',
     textColor: '#ffffff',
     fullName: 'Ngân hàng TMCP Tiên Phong',
-    logoUrl: 'https://cdn.vietqr.io/img/TPB.png'
+    logoUrl: '/images/wallets/tpbank.svg'
   },
   'sacombank': {
     abbr: 'STB',
