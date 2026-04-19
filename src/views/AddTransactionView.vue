@@ -8,6 +8,7 @@ import {
   EXPENSE_CATEGORIES,
   INCOME_CATEGORIES
 } from '@/constants/finance'
+import { getWalletBrand } from '@/constants/walletBrands'
 import type { TransactionType } from '@/types'
 import { ArrowLeft, Check, ChevronDown, ArrowUpRight, ArrowDownRight } from 'lucide-vue-next'
 
@@ -183,7 +184,21 @@ async function submit() {
           "
           @click="walletId = w.id"
         >
-          <span class="text-lg">{{ w.icon }}</span>
+          <img
+            v-if="getWalletBrand(w.name)?.logoUrl"
+            :src="getWalletBrand(w.name)!.logoUrl"
+            :alt="w.name"
+            class="h-7 w-7 rounded border border-border-subtle object-contain bg-white p-0.5"
+            loading="lazy"
+          />
+          <div
+            v-else-if="getWalletBrand(w.name)"
+            class="flex h-7 w-7 items-center justify-center rounded text-[10px] font-bold shadow-sm"
+            :style="{ backgroundColor: getWalletBrand(w.name)!.bgColor, color: getWalletBrand(w.name)!.textColor }"
+          >
+            {{ getWalletBrand(w.name)!.abbr }}
+          </div>
+          <span v-else class="text-lg">{{ w.icon }}</span>
           <span class="text-text-secondary w-full truncate text-center text-[0.6875rem]">
             {{ w.name }}
           </span>

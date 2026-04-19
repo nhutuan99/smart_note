@@ -190,7 +190,7 @@ async function saveEdit(id: string, newBalance: string) {
             v-if="getWalletBrand(w.name)?.logoUrl"
             :src="getWalletBrand(w.name)!.logoUrl"
             :alt="w.name"
-            class="h-12 w-12 rounded-xl object-contain"
+            class="h-12 w-12 rounded-xl object-contain bg-white p-1"
             loading="lazy"
           />
           <div
