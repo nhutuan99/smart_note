@@ -2,7 +2,10 @@
 import { ref, onMounted } from 'vue'
 import { useFinanceStore } from '@/stores/finance'
 import { formatVND } from '@/constants/finance'
+import { getWalletBrand } from '@/constants/walletBrands'
+import { httpClient } from '@/shared/api/httpClient'
 import { Plus, Trash2, Edit3, X, Check } from 'lucide-vue-next'
+import PinDialog from '@/components/PinDialog.vue'
 
 const finance = useFinanceStore()
 
@@ -12,37 +15,56 @@ const showAdd = ref(false)
 const editId = ref<string | null>(null)
 const newWallet = ref({ name: '', icon: '💰', color: '#10b981' })
 
-const ICONS = ['🏦', '🏧', '📱', '💙', '💳', '💵', '💰', '🪙', '💎', '🔐']
+// PIN state
+const hasPin = ref(false)
+const showPinDialog = ref(false)
+const pendingDeleteId = ref<string | null>(null)
+
+onMounted(async () => {
+  try {
+    const data = await httpClient.get<{ hasPin: boolean }>('/api/pin')
+    hasPin.value = data?.hasPin || false
+  } catch { /* no pin set */ }
+})
+
 const COLORS = [
-  '#e62e2e',
-  '#7b2d8e',
-  '#d82d8b',
-  '#0068ff',
-  '#1a1f71',
-  '#10b981',
-  '#f59e0b',
-  '#3b82f6',
-  '#8b5cf6',
-  '#ef4444'
+  '#e62e2e', '#7b2d8e', '#d82d8b', '#0068ff', '#1a1f71',
+  '#10b981', '#f59e0b', '#3b82f6', '#8b5cf6', '#ef4444',
+  '#006838', '#1e3765', '#00529b', '#d11f26', '#003c7d'
 ]
 
 async function addWallet() {
   if (!newWallet.value.name.trim()) return
+  // Auto-detect brand color from name
+  const brand = getWalletBrand(newWallet.value.name)
   await finance.addWallet({
     name: newWallet.value.name.trim(),
     balance: 0,
     currency: 'VND',
     icon: newWallet.value.icon,
-    color: newWallet.value.color,
+    color: brand?.bgColor || newWallet.value.color,
     order: finance.wallets.length
   })
   newWallet.value = { name: '', icon: '💰', color: '#10b981' }
   showAdd.value = false
 }
 
-async function deleteWallet(id: string) {
-  if (confirm('Xóa ví này? Các giao dịch liên quan sẽ không bị xóa.')) {
-    await finance.deleteWallet(id)
+function requestDelete(id: string) {
+  if (hasPin.value) {
+    pendingDeleteId.value = id
+    showPinDialog.value = true
+  } else {
+    if (confirm('Xóa ví này? Các giao dịch liên quan sẽ không bị xóa.')) {
+      finance.deleteWallet(id)
+    }
+  }
+}
+
+async function onPinConfirmed() {
+  showPinDialog.value = false
+  if (pendingDeleteId.value) {
+    await finance.deleteWallet(pendingDeleteId.value)
+    pendingDeleteId.value = null
   }
 }
 
@@ -80,29 +102,37 @@ async function saveEdit(id: string, newBalance: string) {
         <div class="flex flex-col gap-4">
           <input
             v-model="newWallet.name"
-            placeholder="Tên ví (VD: Agribank)"
+            placeholder="Tên ví (VD: Vietcombank, MoMo, Tiền mặt...)"
             class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border px-4 py-2.5 text-sm transition-all duration-150 focus:ring-2 focus:outline-none"
           />
-          <div>
-            <span class="text-text-tertiary mb-2 block text-[0.6875rem]">Icon</span>
-            <div class="flex flex-wrap gap-2">
-              <button
-                v-for="icon in ICONS"
-                :key="icon"
-                class="flex h-9 w-9 items-center justify-center rounded-lg border text-lg transition-all duration-150"
-                :class="
-                  newWallet.icon === icon
-                    ? 'border-accent bg-accent-subtle'
-                    : 'border-border-default hover:border-border-strong'
-                "
-                @click="newWallet.icon = icon"
+
+          <!-- Brand preview -->
+          <div v-if="newWallet.name.trim()">
+            <span class="text-text-tertiary mb-2 block text-[0.6875rem]">Preview</span>
+            <div class="flex items-center gap-3">
+              <div
+                v-if="getWalletBrand(newWallet.name)"
+                class="flex h-10 w-10 items-center justify-center rounded-xl text-xs font-bold"
+                :style="{
+                  backgroundColor: getWalletBrand(newWallet.name)!.bgColor,
+                  color: getWalletBrand(newWallet.name)!.textColor
+                }"
               >
-                {{ icon }}
-              </button>
+                {{ getWalletBrand(newWallet.name)!.abbr }}
+              </div>
+              <div
+                v-else
+                class="flex h-10 w-10 items-center justify-center rounded-xl text-lg"
+                :style="{ backgroundColor: newWallet.color + '30' }"
+              >
+                {{ newWallet.icon }}
+              </div>
+              <span class="text-sm font-medium">{{ newWallet.name }}</span>
             </div>
           </div>
+
           <div>
-            <span class="text-text-tertiary mb-2 block text-[0.6875rem]">Màu</span>
+            <span class="text-text-tertiary mb-2 block text-[0.6875rem]">Màu (cho ví tùy chỉnh)</span>
             <div class="flex flex-wrap gap-2">
               <button
                 v-for="color in COLORS"
@@ -140,8 +170,20 @@ async function saveEdit(id: string, newBalance: string) {
         :key="w.id"
         class="bg-bg-surface border-border-default hover:border-border-strong flex items-center gap-4 rounded-xl border p-5 transition-all duration-150"
       >
+        <!-- Brand Badge or Emoji -->
         <div
-          class="flex h-12 w-12 items-center justify-center rounded-xl text-2xl"
+          v-if="getWalletBrand(w.name)"
+          class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-xs font-bold shadow-sm"
+          :style="{
+            backgroundColor: getWalletBrand(w.name)!.bgColor,
+            color: getWalletBrand(w.name)!.textColor
+          }"
+        >
+          {{ getWalletBrand(w.name)!.abbr }}
+        </div>
+        <div
+          v-else
+          class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl"
           :style="{ backgroundColor: w.color + '20' }"
         >
           {{ w.icon }}
@@ -189,7 +231,7 @@ async function saveEdit(id: string, newBalance: string) {
             <Edit3 :size="14" />
           </button>
           <button
-            @click="deleteWallet(w.id)"
+            @click="requestDelete(w.id)"
             class="text-text-disabled hover:text-error hover:bg-bg-hover rounded p-1.5 transition-all duration-150"
             title="Xóa ví"
           >
@@ -211,6 +253,15 @@ async function saveEdit(id: string, newBalance: string) {
         {{ formatVND(finance.totalBalance) }}
       </span>
     </div>
+
+    <!-- PIN Dialog -->
+    <PinDialog
+      :show="showPinDialog"
+      title="Xác nhận xóa ví"
+      message="Nhập mã PIN để xóa ví này"
+      @confirmed="onPinConfirmed"
+      @cancelled="showPinDialog = false; pendingDeleteId = null"
+    />
   </div>
 </template>
 

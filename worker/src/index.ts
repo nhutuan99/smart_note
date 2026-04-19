@@ -42,8 +42,16 @@ interface TransactionData {
   category: string
   note: string
   walletId: string
-  source: 'manual' | 'telegram'
+  source: 'manual' | 'telegram' | 'notification'
   date: string
+  createdAt: string
+}
+
+interface PendingNotification {
+  id: string
+  rawText: string
+  appName: string
+  status: 'pending' | 'resolved'
   createdAt: string
 }
 
@@ -535,6 +543,227 @@ async function handleTelegramWebhook(request: Request, env: Env): Promise<Respon
   })
 }
 
+// ====== Bank Notification Parser ======
+
+interface ParsedTransaction {
+  type: 'income' | 'expense'
+  amount: number
+  walletHint: string
+  note: string
+}
+
+function parseAmount(text: string): number {
+  // Match Vietnamese amount formats: 500,000 or 500.000 or 500000
+  const match = text.match(/([\d.,]+)\s*(?:VND|đ|d|vnd)/i)
+  if (!match) return 0
+  // Remove separators, keep only digits
+  return parseInt(match[1].replace(/[.,]/g, ''), 10) || 0
+}
+
+function parseNotification(appName: string, text: string): ParsedTransaction | null {
+  const lowerApp = appName.toLowerCase()
+  const lowerText = text.toLowerCase()
+
+  // Detect bank from app name or text content
+  let walletHint = ''
+  if (lowerApp.includes('vietcombank') || lowerApp.includes('vcb') || lowerText.includes('vietcombank'))
+    walletHint = 'Vietcombank'
+  else if (lowerApp.includes('techcombank') || lowerApp.includes('tcb') || lowerText.includes('techcombank'))
+    walletHint = 'Techcombank'
+  else if (lowerApp.includes('mbbank') || lowerApp.includes('mb bank') || lowerText.includes('mbbank'))
+    walletHint = 'MBBank'
+  else if (lowerApp.includes('tpbank') || lowerApp.includes('tpb') || lowerText.includes('tpbank'))
+    walletHint = 'TPBank'
+  else if (lowerApp.includes('momo') || lowerText.includes('momo'))
+    walletHint = 'MoMo'
+  else if (lowerApp.includes('zalopay') || lowerApp.includes('zalo pay') || lowerText.includes('zalopay'))
+    walletHint = 'ZaloPay'
+  else if (lowerApp.includes('bidv') || lowerText.includes('bidv'))
+    walletHint = 'BIDV'
+  else if (lowerApp.includes('agribank') || lowerText.includes('agribank'))
+    walletHint = 'Agribank'
+  else if (lowerApp.includes('vietinbank') || lowerText.includes('vietinbank'))
+    walletHint = 'VietinBank'
+  else if (lowerApp.includes('acb') || lowerText.includes('acb'))
+    walletHint = 'ACB'
+
+  // Extract amount
+  const amount = parseAmount(text)
+  if (amount <= 0) return null
+
+  // Determine transaction type
+  let type: 'income' | 'expense' = 'expense'
+
+  // Income indicators
+  const incomeKeywords = ['ghi có', 'ghi co', 'nhận', 'nhan', 'nhận được', '+', 'credited', 'received', 'cộng']
+  // Expense indicators  
+  const expenseKeywords = ['ghi nợ', 'ghi no', 'thanh toán', 'thanh toan', 'trừ', 'tru', '-', 'debited', 'chi', 'chuyển', 'chuyen']
+
+  if (incomeKeywords.some(k => lowerText.includes(k))) type = 'income'
+  if (expenseKeywords.some(k => lowerText.includes(k))) type = 'expense'
+
+  // Check for +/- sign before amount
+  const signMatch = text.match(/([+-])\s*[\d.,]+\s*(?:VND|đ|d)/i)
+  if (signMatch) {
+    type = signMatch[1] === '+' ? 'income' : 'expense'
+  }
+
+  // Extract note/description (ND:, Noi dung:, etc.)
+  let note = ''
+  const ndMatch = text.match(/(?:ND|Noi dung|Ref|nội dung)[:\s]+(.*?)(?:\.|$)/i)
+  if (ndMatch) note = ndMatch[1].trim()
+
+  return { type, amount, walletHint, note }
+}
+
+async function handleNotificationWebhook(request: Request, env: Env): Promise<Response> {
+  const secret = request.headers.get('X-Webhook-Secret')
+  if (secret !== env.TELEGRAM_WEBHOOK_SECRET) {
+    return errorResponse('Unauthorized webhook', 401)
+  }
+
+  const body = (await request.json()) as any
+  const { userId, appName, text, title } = body
+
+  if (!userId || !text) {
+    return errorResponse('Missing required fields: userId, text')
+  }
+
+  const fullText = title ? `${title} ${text}` : text
+  const parsed = parseNotification(appName || '', fullText)
+
+  // If parsing failed, save as pending notification
+  if (!parsed) {
+    const pending = (await getJSON<PendingNotification[]>(
+      env.SMART_NOTE_KV,
+      `users/${userId}/finance/pending`
+    )) || []
+
+    pending.push({
+      id: generateId(),
+      rawText: fullText,
+      appName: appName || 'Unknown',
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    })
+
+    await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/pending`, pending)
+
+    return jsonResponse({
+      success: false,
+      error: 'Không thể detect giao dịch, đã lưu vào pending',
+      data: { rawText: fullText, status: 'pending' }
+    })
+  }
+
+  // Match wallet by hint
+  const wallets = (await getJSON<WalletData[]>(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`)) || []
+  let walletId = wallets[0]?.id || ''
+  if (parsed.walletHint) {
+    const found = wallets.find(w => w.name.toLowerCase().includes(parsed.walletHint.toLowerCase()))
+    if (found) walletId = found.id
+  }
+
+  // Create transaction
+  const txs = (await getJSON<TransactionData[]>(
+    env.SMART_NOTE_KV,
+    `users/${userId}/finance/transactions`
+  )) || []
+
+  const tx: TransactionData = {
+    id: generateId(),
+    type: parsed.type,
+    amount: parsed.amount,
+    category: parsed.type === 'expense' ? 'other_expense' : 'other_income',
+    note: parsed.note || `Auto: ${appName || 'notification'}`,
+    walletId,
+    source: 'notification',
+    date: new Date().toISOString().substring(0, 10),
+    createdAt: new Date().toISOString()
+  }
+
+  txs.push(tx)
+  await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/transactions`, txs)
+
+  const walletIdx = wallets.findIndex(w => w.id === walletId)
+  if (walletIdx !== -1) {
+    wallets[walletIdx].balance += tx.type === 'income' ? tx.amount : -tx.amount
+    await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`, wallets)
+  }
+
+  return jsonResponse({
+    success: true,
+    data: tx,
+    message: `Auto: ${tx.type === 'income' ? '+' : '-'}${tx.amount.toLocaleString('vi-VN')}đ → ${wallets[walletIdx]?.name || 'ví'}`
+  })
+}
+
+// ====== PIN System ======
+
+async function handleSetPin(userId: string, request: Request, env: Env): Promise<Response> {
+  const { pin, currentPin } = (await request.json()) as any
+  if (!pin || pin.length < 4 || pin.length > 6) {
+    return errorResponse('PIN phải từ 4-6 chữ số')
+  }
+  if (!/^\d+$/.test(pin)) {
+    return errorResponse('PIN chỉ được chứa số')
+  }
+
+  const user = await getJSON<UserData>(env.SMART_NOTE_KV, `users/${userId}/profile`)
+  if (!user) return errorResponse('User not found', 404)
+
+  // If PIN already exists, verify current PIN first
+  const existingPin = await getJSON<string>(env.SMART_NOTE_KV, `users/${userId}/pin`)
+  if (existingPin) {
+    if (!currentPin) return errorResponse('Cần nhập PIN hiện tại')
+    const currentHash = await hashPassword(currentPin)
+    if (currentHash !== existingPin) return errorResponse('PIN hiện tại không đúng', 401)
+  }
+
+  const pinHash = await hashPassword(pin)
+  await putJSON(env.SMART_NOTE_KV, `users/${userId}/pin`, pinHash)
+
+  return jsonResponse({ success: true, message: 'PIN đã được thiết lập' })
+}
+
+async function handleVerifyPin(userId: string, request: Request, env: Env): Promise<Response> {
+  const { pin } = (await request.json()) as any
+  if (!pin) return errorResponse('PIN is required')
+
+  const storedHash = await getJSON<string>(env.SMART_NOTE_KV, `users/${userId}/pin`)
+  if (!storedHash) return errorResponse('Chưa thiết lập PIN', 404)
+
+  const inputHash = await hashPassword(pin)
+  if (inputHash !== storedHash) return errorResponse('PIN không đúng', 401)
+
+  return jsonResponse({ success: true, message: 'PIN verified' })
+}
+
+async function handleCheckPin(userId: string, env: Env): Promise<Response> {
+  const storedHash = await getJSON<string>(env.SMART_NOTE_KV, `users/${userId}/pin`)
+  return jsonResponse({ success: true, data: { hasPin: !!storedHash } })
+}
+
+async function handleListPending(userId: string, env: Env): Promise<Response> {
+  const pending = (await getJSON<PendingNotification[]>(
+    env.SMART_NOTE_KV,
+    `users/${userId}/finance/pending`
+  )) || []
+  return jsonResponse({ success: true, data: pending.filter(p => p.status === 'pending') })
+}
+
+async function handleResolvePending(userId: string, pendingId: string, env: Env): Promise<Response> {
+  const pending = (await getJSON<PendingNotification[]>(
+    env.SMART_NOTE_KV,
+    `users/${userId}/finance/pending`
+  )) || []
+  const idx = pending.findIndex(p => p.id === pendingId)
+  if (idx === -1) return errorResponse('Pending notification not found', 404)
+  pending[idx].status = 'resolved'
+  await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/pending`, pending)
+  return jsonResponse({ success: true })
+}
+
 // ====== Main Router ======
 
 export default {
@@ -555,9 +784,12 @@ export default {
         return handleLogin(request, env)
       }
 
-      // Telegram webhook (uses webhook secret, not JWT)
+      // Webhooks (use webhook secret, not JWT)
       if (path === '/api/webhook/telegram' && request.method === 'POST') {
         return handleTelegramWebhook(request, env)
+      }
+      if (path === '/api/webhook/notification' && request.method === 'POST') {
+        return handleNotificationWebhook(request, env)
       }
 
       // Protected routes - verify JWT
@@ -614,6 +846,26 @@ export default {
       const txMatch = path.match(/^\/api\/transactions\/(.+)$/)
       if (txMatch && request.method === 'DELETE') {
         return handleDeleteTransaction(userId, txMatch[1], env)
+      }
+
+      // PIN
+      if (path === '/api/pin' && request.method === 'GET') {
+        return handleCheckPin(userId, env)
+      }
+      if (path === '/api/pin' && request.method === 'POST') {
+        return handleSetPin(userId, request, env)
+      }
+      if (path === '/api/pin/verify' && request.method === 'POST') {
+        return handleVerifyPin(userId, request, env)
+      }
+
+      // Pending notifications
+      if (path === '/api/pending' && request.method === 'GET') {
+        return handleListPending(userId, env)
+      }
+      const pendingMatch = path.match(/^\/api\/pending\/(.+)\/resolve$/)
+      if (pendingMatch && request.method === 'POST') {
+        return handleResolvePending(userId, pendingMatch[1], env)
       }
 
       return errorResponse('Not found', 404)

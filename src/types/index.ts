@@ -54,7 +54,7 @@ export interface Transaction {
   category: string
   note: string
   walletId: string
-  source: 'manual' | 'telegram'
+  source: 'manual' | 'telegram' | 'notification'
   date: string
   createdAt: string
 }
