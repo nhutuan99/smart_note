@@ -88,6 +88,23 @@ body {
 }
 
 /* ============================================
+   Autofill Override (dark theme)
+   ============================================ */
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px var(--color-bg-elevated) inset !important;
+  box-shadow: 0 0 0 1000px var(--color-bg-elevated) inset !important;
+  -webkit-text-fill-color: var(--color-text-primary) !important;
+  caret-color: var(--color-text-primary);
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* ============================================
    Animations
    ============================================ */
 
