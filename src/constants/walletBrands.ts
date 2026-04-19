@@ -154,13 +154,6 @@ export const WALLET_BRANDS: Record<string, BrandConfig> = {
     fullName: 'TMCP Việt Nam Thịnh Vượng - Ngân hàng số Ubank by VPBank',
     logoUrl: 'https://cdn.vietqr.io/img/UBANK.png'
   },
-  'viettelmoney': {
-    abbr: 'VTLMONEY',
-    bgColor: '#ffffff',
-    textColor: '#000000',
-    fullName: 'Tổng Công ty Dịch vụ số Viettel - Chi nhánh tập đoàn công nghiệp viễn thông Quân Đội',
-    logoUrl: 'https://cdn.vietqr.io/img/VIETTELMONEY.png'
-  },
   'timo': {
     abbr: 'TIMO',
     bgColor: '#ffffff',
@@ -188,13 +181,6 @@ export const WALLET_BRANDS: Record<string, BrandConfig> = {
     textColor: '#000000',
     fullName: 'Ngân hàng TMCP Bắc Á',
     logoUrl: 'https://cdn.vietqr.io/img/BAB.png'
-  },
-  'momo': {
-    abbr: 'momo',
-    bgColor: '#ffffff',
-    textColor: '#000000',
-    fullName: 'CTCP Dịch Vụ Di Động Trực Tuyến',
-    logoUrl: 'https://cdn.vietqr.io/img/momo.png'
   },
   'pvcombank pay': {
     abbr: 'PVDB',

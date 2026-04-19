@@ -41,6 +41,9 @@ export const WALLET_BRANDS: Record<string, BrandConfig> = {
   banks.forEach(bank => {
     // lowercase key
     const shortNameKey = (bank.shortName || bank.short_name || bank.code).toLowerCase()
+    // Skip MoMo to avoid conflict with E-Wallets section
+    if (shortNameKey.includes('momo') || shortNameKey.includes('vnpay') || shortNameKey.includes('zalo') || shortNameKey.includes('viettel') || shortNameKey.includes('shopee')) return;
+    
     const color = customColors[shortNameKey] || { bg: '#ffffff', text: '#000000' }
     
     let logoValue = bank.logo;
