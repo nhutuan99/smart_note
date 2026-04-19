@@ -132,12 +132,13 @@ useEventListener(document, 'click', handleClickOutside)
         >
           <span v-if="selectedWallet" class="flex items-center gap-1.5">
             <template v-if="getWalletBrand(selectedWallet.name)">
-              <img
-                v-if="getWalletBrand(selectedWallet.name)?.logoUrl"
-                :src="getWalletBrand(selectedWallet.name)!.logoUrl"
-                class="h-4 w-4 rounded-[3px] object-contain bg-white p-[1px]"
-              />
-              <span v-else class="flex h-4 w-4 items-center justify-center rounded-[3px] text-[8px] font-bold"
+              <div v-if="getWalletBrand(selectedWallet.name)?.logoUrl" class="flex h-4 w-4 shrink-0 overflow-hidden rounded-[3px] bg-white border border-border-default/50 p-0.5">
+                <img
+                  :src="getWalletBrand(selectedWallet.name)!.logoUrl"
+                  class="h-full w-full object-contain object-center"
+                />
+              </div>
+              <span v-else class="flex h-4 w-4 shrink-0 items-center justify-center rounded-[3px] text-[8px] font-bold"
                 :style="{ backgroundColor: getWalletBrand(selectedWallet.name)!.bgColor, color: getWalletBrand(selectedWallet.name)!.textColor }"
               >
                 {{ getWalletBrand(selectedWallet.name)!.abbr }}
@@ -194,12 +195,13 @@ useEventListener(document, 'click', handleClickOutside)
               class="hover:bg-bg-hover flex w-full items-center gap-2.5 px-3 py-2.5 text-sm transition-colors duration-100"
               :class="finance.filter.walletId === w.id ? 'bg-accent-subtle' : ''"
             >
-              <span v-if="getWalletBrand(w.name)" class="flex h-7 w-7 items-center justify-center rounded-lg text-sm bg-bg-elevated overflow-hidden">
-                <img
-                  v-if="getWalletBrand(w.name)?.logoUrl"
-                  :src="getWalletBrand(w.name)!.logoUrl"
-                  class="h-full w-full object-contain bg-white p-0.5 border border-border-default rounded-lg"
-                />
+              <span v-if="getWalletBrand(w.name)" class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-sm bg-bg-elevated overflow-hidden border border-border-default">
+                <div v-if="getWalletBrand(w.name)?.logoUrl" class="flex h-full w-full bg-white p-1">
+                  <img
+                    :src="getWalletBrand(w.name)!.logoUrl"
+                    class="h-full w-full object-contain object-center"
+                  />
+                </div>
                 <span v-else class="flex h-full w-full items-center justify-center font-bold text-[10px]"
                   :style="{ backgroundColor: getWalletBrand(w.name)!.bgColor, color: getWalletBrand(w.name)!.textColor }"
                 >

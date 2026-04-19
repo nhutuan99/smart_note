@@ -184,16 +184,17 @@ async function submit() {
           "
           @click="walletId = w.id"
         >
-          <img
-            v-if="getWalletBrand(w.name)?.logoUrl"
-            :src="getWalletBrand(w.name)!.logoUrl"
-            :alt="w.name"
-            class="h-7 w-7 rounded border border-border-subtle object-contain bg-white p-0.5"
-            loading="lazy"
-          />
+          <div v-if="getWalletBrand(w.name)?.logoUrl" class="flex h-7 w-7 shrink-0 overflow-hidden rounded-[4px] bg-white border border-border-default shadow-sm p-1">
+            <img
+              :src="getWalletBrand(w.name)!.logoUrl"
+              :alt="w.name"
+              class="h-full w-full object-contain object-center"
+              loading="lazy"
+            />
+          </div>
           <div
             v-else-if="getWalletBrand(w.name)"
-            class="flex h-7 w-7 items-center justify-center rounded text-[10px] font-bold shadow-sm"
+            class="flex h-7 w-7 shrink-0 items-center justify-center rounded-[4px] text-[10px] font-bold shadow-sm"
             :style="{ backgroundColor: getWalletBrand(w.name)!.bgColor, color: getWalletBrand(w.name)!.textColor }"
           >
             {{ getWalletBrand(w.name)!.abbr }}

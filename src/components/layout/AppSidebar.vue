@@ -106,12 +106,13 @@ async function quickAdd() {
         >
           <span class="text-text-secondary flex items-center gap-2">
             <template v-if="getWalletBrand(w.name)">
-              <img
-                v-if="getWalletBrand(w.name)?.logoUrl"
-                :src="getWalletBrand(w.name)!.logoUrl"
-                class="h-4 w-4 rounded-[3px] object-contain bg-white p-[1px]"
-              />
-              <span v-else class="flex h-4 w-4 items-center justify-center rounded-[3px] text-[8px] font-bold"
+              <div v-if="getWalletBrand(w.name)?.logoUrl" class="flex h-4 w-4 shrink-0 overflow-hidden rounded-[3px] bg-white border border-border-default/50 p-[2px]">
+                <img
+                  :src="getWalletBrand(w.name)!.logoUrl"
+                  class="h-full w-full object-contain object-center"
+                />
+              </div>
+              <span v-else class="flex h-4 w-4 shrink-0 items-center justify-center rounded-[3px] text-[8px] font-bold"
                 :style="{ backgroundColor: getWalletBrand(w.name)!.bgColor, color: getWalletBrand(w.name)!.textColor }"
               >
                 {{ getWalletBrand(w.name)!.abbr }}

@@ -186,13 +186,14 @@ async function saveEdit(id: string, newBalance: string) {
       >
         <!-- Brand Logo -->
         <div class="flex h-12 w-12 shrink-0 items-center justify-center">
-          <img
-            v-if="getWalletBrand(w.name)?.logoUrl"
-            :src="getWalletBrand(w.name)!.logoUrl"
-            :alt="w.name"
-            class="h-12 w-12 rounded-xl object-contain bg-white p-1"
-            loading="lazy"
-          />
+          <div v-if="getWalletBrand(w.name)?.logoUrl" class="flex h-12 w-12 overflow-hidden rounded-xl bg-white border border-border-default shadow-sm p-1.5">
+            <img
+              :src="getWalletBrand(w.name)!.logoUrl"
+              :alt="w.name"
+              class="h-full w-full object-contain object-center"
+              loading="lazy"
+            />
+          </div>
           <div
             v-else-if="getWalletBrand(w.name)"
             class="flex h-12 w-12 items-center justify-center rounded-xl text-sm font-bold shadow-sm"

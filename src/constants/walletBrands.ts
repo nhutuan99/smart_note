@@ -473,48 +473,48 @@ export const WALLET_BRANDS: Record<string, BrandConfig> = {
 
   // ── E-Wallets ──
   zalopay: {
-    abbr: 'Z',
-    bgColor: '#0068ff',
-    textColor: '#ffffff',
+    abbr: 'Zalo',
+    bgColor: '#ffffff',
+    textColor: '#0068ff',
     fullName: 'ZaloPay',
-    logoUrl: 'https://img.logo.dev/zalopay.vn?token=pk_a8zHRmHcTi-Fv0L0E8QNRQ&size=80&format=png'
+    logoUrl: '/images/wallets/zalopay.png'
   },
   vnpay: {
     abbr: 'VN',
     bgColor: '#003087',
     textColor: '#ffffff',
     fullName: 'VNPay',
-    logoUrl: 'https://img.logo.dev/vnpay.vn?token=pk_a8zHRmHcTi-Fv0L0E8QNRQ&size=80&format=png'
+    logoUrl: '/images/wallets/vnpay.png'
   },
   shopee: {
     abbr: 'S',
     bgColor: '#ee4d2d',
     textColor: '#ffffff',
     fullName: 'ShopeePay',
-    logoUrl: 'https://img.logo.dev/shopee.vn?token=pk_a8zHRmHcTi-Fv0L0E8QNRQ&size=80&format=png'
+    logoUrl: '/images/wallets/shopeepay.png'
   },
   viettelpay: {
     abbr: 'VT',
     bgColor: '#ee0033',
     textColor: '#ffffff',
     fullName: 'ViettelPay',
-    logoUrl: 'https://img.logo.dev/viettel.com.vn?token=pk_a8zHRmHcTi-Fv0L0E8QNRQ&size=80&format=png'
+    logoUrl: '/images/wallets/viettelpay.png'
   },
 
   // ── International ──
   visa: {
     abbr: 'V',
     bgColor: '#1a1f71',
-    textColor: '#f7b600',
+    textColor: '#ffffff',
     fullName: 'Visa',
-    logoUrl: 'https://img.logo.dev/visa.com?token=pk_a8zHRmHcTi-Fv0L0E8QNRQ&size=80&format=png'
+    logoUrl: '/images/wallets/visa.png'
   },
   mastercard: {
     abbr: 'MC',
     bgColor: '#eb001b',
     textColor: '#ffffff',
     fullName: 'Mastercard',
-    logoUrl: 'https://img.logo.dev/mastercard.com?token=pk_a8zHRmHcTi-Fv0L0E8QNRQ&size=80&format=png'
+    logoUrl: '/images/wallets/mastercard.png'
   },
 
   // ── Cash ──
