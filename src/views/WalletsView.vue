@@ -165,7 +165,21 @@ async function saveEdit(id: string, newBalance: string) {
 
     <!-- Wallet List -->
     <div class="space-y-3">
-      <div
+      <!-- Loading Skeletons -->
+      <template v-if="finance.loading">
+        <div v-for="i in 3" :key="'skel-' + i" class="bg-bg-surface border-border-default flex items-center gap-4 rounded-xl border p-5">
+          <div class="skeleton h-12 w-12 rounded-xl"></div>
+          <div class="flex-1 space-y-2">
+            <div class="skeleton h-4 w-32"></div>
+            <div class="skeleton h-3 w-16"></div>
+          </div>
+          <div class="skeleton h-6 w-24"></div>
+        </div>
+      </template>
+
+      <!-- Actual List -->
+      <template v-else>
+        <div
         v-for="w in finance.wallets"
         :key="w.id"
         class="bg-bg-surface border-border-default hover:border-border-strong flex items-center gap-4 rounded-xl border p-5 transition-all duration-150"
@@ -245,6 +259,7 @@ async function saveEdit(id: string, newBalance: string) {
           </button>
         </div>
       </div>
+      </template>
     </div>
 
     <!-- Total -->

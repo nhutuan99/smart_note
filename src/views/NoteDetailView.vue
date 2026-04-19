@@ -21,9 +21,11 @@ const lastSaved = ref('')
 const hasChanges = ref(false)
 const showTagInput = ref(false)
 let saveTimeout: ReturnType<typeof setTimeout> | null = null
+const loadingNote = ref(true)
 const noteId = computed(() => route.params.id as string)
 
 onMounted(async () => {
+  loadingNote.value = true
   const note = await notesStore.fetchNote(noteId.value)
   if (note) {
     title.value = note.title
@@ -35,6 +37,7 @@ onMounted(async () => {
     ui.showToast('error', 'Note not found')
     router.push('/notes')
   }
+  loadingNote.value = false
 })
 
 // Auto-cleanup keyboard shortcut listener via composable
@@ -202,20 +205,29 @@ function handleKeydown(e: KeyboardEvent) {
       </div>
     </div>
 
-    <!-- Title -->
-    <input
-      id="note-title-input"
-      v-model="title"
-      placeholder="Untitled"
-      class="text-text-primary placeholder:text-text-disabled mb-2 w-full border-none bg-transparent py-2 text-[1.875rem] leading-tight font-bold tracking-tight focus:outline-none"
-    />
+    <template v-if="loadingNote">
+      <div class="skeleton mb-4 h-[2.5rem] w-3/4"></div>
+      <div class="skeleton mb-2 h-4 w-full"></div>
+      <div class="skeleton mb-2 h-4 w-full"></div>
+      <div class="skeleton mb-2 h-4 w-4/5"></div>
+      <div class="skeleton mb-2 h-4 w-5/6"></div>
+    </template>
+    <template v-else>
+      <!-- Title -->
+      <input
+        id="note-title-input"
+        v-model="title"
+        placeholder="Untitled"
+        class="text-text-primary placeholder:text-text-disabled mb-2 w-full border-none bg-transparent py-2 text-[1.875rem] leading-tight font-bold tracking-tight focus:outline-none"
+      />
 
-    <!-- Content -->
-    <textarea
-      id="note-content-input"
-      v-model="content"
-      placeholder="Start writing... (Markdown supported)"
-      class="text-text-secondary placeholder:text-text-disabled min-h-[31.25rem] flex-1 resize-none border-none bg-transparent py-2 font-sans text-sm leading-[1.8] focus:outline-none"
-    />
+      <!-- Content -->
+      <textarea
+        id="note-content-input"
+        v-model="content"
+        placeholder="Start writing... (Markdown supported)"
+        class="text-text-secondary placeholder:text-text-disabled min-h-[31.25rem] flex-1 resize-none border-none bg-transparent py-2 font-sans text-sm leading-[1.8] focus:outline-none"
+      />
+    </template>
   </div>
 </template>

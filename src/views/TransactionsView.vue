@@ -199,11 +199,30 @@ useEventListener(document, 'click', handleClickOutside)
       </div>
     </div>
 
-    <!-- Transaction Groups -->
-    <div
-      v-if="groupedTransactions.length"
-      class="space-y-4"
-    >
+    <!-- Transaction Groups / Loading -->
+    <template v-if="finance.loading">
+      <div class="space-y-4">
+        <div v-for="i in 2" :key="'grp-' + i">
+          <div class="mb-2 flex items-center justify-between px-1">
+            <div class="skeleton h-4 w-24"></div>
+            <div class="skeleton h-4 w-16"></div>
+          </div>
+          <div class="bg-bg-surface border-border-default divide-border-subtle divide-y overflow-hidden rounded-xl border">
+            <div v-for="j in 3" :key="'item-' + j" class="flex items-center gap-3 px-4 py-3">
+              <div class="skeleton h-10 w-10 rounded-xl"></div>
+              <div class="flex-1 space-y-2">
+                <div class="skeleton h-4 w-3/4"></div>
+                <div class="skeleton h-3 w-1/2"></div>
+              </div>
+              <div class="skeleton h-5 w-16"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <template v-else-if="groupedTransactions.length">
+      <div class="space-y-4">
       <div
         v-for="[date, txs] in groupedTransactions"
         :key="date"
@@ -280,27 +299,29 @@ useEventListener(document, 'click', handleClickOutside)
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </template>
 
     <!-- Empty -->
-    <div
-      v-else
-      class="flex flex-col items-center py-16 text-center"
-    >
-      <Calendar
-        :size="48"
-        class="text-text-disabled mb-4"
-      />
-      <h3 class="mb-2 text-lg font-semibold">Chưa có giao dịch</h3>
-      <p class="text-text-tertiary mb-6 text-sm">Thêm giao dịch thủ công hoặc chat qua Telegram</p>
-      <button
-        @click="router.push('/transactions/add')"
-        class="btn-secondary"
+    <template v-else>
+      <div
+        class="flex flex-col items-center py-16 text-center"
       >
-        <Plus :size="16" />
-        Thêm giao dịch
-      </button>
-    </div>
+        <Calendar
+          :size="48"
+          class="text-text-disabled mb-4"
+        />
+        <h3 class="mb-2 text-lg font-semibold">Chưa có giao dịch</h3>
+        <p class="text-text-tertiary mb-6 text-sm">Thêm giao dịch thủ công hoặc chat qua Telegram</p>
+        <button
+          @click="router.push('/transactions/add')"
+          class="btn-secondary"
+        >
+          <Plus :size="16" />
+          Thêm giao dịch
+        </button>
+      </div>
+    </template>
   </div>
 </template>
 
