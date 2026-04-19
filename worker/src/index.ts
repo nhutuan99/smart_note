@@ -15,6 +15,7 @@ interface Env {
   SMART_NOTE_KV: KVNamespace
   JWT_SECRET: string
   TELEGRAM_WEBHOOK_SECRET: string
+  RESEND_API_KEY?: string
 }
 
 interface UserData {
@@ -283,12 +284,44 @@ async function handleSendOtp(userId: string, env: Env): Promise<Response> {
   // Store OTP in KV with an expiration time of 5 minutes (300 seconds)
   await env.SMART_NOTE_KV.put(`users/${userId}/otp`, otp, { expirationTtl: 300 })
 
-  // Note: In a real app, integrate Resend, Mailgun, or SendGrid here
-  console.log(`[MOCK EMAIL] To: ${user.email} -> Your OTP for account deletion is: ${otp}`)
+  // Send via Resend if API key is configured
+  if (env.RESEND_API_KEY) {
+    try {
+      await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${env.RESEND_API_KEY}`
+        },
+        body: JSON.stringify({
+          from: 'Smart Note <onboarding@resend.dev>',
+          to: user.email,
+          subject: 'Xác thực xóa tài khoản - Smart Note',
+          html: `
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2>Yêu cầu xóa tài khoản</h2>
+              <p>Chào ${user.name},</p>
+              <p>Chúng tôi nhận được yêu cầu xóa toàn bộ dữ liệu tài khoản Smart Note của bạn.</p>
+              <p>Mã OTP của bạn là: <strong style="font-size: 24px; color: #10b981; letter-spacing: 2px;">${otp}</strong></p>
+              <p><em>Mã có hiệu lực trong vòng 5 phút. Vui lòng không chia sẻ mã này cho bất kỳ ai.</em></p>
+            </div>
+          `
+        })
+      })
+      console.log(`[EMAIL SENT] OTP sent to ${user.email} via Resend.`)
+    } catch (e) {
+      console.error('Failed to send email:', e)
+    }
+  } else {
+    // Fallback to console log if no key provided
+    console.log(`[MOCK EMAIL] To: ${user.email} -> Your OTP for account deletion is: ${otp}`)
+  }
 
   return jsonResponse({ 
     success: true, 
-    message: 'OTP sent to email successfully. (Dev note: Check worker console for the OTP or use standard dev OTP if configured)'
+    message: env.RESEND_API_KEY 
+      ? `Mã OTP đã được gửi về email ${user.email}.` 
+      : 'Đã gửi mã OTP. (Môi trường Dev: hãy kiểm tra Console để lấy mã OTP)'
   })
 }
 

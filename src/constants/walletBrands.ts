@@ -500,7 +500,7 @@ export const WALLET_BRANDS: Record<string, BrandConfig> = {
     bgColor: '#1a1f71',
     textColor: '#ffffff',
     fullName: 'Visa',
-    logoUrl: '/images/wallets/visa.png'
+    logoUrl: '/images/wallets/visa.svg'
   },
   mastercard: {
     abbr: 'MC',
