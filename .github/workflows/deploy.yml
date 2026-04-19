@@ -1,12 +1,9 @@
 name: Deploy to S3 + CloudFront
 
 on:
-  push:
-    branches: [main]
-    paths-ignore:
-      - 'worker/**'
-      - '*.md'
-      - '.vscode/**'
+  # Manual trigger only - use AWS Amplify for automatic deployments
+  # To use this workflow: set up GitHub Secrets (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, S3_BUCKET, CLOUDFRONT_DISTRIBUTION_ID)
+  workflow_dispatch:
 
 jobs:
   deploy:
