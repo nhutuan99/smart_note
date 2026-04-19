@@ -106,6 +106,21 @@ async function saveEdit(id: string, newBalance: string) {
             class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border px-4 py-2.5 text-sm transition-all duration-150 focus:ring-2 focus:outline-none"
           />
 
+          <div class="mb-2">
+            <span class="text-text-tertiary mb-2 block text-[0.6875rem]">Ngân hàng & Ví phổ biến</span>
+            <div class="flex flex-wrap items-center gap-2">
+              <button
+                v-for="brand in ['MoMo', 'ZaloPay', 'Techcombank', 'TPBank', 'Vietcombank', 'MBBank', 'Visa', 'Tiền mặt']"
+                :key="brand"
+                @click="newWallet.name = brand"
+                class="border-border-default hover:border-accent hover:text-accent bg-bg-surface text-text-secondary rounded-lg border px-3 py-1.5 text-xs font-medium transition-all duration-150"
+                :class="newWallet.name === brand ? 'border-accent bg-accent/10 text-accent' : ''"
+              >
+                {{ brand }}
+              </button>
+            </div>
+          </div>
+
           <!-- Brand preview -->
           <div v-if="newWallet.name.trim()">
             <span class="text-text-tertiary mb-2 block text-[0.6875rem]">Preview</span>
