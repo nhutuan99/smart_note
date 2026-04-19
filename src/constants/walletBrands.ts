@@ -61,7 +61,7 @@ export const WALLET_BRANDS: Record<string, BrandConfig> = {
     bgColor: '#e62e2e',
     textColor: '#ffffff',
     fullName: 'Ngân hàng TMCP Kỹ thương Việt Nam',
-    logoUrl: 'https://cdn.vietqr.io/img/TCB.png'
+    logoUrl: '/images/wallets/techcombank.svg'
   },
   'acb': {
     abbr: 'ACB',
@@ -190,11 +190,11 @@ export const WALLET_BRANDS: Record<string, BrandConfig> = {
     logoUrl: 'https://cdn.vietqr.io/img/BAB.png'
   },
   'momo': {
-    abbr: 'MoMo',
+    abbr: 'momo',
     bgColor: '#ffffff',
-    textColor: '#d82d8b',
-    fullName: 'MoMo',
-    logoUrl: '/images/wallets/momo.png'
+    textColor: '#000000',
+    fullName: 'CTCP Dịch Vụ Di Động Trực Tuyến',
+    logoUrl: 'https://cdn.vietqr.io/img/momo.png'
   },
   'pvcombank pay': {
     abbr: 'PVDB',
@@ -472,6 +472,13 @@ export const WALLET_BRANDS: Record<string, BrandConfig> = {
 
 
   // ── E-Wallets ──
+  momo: {
+    abbr: 'MoMo',
+    bgColor: '#ffffff',
+    textColor: '#d82d8b',
+    fullName: 'MoMo',
+    logoUrl: '/images/wallets/momo.png'
+  },
   zalopay: {
     abbr: 'Zalo',
     bgColor: '#ffffff',

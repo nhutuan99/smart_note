@@ -43,12 +43,17 @@ export const WALLET_BRANDS: Record<string, BrandConfig> = {
     const shortNameKey = (bank.shortName || bank.short_name || bank.code).toLowerCase()
     const color = customColors[shortNameKey] || { bg: '#ffffff', text: '#000000' }
     
+    let logoValue = bank.logo;
+    if (shortNameKey === 'techcombank') {
+      logoValue = '/images/wallets/techcombank.svg';
+    }
+    
     result += `  '${shortNameKey}': {
     abbr: '${bank.code}',
     bgColor: '${color.bg}',
     textColor: '${color.text}',
     fullName: '${bank.name}',
-    logoUrl: '${bank.logo}'
+    logoUrl: '${logoValue}'
   },\n`
   })
 
@@ -57,55 +62,55 @@ export const WALLET_BRANDS: Record<string, BrandConfig> = {
 
   // ── E-Wallets ──
   momo: {
-    abbr: 'M',
-    bgColor: '#d82d8b',
-    textColor: '#ffffff',
+    abbr: 'MoMo',
+    bgColor: '#ffffff',
+    textColor: '#d82d8b',
     fullName: 'MoMo',
-    logoUrl: 'https://img.logo.dev/momo.vn?token=pk_a8zHRmHcTi-Fv0L0E8QNRQ&size=80&format=png'
+    logoUrl: '/images/wallets/momo.png'
   },
   zalopay: {
-    abbr: 'Z',
-    bgColor: '#0068ff',
-    textColor: '#ffffff',
+    abbr: 'Zalo',
+    bgColor: '#ffffff',
+    textColor: '#0068ff',
     fullName: 'ZaloPay',
-    logoUrl: 'https://img.logo.dev/zalopay.vn?token=pk_a8zHRmHcTi-Fv0L0E8QNRQ&size=80&format=png'
+    logoUrl: '/images/wallets/zalopay.png'
   },
   vnpay: {
     abbr: 'VN',
     bgColor: '#003087',
     textColor: '#ffffff',
     fullName: 'VNPay',
-    logoUrl: 'https://img.logo.dev/vnpay.vn?token=pk_a8zHRmHcTi-Fv0L0E8QNRQ&size=80&format=png'
+    logoUrl: '/images/wallets/vnpay.png'
   },
   shopee: {
     abbr: 'S',
     bgColor: '#ee4d2d',
     textColor: '#ffffff',
     fullName: 'ShopeePay',
-    logoUrl: 'https://img.logo.dev/shopee.vn?token=pk_a8zHRmHcTi-Fv0L0E8QNRQ&size=80&format=png'
+    logoUrl: '/images/wallets/shopeepay.png'
   },
   viettelpay: {
     abbr: 'VT',
     bgColor: '#ee0033',
     textColor: '#ffffff',
     fullName: 'ViettelPay',
-    logoUrl: 'https://img.logo.dev/viettel.com.vn?token=pk_a8zHRmHcTi-Fv0L0E8QNRQ&size=80&format=png'
+    logoUrl: '/images/wallets/viettelpay.png'
   },
 
   // ── International ──
   visa: {
     abbr: 'V',
     bgColor: '#1a1f71',
-    textColor: '#f7b600',
+    textColor: '#ffffff',
     fullName: 'Visa',
-    logoUrl: 'https://img.logo.dev/visa.com?token=pk_a8zHRmHcTi-Fv0L0E8QNRQ&size=80&format=png'
+    logoUrl: '/images/wallets/visa.png'
   },
   mastercard: {
     abbr: 'MC',
     bgColor: '#eb001b',
     textColor: '#ffffff',
     fullName: 'Mastercard',
-    logoUrl: 'https://img.logo.dev/mastercard.com?token=pk_a8zHRmHcTi-Fv0L0E8QNRQ&size=80&format=png'
+    logoUrl: '/images/wallets/mastercard.png'
   },
 
   // ── Cash ──
