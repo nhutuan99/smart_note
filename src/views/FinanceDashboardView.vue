@@ -80,17 +80,8 @@ function timeSince(dateStr: string) {
   <div class="max-w-[75rem]">
     <!-- Hero -->
     <div
-      class="relative mb-6 flex flex-col gap-4 overflow-hidden rounded-2xl p-5 md:flex-row md:items-start md:justify-between md:p-8"
-      style="background: linear-gradient(135deg, rgba(20, 184, 166, 0.08) 0%, rgba(10, 16, 24, 0.95) 50%, rgba(13, 148, 136, 0.05) 100%); border: 1px solid rgba(20, 184, 166, 0.15);"
+      class="card-premium relative mb-6 flex flex-col gap-4 overflow-hidden p-5 md:flex-row md:items-start md:justify-between md:p-8"
     >
-      <div
-        class="pointer-events-none absolute top-0 right-0 h-[20rem] w-[20rem] translate-x-[20%] -translate-y-[20%] rounded-full"
-        style="background: radial-gradient(circle, rgba(20, 184, 166, 0.15) 0%, transparent 70%);"
-      ></div>
-      <div
-        class="pointer-events-none absolute bottom-0 left-0 h-[12rem] w-[12rem] -translate-x-[30%] translate-y-[30%] rounded-full"
-        style="background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%);"
-      ></div>
       <div class="relative z-10">
         <div class="mb-2 flex items-center gap-2">
           <Sparkles

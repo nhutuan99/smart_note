@@ -49,12 +49,6 @@ async function handleSubmit() {
     <!-- Background effects -->
     <div class="pointer-events-none absolute inset-0">
       <div
-        class="bg-accent absolute -top-[12.5rem] -right-[6.25rem] h-[37.5rem] w-[37.5rem] animate-[float_8s_ease-in-out_infinite] rounded-full opacity-15 blur-[7.5rem]"
-      ></div>
-      <div
-        class="bg-info absolute -bottom-[9.375rem] -left-[6.25rem] h-[25rem] w-[25rem] animate-[float_10s_ease-in-out_infinite_reverse] rounded-full opacity-15 blur-[7.5rem]"
-      ></div>
-      <div
         class="absolute inset-0"
         style="
           background-image:

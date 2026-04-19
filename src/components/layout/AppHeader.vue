@@ -29,13 +29,15 @@ function handleLogout() {
       </button>
       <router-link
         to="/"
-        class="text-text-primary flex items-center gap-2 text-base font-semibold tracking-tight no-underline"
+        class="text-text-primary group flex items-center gap-2.5 text-base font-bold tracking-tight no-underline"
       >
-        <Sparkles
-          :size="20"
-          class="text-accent"
-        />
-        <span class="hidden md:inline">SmartNote</span>
+        <div class="bg-bg-elevated flex h-[1.875rem] w-[1.875rem] items-center justify-center rounded-[0.4rem] shadow-sm transition-all duration-150 group-hover:scale-105 group-hover:shadow-md border border-border-default">
+          <Sparkles
+            :size="16"
+            class="text-accent"
+          />
+        </div>
+        <span class="hidden md:inline group-hover:text-accent transition-colors duration-150">SmartNote</span>
       </router-link>
     </div>
 
