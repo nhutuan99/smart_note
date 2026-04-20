@@ -1021,8 +1021,24 @@ function parseSmsTransaction(text: string) {
 
 async function handleSmsWebhook(request: Request, env: Env): Promise<Response> {
   const contentType = request.headers.get('content-type') || ''
-  let text = ''
+  
+  const url = new URL(request.url)
+  const debugUserId = url.searchParams.get('userId')
+  const cloned = request.clone()
+  
+  let rawTextDump = ''
+  try {
+    rawTextDump = await cloned.text()
+    if (debugUserId) {
+      await putJSON(env.SMART_NOTE_KV, `users/${debugUserId}/finance/latest_request`, {
+        contentType,
+        rawDump: rawTextDump,
+        time: new Date().toISOString()
+      })
+    }
+  } catch (e) {}
 
+  let text = ''
   try {
     if (contentType.includes('application/json')) {
       const body = await request.json() as any
