@@ -1079,7 +1079,6 @@ async function handleSmsWebhook(request: Request, env: Env): Promise<Response> {
     }
   }
 
-  const url = new URL(request.url)
   const userId = url.searchParams.get('userId')
   if (!userId) return errorResponse('Missing userId query param')
 
