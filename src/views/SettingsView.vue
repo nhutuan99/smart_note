@@ -210,11 +210,19 @@ async function savePin() {
             <div class="flex items-center gap-2">
               <Camera :size="16" class="text-text-tertiary" />
               <input
-                v-model="profileForm.avatarUrl"
+                v-model.trim="profileForm.avatarUrl"
                 type="url"
                 placeholder="https://example.com/avatar.png"
                 class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle flex-1 rounded-lg border px-3 py-2 text-sm transition-all focus:ring-2 focus:outline-none"
               />
+              <button
+                v-if="profileForm.avatarUrl"
+                @click="profileForm.avatarUrl = ''"
+                class="text-text-tertiary hover:text-error rounded-lg p-2 transition-colors"
+                title="Remove Avatar"
+              >
+                <Trash2 :size="16" />
+              </button>
             </div>
             <p class="text-text-tertiary mt-1 text-[0.6875rem]">Paste a public image URL for your avatar.</p>
           </div>

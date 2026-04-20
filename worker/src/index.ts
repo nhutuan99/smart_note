@@ -274,7 +274,13 @@ async function handleUpdateProfile(userId: string, request: Request, env: Env): 
   if (!user) return errorResponse('User not found', 404)
 
   if (name) user.name = name
-  if (avatarUrl !== undefined) user.avatarUrl = avatarUrl
+  if (avatarUrl !== undefined) {
+    if (!avatarUrl || avatarUrl.trim() === '') {
+      delete user.avatarUrl
+    } else {
+      user.avatarUrl = avatarUrl.trim()
+    }
+  }
 
   await putJSON(env.SMART_NOTE_KV, `users/${userId}/profile`, user)
 
@@ -284,7 +290,7 @@ async function handleUpdateProfile(userId: string, request: Request, env: Env): 
       id: user.id,
       email: user.email,
       name: user.name,
-      avatarUrl: user.avatarUrl,
+      avatarUrl: user.avatarUrl || '',
       createdAt: user.createdAt
     }
   })
