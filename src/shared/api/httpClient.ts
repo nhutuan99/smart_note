@@ -16,6 +16,8 @@ import type { ApiResponse } from '@/types'
 // In production, use the full worker URL
 const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
 
+let isRedirecting = false
+
 function getToken(): string | null {
   return localStorage.getItem('smart_note_token')
 }
@@ -36,10 +38,15 @@ function buildHeaders(hasBody: boolean): HeadersInit {
 
 async function handleResponse<T>(response: Response): Promise<T> {
   if (response.status === 401) {
-    // Token expired or invalid — clear auth and redirect
+    // Token expired or invalid — clear auth
     localStorage.removeItem('smart_note_token')
     localStorage.removeItem('smart_note_user')
-    window.location.href = '/login'
+    
+    // Prevent redirect loop if multiple API calls fail simultaneously
+    if (!isRedirecting && window.location.pathname !== '/login') {
+      isRedirecting = true
+      window.location.href = '/login'
+    }
     throw new Error('Session expired')
   }
 

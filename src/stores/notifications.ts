@@ -21,6 +21,8 @@ export const useNotificationStore = defineStore('notifications', () => {
   const notifications = ref<AppNotification[]>([])
   const loading = ref(false)
   const filter = ref<'all' | 'unread'>('all')
+  
+  let lastFetchTime = 0
 
   const unreadCount = computed(() => notifications.value.filter(n => !n.read).length)
 
@@ -30,11 +32,18 @@ export const useNotificationStore = defineStore('notifications', () => {
       : notifications.value
   )
 
-  async function fetch() {
+  async function fetch(force = false) {
+    const now = Date.now()
+    // Rate limit: prevent spamming API if called within 5 seconds unless forced
+    if (!force && now - lastFetchTime < 5000 && notifications.value.length > 0) {
+      return
+    }
+
     loading.value = true
     try {
       const data = await httpClient.get<AppNotification[]>('/api/notifications')
       notifications.value = data || []
+      lastFetchTime = Date.now()
     } catch {
       // silently fail — non-critical
     } finally {
