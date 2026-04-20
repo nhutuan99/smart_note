@@ -136,7 +136,11 @@ export const useFinanceStore = defineStore('finance', () => {
   async function fetchWallets() {
     try {
       const data = await httpClient.get<Wallet[]>('/api/wallets')
-      wallets.value = data || []
+      if (data) {
+        wallets.value = data.sort((a, b) => (a.order ?? 99) - (b.order ?? 99))
+      } else {
+        wallets.value = []
+      }
     } catch (err) {
       console.error('Failed to fetch wallets:', err)
     }

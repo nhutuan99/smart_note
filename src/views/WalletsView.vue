@@ -129,10 +129,12 @@ async function onDrop(e: DragEvent, targetWallet: Wallet) {
   wallets.forEach((w, i) => { w.order = i })
   finance.wallets = wallets
 
-  // Persist to backend
+  // Persist to backend sequentially to prevent Cloudflare KV race conditions
   isDraggingSaving.value = true
   try {
-    await Promise.all(wallets.map((w, i) => finance.updateWallet(w.id, { order: i })))
+    for (let i = 0; i < wallets.length; i++) {
+      await finance.updateWallet(wallets[i].id, { order: i })
+    }
   } catch {
     ui.showToast('error', 'Không thể lưu thứ tự ví')
     await finance.fetchWallets()
