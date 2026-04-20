@@ -35,6 +35,10 @@ export const useUiStore = defineStore('ui', () => {
     sidebarOpen.value = !sidebarOpen.value
   }
 
+  function closeSidebar() {
+    sidebarOpen.value = false
+  }
+
   function toggleSearch() {
     searchOpen.value = !searchOpen.value
   }
@@ -78,6 +82,7 @@ export const useUiStore = defineStore('ui', () => {
     toasts,
     confirmState,
     toggleSidebar,
+    closeSidebar,
     toggleSearch,
     showToast,
     removeToast,

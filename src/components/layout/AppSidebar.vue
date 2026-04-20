@@ -3,6 +3,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useUiStore } from '@/stores/ui'
 import { useFinanceStore } from '@/stores/finance'
 import { useNotesStore } from '@/stores/notes'
+import { useDevice } from '@/composables/useDevice'
 import { formatVNDShort } from '@/constants/finance'
 import { getWalletBrand } from '@/constants/walletBrands'
 import {
@@ -22,6 +23,7 @@ const route = useRoute()
 const ui = useUiStore()
 const finance = useFinanceStore()
 const notesStore = useNotesStore()
+const { isMobileOrTablet } = useDevice()
 
 const navItems = [
   { label: 'Dashboard', icon: LayoutDashboard, route: '/' },
@@ -33,8 +35,22 @@ const navItems = [
 
 const isActive = (path: string) => (path === '/' ? route.path === '/' : route.path.startsWith(path))
 
+/** Đóng sidebar trên mobile/tablet sau mỗi action navigate */
+function closeSidebarOnMobile() {
+  if (isMobileOrTablet.value) {
+    ui.closeSidebar()
+  }
+}
+
 async function quickAdd() {
   router.push('/transactions/add')
+  closeSidebarOnMobile()
+}
+
+function navigateWallet(walletId: string) {
+  finance.filter = { walletId }
+  router.push('/transactions')
+  closeSidebarOnMobile()
 }
 </script>
 
@@ -81,6 +97,7 @@ async function quickAdd() {
             isActive(item.route) ? 'bg-bg-hover text-accent font-medium' : '',
             !ui.sidebarOpen ? 'justify-center px-2' : ''
           ]"
+          @click="closeSidebarOnMobile"
         >
           <component
             :is="item.icon"
@@ -102,7 +119,7 @@ async function quickAdd() {
           v-for="w in finance.wallets.slice(0, 5)"
           :key="w.id"
           class="hover:bg-bg-hover flex cursor-pointer items-center justify-between rounded-lg px-3 py-1.5 text-sm transition-all duration-150"
-          @click="finance.filter = { walletId: w.id }; router.push('/transactions')"
+          @click="navigateWallet(w.id)"
         >
           <span class="text-text-secondary flex items-center gap-2">
             <template v-if="getWalletBrand(w.name)">
