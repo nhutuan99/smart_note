@@ -1,4 +1,5 @@
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useEventListener } from './useEventListener'
 
 export type DeviceType = 'mobile' | 'tablet' | 'desktop'
 
@@ -66,14 +67,11 @@ export function useDevice() {
     }
   }
 
+  useEventListener(window, 'resize', onResize as EventListener, { passive: true })
+
   onMounted(() => {
-    window.addEventListener('resize', onResize, { passive: true })
     // Initial evaluation
     deviceType.value = resolveDeviceType()
-  })
-
-  onUnmounted(() => {
-    window.removeEventListener('resize', onResize)
   })
 
   return {

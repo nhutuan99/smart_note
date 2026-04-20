@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
 import { useNotificationStore } from '@/stores/notifications'
+import { useEventListener } from '@/composables/useEventListener'
 import { useRouter } from 'vue-router'
 import { Menu, Bell, Settings, LogOut, Sparkles, ArrowUpRight, ArrowDownRight, CheckCheck, Trash2, BellOff, Zap } from 'lucide-vue-next'
 
@@ -26,11 +27,11 @@ function handleOutsideClick(e: MouseEvent) {
   }
 }
 
+useEventListener(document, 'click', handleOutsideClick as EventListener)
+
 onMounted(() => {
-  document.addEventListener('click', handleOutsideClick)
   notiStore.fetch()
 })
-onUnmounted(() => document.removeEventListener('click', handleOutsideClick))
 
 // ─── Auth ───────────────────────────────────────────────────────────────────
 function handleLogout() {

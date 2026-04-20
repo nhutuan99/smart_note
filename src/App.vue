@@ -3,6 +3,7 @@ import { useRoute } from 'vue-router'
 import { computed, onMounted, onUnmounted } from 'vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import { useDevice } from '@/composables/useDevice'
+import { useEventListener } from '@/composables/useEventListener'
 
 const route = useRoute()
 const { deviceType, isMobileOrTablet } = useDevice()
@@ -20,15 +21,9 @@ function preventDoubleTapZoom(e: TouchEvent) {
   lastTouchEnd = now
 }
 
-onMounted(() => {
-  if (isMobileOrTablet.value) {
-    document.addEventListener('touchend', preventDoubleTapZoom, { passive: false })
-  }
-})
-
-onUnmounted(() => {
-  document.removeEventListener('touchend', preventDoubleTapZoom)
-})
+if (isMobileOrTablet.value) {
+  useEventListener(document, 'touchend', preventDoubleTapZoom as EventListener, { passive: false })
+}
 </script>
 
 <template>
