@@ -69,33 +69,20 @@ async function saveProfile() {
 // ── Account Deletion ──
 const isDeleteModalOpen = ref(false)
 const deleteLoading = ref(false)
-const otpSent = ref(false)
-const deleteOtpForm = ref({ otp: '' })
-
-async function requestDeleteAccount() {
-  try {
-    deleteLoading.value = true
-    const res = await httpClient.post<{ message: string }>('/api/auth/otp/send')
-    ui.showToast('success', res.message || 'OTP sent to your email')
-    otpSent.value = true
-  } catch (err: any) {
-    ui.showToast('error', err.message || 'Failed to request account deletion')
-  } finally {
-    deleteLoading.value = false
-  }
-}
+const deletePasswordForm = ref({ password: '' })
+const showDeletePassword = ref(false)
 
 async function confirmDeleteAccount() {
-  if (!deleteOtpForm.value.otp) return ui.showToast('error', 'Vui lòng nhập OTP')
+  if (!deletePasswordForm.value.password) return ui.showToast('error', 'Vui lòng nhập mật khẩu')
   try {
     deleteLoading.value = true
-    await httpClient.post('/api/auth/account/delete', { otp: deleteOtpForm.value.otp })
-    ui.showToast('success', 'Account deleted successfully')
+    await httpClient.post('/api/auth/delete-account', { password: deletePasswordForm.value.password })
+    ui.showToast('success', 'Tài khoản đã được xóa vĩnh viễn')
     isDeleteModalOpen.value = false
     auth.logout()
     router.push('/login')
   } catch (err: any) {
-    ui.showToast('error', err.message || 'Failed to delete account (Invalid OTP?)')
+    ui.showToast('error', err.message || 'Mật khẩu không chính xác')
   } finally {
     deleteLoading.value = false
   }
@@ -498,53 +485,43 @@ async function savePin() {
               Hành động này <strong class="text-text-primary">không thể hoàn tác</strong>. Mọi dữ liệu (ví, giao dịch, ghi chú) sẽ bị xóa viễn viễn.
             </p>
 
-            <div v-if="!otpSent" class="flex flex-col gap-3">
-              <button
-                @click="requestDeleteAccount"
-                :disabled="deleteLoading"
-                class="bg-error hover:bg-error/90 flex w-full justify-center rounded-xl py-3 font-semibold text-white transition-colors disabled:opacity-50"
-              >
-                <span v-if="deleteLoading" class="h-5 w-5 animate-spin rounded-full border-2 border-white/20 border-l-white"></span>
-                <span v-else>Gửi OTP xác nhận</span>
-              </button>
-              <button
-                @click="isDeleteModalOpen = false"
-                class="text-text-secondary hover:text-text-primary w-full py-2 text-sm font-medium"
-              >
-                Hủy bỏ
-              </button>
-            </div>
-
-            <div v-else class="flex flex-col gap-4">
+            <div class="flex flex-col gap-4">
               <div>
-                <label class="text-text-secondary mb-1 block text-sm font-medium">Mã OTP (Đã gửi vào Email)</label>
-                <input
-                  v-model="deleteOtpForm.otp"
-                  type="text"
-                  placeholder="Nhập 6 số OTP"
-                  maxlength="6"
-                  class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-error focus:ring-error/20 w-full rounded-xl border px-4 py-3 text-center text-lg tracking-widest transition-all focus:ring-2 focus:outline-none"
-                />
+                <label class="text-text-secondary mb-1 block text-sm font-medium">Mật khẩu xác nhận</label>
+                <div class="relative">
+                  <Lock :size="18" class="text-text-tertiary absolute top-1/2 left-3 -translate-y-1/2" />
+                  <input
+                    v-model="deletePasswordForm.password"
+                    :type="showDeletePassword ? 'text' : 'password'"
+                    placeholder="Nhập mật khẩu của bạn"
+                    class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-error focus:ring-error/20 w-full rounded-xl border py-3 pr-10 pl-10 text-sm transition-all focus:ring-2 focus:outline-none"
+                    @keyup.enter="confirmDeleteAccount"
+                  />
+                  <button
+                    @click="showDeletePassword = !showDeletePassword"
+                    class="text-text-tertiary hover:text-text-primary absolute top-1/2 right-3 -translate-y-1/2 transition-colors"
+                  >
+                    <Eye v-if="!showDeletePassword" :size="18" />
+                    <EyeOff v-else :size="18" />
+                  </button>
+                </div>
               </div>
               <div class="flex gap-3">
                 <button
-                  @click="isDeleteModalOpen = false; otpSent = false; deleteOtpForm.otp = ''"
+                  @click="isDeleteModalOpen = false; deletePasswordForm.password = ''"
                   class="border-border-default text-text-secondary hover:bg-bg-hover flex-1 rounded-xl border py-2.5 font-medium transition-colors"
                 >
                   Hủy
                 </button>
                 <button
                   @click="confirmDeleteAccount"
-                  :disabled="deleteLoading || deleteOtpForm.otp.length < 6"
-                  class="bg-error hover:bg-error/90 flex-1 justify-center rounded-xl py-2.5 font-semibold text-white transition-colors disabled:opacity-50"
+                  :disabled="deleteLoading || !deletePasswordForm.password"
+                  class="bg-error hover:bg-error/90 flex-1 justify-center flex items-center rounded-xl py-2.5 font-semibold text-white transition-colors disabled:opacity-50"
                 >
                   <span v-if="deleteLoading" class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-l-white"></span>
                   <span v-else>Xóa vĩnh viễn</span>
                 </button>
               </div>
-              <p class="text-text-tertiary text-center text-[0.6875rem] mt-2">
-                Không nhận được? <button @click="requestDeleteAccount" class="text-accent hover:underline">Gửi lại</button>
-              </p>
             </div>
           </div>
         </div>
