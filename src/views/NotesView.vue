@@ -173,21 +173,21 @@ async function handleTogglePin(id: string, e: Event) {
           >
             <h3 class="text-text-primary text-sm font-semibold">{{ note.title }}</h3>
             <div
-              class="flex gap-0.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100"
+              class="flex gap-0.5 opacity-100 md:opacity-0 transition-opacity duration-150 md:group-hover:opacity-100"
               @click.prevent
             >
               <button
-                class="text-text-tertiary hover:bg-bg-hover hover:text-text-primary rounded p-1 transition-all duration-150"
+                class="text-text-tertiary hover:bg-bg-hover hover:text-text-primary rounded p-2 md:p-1 transition-all duration-150 touch-target"
                 :class="note.pinned ? 'text-warning' : ''"
                 @click="handleTogglePin(note.id, $event)"
               >
-                <Pin :size="14" />
+                <Pin :size="16" />
               </button>
               <button
-                class="text-text-tertiary hover:bg-bg-hover hover:text-error rounded p-1 transition-all duration-150"
+                class="text-text-tertiary hover:bg-bg-hover hover:text-error rounded p-2 md:p-1 transition-all duration-150 touch-target"
                 @click.stop="showDeleteConfirm = note.id"
               >
-                <Trash2 :size="14" />
+                <Trash2 :size="16" />
               </button>
             </div>
           </div>

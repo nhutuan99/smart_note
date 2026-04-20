@@ -209,3 +209,29 @@ select:-webkit-autofill {
   border: 1px solid var(--color-border-default);
   border-radius: 0.5rem;
 }
+
+/* ============================================
+   Mobile-First Touch Optimizations
+   ============================================ */
+
+/* Always show action icons on touch devices (no hover) */
+.device--mobile .touch-show,
+.device--tablet .touch-show {
+  opacity: 1 !important;
+}
+
+/* Minimum 44px touch targets on mobile */
+.device--mobile .touch-target,
+.device--tablet .touch-target {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Brighter icon color on mobile for better visibility */
+.device--mobile .touch-bright,
+.device--tablet .touch-bright {
+  color: var(--color-text-secondary) !important;
+}

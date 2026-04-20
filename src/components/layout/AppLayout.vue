@@ -16,7 +16,7 @@ const ui = useUiStore()
       class="fixed top-[3.5rem] right-0 bottom-0 w-full overflow-y-auto transition-all duration-300"
       :class="ui.sidebarOpen ? 'md:w-[calc(100%-16.25rem)]' : 'md:w-[calc(100%-3.75rem)]'"
     >
-      <div class="mx-auto max-w-7xl p-4 md:p-6 lg:p-8">
+      <div class="max-w-7xl p-4 md:p-6 lg:px-10 lg:py-8">
         <router-view v-slot="{ Component }">
           <transition
             name="fade"

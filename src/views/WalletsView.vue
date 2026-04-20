@@ -271,17 +271,17 @@ async function saveEdit(id: string, newBalance: string) {
           </span>
           <button
             @click="startEdit(w.id)"
-            class="text-text-disabled hover:text-text-primary hover:bg-bg-hover rounded p-1.5 transition-all duration-150"
+            class="text-text-tertiary hover:text-text-primary hover:bg-bg-hover rounded p-2 transition-all duration-150 touch-target"
             title="Sửa số dư"
           >
-            <Edit3 :size="14" />
+            <Edit3 :size="16" />
           </button>
           <button
             @click="requestDelete(w.id)"
-            class="text-text-disabled hover:text-error hover:bg-bg-hover rounded p-1.5 transition-all duration-150"
+            class="text-text-tertiary hover:text-error hover:bg-bg-hover rounded p-2 transition-all duration-150 touch-target"
             title="Xóa ví"
           >
-            <Trash2 :size="14" />
+            <Trash2 :size="16" />
           </button>
         </div>
       </div>

@@ -329,10 +329,10 @@ useEventListener(document, 'click', handleClickOutside)
 
             <!-- Delete -->
             <button
-              class="text-text-disabled hover:text-error hover:bg-bg-active rounded p-1 opacity-0 transition-all duration-150 group-hover:opacity-100"
+              class="text-text-tertiary hover:text-error hover:bg-bg-active rounded p-2 md:p-1 opacity-100 md:opacity-0 transition-all duration-150 md:group-hover:opacity-100 touch-target"
               @click="deleteTx(tx.id)"
             >
-              <Trash2 :size="14" />
+              <Trash2 :size="16" />
             </button>
           </div>
         </div>
