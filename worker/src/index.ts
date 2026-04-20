@@ -1026,7 +1026,9 @@ async function handleSmsWebhook(request: Request, env: Env): Promise<Response> {
   try {
     if (contentType.includes('application/json')) {
       const body = await request.json() as any
-      text = body?.text || body?.message || body?.body || ''
+      // iOS Shortcuts sends: {"text": "SMS content"} or {"text": {"body": "..."}}
+      const raw = body?.text ?? body?.message ?? body?.body ?? body?.content ?? ''
+      text = typeof raw === 'string' ? raw : (raw?.body ?? raw?.content ?? raw?.text ?? JSON.stringify(raw))
     } else if (contentType.includes('application/x-www-form-urlencoded') || contentType.includes('multipart/form-data')) {
       const formData = await request.formData()
       text = (formData.get('text') || formData.get('message') || formData.get('body') || '').toString()
@@ -1038,7 +1040,13 @@ async function handleSmsWebhook(request: Request, env: Env): Promise<Response> {
   }
 
   text = text.trim()
-  if (!text) return errorResponse('Missing SMS text')
+  if (!text) {
+    return jsonResponse({
+      success: false,
+      error: 'Missing SMS text',
+      hint: 'Nếu bạn test thủ công bằng nút Play thì sẽ trống. Hãy đợi SMS ngân hàng thật để trigger tự động.'
+    }, 400)
+  }
 
   const parsed = parseSmsTransaction(text)
   if (!parsed) {
