@@ -1044,6 +1044,105 @@ async function handleCassoWebhook(request: Request, env: Env): Promise<Response>
   })
 }
 
+// ─── iOS SMS Webhook ──────────────────────────────────────────────────────────
+
+function parseSmsTransaction(text: string) {
+  if (!text) return null
+  
+  // Try to find +/- followed by numbers and currency
+  const match = text.match(/([+-])\s*([\d,.]+)\s*(VND|đ|d)/i)
+  if (!match) return null
+
+  const sign = match[1]
+  const amountStr = match[2].replace(/[,.]/g, '') // remove all commas/dots
+  const amount = parseInt(amountStr, 10)
+  
+  if (isNaN(amount) || amount === 0) return null
+
+  return {
+    type: sign === '+' ? 'income' : 'expense' as 'income'|'expense',
+    amount: amount,
+    rawText: text.substring(0, 50) + (text.length > 50 ? '...' : '') // truncate note
+  }
+}
+
+async function handleSmsWebhook(request: Request, env: Env): Promise<Response> {
+  let body: any
+  try {
+    body = await request.json()
+  } catch {
+    return errorResponse('Invalid JSON body')
+  }
+
+  const text = body?.text || body?.message || body?.body || ''
+  if (!text) return errorResponse('Missing SMS text')
+
+  const parsed = parseSmsTransaction(text)
+  if (!parsed) {
+    return jsonResponse({ success: false, message: 'Could not parse SMS transaction' })
+  }
+
+  const url = new URL(request.url)
+  const userId = url.searchParams.get('userId')
+  if (!userId) return errorResponse('Missing userId query param')
+
+  const user = await getJSON<UserData>(env.SMART_NOTE_KV, `users/${userId}/profile`)
+  if (!user) return errorResponse('User not found', 404)
+
+  const wallets = (await getJSON<WalletData[]>(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`)) || []
+  const txs = (await getJSON<TransactionData[]>(env.SMART_NOTE_KV, `users/${userId}/finance/transactions`)) || []
+
+  // Default to first wallet for SMS since we don't know bank Name precisely yet
+  const walletId = wallets[0]?.id || ''
+  
+  // Prevent duplicate SMS: simple hash of text + date
+  const smsHash = `[sms:${btoa(text.substring(0,20)).substring(0,10)}]`
+  const alreadyExists = txs.some(t => t.note?.includes(smsHash))
+  if (alreadyExists) {
+    return jsonResponse({ success: true, message: 'Duplicate SMS skipped' })
+  }
+
+  const tx: TransactionData = {
+    id: generateId(),
+    type: parsed.type,
+    amount: parsed.amount,
+    category: parsed.type === 'income' ? 'other_income' : 'other_expense',
+    note: `${parsed.rawText} ${smsHash}`.trim(),
+    walletId,
+    source: 'sms',
+    date: new Date().toISOString().substring(0, 10),
+    createdAt: new Date().toISOString()
+  }
+
+  txs.push(tx)
+
+  // Cập nhật số dư
+  const walletIdx = wallets.findIndex(w => w.id === walletId)
+  if (walletIdx !== -1) {
+    wallets[walletIdx].balance += parsed.type === 'income' ? parsed.amount : -parsed.amount
+  }
+
+  // Noti
+  const walletName = wallets.find(w => w.id === walletId)?.name || 'ví'
+  const notiList = (await getJSON<NotificationData[]>(env.SMART_NOTE_KV, `users/${userId}/notifications`)) || []
+  notiList.unshift({
+    id: generateId(),
+    type: parsed.type === 'income' ? 'bank_in' : 'bank_out',
+    title: parsed.type === 'income' ? 'Tiền vào tài khoản' : 'Tiền ra tài khoản',
+    body: `${parsed.type === 'income' ? '+' : '-'}${parsed.amount.toLocaleString('vi-VN')}đ • ${walletName} • SMS`,
+    read: false,
+    createdAt: new Date().toISOString(),
+    meta: { amount: parsed.amount, txType: parsed.type, walletName, bankName: 'SMS' }
+  })
+  if (notiList.length > 100) notiList.splice(100)
+  
+  await putJSON(env.SMART_NOTE_KV, `users/${userId}/notifications`, notiList)
+  await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/transactions`, txs)
+  await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`, wallets)
+
+  return jsonResponse({ success: true, message: 'SMS transaction processed' })
+}
+
 // ====== PIN System ======
 
 async function handleSetPin(userId: string, request: Request, env: Env): Promise<Response> {
@@ -1140,6 +1239,9 @@ export default {
       // Casso Bank Webhook — POST /api/webhook/casso?userId=<userId>
       if (path === '/api/webhook/casso' && request.method === 'POST') {
         return handleCassoWebhook(request, env)
+      }
+      if (path === '/api/webhook/sms' && request.method === 'POST') {
+        return handleSmsWebhook(request, env)
       }
 
       // Protected routes - verify JWT

@@ -6,7 +6,7 @@ import { useRouter } from 'vue-router'
 import { computed, ref, onMounted } from 'vue'
 import { httpClient } from '@/shared/api/httpClient'
 import type { User } from '@/types'
-import { User as UserIcon, Database, Download, LogOut, HardDrive, FileText, Shield, Lock, Eye, EyeOff, AlertTriangle, Trash2, Camera, Save, Copy, Link } from 'lucide-vue-next'
+import { User as UserIcon, Database, Download, LogOut, HardDrive, FileText, Shield, Lock, Eye, EyeOff, AlertTriangle, Trash2, Camera, Save, Link } from 'lucide-vue-next'
 
 const auth = useAuthStore()
 const notesStore = useNotesStore()
@@ -112,24 +112,7 @@ onMounted(async () => {
   } catch { /* ignore */ }
 })
 
-// ── Casso Bank Integration ──
 
-function copyWebhookUrl() {
-  const url = `https://smart-note-api.tintphcm1.workers.dev/api/webhook/casso?userId=${auth.user?.id}`
-  navigator.clipboard.writeText(url).then(() => {
-    ui.showToast('success', 'Đã copy webhook URL!')
-  }).catch(() => {
-    ui.showToast('error', 'Không thể copy, vui lòng copy thủ công.')
-  })
-}
-
-function copySecureToken() {
-  navigator.clipboard.writeText('smartnote_casso_secret_2024').then(() => {
-    ui.showToast('success', 'Đã copy Secure Token!')
-  }).catch(() => {
-    ui.showToast('error', 'Không thể copy, vui lòng copy thủ công.')
-  })
-}
 
 // ── PIN Management ──
 
@@ -441,158 +424,6 @@ async function savePin() {
         </transition>
       </div>
     </div>
-
-    <!-- Casso Bank Integration -->
-    <div class="mb-6">
-      <div class="text-text-secondary mb-3 flex items-center gap-2">
-        <span class="text-lg">🏦</span>
-        <h3 class="text-sm font-semibold">Kết nối ngân hàng tự động</h3>
-        <span class="bg-accent/15 text-accent rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold">via Casso</span>
-      </div>
-      <div class="card-premium overflow-hidden p-0">
-
-        <!-- Banner -->
-        <div class="bg-accent-subtle border-border-default border-b px-5 py-4">
-          <p class="text-text-secondary text-sm">
-            Kết nối tài khoản ngân hàng qua <strong class="text-text-primary">Casso</strong> để SmartNote tự động ghi nhận mọi giao dịch ngay khi phát sinh — không cần nhập tay.
-          </p>
-        </div>
-
-        <!-- Steps -->
-        <div class="divide-border-default divide-y">
-
-          <!-- Step 1 -->
-          <div class="flex items-start gap-4 px-5 py-4">
-            <div class="bg-accent text-bg-primary flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold">1</div>
-            <div class="flex-1">
-              <h4 class="mb-1 text-sm font-semibold">Đăng ký & đăng nhập Casso</h4>
-              <p class="text-text-tertiary mb-2 text-[0.8125rem]">Tạo tài khoản miễn phí tại <strong class="text-text-primary">my.casso.vn</strong> bằng email hoặc Google.</p>
-              <a
-                href="https://my.casso.vn/register"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-accent hover:opacity-80 inline-flex items-center gap-1.5 rounded-lg border border-current px-3 py-1.5 text-[0.8125rem] font-medium transition-opacity"
-              >
-                <span>Mở my.casso.vn →</span>
-              </a>
-            </div>
-          </div>
-
-          <!-- Step 2 -->
-          <div class="flex items-start gap-4 px-5 py-4">
-            <div class="bg-accent text-bg-primary flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold">2</div>
-            <div class="flex-1">
-              <h4 class="mb-2 text-sm font-semibold">Liên kết tài khoản ngân hàng</h4>
-              <div class="space-y-2">
-                <div class="flex items-start gap-2">
-                  <span class="bg-bg-elevated border-border-default text-text-tertiary mt-0.5 shrink-0 rounded border px-1.5 py-0.5 font-mono text-[0.625rem]">1</span>
-                  <p class="text-text-tertiary text-[0.8125rem]">Sau khi đăng nhập, bấm vào <kbd class="bg-bg-elevated border-border-default rounded border px-1.5 py-0.5 text-[0.75rem] font-semibold text-text-primary">+ Thêm tài khoản</kbd> ở màn hình chính</p>
-                </div>
-                <div class="flex items-start gap-2">
-                  <span class="bg-bg-elevated border-border-default text-text-tertiary mt-0.5 shrink-0 rounded border px-1.5 py-0.5 font-mono text-[0.625rem]">2</span>
-                  <p class="text-text-tertiary text-[0.8125rem]">Chọn <strong class="text-text-primary">ngân hàng</strong> của bạn (VD: Techcombank, MBBank, TPBank...)</p>
-                </div>
-                <div class="flex items-start gap-2">
-                  <span class="bg-bg-elevated border-border-default text-text-tertiary mt-0.5 shrink-0 rounded border px-1.5 py-0.5 font-mono text-[0.625rem]">3</span>
-                  <p class="text-text-tertiary text-[0.8125rem]">Làm theo hướng dẫn xác thực của Casso (thường là nhập số tài khoản + OTP SMS từ ngân hàng)</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Step 3 -->
-          <div class="flex items-start gap-4 px-5 py-4">
-            <div class="bg-accent text-bg-primary flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold">3</div>
-            <div class="flex-1">
-              <h4 class="mb-2 text-sm font-semibold">Tạo Webhook trong Casso</h4>
-
-              <!-- Breadcrumb path -->
-              <div class="bg-bg-elevated border-border-default mb-3 flex flex-wrap items-center gap-1 rounded-lg border px-3 py-2 text-[0.75rem]">
-                <span class="text-text-tertiary">my.casso.vn</span>
-                <span class="text-text-disabled">›</span>
-                <span class="text-text-primary font-medium">Thiết lập</span>
-                <span class="text-text-disabled">›</span>
-                <span class="text-text-primary font-medium">Tích hợp</span>
-                <span class="text-text-disabled">›</span>
-                <span class="text-accent font-semibold">+ Thêm tích hợp</span>
-              </div>
-
-              <div class="space-y-2">
-                <div class="flex items-start gap-2">
-                  <span class="bg-bg-elevated border-border-default text-text-tertiary mt-0.5 shrink-0 rounded border px-1.5 py-0.5 font-mono text-[0.625rem]">1</span>
-                  <p class="text-text-tertiary text-[0.8125rem]">Vào menu <strong class="text-text-primary">Thiết lập</strong> (icon bánh răng bên trái) → chọn <strong class="text-text-primary">Tích hợp</strong></p>
-                </div>
-                <div class="flex items-start gap-2">
-                  <span class="bg-bg-elevated border-border-default text-text-tertiary mt-0.5 shrink-0 rounded border px-1.5 py-0.5 font-mono text-[0.625rem]">2</span>
-                  <p class="text-text-tertiary text-[0.8125rem]">Bấm <kbd class="bg-bg-elevated border-border-default rounded border px-1.5 py-0.5 text-[0.75rem] font-semibold text-text-primary">+ Thêm tích hợp</kbd> → chọn <strong class="text-text-primary">Webhook</strong></p>
-                </div>
-                <div class="flex items-start gap-2">
-                  <span class="bg-bg-elevated border-border-default text-text-tertiary mt-0.5 shrink-0 rounded border px-1.5 py-0.5 font-mono text-[0.625rem]">3</span>
-                  <p class="text-text-tertiary text-[0.8125rem]">Ở mục <strong class="text-text-primary">Tài khoản ngân hàng</strong>: chọn tài khoản vừa liên kết (hoặc chọn "Tất cả")</p>
-                </div>
-                <div class="flex items-start gap-2">
-                  <span class="bg-bg-elevated border-border-default text-text-tertiary mt-0.5 shrink-0 rounded border px-1.5 py-0.5 font-mono text-[0.625rem]">4</span>
-                  <p class="text-text-tertiary text-[0.8125rem]">Ở mục <strong class="text-text-primary">Webhook URL</strong>: dán URL bên dưới vào</p>
-                </div>
-              </div>
-
-              <!-- Webhook URL box -->
-              <div class="bg-bg-elevated border-border-default mt-3 flex items-center gap-2 rounded-lg border px-3 py-2">
-                <code class="text-accent min-w-0 flex-1 break-all text-[0.75rem] leading-relaxed">https://smart-note-api.tintphcm1.workers.dev/api/webhook/casso?userId={{ auth.user?.id || 'YOUR_USER_ID' }}</code>
-                <button
-                  class="text-text-tertiary hover:text-text-primary shrink-0 rounded p-1 transition-colors"
-                  title="Copy webhook URL"
-                  @click="copyWebhookUrl"
-                >
-                  <Copy :size="14" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Step 4 -->
-          <div class="flex items-start gap-4 px-5 py-4">
-            <div class="bg-accent text-bg-primary flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold">4</div>
-            <div class="flex-1">
-              <h4 class="mb-2 text-sm font-semibold">Nhập Secure Token & lưu</h4>
-              <div class="space-y-2">
-                <div class="flex items-start gap-2">
-                  <span class="bg-bg-elevated border-border-default text-text-tertiary mt-0.5 shrink-0 rounded border px-1.5 py-0.5 font-mono text-[0.625rem]">1</span>
-                  <p class="text-text-tertiary text-[0.8125rem]">Ở mục <strong class="text-text-primary">Key bảo mật (Secure Token)</strong>: nhập đúng chuỗi sau</p>
-                </div>
-              </div>
-
-              <!-- Token box -->
-              <div class="bg-bg-elevated border-border-default mt-2 mb-3 flex items-center gap-2 rounded-lg border px-3 py-2">
-                <code class="text-accent flex-1 text-[0.8125rem] font-semibold">smartnote_casso_secret_2024</code>
-                <button
-                  class="text-text-tertiary hover:text-text-primary shrink-0 rounded p-1 transition-colors"
-                  title="Copy token"
-                  @click="copySecureToken"
-                >
-                  <Copy :size="14" />
-                </button>
-              </div>
-
-              <div class="space-y-2">
-                <div class="flex items-start gap-2">
-                  <span class="bg-bg-elevated border-border-default text-text-tertiary mt-0.5 shrink-0 rounded border px-1.5 py-0.5 font-mono text-[0.625rem]">2</span>
-                  <p class="text-text-tertiary text-[0.8125rem]">Bấm <kbd class="bg-bg-elevated border-border-default rounded border px-1.5 py-0.5 text-[0.75rem] font-semibold text-text-primary">Gọi thử</kbd> để Casso test gửi dữ liệu → nếu thành công bấm <kbd class="bg-bg-elevated border-border-default rounded border px-1.5 py-0.5 text-[0.75rem] font-semibold text-text-primary">Lưu</kbd></p>
-                </div>
-              </div>
-
-              <!-- Success note -->
-              <div class="bg-success/8 border-success/20 mt-3 flex items-start gap-2 rounded-lg border px-3 py-2.5">
-                <span class="text-success mt-px text-sm">✅</span>
-                <p class="text-text-secondary text-[0.8125rem]">Xong! Từ giờ mỗi giao dịch ngân hàng sẽ tự động xuất hiện trong SmartNote và bạn sẽ nhận thông báo real-time qua icon <strong class="text-text-primary">🔔</strong> trên header.</p>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </div>
-
 
     <!-- Account -->
     <div class="mb-6">

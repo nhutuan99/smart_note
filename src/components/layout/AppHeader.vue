@@ -4,7 +4,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
 import { useNotificationStore } from '@/stores/notifications'
 import { useRouter } from 'vue-router'
-import { Menu, Bell, Settings, LogOut, Sparkles, ArrowUpRight, ArrowDownRight, CheckCheck, Trash2, BellOff } from 'lucide-vue-next'
+import { Menu, Bell, Settings, LogOut, Sparkles, ArrowUpRight, ArrowDownRight, CheckCheck, Trash2, BellOff, Zap } from 'lucide-vue-next'
 
 const auth = useAuthStore()
 const ui = useUiStore()
@@ -65,6 +65,15 @@ function handleLogout() {
 
     <!-- Right -->
     <div class="flex items-center gap-1">
+      <!-- Auto Sync -->
+      <router-link
+        to="/auto-sync"
+        class="text-text-secondary hover:bg-bg-hover hover:text-accent relative flex h-[2.125rem] w-[2.125rem] items-center justify-center rounded-lg transition-all duration-150"
+        title="Đồng bộ tự động"
+      >
+        <Zap :size="18" />
+      </router-link>
+
       <!-- ── Bell Notification ── -->
       <div ref="bellRef" class="relative">
         <button

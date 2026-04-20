@@ -51,6 +51,12 @@ const router = createRouter({
       name: 'settings',
       component: () => import('@/views/SettingsView.vue'),
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/auto-sync',
+      name: 'auto-sync',
+      component: () => import('@/views/AutoSyncView.vue'),
+      meta: { requiresAuth: true }
     }
   ]
 })
