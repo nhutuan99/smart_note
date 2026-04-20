@@ -6,7 +6,7 @@ import { useRouter } from 'vue-router'
 import { computed, ref, onMounted } from 'vue'
 import { httpClient } from '@/shared/api/httpClient'
 import type { User } from '@/types'
-import { User as UserIcon, Database, Download, LogOut, HardDrive, FileText, Shield, Lock, Eye, EyeOff, AlertTriangle, Trash2, Camera, Save } from 'lucide-vue-next'
+import { User as UserIcon, Database, Download, LogOut, HardDrive, FileText, Shield, Lock, Eye, EyeOff, AlertTriangle, Trash2, Camera, Save, Copy, Link } from 'lucide-vue-next'
 
 const auth = useAuthStore()
 const notesStore = useNotesStore()
@@ -111,6 +111,19 @@ onMounted(async () => {
     hasPin.value = data?.hasPin || false
   } catch { /* ignore */ }
 })
+
+// ── Casso Bank Integration ──
+
+function copyWebhookUrl() {
+  const url = `https://smart-note-api.tintphcm1.workers.dev/api/webhook/casso?userId=${auth.user?.id}`
+  navigator.clipboard.writeText(url).then(() => {
+    ui.showToast('success', 'Đã copy webhook URL!')
+  }).catch(() => {
+    ui.showToast('error', 'Không thể copy, vui lòng copy thủ công.')
+  })
+}
+
+// ── PIN Management ──
 
 async function savePin() {
   if (pinForm.value.newPin.length < 4 || pinForm.value.newPin.length > 6) {
@@ -418,6 +431,83 @@ async function savePin() {
             </div>
           </div>
         </transition>
+      </div>
+    </div>
+
+    <!-- Casso Bank Integration -->
+    <div class="mb-6">
+      <div class="text-text-secondary mb-3 flex items-center gap-2">
+        <span class="text-lg">🏦</span>
+        <h3 class="text-sm font-semibold">Kết nối ngân hàng tự động</h3>
+        <span class="bg-accent/15 text-accent rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold">via Casso</span>
+      </div>
+      <div class="card-premium overflow-hidden p-0">
+        <!-- Banner -->
+        <div class="bg-accent-subtle border-border-default border-b px-5 py-4">
+          <p class="text-text-secondary text-sm">
+            Kết nối tài khoản ngân hàng qua <strong class="text-text-primary">Casso</strong> để SmartNote tự động ghi nhận mọi giao dịch ngay khi phát sinh — không cần nhập tay.
+          </p>
+        </div>
+
+        <!-- Steps -->
+        <div class="divide-border-subtle divide-y px-5">
+          <!-- Step 1 -->
+          <div class="flex items-start gap-4 py-4">
+            <div class="bg-accent text-bg-primary flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold">1</div>
+            <div class="flex-1">
+              <h4 class="mb-1 text-sm font-semibold">Đăng ký tài khoản Casso</h4>
+              <p class="text-text-tertiary mb-2 text-[0.8125rem]">Tạo tài khoản miễn phí và liên kết tài khoản ngân hàng của bạn.</p>
+              <a
+                href="https://casso.vn"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-accent hover:text-accent-text inline-flex items-center gap-1 text-sm font-medium transition-colors"
+              >
+                Truy cập casso.vn →
+              </a>
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="flex items-start gap-4 py-4">
+            <div class="bg-accent text-bg-primary flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold">2</div>
+            <div class="flex-1">
+              <h4 class="mb-1 text-sm font-semibold">Liên kết tài khoản ngân hàng</h4>
+              <p class="text-text-tertiary text-[0.8125rem]">Trong Casso, vào mục <strong class="text-text-primary">Tài khoản → Thêm tài khoản</strong> và làm theo hướng dẫn để kết nối ngân hàng.</p>
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="flex items-start gap-4 py-4">
+            <div class="bg-accent text-bg-primary flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold">3</div>
+            <div class="flex-1">
+              <h4 class="mb-2 text-sm font-semibold">Cấu hình Webhook URL trong Casso</h4>
+              <p class="text-text-tertiary mb-3 text-[0.8125rem]">Trong Casso, vào <strong class="text-text-primary">Cài đặt → Webhook</strong> và điền URL sau:</p>
+              <div class="bg-bg-elevated border-border-default flex items-center gap-2 rounded-lg border px-3 py-2">
+                <code class="text-accent flex-1 break-all text-[0.75rem]">
+                  https://smart-note-api.tintphcm1.workers.dev/api/webhook/casso?userId={{ auth.user?.id || 'YOUR_USER_ID' }}
+                </code>
+                <button
+                  class="text-text-tertiary hover:text-text-primary shrink-0 rounded p-1 transition-colors"
+                  title="Copy webhook URL"
+                  @click="copyWebhookUrl"
+                >
+                  <Copy :size="14" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 4 -->
+          <div class="flex items-start gap-4 py-4">
+            <div class="bg-accent text-bg-primary flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold">4</div>
+            <div class="flex-1">
+              <h4 class="mb-1 text-sm font-semibold">Đặt Secure Token</h4>
+              <p class="text-text-tertiary text-[0.8125rem]">Tại mục <strong class="text-text-primary">Secure Token</strong> trong Casso Webhook, điền: <code class="bg-bg-elevated border-border-default rounded border px-1.5 py-0.5 text-[0.75rem] text-accent">smartnote_casso_secret_2024</code></p>
+              <p class="text-text-disabled mt-2 text-[0.75rem]">✅ Sau khi thiết lập, mọi giao dịch ngân hàng sẽ tự động xuất hiện trong SmartNote và bạn sẽ nhận được thông báo real-time.</p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 

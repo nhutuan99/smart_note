@@ -1,13 +1,38 @@
 <script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
+import { useNotificationStore } from '@/stores/notifications'
 import { useRouter } from 'vue-router'
-import { Menu, Search, Bell, Settings, LogOut, Sparkles } from 'lucide-vue-next'
+import { Menu, Bell, Settings, LogOut, Sparkles, ArrowUpRight, ArrowDownRight, CheckCheck, Trash2, BellOff } from 'lucide-vue-next'
 
 const auth = useAuthStore()
 const ui = useUiStore()
+const notiStore = useNotificationStore()
 const router = useRouter()
 
+// ─── Bell Dropdown ─────────────────────────────────────────────────────────
+const bellOpen = ref(false)
+const bellRef = ref<HTMLElement | null>(null)
+
+function toggleBell() {
+  bellOpen.value = !bellOpen.value
+  if (bellOpen.value) notiStore.fetch()
+}
+
+function handleOutsideClick(e: MouseEvent) {
+  if (bellRef.value && !bellRef.value.contains(e.target as Node)) {
+    bellOpen.value = false
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleOutsideClick)
+  notiStore.fetch()
+})
+onUnmounted(() => document.removeEventListener('click', handleOutsideClick))
+
+// ─── Auth ───────────────────────────────────────────────────────────────────
 function handleLogout() {
   auth.logout()
   router.push('/login')
@@ -31,41 +56,151 @@ function handleLogout() {
         to="/"
         class="text-text-primary group flex items-center gap-2.5 text-base font-bold tracking-tight no-underline"
       >
-        <div class="bg-bg-elevated flex h-[1.875rem] w-[1.875rem] items-center justify-center rounded-[0.4rem] shadow-sm transition-all duration-150 group-hover:scale-105 group-hover:shadow-md border border-border-default">
-          <Sparkles
-            :size="16"
-            class="text-accent"
-          />
+        <div class="bg-bg-elevated border-border-default flex h-[1.875rem] w-[1.875rem] items-center justify-center rounded-[0.4rem] border shadow-sm transition-all duration-150 group-hover:scale-105 group-hover:shadow-md">
+          <Sparkles :size="16" class="text-accent" />
         </div>
         <span class="hidden md:inline group-hover:text-accent transition-colors duration-150">SmartNote</span>
       </router-link>
     </div>
 
-    <!-- Center: Search -->
-    <div class="mx-auto hidden max-w-[30rem] flex-1 justify-center md:flex">
-      <button
-        id="search-trigger-btn"
-        class="border-border-default bg-bg-surface text-text-tertiary hover:border-border-strong hover:bg-bg-elevated flex h-[2.125rem] w-full max-w-[23.75rem] cursor-pointer items-center gap-2 rounded-lg border px-3 text-sm transition-all duration-150"
-        @click="ui.toggleSearch"
-      >
-        <Search :size="14" />
-        <span class="flex-1 text-left">Search notes...</span>
-        <kbd
-          class="border-border-default bg-bg-elevated text-text-tertiary rounded border px-1.5 py-0.5 font-sans text-[0.6875rem]"
-        >
-          ⌘K
-        </kbd>
-      </button>
-    </div>
-
     <!-- Right -->
     <div class="flex items-center gap-1">
-      <button
-        class="text-text-secondary hover:bg-bg-hover hover:text-text-primary flex h-[2.125rem] w-[2.125rem] items-center justify-center rounded-lg transition-all duration-150"
-        id="notifications-btn"
-      >
-        <Bell :size="18" />
-      </button>
+      <!-- ── Bell Notification ── -->
+      <div ref="bellRef" class="relative">
+        <button
+          id="notifications-btn"
+          class="text-text-secondary hover:bg-bg-hover hover:text-text-primary relative flex h-[2.125rem] w-[2.125rem] items-center justify-center rounded-lg transition-all duration-150"
+          :class="bellOpen ? 'bg-bg-hover text-text-primary' : ''"
+          @click.stop="toggleBell"
+        >
+          <Bell :size="18" />
+          <!-- Unread badge -->
+          <span
+            v-if="notiStore.unreadCount > 0"
+            class="bg-error absolute top-1 right-1 flex h-[1.125rem] w-[1.125rem] items-center justify-center rounded-full text-[0.5625rem] font-bold text-white"
+          >
+            {{ notiStore.unreadCount > 9 ? '9+' : notiStore.unreadCount }}
+          </span>
+        </button>
+
+        <!-- Dropdown Panel -->
+        <transition name="dropdown">
+          <div
+            v-if="bellOpen"
+            class="bg-bg-surface border-border-default absolute top-full right-0 z-50 mt-2 w-[22rem] overflow-hidden rounded-xl border shadow-xl"
+            @click.stop
+          >
+            <!-- Header -->
+            <div class="border-border-default flex items-center justify-between border-b px-4 py-3">
+              <div class="flex items-center gap-2">
+                <Bell :size="15" class="text-text-secondary" />
+                <span class="text-sm font-semibold">Thông báo</span>
+                <span
+                  v-if="notiStore.unreadCount > 0"
+                  class="bg-error/15 text-error rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold"
+                >
+                  {{ notiStore.unreadCount }} mới
+                </span>
+              </div>
+              <div class="flex items-center gap-1">
+                <button
+                  v-if="notiStore.unreadCount > 0"
+                  class="text-text-tertiary hover:text-accent flex items-center gap-1 rounded-lg px-2 py-1 text-[0.6875rem] transition-colors duration-150"
+                  title="Đánh dấu tất cả đã đọc"
+                  @click="notiStore.markAllRead()"
+                >
+                  <CheckCheck :size="13" />
+                  <span>Đọc tất cả</span>
+                </button>
+                <button
+                  v-if="notiStore.notifications.length > 0"
+                  class="text-text-tertiary hover:text-error flex items-center gap-1 rounded-lg px-2 py-1 text-[0.6875rem] transition-colors duration-150"
+                  title="Xóa tất cả"
+                  @click="notiStore.clearAll()"
+                >
+                  <Trash2 :size="13" />
+                  <span>Xóa</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Filter Tabs -->
+            <div class="border-border-default flex border-b">
+              <button
+                v-for="tab in [{ key: 'all', label: 'Tất cả' }, { key: 'unread', label: 'Chưa đọc' }]"
+                :key="tab.key"
+                class="border-border-default flex-1 border-r py-2 text-[0.75rem] font-medium transition-colors duration-150 last:border-r-0"
+                :class="notiStore.filter === tab.key
+                  ? 'bg-accent-subtle text-accent'
+                  : 'text-text-secondary hover:bg-bg-hover'"
+                @click="notiStore.filter = tab.key as any"
+              >
+                {{ tab.label }}
+              </button>
+            </div>
+
+            <!-- Notification List -->
+            <div class="max-h-[24rem] overflow-y-auto">
+              <!-- Loading -->
+              <div v-if="notiStore.loading" class="flex flex-col gap-2 p-3">
+                <div v-for="i in 3" :key="i" class="skeleton h-14 rounded-lg" />
+              </div>
+
+              <!-- Items -->
+              <template v-else-if="notiStore.filtered.length">
+                <button
+                  v-for="n in notiStore.filtered"
+                  :key="n.id"
+                  class="hover:bg-bg-hover flex w-full items-start gap-3 px-4 py-3 text-left transition-colors duration-150"
+                  :class="!n.read ? 'bg-accent-subtle/30' : ''"
+                  @click="notiStore.markRead(n.id)"
+                >
+                  <!-- Icon -->
+                  <div
+                    class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+                    :class="n.type === 'bank_in' ? 'bg-success/15' : n.type === 'bank_out' ? 'bg-error/15' : 'bg-info/15'"
+                  >
+                    <ArrowUpRight v-if="n.type === 'bank_in'" :size="15" class="text-success" />
+                    <ArrowDownRight v-else-if="n.type === 'bank_out'" :size="15" class="text-error" />
+                    <Bell v-else :size="15" class="text-info" />
+                  </div>
+
+                  <!-- Content -->
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-start justify-between gap-2">
+                      <span
+                        class="text-[0.8125rem] leading-tight"
+                        :class="!n.read ? 'text-text-primary font-semibold' : 'text-text-secondary font-medium'"
+                      >
+                        {{ n.title }}
+                      </span>
+                      <!-- Unread dot -->
+                      <span v-if="!n.read" class="bg-accent mt-1 h-2 w-2 shrink-0 rounded-full" />
+                    </div>
+                    <p class="text-text-tertiary mt-0.5 truncate text-[0.75rem]">{{ n.body }}</p>
+                    <span class="text-text-disabled mt-1 block text-[0.6875rem]">
+                      {{ notiStore.timeSince(n.createdAt) }}
+                    </span>
+                  </div>
+                </button>
+              </template>
+
+              <!-- Empty -->
+              <div v-else class="flex flex-col items-center py-10 text-center">
+                <BellOff :size="32" class="text-text-disabled mb-3" />
+                <p class="text-text-tertiary text-sm font-medium">
+                  {{ notiStore.filter === 'unread' ? 'Không có thông báo chưa đọc' : 'Chưa có thông báo' }}
+                </p>
+                <p class="text-text-disabled mt-1 text-[0.75rem]">
+                  Kết nối ngân hàng để nhận thông báo tự động
+                </p>
+              </div>
+            </div>
+          </div>
+        </transition>
+      </div>
+
+      <!-- Settings -->
       <router-link
         to="/settings"
         class="text-text-secondary hover:bg-bg-hover hover:text-text-primary flex h-[2.125rem] w-[2.125rem] items-center justify-center rounded-lg transition-all duration-150"
@@ -73,7 +208,10 @@ function handleLogout() {
       >
         <Settings :size="18" />
       </router-link>
+
       <div class="bg-border-default mx-2 h-6 w-px"></div>
+
+      <!-- User / Logout -->
       <button
         id="user-menu-btn"
         class="hover:bg-bg-hover group flex items-center gap-2 rounded-lg px-2 py-1 transition-all duration-150"
@@ -100,3 +238,20 @@ function handleLogout() {
     </div>
   </header>
 </template>
+
+<style scoped>
+.dropdown-enter-active {
+  transition: opacity 150ms ease, transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.dropdown-leave-active {
+  transition: opacity 100ms ease, transform 100ms ease;
+}
+.dropdown-enter-from {
+  opacity: 0;
+  transform: translateY(-0.375rem) scale(0.97);
+}
+.dropdown-leave-to {
+  opacity: 0;
+  transform: translateY(-0.25rem) scale(0.98);
+}
+</style>

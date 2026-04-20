@@ -15,6 +15,7 @@ interface Env {
   SMART_NOTE_KV: KVNamespace
   JWT_SECRET: string
   TELEGRAM_WEBHOOK_SECRET: string
+  CASSO_WEBHOOK_SECRET: string
   RESEND_API_KEY?: string
 }
 
@@ -44,7 +45,7 @@ interface TransactionData {
   category: string
   note: string
   walletId: string
-  source: 'manual' | 'telegram' | 'notification'
+  source: 'manual' | 'telegram' | 'notification' | 'casso'
   date: string
   createdAt: string
 }
@@ -65,6 +66,21 @@ interface WalletData {
   icon: string
   color: string
   order: number
+}
+
+interface NotificationData {
+  id: string
+  type: 'bank_in' | 'bank_out' | 'system'
+  title: string
+  body: string
+  read: boolean
+  createdAt: string
+  meta?: {
+    amount?: number
+    txType?: 'income' | 'expense'
+    walletName?: string
+    bankName?: string
+  }
 }
 
 // ====== Default Wallets (created on register) ======
@@ -810,6 +826,224 @@ async function handleNotificationWebhook(request: Request, env: Env): Promise<Re
   })
 }
 
+// ====== Notification Handlers ======
+
+async function handleListNotifications(userId: string, env: Env): Promise<Response> {
+  const notifications = (await getJSON<NotificationData[]>(
+    env.SMART_NOTE_KV, `users/${userId}/notifications`
+  )) || []
+  // Newest first
+  notifications.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+  return jsonResponse({ success: true, data: notifications })
+}
+
+async function handleMarkNotificationRead(userId: string, notiId: string, env: Env): Promise<Response> {
+  const notifications = (await getJSON<NotificationData[]>(
+    env.SMART_NOTE_KV, `users/${userId}/notifications`
+  )) || []
+  const idx = notifications.findIndex(n => n.id === notiId)
+  if (idx !== -1) {
+    notifications[idx].read = true
+    await putJSON(env.SMART_NOTE_KV, `users/${userId}/notifications`, notifications)
+  }
+  return jsonResponse({ success: true })
+}
+
+async function handleMarkAllNotificationsRead(userId: string, env: Env): Promise<Response> {
+  const notifications = (await getJSON<NotificationData[]>(
+    env.SMART_NOTE_KV, `users/${userId}/notifications`
+  )) || []
+  notifications.forEach(n => n.read = true)
+  await putJSON(env.SMART_NOTE_KV, `users/${userId}/notifications`, notifications)
+  return jsonResponse({ success: true })
+}
+
+async function handleClearNotifications(userId: string, env: Env): Promise<Response> {
+  await putJSON(env.SMART_NOTE_KV, `users/${userId}/notifications`, [])
+  return jsonResponse({ success: true })
+}
+
+// ====== Casso Bank Webhook ======
+// Docs: https://docs.casso.vn
+// Casso gửi POST mỗi khi có giao dịch mới vào tài khoản ngân hàng đã liên kết.
+// Payload example:
+// {
+//   "error": 0,
+//   "data": {
+//     "id": 1234567, "tid": "FT23123456789",
+//     "description": "MBVCB.123456. Nguyen Van A chuyen tien",
+//     "amount": 500000,             // dương = nhận (income), âm = chi (expense)
+//     "cusum_balance": 2500000,
+//     "when": "2024-01-20 08:30:00",
+//     "bankSubAccId": "0123456789",
+//     "bankName": "Techcombank",
+//     "bankAbbr": "TCB"
+//   }
+// }
+
+// Map Casso bankAbbr/bankName → tên ví trong SmartNote
+const CASSO_BANK_MAP: Record<string, string[]> = {
+  'Techcombank':  ['techcombank', 'tcb'],
+  'TPBank':       ['tpbank', 'tpb', 'tp bank'],
+  'MBBank':       ['mbbank', 'mb bank', 'mb', 'quân đội'],
+  'Vietcombank':  ['vietcombank', 'vcb'],
+  'BIDV':         ['bidv'],
+  'Agribank':     ['agribank', 'agr'],
+  'VietinBank':   ['vietinbank', 'viettin', 'ctg'],
+  'ACB':          ['acb'],
+  'VPBank':       ['vpbank', 'vp bank'],
+  'SHBank':       ['shbank', 'sh bank'],
+  'MSB':          ['msb', 'maritime'],
+  'MoMo':         ['momo'],
+  'ZaloPay':      ['zalopay', 'zalo pay'],
+}
+
+function matchWalletByCasso(wallets: WalletData[], bankName: string, bankAbbr: string): string {
+  const needle = (bankName + ' ' + bankAbbr).toLowerCase()
+
+  // 1. Tìm theo mapping chuẩn
+  for (const [walletKey, aliases] of Object.entries(CASSO_BANK_MAP)) {
+    const isMatch = aliases.some(alias => needle.includes(alias))
+    if (isMatch) {
+      const found = wallets.find(w => w.name.toLowerCase().includes(walletKey.toLowerCase()))
+      if (found) return found.id
+    }
+  }
+
+  // 2. Fuzzy: tìm thẳng theo bankAbbr trong tên ví
+  if (bankAbbr) {
+    const found = wallets.find(w => w.name.toLowerCase().includes(bankAbbr.toLowerCase()))
+    if (found) return found.id
+  }
+
+  // 3. Fallback: ví đầu tiên
+  return wallets[0]?.id || ''
+}
+
+function parseCassoDate(when: string): string {
+  // Casso format: "2024-01-20 08:30:00" → "2024-01-20"
+  try {
+    return when.substring(0, 10)
+  } catch {
+    return new Date().toISOString().substring(0, 10)
+  }
+}
+
+async function handleCassoWebhook(request: Request, env: Env): Promise<Response> {
+  // Xác thực webhook key từ Casso (cấu hình trong Casso dashboard)
+  const secret = request.headers.get('secure-token') ||
+                 request.headers.get('Authorization')?.replace('Bearer ', '') || ''
+
+  if (env.CASSO_WEBHOOK_SECRET && secret !== env.CASSO_WEBHOOK_SECRET) {
+    console.warn('[CASSO] Unauthorized webhook attempt')
+    return errorResponse('Unauthorized', 401)
+  }
+
+  let body: any
+  try {
+    body = await request.json()
+  } catch {
+    return errorResponse('Invalid JSON body')
+  }
+
+  // Casso gửi object hoặc array các giao dịch
+  const records: any[] = Array.isArray(body?.data) ? body.data
+    : body?.data ? [body.data]
+    : []
+
+  if (records.length === 0) {
+    return jsonResponse({ success: true, message: 'No records to process' })
+  }
+
+  // Lấy userId từ query param: /api/webhook/casso?userId=xxx
+  const url = new URL(request.url)
+  const userId = url.searchParams.get('userId')
+  if (!userId) return errorResponse('Missing userId query param')
+
+  // Verify user exists
+  const user = await getJSON<UserData>(env.SMART_NOTE_KV, `users/${userId}/profile`)
+  if (!user) return errorResponse('User not found', 404)
+
+  const wallets = (await getJSON<WalletData[]>(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`)) || []
+  const txs = (await getJSON<TransactionData[]>(env.SMART_NOTE_KV, `users/${userId}/finance/transactions`)) || []
+
+  const created: TransactionData[] = []
+
+  for (const record of records) {
+    const rawAmount: number = record.amount ?? 0
+    if (rawAmount === 0) continue
+
+    const type: 'income' | 'expense' = rawAmount > 0 ? 'income' : 'expense'
+    const amount = Math.abs(rawAmount)
+    const bankName: string = record.bankName ?? record.bank_name ?? ''
+    const bankAbbr: string = record.bankAbbr ?? record.bank_abbr ?? ''
+    const description: string = record.description ?? record.memo ?? ''
+    const when: string = record.when ?? record.createdAt ?? ''
+
+    const walletId = matchWalletByCasso(wallets, bankName, bankAbbr)
+
+    // Tránh duplicate: kiểm tra theo Casso transaction ID
+    const cassoTid: string = String(record.tid ?? record.id ?? '')
+    const alreadyExists = txs.some(t => t.note?.includes(`[casso:${cassoTid}]`))
+    if (alreadyExists) {
+      console.log(`[CASSO] Duplicate skipped: ${cassoTid}`)
+      continue
+    }
+
+    const tx: TransactionData = {
+      id: generateId(),
+      type,
+      amount,
+      category: type === 'income' ? 'other_income' : 'other_expense',
+      note: `${description} [casso:${cassoTid}]`.trim(),
+      walletId,
+      source: 'casso',
+      date: parseCassoDate(when),
+      createdAt: new Date().toISOString()
+    }
+
+    txs.push(tx)
+    created.push(tx)
+
+    // Cập nhật số dư ví
+    const walletIdx = wallets.findIndex(w => w.id === walletId)
+    if (walletIdx !== -1) {
+      wallets[walletIdx].balance += type === 'income' ? amount : -amount
+    }
+
+    // Tạo notification
+    const walletName = wallets.find(w => w.id === walletId)?.name || 'ví'
+    const notiList = (await getJSON<NotificationData[]>(
+      env.SMART_NOTE_KV, `users/${userId}/notifications`
+    )) || []
+    notiList.unshift({
+      id: generateId(),
+      type: type === 'income' ? 'bank_in' : 'bank_out',
+      title: type === 'income' ? 'Tiền vào tài khoản' : 'Tiền ra tài khoản',
+      body: `${type === 'income' ? '+' : '-'}${amount.toLocaleString('vi-VN')}đ • ${walletName} • ${bankName || bankAbbr}`,
+      read: false,
+      createdAt: new Date().toISOString(),
+      meta: { amount, txType: type, walletName, bankName: bankName || bankAbbr }
+    })
+    // Giữ tối đa 100 noti
+    if (notiList.length > 100) notiList.splice(100)
+    await putJSON(env.SMART_NOTE_KV, `users/${userId}/notifications`, notiList)
+  }
+
+  if (created.length > 0) {
+    await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/transactions`, txs)
+    await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`, wallets)
+  }
+
+  console.log(`[CASSO] Processed ${created.length}/${records.length} transactions for user ${userId}`)
+
+  return jsonResponse({
+    success: true,
+    message: `Đã ghi ${created.length} giao dịch từ ngân hàng`,
+    data: created
+  })
+}
+
 // ====== PIN System ======
 
 async function handleSetPin(userId: string, request: Request, env: Env): Promise<Response> {
@@ -903,6 +1137,10 @@ export default {
       if (path === '/api/webhook/notification' && request.method === 'POST') {
         return handleNotificationWebhook(request, env)
       }
+      // Casso Bank Webhook — POST /api/webhook/casso?userId=<userId>
+      if (path === '/api/webhook/casso' && request.method === 'POST') {
+        return handleCassoWebhook(request, env)
+      }
 
       // Protected routes - verify JWT
       const authHeader = request.headers.get('Authorization')
@@ -980,6 +1218,21 @@ export default {
       }
       if (path === '/api/pin/verify' && request.method === 'POST') {
         return handleVerifyPin(userId, request, env)
+      }
+
+      // Notifications
+      if (path === '/api/notifications' && request.method === 'GET') {
+        return handleListNotifications(userId, env)
+      }
+      if (path === '/api/notifications/read-all' && request.method === 'POST') {
+        return handleMarkAllNotificationsRead(userId, env)
+      }
+      if (path === '/api/notifications' && request.method === 'DELETE') {
+        return handleClearNotifications(userId, env)
+      }
+      const notiReadMatch = path.match(/^\/api\/notifications\/(.+)\/read$/)
+      if (notiReadMatch && request.method === 'POST') {
+        return handleMarkNotificationRead(userId, notiReadMatch[1], env)
       }
 
       // Pending notifications
