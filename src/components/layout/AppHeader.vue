@@ -97,7 +97,7 @@ function handleLogout() {
         <transition name="dropdown">
           <div
             v-if="bellOpen"
-            class="bg-bg-surface border-border-default absolute top-full right-0 z-50 mt-2 w-[22rem] overflow-hidden rounded-xl border shadow-xl"
+            class="bg-bg-surface border-border-default absolute top-full right-0 sm:-right-2 z-50 mt-3 w-[calc(100vw-2rem)] sm:w-[22rem] overflow-hidden rounded-xl border shadow-xl"
             @click.stop
           >
             <!-- Header -->
@@ -115,21 +115,21 @@ function handleLogout() {
               <div class="flex items-center gap-1">
                 <button
                   v-if="notiStore.unreadCount > 0"
-                  class="text-text-tertiary hover:text-accent flex items-center gap-1 rounded-lg px-2 py-1 text-[0.6875rem] transition-colors duration-150"
+                  class="text-text-tertiary hover:bg-bg-hover hover:text-accent flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-[0.6875rem] transition-colors duration-150"
                   title="Đánh dấu tất cả đã đọc"
                   @click="notiStore.markAllRead()"
                 >
-                  <CheckCheck :size="13" />
-                  <span>Đọc tất cả</span>
+                  <CheckCheck :size="14" />
+                  <span class="hidden sm:inline">Đọc tất cả</span>
                 </button>
                 <button
                   v-if="notiStore.notifications.length > 0"
-                  class="text-text-tertiary hover:text-error flex items-center gap-1 rounded-lg px-2 py-1 text-[0.6875rem] transition-colors duration-150"
+                  class="text-text-tertiary hover:bg-error/10 hover:text-error flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-[0.6875rem] transition-colors duration-150"
                   title="Xóa tất cả"
                   @click="notiStore.clearAll()"
                 >
-                  <Trash2 :size="13" />
-                  <span>Xóa</span>
+                  <Trash2 :size="14" />
+                  <span class="hidden sm:inline">Xóa</span>
                 </button>
               </div>
             </div>
@@ -150,7 +150,7 @@ function handleLogout() {
             </div>
 
             <!-- Notification List -->
-            <div class="max-h-[24rem] overflow-y-auto">
+            <div class="max-h-[60vh] sm:max-h-[24rem] overflow-y-auto">
               <!-- Loading -->
               <div v-if="notiStore.loading" class="flex flex-col gap-2 p-3">
                 <div v-for="i in 3" :key="i" class="skeleton h-14 rounded-lg" />
