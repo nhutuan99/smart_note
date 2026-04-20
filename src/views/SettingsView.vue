@@ -103,9 +103,6 @@ onMounted(async () => {
     hasPin.value = data?.hasPin || false
   } catch { /* ignore */ }
 })
-
-
-
 // ── PIN Management ──
 
 async function savePin() {

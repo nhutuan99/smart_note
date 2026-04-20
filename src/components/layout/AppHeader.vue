@@ -102,7 +102,11 @@ function handleLogout() {
         <transition name="dropdown">
           <div
             v-if="bellOpen"
-            class="bg-bg-surface border-border-default absolute top-full right-0 sm:-right-2 z-50 mt-3 w-[calc(100vw-2rem)] sm:w-[22rem] overflow-hidden rounded-xl border shadow-xl"
+            class="
+              fixed left-1/2 top-[4.25rem] z-50 w-[calc(100vw-2rem)] -translate-x-1/2
+              sm:absolute sm:left-auto sm:top-full sm:translate-x-0 sm:-right-2 sm:w-[22rem] sm:mt-3
+              bg-bg-surface border-border-default overflow-hidden rounded-xl border shadow-xl
+            "
             @click.stop
           >
             <!-- Header -->
@@ -249,7 +253,7 @@ function handleLogout() {
         />
         <LogOut
           :size="14"
-          class="text-text-tertiary opacity-0 transition-opacity duration-150 group-hover:opacity-100"
+          class="text-text-tertiary opacity-100 md:opacity-0 transition-opacity duration-150 group-hover:opacity-100"
         />
       </button>
     </div>

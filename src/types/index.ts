@@ -55,7 +55,7 @@ export interface Transaction {
   category: string
   note: string
   walletId: string
-  source: 'manual' | 'telegram' | 'notification'
+  source: 'manual' | 'telegram' | 'notification' | 'casso' | 'sms'
   date: string
   createdAt: string
 }

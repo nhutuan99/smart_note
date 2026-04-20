@@ -4,7 +4,9 @@ import { useEventListener } from '@/composables/useEventListener'
 import { useRoute, useRouter } from 'vue-router'
 import { useNotesStore } from '@/stores/notes'
 import { useUiStore } from '@/stores/ui'
-import { ArrowLeft, Save, Pin, Trash2, Tag, X, Plus, Check } from 'lucide-vue-next'
+import RichEditor from '@/components/editor/RichEditor.vue'
+import AiPanel from '@/components/editor/AiPanel.vue'
+import { ArrowLeft, Save, Pin, Trash2, Tag, X, Plus, Check, Sparkles } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
@@ -24,6 +26,9 @@ let saveTimeout: ReturnType<typeof setTimeout> | null = null
 const loadingNote = ref(true)
 const noteId = computed(() => route.params.id as string)
 
+// AI Panel
+const showAiPanel = ref(false)
+
 onMounted(async () => {
   loadingNote.value = true
   const note = await notesStore.fetchNote(noteId.value)
@@ -40,7 +45,6 @@ onMounted(async () => {
   loadingNote.value = false
 })
 
-// Auto-cleanup keyboard shortcut listener via composable
 useEventListener(document, 'keydown', handleKeydown)
 
 onUnmounted(() => {
@@ -84,7 +88,7 @@ async function handleDelete() {
     danger: true,
     confirmText: 'Chắc chắn xóa'
   })
-  
+
   if (confirmed) {
     if (await notesStore.deleteNote(noteId.value)) {
       ui.showToast('success', 'Note deleted')
@@ -115,6 +119,23 @@ function handleKeydown(e: KeyboardEvent) {
     saveNote()
   }
 }
+
+// AI handlers
+function toggleAiPanel() {
+  showAiPanel.value = !showAiPanel.value
+}
+
+function handleAiInsert(text: string) {
+  // Append the AI text to the existing HTML content
+  content.value += `\n<p>${text.replace(/\n/g, '</p><p>')}</p>`
+  ui.showToast('success', 'Đã chèn nội dung AI')
+}
+
+function handleApplyTags(aiTags: string[]) {
+  const newTags = aiTags.filter(t => !tags.value.includes(t))
+  tags.value.push(...newTags)
+  ui.showToast('success', `Đã thêm ${newTags.length} tag${newTags.length !== 1 ? 's' : ''}`)
+}
 </script>
 
 <template>
@@ -137,15 +158,26 @@ function handleKeydown(e: KeyboardEvent) {
             <span class="text-text-tertiary">Unsaved changes</span>
           </template>
           <template v-else-if="lastSaved">
-            <Check
-              :size="14"
-              class="text-success"
-            />
+            <Check :size="14" class="text-success" />
             <span class="text-text-disabled">Saved {{ lastSaved }}</span>
           </template>
         </div>
       </div>
       <div class="flex items-center gap-1">
+        <!-- AI Button -->
+        <button
+          id="ai-panel-btn"
+          title="AI Assistant"
+          class="flex h-[2.125rem] items-center gap-1.5 rounded-lg px-2.5 text-sm font-medium transition-all duration-150"
+          :class="showAiPanel
+            ? 'bg-accent-subtle text-accent'
+            : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary'"
+          @click="toggleAiPanel"
+        >
+          <Sparkles :size="15" />
+          <span class="hidden sm:inline">AI</span>
+        </button>
+
         <button
           id="pin-note-btn"
           :title="pinned ? 'Unpin' : 'Pin'"
@@ -176,10 +208,7 @@ function handleKeydown(e: KeyboardEvent) {
 
     <!-- Tags -->
     <div class="mb-2 flex items-center gap-2 pb-4">
-      <Tag
-        :size="14"
-        class="text-text-disabled shrink-0"
-      />
+      <Tag :size="14" class="text-text-disabled shrink-0" />
       <div class="flex flex-wrap items-center gap-2">
         <span
           v-for="tag in tags"
@@ -227,16 +256,21 @@ function handleKeydown(e: KeyboardEvent) {
         id="note-title-input"
         v-model="title"
         placeholder="Untitled"
-        class="text-text-primary placeholder:text-text-disabled mb-2 w-full border-none bg-transparent py-2 text-[1.875rem] leading-tight font-bold tracking-tight focus:outline-none"
+        class="text-text-primary placeholder:text-text-disabled mb-4 w-full border-none bg-transparent py-2 text-[1.875rem] leading-tight font-bold tracking-tight focus:outline-none"
       />
 
-      <!-- Content -->
-      <textarea
-        id="note-content-input"
-        v-model="content"
-        placeholder="Start writing... (Markdown supported)"
-        class="text-text-secondary placeholder:text-text-disabled min-h-[31.25rem] flex-1 resize-none border-none bg-transparent py-2 font-sans text-sm leading-[1.8] focus:outline-none"
+      <!-- AI Panel -->
+      <AiPanel
+        :visible="showAiPanel"
+        :title="title"
+        :content="content"
+        @close="showAiPanel = false"
+        @insert-text="handleAiInsert"
+        @apply-tags="handleApplyTags"
       />
+
+      <!-- Rich Editor -->
+      <RichEditor v-model="content" />
     </template>
   </div>
 </template>

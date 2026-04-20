@@ -17,6 +17,7 @@ interface Env {
   TELEGRAM_WEBHOOK_SECRET: string
   CASSO_WEBHOOK_SECRET: string
   RESEND_API_KEY?: string
+  AI: Ai
 }
 
 interface UserData {
@@ -45,7 +46,7 @@ interface TransactionData {
   category: string
   note: string
   walletId: string
-  source: 'manual' | 'telegram' | 'notification' | 'casso'
+  source: 'manual' | 'telegram' | 'notification' | 'casso' | 'sms'
   date: string
   createdAt: string
 }
@@ -86,12 +87,9 @@ interface NotificationData {
 // ====== Default Wallets (created on register) ======
 
 const DEFAULT_WALLETS: Omit<WalletData, 'id'>[] = [
-  { name: 'Techcombank', balance: 0, currency: 'VND', icon: '🏦', color: '#e62e2e', order: 0 },
-  { name: 'TPBank', balance: 0, currency: 'VND', icon: '🏧', color: '#7b2d8e', order: 1 },
-  { name: 'MoMo', balance: 0, currency: 'VND', icon: '📱', color: '#d82d8b', order: 2 },
-  { name: 'ZaloPay', balance: 0, currency: 'VND', icon: '💙', color: '#0068ff', order: 3 },
-  { name: 'Visa', balance: 0, currency: 'VND', icon: '💳', color: '#1a1f71', order: 4 },
-  { name: 'Tiền mặt', balance: 0, currency: 'VND', icon: '💵', color: '#10b981', order: 5 }
+  { name: 'Ngân hàng', balance: 0, currency: 'VND', icon: '🏦', color: '#3b82f6', order: 0 },
+  { name: 'Ví điện tử', balance: 0, currency: 'VND', icon: '📱', color: '#8b5cf6', order: 1 },
+  { name: 'Tiền mặt',   balance: 0, currency: 'VND', icon: '💵', color: '#10b981', order: 2 },
 ]
 
 // ====== Utility Functions ======
@@ -1022,14 +1020,24 @@ function parseSmsTransaction(text: string) {
 }
 
 async function handleSmsWebhook(request: Request, env: Env): Promise<Response> {
-  let body: any
+  const contentType = request.headers.get('content-type') || ''
+  let text = ''
+
   try {
-    body = await request.json()
-  } catch {
-    return errorResponse('Invalid JSON body')
+    if (contentType.includes('application/json')) {
+      const body = await request.json() as any
+      text = body?.text || body?.message || body?.body || ''
+    } else if (contentType.includes('application/x-www-form-urlencoded') || contentType.includes('multipart/form-data')) {
+      const formData = await request.formData()
+      text = (formData.get('text') || formData.get('message') || formData.get('body') || '').toString()
+    } else {
+      text = await request.text()
+    }
+  } catch (err) {
+    return errorResponse('Invalid webhook payload')
   }
 
-  const text = body?.text || body?.message || body?.body || ''
+  text = text.trim()
   if (!text) return errorResponse('Missing SMS text')
 
   const parsed = parseSmsTransaction(text)
@@ -1164,6 +1172,108 @@ async function handleResolvePending(userId: string, pendingId: string, env: Env)
   return jsonResponse({ success: true })
 }
 
+// ====== Cloudflare Workers AI ======
+
+const AI_MODEL = '@cf/meta/llama-3.1-8b-instruct'
+
+const AI_SYSTEM_PROMPTS: Record<string, string> = {
+  summarize: 'You are a concise summarizer. Summarize the user content into bullet points (max 5). Reply in the same language as the content. Return ONLY the bullet list, no intro or explanation.',
+  continue: 'You are a writing assistant. Continue the user text naturally in 2-3 sentences. Match the tone and language. Return ONLY the continuation, no explanation.',
+  improve: 'You are an editor. Improve the grammar and style of the user text. Keep the original meaning and language. Return ONLY the improved text.',
+  tags: 'You are a tagging assistant. Suggest 3-5 relevant tags for the content. Return ONLY a comma-separated list of lowercase tags, nothing else.',
+  ask: 'You are a helpful assistant. Answer the user question based on the provided note content. Be concise and clear.'
+}
+
+async function handleAi(request: Request, env: Env): Promise<Response> {
+  if (!env.AI) return errorResponse('AI binding not configured', 503)
+
+  const body = (await request.json()) as any
+  const { action, content, question } = body
+
+  if (!action) return errorResponse('Missing action')
+  if (!content && action !== 'ask') return errorResponse('Note content is required')
+  if (action === 'ask' && !question) return errorResponse('Missing question')
+
+  const systemPrompt = AI_SYSTEM_PROMPTS[action]
+  if (!systemPrompt) return errorResponse(`Unknown action: ${action}`)
+
+  let userMessage: string
+  if (action === 'ask') {
+    userMessage = content
+      ? `Note content:\n${content}\n\nQuestion: ${question}`
+      : `Question: ${question}`
+  } else if (action === 'tags') {
+    userMessage = `Title: ${body.title || ''}\nContent: ${content.substring(0, 600)}`
+  } else {
+    userMessage = content
+  }
+
+  try {
+    const response = await env.AI.run(AI_MODEL as any, {
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userMessage }
+      ],
+      max_tokens: 512,
+      temperature: 0.7
+    }) as any
+
+    const text = response?.response || ''
+    return jsonResponse({ success: true, data: text })
+  } catch (err: any) {
+    return errorResponse(err.message || 'AI request failed', 500)
+  }
+}
+
+async function handleAiStream(request: Request, env: Env): Promise<Response> {
+  if (!env.AI) return errorResponse('AI binding not configured', 503)
+
+  const body = (await request.json()) as any
+  const { action, content, question } = body
+
+  if (!action) return errorResponse('Missing action')
+  if (!content && action !== 'ask') return errorResponse('Note content is required')
+  if (action === 'ask' && !question) return errorResponse('Missing question')
+
+  const systemPrompt = AI_SYSTEM_PROMPTS[action]
+  if (!systemPrompt) return errorResponse(`Unknown action: ${action}`)
+
+  let userMessage: string
+  if (action === 'ask') {
+    userMessage = content
+      ? `Note content:\n${content}\n\nQuestion: ${question}`
+      : `Question: ${question}`
+  } else if (action === 'tags') {
+    userMessage = `Title: ${body.title || ''}\nContent: ${content.substring(0, 600)}`
+  } else {
+    userMessage = content
+  }
+
+  try {
+    const stream = await (env.AI as any).run(AI_MODEL, {
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userMessage }
+      ],
+      max_tokens: 512,
+      temperature: 0.7,
+      stream: true
+    }) as ReadableStream
+
+    const cors = corsHeaders()
+    return new Response(stream, {
+      headers: {
+        ...cors,
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'X-Content-Type-Options': 'nosniff',
+      }
+    })
+  } catch (err: any) {
+    return errorResponse(err.message || 'AI stream failed', 500)
+  }
+}
+
 // ====== Main Router ======
 
 export default {
@@ -1296,6 +1406,14 @@ export default {
       const pendingMatch = path.match(/^\/api\/pending\/(.+)\/resolve$/)
       if (pendingMatch && request.method === 'POST') {
         return handleResolvePending(userId, pendingMatch[1], env)
+      }
+
+      // AI
+      if (path === '/api/ai/stream' && request.method === 'POST') {
+        return handleAiStream(request, env)
+      }
+      if (path === '/api/ai' && request.method === 'POST') {
+        return handleAi(request, env)
       }
 
       return errorResponse('Not found', 404)
