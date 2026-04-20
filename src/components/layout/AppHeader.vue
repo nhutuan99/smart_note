@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
 import { useNotificationStore } from '@/stores/notifications'
@@ -11,6 +11,11 @@ const auth = useAuthStore()
 const ui = useUiStore()
 const notiStore = useNotificationStore()
 const router = useRouter()
+
+const imgError = ref(false)
+watch(() => auth.user?.avatarUrl, () => {
+  imgError.value = false
+})
 
 // ─── Bell Dropdown ─────────────────────────────────────────────────────────
 const bellOpen = ref(false)
@@ -228,17 +233,19 @@ function handleLogout() {
         @click="handleLogout"
       >
         <div
-          v-if="!auth.user?.avatarUrl"
+          v-if="!auth.user?.avatarUrl || imgError"
           class="bg-accent-subtle text-accent flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold"
         >
           {{ auth.user?.name?.charAt(0)?.toUpperCase() || 'U' }}
         </div>
         <img
           v-else
+          v-show="!imgError"
           :src="auth.user?.avatarUrl"
           alt="Avatar"
           class="h-7 w-7 rounded-full object-cover"
-          @error="auth.user.avatarUrl = ''"
+          referrerpolicy="no-referrer"
+          @error="imgError = true"
         />
         <LogOut
           :size="14"

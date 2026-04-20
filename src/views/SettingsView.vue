@@ -3,7 +3,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useNotesStore } from '@/stores/notes'
 import { useUiStore } from '@/stores/ui'
 import { useRouter } from 'vue-router'
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import { httpClient } from '@/shared/api/httpClient'
 import type { User } from '@/types'
 import { User as UserIcon, Database, Download, LogOut, HardDrive, FileText, Shield, Lock, Eye, EyeOff, AlertTriangle, Trash2, Camera, Save, Link } from 'lucide-vue-next'
@@ -12,6 +12,11 @@ const auth = useAuthStore()
 const notesStore = useNotesStore()
 const ui = useUiStore()
 const router = useRouter()
+
+const imgError = ref(false)
+watch(() => auth.user?.avatarUrl, () => {
+  imgError.value = false
+})
 
 const storageUsed = computed(() => {
   let t = 0
@@ -162,17 +167,19 @@ async function savePin() {
         <div v-if="!isEditingProfile" class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div class="flex items-center gap-4">
             <div
-              v-if="!auth.user?.avatarUrl"
+              v-if="!auth.user?.avatarUrl || imgError"
               class="bg-accent-subtle text-accent flex h-[3.25rem] w-[3.25rem] items-center justify-center rounded-full text-xl font-semibold"
             >
               {{ auth.user?.name?.charAt(0)?.toUpperCase() || 'U' }}
             </div>
             <img 
               v-else 
+              v-show="!imgError"
               :src="auth.user?.avatarUrl" 
               alt="Avatar" 
               class="h-[3.25rem] w-[3.25rem] rounded-full object-cover shadow-sm"
-              @error="auth.user.avatarUrl = ''"
+              referrerpolicy="no-referrer"
+              @error="imgError = true"
             />
             <div>
               <h4 class="mb-0.5 text-base font-semibold">{{ auth.user?.name || 'User' }}</h4>
