@@ -1048,7 +1048,21 @@ async function handleSmsWebhook(request: Request, env: Env): Promise<Response> {
     }, 400)
   }
 
-  const parsed = parseSmsTransaction(text)
+  let predictedWalletHint = ''
+  const notiParsed = parseNotification('SMS', text)
+  if (notiParsed) {
+    predictedWalletHint = notiParsed.walletHint
+  }
+
+  let parsed = parseSmsTransaction(text)
+  if (!parsed && notiParsed) {
+    parsed = {
+      type: notiParsed.type,
+      amount: notiParsed.amount,
+      rawText: text.substring(0, 50) + (text.length > 50 ? '...' : '')
+    }
+  }
+
   if (!parsed) {
     return jsonResponse({ success: false, message: 'Could not parse SMS transaction' })
   }
@@ -1063,11 +1077,16 @@ async function handleSmsWebhook(request: Request, env: Env): Promise<Response> {
   const wallets = (await getJSON<WalletData[]>(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`)) || []
   const txs = (await getJSON<TransactionData[]>(env.SMART_NOTE_KV, `users/${userId}/finance/transactions`)) || []
 
-  // Default to first wallet for SMS since we don't know bank Name precisely yet
-  const walletId = wallets[0]?.id || ''
+  // Map to correct wallet if hinted, otherwise default to first
+  let walletId = wallets[0]?.id || ''
+  if (predictedWalletHint) {
+    const found = wallets.find(w => w.name.toLowerCase().includes(predictedWalletHint.toLowerCase()))
+    if (found) walletId = found.id
+  }
   
-  // Prevent duplicate SMS: simple hash of text + date
-  const smsHash = `[sms:${btoa(text.substring(0,20)).substring(0,10)}]`
+  // Prevent duplicate SMS: safe hash of text without btoa (to avoid unicode crash)
+  const safeText = text.replace(/[^a-zA-Z0-9]/g, '')
+  const smsHash = `[sms:${safeText.substring(0, 20)}]`
   const alreadyExists = txs.some(t => t.note?.includes(smsHash))
   if (alreadyExists) {
     return jsonResponse({ success: true, message: 'Duplicate SMS skipped' })
