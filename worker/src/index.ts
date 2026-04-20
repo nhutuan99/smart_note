@@ -1063,16 +1063,30 @@ async function handleSmsWebhook(request: Request, env: Env): Promise<Response> {
     }
   }
 
-  if (!parsed) {
-    return jsonResponse({ success: false, message: 'Could not parse SMS transaction' })
-  }
-
   const url = new URL(request.url)
   const userId = url.searchParams.get('userId')
   if (!userId) return errorResponse('Missing userId query param')
 
   const user = await getJSON<UserData>(env.SMART_NOTE_KV, `users/${userId}/profile`)
   if (!user) return errorResponse('User not found', 404)
+
+  if (!parsed) {
+    const pending = (await getJSON<PendingNotification[]>(env.SMART_NOTE_KV, `users/${userId}/finance/pending`)) || []
+    pending.push({
+      id: generateId(),
+      rawText: text,
+      appName: 'SMS',
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    })
+    await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/pending`, pending)
+    
+    return jsonResponse({
+      success: false,
+      error: 'Không thể nhận diện cú pháp giao dịch từ SMS, đã lưu vào mục pending',
+      data: { rawText: text, status: 'pending' }
+    })
+  }
 
   const wallets = (await getJSON<WalletData[]>(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`)) || []
   const txs = (await getJSON<TransactionData[]>(env.SMART_NOTE_KV, `users/${userId}/finance/transactions`)) || []
