@@ -38,19 +38,26 @@ const COLORS = [
   '#006838', '#1e3765', '#00529b', '#d11f26', '#003c7d'
 ]
 
+const isAdding = ref(false)
+
 async function addWallet() {
-  if (!newWallet.value.name.trim()) return
-  const brand = getWalletBrand(newWallet.value.name)
-  await finance.addWallet({
-    name: newWallet.value.name.trim(),
-    balance: 0,
-    currency: 'VND',
-    icon: newWallet.value.icon,
-    color: brand?.bgColor || newWallet.value.color,
-    order: finance.wallets.length
-  })
-  newWallet.value = { name: '', icon: '💰', color: '#10b981' }
-  showAdd.value = false
+  if (!newWallet.value.name.trim() || isAdding.value) return
+  isAdding.value = true
+  try {
+    const brand = getWalletBrand(newWallet.value.name)
+    await finance.addWallet({
+      name: newWallet.value.name.trim(),
+      balance: 0,
+      currency: 'VND',
+      icon: newWallet.value.icon,
+      color: brand?.bgColor || newWallet.value.color,
+      order: finance.wallets.length
+    })
+    newWallet.value = { name: '', icon: '💰', color: '#10b981' }
+    showAdd.value = false
+  } finally {
+    isAdding.value = false
+  }
 }
 
 async function requestDelete(id: string) {
@@ -229,7 +236,7 @@ function onDragEnd() {
 
           <div class="flex gap-2">
             <button @click="showAdd = false" class="border-border-default text-text-secondary hover:bg-bg-hover flex-1 rounded-lg border py-2 text-sm transition-all duration-150">{{ t('common.cancel') }}</button>
-            <button @click="addWallet" :disabled="!newWallet.name.trim()" class="btn-primary flex-1 justify-center py-2 disabled:opacity-40">{{ t('common.add') }}</button>
+            <button @click="addWallet" :disabled="!newWallet.name.trim() || isAdding" class="btn-primary flex-1 justify-center py-2 disabled:opacity-40">{{ t('common.add') }}</button>
           </div>
         </div>
       </div>

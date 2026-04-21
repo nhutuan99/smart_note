@@ -120,22 +120,30 @@ useEventListener(document, 'click', (e: MouseEvent) => {
 })
 // --- End Date Picker Logic ---
 
+const isSubmitting = ref(false)
+
 async function submit() {
-  if (!isValid.value) return
+  if (!isValid.value || isSubmitting.value) return
+  isSubmitting.value = true
   const amt = parseInt(amount.value.replace(/[,.]/g, ''))
 
-  await finance.addTransaction({
-    type: type.value,
-    amount: amt,
-    category: category.value,
-    note: note.value,
-    walletId: walletId.value,
-    source: 'manual',
-    date: date.value
-  })
+  try {
+    await finance.addTransaction({
+      type: type.value,
+      amount: amt,
+      category: category.value,
+      note: note.value,
+      walletId: walletId.value,
+      source: 'manual',
+      date: date.value
+    })
 
-  router.push('/')
+    router.push('/')
+  } finally {
+    isSubmitting.value = false
+  }
 }
+
 </script>
 
 <template>
@@ -350,7 +358,7 @@ async function submit() {
 
     <!-- Submit -->
     <button
-      :disabled="!isValid"
+      :disabled="!isValid || isSubmitting"
       @click="submit"
       class="flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold transition-all duration-150"
       :class="

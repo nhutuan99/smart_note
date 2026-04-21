@@ -10,7 +10,6 @@ const { t } = useI18n()
 const router = useRouter()
 const notesStore = useNotesStore()
 const ui = useUiStore()
-const showDeleteConfirm = ref<string | null>(null)
 
 onMounted(() => notesStore.fetchNotes())
 
@@ -26,20 +25,36 @@ function formatDate(d: string) {
     : new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
+const isCreating = ref(false)
+
 async function createNote() {
-  const note = await notesStore.createNote({
-    title: 'Untitled Note',
-    content: '',
-    tags: [],
-    pinned: false
-  })
-  if (note) router.push(`/notes/${note.id}`)
+  if (isCreating.value) return
+  isCreating.value = true
+  try {
+    const note = await notesStore.createNote({
+      title: 'Untitled Note',
+      content: '',
+      tags: [],
+      pinned: false
+    })
+    if (note) router.push(`/notes/${note.id}`)
+  } finally {
+    isCreating.value = false
+  }
 }
 
 async function handleDelete(id: string) {
-  if (await notesStore.deleteNote(id)) {
-    ui.showToast('success', t('notes.noteDeleted'))
-    showDeleteConfirm.value = null
+  const confirmed = await ui.requestConfirm({
+    title: 'Xóa ghi chú',
+    message: 'Ghi chú này sẽ bị xóa khỏi hệ thống.\nHành động này không thể hoàn tác.',
+    danger: true,
+    confirmText: 'Chắc chắn xóa'
+  })
+
+  if (confirmed) {
+    if (await notesStore.deleteNote(id)) {
+      ui.showToast('success', t('notes.noteDeleted'))
+    }
   }
 }
 
@@ -62,6 +77,7 @@ async function handleTogglePin(id: string, e: Event) {
         id="notes-new-btn"
         @click="createNote"
         class="btn-primary"
+        :disabled="isCreating"
       >
         <Plus :size="16" />
         {{ t('notes.newNote') }}
@@ -187,7 +203,7 @@ async function handleTogglePin(id: string, e: Event) {
               </button>
               <button
                 class="text-text-tertiary hover:bg-bg-hover hover:text-error rounded p-2 md:p-1 transition-all duration-150 touch-target"
-                @click.stop="showDeleteConfirm = note.id"
+                @click.prevent.stop="handleDelete(note.id)"
               >
                 <Trash2 :size="16" />
               </button>
@@ -222,30 +238,6 @@ async function handleTogglePin(id: string, e: Event) {
           </div>
         </router-link>
 
-        <!-- Delete confirm overlay -->
-        <transition name="fade">
-          <div
-            v-if="showDeleteConfirm === note.id"
-            class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-xl bg-bg-surface/90 backdrop-blur-sm border border-border-default"
-            @click.stop
-          >
-            <p class="text-text-primary font-medium">{{ t('notes.deleteNote') }}</p>
-            <div class="flex gap-2">
-              <button
-                class="border-border-default text-text-secondary hover:bg-bg-hover rounded-lg border px-4 py-1.5 text-sm transition-all duration-150"
-                @click="showDeleteConfirm = null"
-              >
-                {{ t('common.cancel') }}
-              </button>
-              <button
-                class="btn-danger"
-                @click="handleDelete(note.id)"
-              >
-                {{ t('common.delete') }}
-              </button>
-            </div>
-          </div>
-        </transition>
       </div>
     </div>
 
@@ -272,6 +264,7 @@ async function handleTogglePin(id: string, e: Event) {
         v-if="!notesStore.searchQuery"
         @click="createNote"
         class="btn-secondary"
+        :disabled="isCreating"
       >
         <Plus :size="16" />
         {{ t('notes.createNote') }}
