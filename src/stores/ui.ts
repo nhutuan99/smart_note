@@ -20,8 +20,7 @@ export const useUiStore = defineStore('ui', () => {
   const searchOpen = ref(false)
   const toasts = ref<Toast[]>([])
   const theme = ref<'dark' | 'light'>(
-    (localStorage.getItem('sn_theme') as 'dark' | 'light') || 
-    (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
+    (localStorage.getItem('sn_theme') as 'dark' | 'light') || 'dark'
   )
   let toastId = 0
 
