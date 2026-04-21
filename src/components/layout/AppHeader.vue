@@ -196,7 +196,7 @@ function handleLogout() {
                         {{ n.title }}
                       </span>
                       <!-- Unread dot -->
-                      <span v-if="!n.read" class="bg-info mt-1 h-2 w-2 shrink-0 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+                      <span v-if="!n.read" class="bg-accent mt-1 h-2 w-2 shrink-0 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
                     </div>
                     <p class="text-text-tertiary mt-0.5 truncate text-[0.75rem]">{{ n.body }}</p>
                     <span class="text-text-disabled mt-1 block text-[0.6875rem]">
