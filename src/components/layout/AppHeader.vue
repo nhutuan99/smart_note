@@ -3,15 +3,17 @@ import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
 import { useNotificationStore } from '@/stores/notifications'
+import { useFinanceStore } from '@/stores/finance'
 import { useEventListener } from '@/composables/useEventListener'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { Menu, Bell, Settings, LogOut, Sparkles, ArrowUpRight, ArrowDownRight, CheckCheck, Trash2, BellOff, Zap } from 'lucide-vue-next'
+import { Menu, Bell, Settings, LogOut, Sparkles, ArrowUpRight, ArrowDownRight, CheckCheck, Trash2, BellOff, Zap, Sun, Moon } from 'lucide-vue-next'
 
 const { t } = useI18n()
 const auth = useAuthStore()
 const ui = useUiStore()
 const notiStore = useNotificationStore()
+const finance = useFinanceStore()
 const router = useRouter()
 
 const imgError = ref(false)
@@ -42,6 +44,7 @@ onMounted(() => {
 
 // ─── Auth ───────────────────────────────────────────────────────────────────
 function handleLogout() {
+  finance.reset()  // clear cached transactions/wallets before leaving
   auth.logout()
   router.push('/login')
 }
@@ -49,7 +52,7 @@ function handleLogout() {
 
 <template>
   <header
-    class="border-border-default fixed top-0 right-0 left-0 z-50 flex h-[3.5rem] items-center justify-between border-b bg-black/75 px-4 backdrop-blur-xl"
+    class="border-border-default fixed top-0 right-0 left-0 z-50 flex h-[3.5rem] items-center justify-between border-b bg-bg-surface/85 px-4 backdrop-blur-xl transition-colors duration-300"
   >
     <!-- Left -->
     <div class="flex items-center gap-3">
@@ -73,6 +76,16 @@ function handleLogout() {
 
     <!-- Right -->
     <div class="flex items-center gap-1">
+      <!-- Theme Toggle -->
+      <button
+        class="text-text-secondary hover:bg-bg-hover hover:text-accent relative flex h-[2.125rem] w-[2.125rem] items-center justify-center rounded-lg transition-all duration-150"
+        title="Toggle Theme"
+        @click="ui.toggleTheme()"
+      >
+        <Sun v-if="ui.theme === 'dark'" :size="18" />
+        <Moon v-else :size="18" />
+      </button>
+
       <!-- Auto Sync -->
       <router-link
         to="/auto-sync"

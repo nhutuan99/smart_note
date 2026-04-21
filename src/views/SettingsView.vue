@@ -2,6 +2,7 @@
 import { useAuthStore } from '@/stores/auth'
 import { useNotesStore } from '@/stores/notes'
 import { useUiStore } from '@/stores/ui'
+import { useFinanceStore } from '@/stores/finance'
 import { useRouter } from 'vue-router'
 import { computed, ref, onMounted, watch } from 'vue'
 import { httpClient } from '@/shared/api/httpClient'
@@ -14,6 +15,7 @@ const { t } = useI18n()
 const auth = useAuthStore()
 const notesStore = useNotesStore()
 const ui = useUiStore()
+const finance = useFinanceStore()
 const router = useRouter()
 
 const imgError = ref(false)
@@ -90,6 +92,7 @@ async function confirmDeleteAccount() {
     await httpClient.post('/api/auth/delete-account', { password: deletePasswordForm.value.password })
     ui.showToast('success', t('settings.accountDeleted'))
     isDeleteModalOpen.value = false
+    finance.reset()
     auth.logout()
     router.push('/login')
   } catch (err: any) {
@@ -480,7 +483,7 @@ async function savePin() {
           </div>
           <button
             id="logout-btn"
-            @click="auth.logout(); router.push('/login')"
+            @click="finance.reset(); auth.logout(); router.push('/login')"
             class="border-border-default hover:bg-bg-hover hover:text-text-primary rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-150 flex items-center gap-2 text-text-secondary"
           >
             <LogOut :size="16" />

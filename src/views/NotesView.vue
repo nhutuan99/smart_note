@@ -226,7 +226,7 @@ async function handleTogglePin(id: string, e: Event) {
         <transition name="fade">
           <div
             v-if="showDeleteConfirm === note.id"
-            class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-xl bg-black/85"
+            class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-xl bg-bg-surface/90 backdrop-blur-sm border border-border-default"
             @click.stop
           >
             <p class="text-text-primary font-medium">{{ t('notes.deleteNote') }}</p>

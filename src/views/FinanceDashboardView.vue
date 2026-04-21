@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useFinanceStore } from '@/stores/finance'
+import { useFinancePolling } from '@/composables/useFinancePolling'
 import { useAuthStore } from '@/stores/auth'
 import { formatVND, formatVNDShort, getCategoryConfig } from '@/constants/finance'
 import { getWalletBrand } from '@/constants/walletBrands'
@@ -21,9 +21,7 @@ import {
 const { t, tm } = useI18n()
 const router = useRouter()
 const auth = useAuthStore()
-const finance = useFinanceStore()
-
-onMounted(() => finance.fetchAll())
+const finance = useFinancePolling()
 
 const greeting = computed(() => {
   const h = new Date().getHours()
@@ -96,8 +94,10 @@ function timeSince(dateStr: string) {
     <!-- Balance + Income/Expense Cards -->
     <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
       <!-- Total Balance -->
-      <div class="card-premium p-5 sm:col-span-1">
-        <div class="mb-3 flex items-center gap-2">
+      <div class="card-premium p-5 sm:col-span-1 border-accent/40 bg-accent/5 shadow-md shadow-accent/10 relative overflow-hidden">
+        <!-- Decorative subtle glow -->
+        <div class="absolute -right-8 -top-8 w-32 h-32 bg-accent/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="mb-3 flex items-center gap-2 relative z-10">
           <div class="flex h-9 w-9 items-center justify-center rounded-lg" style="background: rgba(20, 184, 166, 0.12);">
             <Wallet
               :size="18"
@@ -106,8 +106,8 @@ function timeSince(dateStr: string) {
           </div>
           <span class="text-text-tertiary text-sm">{{ t('dashboard.totalBalance') }}</span>
         </div>
-        <div v-if="finance.loading" class="skeleton h-8 w-40 mt-1"></div>
-        <div v-else class="text-2xl font-bold tracking-tight">
+        <div v-if="finance.loading" class="skeleton h-8 w-40 mt-1 relative z-10"></div>
+        <div v-else class="text-3xl font-bold tracking-tight text-text-primary relative z-10">
           {{ formatVND(finance.totalBalance) }}
         </div>
       </div>

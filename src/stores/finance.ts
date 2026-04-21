@@ -22,6 +22,12 @@ export const useFinanceStore = defineStore('finance', () => {
     new Date().toISOString().substring(0, 7) // "2026-04"
   )
 
+  // ── Polling state (module-level, not reactive) ──
+  let _pollTimer: ReturnType<typeof setInterval> | null = null
+  let _lastFetchTime = 0
+  const POLL_INTERVAL_MS = 30_000    // 30 seconds
+  const VISIBILITY_STALE_MS = 10_000 // 10 seconds
+
   // ── Computed: Totals ──
 
   const totalBalance = computed(() => wallets.value.reduce((sum, w) => sum + w.balance, 0))
@@ -159,9 +165,74 @@ export const useFinanceStore = defineStore('finance', () => {
     loading.value = true
     try {
       await Promise.all([fetchWallets(), fetchTransactions()])
+      _lastFetchTime = Date.now()
     } finally {
       loading.value = false
     }
+  }
+
+  /**
+   * Silent background refresh — no loading spinner.
+   * Used by polling and visibility-change handler.
+   */
+  async function silentRefresh() {
+    try {
+      await Promise.all([fetchWallets(), fetchTransactions()])
+      _lastFetchTime = Date.now()
+    } catch {
+      // silently fail — non-critical background update
+    }
+  }
+
+  // ── Auto-polling ──
+
+  /**
+   * Start a 30s polling interval.
+   * Call once in the main finance view's onMounted.
+   * Multiple views calling this is safe — only one timer runs.
+   */
+  function startPolling() {
+    if (_pollTimer) return // already running, do nothing
+    _pollTimer = setInterval(() => {
+      silentRefresh()
+    }, POLL_INTERVAL_MS)
+  }
+
+  /**
+   * Stop the polling interval.
+   * Call in onUnmounted to clean up.
+   */
+  function stopPolling() {
+    if (_pollTimer) {
+      clearInterval(_pollTimer)
+      _pollTimer = null
+    }
+  }
+
+  /**
+   * Refresh if data is stale when user returns to the tab/window.
+   * Wire this to document visibilitychange in each finance view.
+   */
+  function refreshOnVisible() {
+    if (document.visibilityState === 'visible') {
+      const isStale = Date.now() - _lastFetchTime > VISIBILITY_STALE_MS
+      if (isStale) {
+        silentRefresh()
+      }
+    }
+  }
+
+  /**
+   * Reset all cached finance data.
+   * MUST be called on logout to prevent data leakage between users.
+   */
+  function reset() {
+    stopPolling()
+    wallets.value = []
+    transactions.value = []
+    filter.value = { type: 'all' }
+    selectedMonth.value = new Date().toISOString().substring(0, 7)
+    _lastFetchTime = 0
   }
 
   // ── Actions: Wallets ──
@@ -215,6 +286,7 @@ export const useFinanceStore = defineStore('finance', () => {
         transactions.value.push(tx)
         // Refresh wallets to get updated balance from server
         await fetchWallets()
+        _lastFetchTime = Date.now()
       }
       return tx
     } catch (err) {
@@ -229,6 +301,7 @@ export const useFinanceStore = defineStore('finance', () => {
       transactions.value = transactions.value.filter((t) => t.id !== id)
       // Refresh wallets to get reverted balance from server
       await fetchWallets()
+      _lastFetchTime = Date.now()
     } catch (err) {
       console.error('Failed to delete transaction:', err)
     }
@@ -258,6 +331,11 @@ export const useFinanceStore = defineStore('finance', () => {
     deleteTransaction,
     fetchWallets,
     fetchTransactions,
-    fetchAll
+    fetchAll,
+    silentRefresh,
+    startPolling,
+    stopPolling,
+    refreshOnVisible,
+    reset
   }
 })

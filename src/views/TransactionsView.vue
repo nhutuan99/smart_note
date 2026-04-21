@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useEventListener } from '@/composables/useEventListener'
 import { useRouter } from 'vue-router'
-import { useFinanceStore } from '@/stores/finance'
+import { useFinancePolling } from '@/composables/useFinancePolling'
 import { useUiStore } from '@/stores/ui'
 import { formatVND, getCategoryConfig } from '@/constants/finance'
 import { getWalletBrand } from '@/constants/walletBrands'
@@ -23,10 +23,8 @@ import {
 
 const { t, tm } = useI18n()
 const router = useRouter()
-const finance = useFinanceStore()
+const finance = useFinancePolling()
 const ui = useUiStore()
-
-onMounted(() => finance.fetchAll())
 
 // Group transactions by date
 const groupedTransactions = computed(() => {
@@ -57,17 +55,28 @@ function dayTotal(txs: Transaction[]) {
   return { income, expense, net: income - expense }
 }
 
-async function deleteTx(id: string) {
-  const confirmed = await ui.requestConfirm({
-    title: t('transactions.deleteTitle'),
-    message: t('transactions.deleteMessage'),
-    danger: true,
-    confirmText: t('transactions.deleteConfirm')
-  })
-  
-  if (confirmed) {
-    finance.deleteTransaction(id)
+const AUTO_SOURCES: Transaction['source'][] = ['sms', 'casso', 'notification', 'telegram']
+
+async function deleteTx(tx: Transaction) {
+  // Auto-sourced transactions require PIN to prevent accidental/unauthorized deletion
+  if (AUTO_SOURCES.includes(tx.source)) {
+    const pinOk = await ui.requestPinValidation(
+      'Xác nhận xóa giao dịch',
+      `Giao dịch từ ${tx.source.toUpperCase()} được bảo vệ. Nhập mã PIN để xóa.`
+    )
+    if (!pinOk) return
+  } else {
+    // Manual transactions only need regular confirm
+    const confirmed = await ui.requestConfirm({
+      title: t('transactions.deleteTitle'),
+      message: t('transactions.deleteMessage'),
+      danger: true,
+      confirmText: t('transactions.deleteConfirm')
+    })
+    if (!confirmed) return
   }
+
+  finance.deleteTransaction(tx.id)
 }
 
 // Custom wallet dropdown
@@ -306,9 +315,27 @@ useEventListener(document, 'click', handleClickOutside)
                 <span>{{ finance.getWalletName(tx.walletId) }}</span>
                 <span
                   v-if="tx.source === 'telegram'"
-                  class="bg-info/10 text-info rounded px-1.5 py-0.5 text-[0.625rem]"
+                  class="bg-info/10 text-info rounded px-1.5 py-0.5 text-[0.625rem] font-medium"
                 >
                   Telegram
+                </span>
+                <span
+                  v-else-if="tx.source === 'sms'"
+                  class="bg-success/10 text-success rounded px-1.5 py-0.5 text-[0.625rem] font-medium"
+                >
+                  SMS
+                </span>
+                <span
+                  v-else-if="tx.source === 'casso'"
+                  class="bg-accent/10 text-accent rounded px-1.5 py-0.5 text-[0.625rem] font-medium"
+                >
+                  Casso
+                </span>
+                <span
+                  v-else-if="tx.source === 'notification'"
+                  class="bg-warning/10 text-warning rounded px-1.5 py-0.5 text-[0.625rem] font-medium"
+                >
+                  Auto
                 </span>
               </div>
             </div>
@@ -332,7 +359,7 @@ useEventListener(document, 'click', handleClickOutside)
             <!-- Delete -->
             <button
               class="text-text-tertiary hover:text-error hover:bg-bg-active rounded p-2 md:p-1 opacity-100 md:opacity-0 transition-all duration-150 md:group-hover:opacity-100 touch-target"
-              @click="deleteTx(tx.id)"
+              @click="deleteTx(tx)"
             >
               <Trash2 :size="16" />
             </button>

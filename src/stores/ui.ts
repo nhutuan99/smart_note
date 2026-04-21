@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 
 export interface Toast {
   id: number
@@ -19,7 +19,21 @@ export const useUiStore = defineStore('ui', () => {
   const sidebarOpen = ref(true)
   const searchOpen = ref(false)
   const toasts = ref<Toast[]>([])
+  const theme = ref<'dark' | 'light'>(
+    (localStorage.getItem('sn_theme') as 'dark' | 'light') || 
+    (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
+  )
   let toastId = 0
+
+  // Apply theme to body
+  watch(theme, (newTheme) => {
+    document.documentElement.setAttribute('data-theme', newTheme)
+    localStorage.setItem('sn_theme', newTheme)
+  }, { immediate: true })
+
+  function toggleTheme() {
+    theme.value = theme.value === 'dark' ? 'light' : 'dark'
+  }
 
   const confirmState = ref<{
     isOpen: boolean
@@ -133,11 +147,13 @@ export const useUiStore = defineStore('ui', () => {
     sidebarOpen,
     searchOpen,
     toasts,
+    theme,
     confirmState,
     pinState,
     toggleSidebar,
     closeSidebar,
     toggleSearch,
+    toggleTheme,
     showToast,
     removeToast,
     requestConfirm,

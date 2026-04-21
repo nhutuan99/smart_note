@@ -1024,10 +1024,10 @@ interface SmsParsedResult {
   rawText: string     // original SMS (truncated for storage)
 }
 
-function parseSmsTransaction(text: string): SmsParsedResult | null {
+function parseSmsTransaction(text: string, senderHint = ''): SmsParsedResult | null {
   if (!text) return null
 
-  // ── Detect bank name ──
+  // ── Detect bank name from SMS body first ──
   let bankName = ''
   const lowerText = text.toLowerCase()
   if (lowerText.includes('tpbank') || lowerText.includes('(tpbank)'))  bankName = 'TPBank'
@@ -1042,6 +1042,26 @@ function parseSmsTransaction(text: string): SmsParsedResult | null {
   else if (lowerText.includes('sacombank'))  bankName = 'Sacombank'
   else if (lowerText.includes('momo'))       bankName = 'MoMo'
   else if (lowerText.includes('zalopay'))    bankName = 'ZaloPay'
+
+  // ── Fallback: use sender hint from iOS Shortcuts if body has no bank name ──
+  // (some TPBank SMS don't start with "(TPBank):" prefix)
+  if (!bankName && senderHint) {
+    const lowerHint = senderHint.toLowerCase()
+    if (lowerHint.includes('tpbank'))     bankName = 'TPBank'
+    else if (lowerHint.includes('techcombank') || lowerHint.includes('tcb')) bankName = 'Techcombank'
+    else if (lowerHint.includes('vietcombank') || lowerHint.includes('vcb')) bankName = 'Vietcombank'
+    else if (lowerHint.includes('mbbank') || lowerHint.includes('mb'))       bankName = 'MBBank'
+    else if (lowerHint.includes('bidv'))       bankName = 'BIDV'
+    else if (lowerHint.includes('agribank'))   bankName = 'Agribank'
+    else if (lowerHint.includes('vietinbank')) bankName = 'VietinBank'
+    else if (lowerHint.includes('acb'))        bankName = 'ACB'
+    else if (lowerHint.includes('vpbank'))     bankName = 'VPBank'
+    else if (lowerHint.includes('sacombank'))  bankName = 'Sacombank'
+    else if (lowerHint.includes('momo'))       bankName = 'MoMo'
+    else if (lowerHint.includes('zalopay'))    bankName = 'ZaloPay'
+    // If still not matched, store the raw sender hint as bankName for manual wallet matching
+    if (!bankName) bankName = senderHint
+  }
 
   // ── Extract structured fields (TPBank, Techcombank, etc.) ──
   // PS (Phát sinh): PS:-22.000VND or PS:+500.000VND
@@ -1122,38 +1142,64 @@ function parseSmsTransaction(text: string): SmsParsedResult | null {
 
 async function handleSmsWebhook(request: Request, env: Env): Promise<Response> {
   const contentType = request.headers.get('content-type') || ''
-  
   const url = new URL(request.url)
   const userId = url.searchParams.get('userId')
-  const cloned = request.clone()
-  
-  // ── Debug: save raw request to KV for troubleshooting ──
-  let rawTextDump = ''
-  try {
-    rawTextDump = await cloned.text()
-    if (userId) {
-      await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/latest_request`, {
-        contentType,
-        rawDump: rawTextDump,
-        headers: Object.fromEntries([...request.headers]),
-        time: new Date().toISOString()
-      })
-    }
-  } catch (e) {}
 
-  // ── Extract SMS text from various content-types ──
+  // ── Read raw body exactly ONCE ──
+  // Clone is not used — we read the raw string first, then parse from it.
+  // This avoids the double-read bug where request.json()/text() returns empty
+  // after the stream has already been consumed.
+  let rawBody = ''
+  try {
+    rawBody = await request.text()
+  } catch {
+    return errorResponse('Failed to read request body')
+  }
+
+  // ── Debug: save raw request to KV for troubleshooting ──
+  if (userId) {
+    // Non-blocking — don't await to keep webhook fast
+    putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/latest_request`, {
+      contentType,
+      rawDump: rawBody.substring(0, 2000), // cap at 2KB
+      headers: Object.fromEntries([...request.headers]),
+      time: new Date().toISOString()
+    }).catch(() => {})
+  }
+
+  // ── Extract SMS text from rawBody based on content-type ──
   let text = ''
+  let senderHint = '' // e.g. "TPBank" from iOS Shortcuts sender field
   try {
     if (contentType.includes('application/json')) {
-      const body = await request.json() as any
+      const body = JSON.parse(rawBody)
       // iOS Shortcuts sends: {"text": "SMS content"} or {"text": {"body": "..."}}
-      const raw = body?.text ?? body?.message ?? body?.body ?? body?.content ?? ''
+      const raw = body?.text ?? body?.message ?? body?.body ?? body?.content ?? body?.sms ?? ''
       text = typeof raw === 'string' ? raw : (raw?.body ?? raw?.content ?? raw?.text ?? JSON.stringify(raw))
-    } else if (contentType.includes('application/x-www-form-urlencoded') || contentType.includes('multipart/form-data')) {
-      const formData = await request.formData()
-      text = (formData.get('text') || formData.get('message') || formData.get('body') || '').toString()
+      // Optional: sender/from helps bank detection when SMS body lacks bank prefix
+      senderHint = (body?.sender ?? body?.from ?? body?.bank ?? '').toString().trim()
+    } else if (contentType.includes('application/x-www-form-urlencoded')) {
+      const params = new URLSearchParams(rawBody)
+      text = (params.get('text') || params.get('message') || params.get('body') || params.get('sms') || '').toString()
+    } else if (contentType.includes('multipart/form-data')) {
+      // Fallback: try to parse JSON from raw, then treat as plain text
+      try {
+        const body = JSON.parse(rawBody)
+        const raw = body?.text ?? body?.message ?? body?.body ?? ''
+        text = typeof raw === 'string' ? raw : rawBody
+      } catch {
+        text = rawBody
+      }
     } else {
-      text = await request.text()
+      // text/plain or no content-type → treat entire body as SMS text
+      // Also try to parse as JSON first in case iOS sent JSON without proper Content-Type header
+      try {
+        const body = JSON.parse(rawBody)
+        const raw = body?.text ?? body?.message ?? body?.body ?? body?.content ?? body?.sms ?? ''
+        text = typeof raw === 'string' && raw.length > 0 ? raw : rawBody
+      } catch {
+        text = rawBody
+      }
     }
   } catch (err) {
     return errorResponse('Invalid webhook payload')
@@ -1173,8 +1219,8 @@ async function handleSmsWebhook(request: Request, env: Env): Promise<Response> {
   const user = await getJSON<UserData>(env.SMART_NOTE_KV, `users/${userId}/profile`)
   if (!user) return errorResponse('User not found', 404)
 
-  // ── Parse SMS ──
-  const parsed = parseSmsTransaction(text)
+  // ── Parse SMS (pass senderHint for bank detection when body lacks bank prefix) ──
+  const parsed = parseSmsTransaction(text, senderHint)
 
   if (!parsed) {
     // Fallback: try legacy parseNotification
@@ -1188,7 +1234,7 @@ async function handleSmsWebhook(request: Request, env: Env): Promise<Response> {
         txRef: '',
         account: '',
         balance: 0,
-        bankName: notiParsed.walletHint || '',
+        bankName: notiParsed.walletHint || senderHint || '',
         rawText: text.substring(0, 200)
       }
       // Continue processing with fallback
@@ -1206,6 +1252,14 @@ async function handleSmsWebhook(request: Request, env: Env): Promise<Response> {
     })
     await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/pending`, pending)
     
+    // Update latest_request with error
+    await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/latest_request`, {
+      rawDump: text,
+      time: new Date().toISOString(),
+      status: 'pending',
+      error: 'Không thể nhận diện cú pháp giao dịch từ SMS'
+    }).catch(() => {})
+
     return jsonResponse({
       success: false,
       error: 'Không thể nhận diện cú pháp giao dịch từ SMS, đã lưu vào mục pending',
@@ -1308,7 +1362,24 @@ async function processSmsTransaction(
   
   await putJSON(env.SMART_NOTE_KV, `users/${userId}/notifications`, notiList)
   await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/transactions`, txs)
+  await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/transactions`, txs)
   await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`, wallets)
+
+  // Update latest_request with success details
+  await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/latest_request`, {
+    rawDump: originalText,
+    time: new Date().toISOString(),
+    status: 'success',
+    parsedData: {
+      type: parsed.type,
+      amount: parsed.amount,
+      note: parsed.note,
+      bankName: parsed.bankName,
+      walletName,
+      txRef: parsed.txRef,
+      balance: parsed.balance
+    }
+  }).catch(() => {})
 
   return jsonResponse({ 
     success: true, 
@@ -1390,6 +1461,13 @@ async function handleResolvePending(userId: string, pendingId: string, env: Env)
   pending[idx].status = 'resolved'
   await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/pending`, pending)
   return jsonResponse({ success: true })
+}
+
+// ====== Live Debug / Logs ======
+
+async function handleGetLatestSmsLog(userId: string, env: Env): Promise<Response> {
+  const latest = await getJSON(env.SMART_NOTE_KV, `users/${userId}/finance/latest_request`)
+  return jsonResponse({ success: true, data: latest || null })
 }
 
 // ====== Cloudflare Workers AI ======
@@ -1563,6 +1641,11 @@ export default {
         if (request.method === 'GET') return handleGetNote(userId, noteId, env)
         if (request.method === 'PUT') return handleUpdateNote(userId, noteId, request, env)
         if (request.method === 'DELETE') return handleDeleteNote(userId, noteId, env)
+      }
+
+      // Live Webhook Logs
+      if (path === '/api/webhook/sms/latest' && request.method === 'GET') {
+        return handleGetLatestSmsLog(userId, env)
       }
 
       // Finance: Wallets
