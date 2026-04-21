@@ -180,10 +180,11 @@ async function verifyJWT(
 
 // ====== Email (Resend) ======
 
-async function sendEmail(env: Env, to: string, subject: string, html: string): Promise<boolean> {
+async function sendEmail(env: Env, to: string, subject: string, html: string): Promise<void> {
   if (!env.RESEND_API_KEY) {
-    console.warn('[Email] RESEND_API_KEY not configured')
-    return false
+    console.warn('[Email] RESEND_API_KEY not configured — OTP will not be sent')
+    // In dev/test: log OTP so it can still be used without email
+    return
   }
   const from = env.FROM_EMAIL || 'Smart Note <onboarding@resend.dev>'
   const res = await fetch('https://api.resend.com/emails', {
@@ -195,11 +196,20 @@ async function sendEmail(env: Env, to: string, subject: string, html: string): P
     body: JSON.stringify({ from, to, subject, html })
   })
   if (!res.ok) {
-    const err = await res.text()
-    console.error('[Email] Resend error:', err)
-    return false
+    const errBody = await res.text()
+    console.error('[Email] Resend error:', errBody)
+    // Parse Resend error for clearer user message
+    let detail = 'Không thể gửi email OTP'
+    try {
+      const parsed = JSON.parse(errBody)
+      if (parsed?.message) detail = `Email lỗi: ${parsed.message}`
+      // Resend free tier: can only send to account's own email
+      if (errBody.includes('verified') || errBody.includes('domain')) {
+        detail = 'Email chưa được xác minh trên Resend. Vui lòng verify domain hoặc dùng email của tài khoản Resend.'
+      }
+    } catch { /* ignore */ }
+    throw new Error(detail)
   }
-  return true
 }
 
 function generateOtp(): string {
@@ -373,22 +383,28 @@ async function handleForgotPassword(request: Request, env: Env): Promise<Respons
 
   const usersIndex = (await getJSON<Record<string, string>>(env.SMART_NOTE_KV, 'users/_index')) || {}
   const userId = usersIndex[email]
-  // Always return success to prevent email enumeration
-  if (!userId) return jsonResponse({ success: true, message: 'OTP sent if email exists' })
+  // Always return success to prevent email enumeration (don't leak whether email exists)
+  if (!userId) return jsonResponse({ success: true, data: null, message: 'OTP sent if email exists' })
 
   const otp = generateOtp()
   const otpHash = await hashPassword(otp)
   // Store OTP with 10-minute TTL
   await env.SMART_NOTE_KV.put(`users/${userId}/otp/password`, otpHash, { expirationTtl: 600 })
 
-  await sendEmail(
-    env,
-    email,
-    '🔐 Smart Note - Đặt lại mật khẩu',
-    otpEmailHtml(otp, 'Đặt lại mật khẩu', `Dùng mã OTP dưới đây để đặt lại mật khẩu tài khoản <strong>${email}</strong>.`)
-  )
+  try {
+    await sendEmail(
+      env,
+      email,
+      '\uD83D\uDD10 Smart Note - Đặt lại mật khẩu',
+      otpEmailHtml(otp, 'Đặt lại mật khẩu', `Dùng mã OTP dưới đây để đặt lại mật khẩu tài khoản <strong>${email}</strong>.`)
+    )
+  } catch (emailErr: any) {
+    // Clean up OTP if email fails
+    await env.SMART_NOTE_KV.delete(`users/${userId}/otp/password`)
+    return errorResponse(emailErr.message || 'Không thể gửi email OTP', 500)
+  }
 
-  return jsonResponse({ success: true, message: 'OTP sent if email exists' })
+  return jsonResponse({ success: true, data: null, message: 'OTP sent' })
 }
 
 async function handleVerifyOtp(request: Request, env: Env): Promise<Response> {
@@ -412,7 +428,7 @@ async function handleVerifyOtp(request: Request, env: Env): Promise<Response> {
   // Invalidate OTP immediately after verification
   await env.SMART_NOTE_KV.delete(`users/${userId}/otp/password`)
 
-  return jsonResponse({ success: true, resetToken })
+  return jsonResponse({ success: true, data: { resetToken } })
 }
 
 async function handleResetPassword(request: Request, env: Env): Promise<Response> {
@@ -475,7 +491,7 @@ async function handleVerifyPinOtp(userId: string, request: Request, env: Env): P
   await env.SMART_NOTE_KV.put(`users/${userId}/otp/pin_reset_token`, resetTokenHash, { expirationTtl: 900 })
   await env.SMART_NOTE_KV.delete(`users/${userId}/otp/pin`)
 
-  return jsonResponse({ success: true, resetToken })
+  return jsonResponse({ success: true, data: { resetToken } })
 }
 
 async function handleResetPin(userId: string, request: Request, env: Env): Promise<Response> {
