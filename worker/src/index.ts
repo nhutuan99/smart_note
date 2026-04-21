@@ -999,23 +999,124 @@ async function handleCassoWebhook(request: Request, env: Env): Promise<Response>
 
 // ─── iOS SMS Webhook ──────────────────────────────────────────────────────────
 
-function parseSmsTransaction(text: string) {
-  if (!text) return null
-  
-  // Try to find +/- followed by numbers and currency
-  const match = text.match(/([+-])\s*([\d,.]+)\s*(VND|đ|d)/i)
-  if (!match) return null
+/**
+ * Parse structured SMS from Vietnamese banks.
+ * 
+ * TPBank format:
+ *   (TPBank): 21/04/26;08:12
+ *   TK: xxxx8505201
+ *   PS:-22.000VND
+ *   SD: 257.093VND
+ *   SD KHA DUNG: 257.093VND
+ *   ND: NAP TIEN VI MOMO - 0812122501
+ *   SO GD: 918TTMB261
+ * 
+ * Also handles generic: +500,000VND or -300.000VND
+ */
+interface SmsParsedResult {
+  type: 'income' | 'expense'
+  amount: number
+  note: string        // extracted ND or truncated text
+  txRef: string       // SO GD / transaction reference for dedup
+  account: string     // TK number
+  balance: number     // SD (current balance)
+  bankName: string    // detected bank name
+  rawText: string     // original SMS (truncated for storage)
+}
 
-  const sign = match[1]
-  const amountStr = match[2].replace(/[,.]/g, '') // remove all commas/dots
-  const amount = parseInt(amountStr, 10)
-  
-  if (isNaN(amount) || amount === 0) return null
+function parseSmsTransaction(text: string): SmsParsedResult | null {
+  if (!text) return null
+
+  // ── Detect bank name ──
+  let bankName = ''
+  const lowerText = text.toLowerCase()
+  if (lowerText.includes('tpbank') || lowerText.includes('(tpbank)'))  bankName = 'TPBank'
+  else if (lowerText.includes('techcombank') || lowerText.includes('tcb')) bankName = 'Techcombank'
+  else if (lowerText.includes('vietcombank') || lowerText.includes('vcb')) bankName = 'Vietcombank'
+  else if (lowerText.includes('mbbank') || lowerText.includes('mb bank')) bankName = 'MBBank'
+  else if (lowerText.includes('bidv'))       bankName = 'BIDV'
+  else if (lowerText.includes('agribank'))   bankName = 'Agribank'
+  else if (lowerText.includes('vietinbank')) bankName = 'VietinBank'
+  else if (lowerText.includes('acb'))        bankName = 'ACB'
+  else if (lowerText.includes('vpbank'))     bankName = 'VPBank'
+  else if (lowerText.includes('sacombank'))  bankName = 'Sacombank'
+  else if (lowerText.includes('momo'))       bankName = 'MoMo'
+  else if (lowerText.includes('zalopay'))    bankName = 'ZaloPay'
+
+  // ── Extract structured fields (TPBank, Techcombank, etc.) ──
+  // PS (Phát sinh): PS:-22.000VND or PS:+500.000VND
+  const psMatch = text.match(/PS\s*:\s*([+-])\s*([\d.,]+)\s*(?:VND|đ)/i)
+  // TK (Tài khoản): TK: xxxx8505201
+  const tkMatch = text.match(/TK\s*:\s*([^\n\r]+)/i)
+  // SD (Số dư): SD: 257.093VND
+  const sdMatch = text.match(/(?:^|\n)\s*SD\s*:\s*([\d.,]+)\s*(?:VND|đ)/im)
+  // ND (Nội dung): ND: NAP TIEN VI MOMO...
+  const ndMatch = text.match(/ND\s*:\s*([^\n\r]+)/i)
+  // SO GD (Số giao dịch): SO GD: 918TTMB261
+  const soGdMatch = text.match(/SO\s*GD\s*:\s*([^\n\r\s]+)/i)
+
+  let type: 'income' | 'expense' = 'expense'
+  let amount = 0
+  let note = ''
+  let txRef = ''
+  let account = ''
+  let balance = 0
+
+  // ── Strategy 1: Structured PS field (best for TPBank, etc.) ──
+  if (psMatch) {
+    type = psMatch[1] === '+' ? 'income' : 'expense'
+    amount = parseInt(psMatch[2].replace(/[.,]/g, ''), 10) || 0
+  }
+
+  // ── Strategy 2: Generic +/- amount format ──
+  if (amount <= 0) {
+    const genericMatch = text.match(/([+-])\s*([\d.,]+)\s*(?:VND|đ)/i)
+    if (genericMatch) {
+      type = genericMatch[1] === '+' ? 'income' : 'expense'
+      amount = parseInt(genericMatch[2].replace(/[.,]/g, ''), 10) || 0
+    }
+  }
+
+  // ── Strategy 3: "da bi tru" / "da duoc cong" format ──
+  if (amount <= 0) {
+    const truMatch = text.match(/(?:bi tru|ghi no|ghi nợ|trừ)\s*([\d.,]+)\s*(?:VND|đ)/i)
+    if (truMatch) {
+      type = 'expense'
+      amount = parseInt(truMatch[1].replace(/[.,]/g, ''), 10) || 0
+    }
+    const congMatch = text.match(/(?:duoc cong|ghi co|ghi có|cộng|nhận)\s*([\d.,]+)\s*(?:VND|đ)/i)
+    if (congMatch) {
+      type = 'income'
+      amount = parseInt(congMatch[1].replace(/[.,]/g, ''), 10) || 0
+    }
+  }
+
+  if (amount <= 0) return null
+
+  // Extract optional fields
+  if (tkMatch) account = tkMatch[1].trim()
+  if (sdMatch) balance = parseInt(sdMatch[1].replace(/[.,]/g, ''), 10) || 0
+  if (ndMatch) note = ndMatch[1].trim()
+  if (soGdMatch) txRef = soGdMatch[1].trim()
+
+  // Fallback note if ND not found
+  if (!note) {
+    const ndFallback = text.match(/(?:Noi dung|nội dung|Ref)[:\s]+(.+?)(?:\.|$)/im)
+    if (ndFallback) note = ndFallback[1].trim()
+  }
+  if (!note) {
+    note = text.substring(0, 80) + (text.length > 80 ? '...' : '')
+  }
 
   return {
-    type: sign === '+' ? 'income' : 'expense' as 'income'|'expense',
-    amount: amount,
-    rawText: text.substring(0, 50) + (text.length > 50 ? '...' : '') // truncate note
+    type,
+    amount,
+    note,
+    txRef,
+    account,
+    balance,
+    bankName,
+    rawText: text.substring(0, 200) + (text.length > 200 ? '...' : '')
   }
 }
 
@@ -1023,21 +1124,24 @@ async function handleSmsWebhook(request: Request, env: Env): Promise<Response> {
   const contentType = request.headers.get('content-type') || ''
   
   const url = new URL(request.url)
-  const debugUserId = url.searchParams.get('userId')
+  const userId = url.searchParams.get('userId')
   const cloned = request.clone()
   
+  // ── Debug: save raw request to KV for troubleshooting ──
   let rawTextDump = ''
   try {
     rawTextDump = await cloned.text()
-    if (debugUserId) {
-      await putJSON(env.SMART_NOTE_KV, `users/${debugUserId}/finance/latest_request`, {
+    if (userId) {
+      await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/latest_request`, {
         contentType,
         rawDump: rawTextDump,
+        headers: Object.fromEntries([...request.headers]),
         time: new Date().toISOString()
       })
     }
   } catch (e) {}
 
+  // ── Extract SMS text from various content-types ──
   let text = ''
   try {
     if (contentType.includes('application/json')) {
@@ -1064,28 +1168,34 @@ async function handleSmsWebhook(request: Request, env: Env): Promise<Response> {
     }, 400)
   }
 
-  let predictedWalletHint = ''
-  const notiParsed = parseNotification('SMS', text)
-  if (notiParsed) {
-    predictedWalletHint = notiParsed.walletHint
-  }
-
-  let parsed = parseSmsTransaction(text)
-  if (!parsed && notiParsed) {
-    parsed = {
-      type: notiParsed.type,
-      amount: notiParsed.amount,
-      rawText: text.substring(0, 50) + (text.length > 50 ? '...' : '')
-    }
-  }
-
-  const userId = url.searchParams.get('userId')
   if (!userId) return errorResponse('Missing userId query param')
 
   const user = await getJSON<UserData>(env.SMART_NOTE_KV, `users/${userId}/profile`)
   if (!user) return errorResponse('User not found', 404)
 
+  // ── Parse SMS ──
+  const parsed = parseSmsTransaction(text)
+
   if (!parsed) {
+    // Fallback: try legacy parseNotification
+    const notiParsed = parseNotification('SMS', text)
+    if (notiParsed) {
+      // Use notiParsed as fallback — create a minimal parsed result
+      const fallbackParsed: SmsParsedResult = {
+        type: notiParsed.type,
+        amount: notiParsed.amount,
+        note: notiParsed.note || text.substring(0, 80),
+        txRef: '',
+        account: '',
+        balance: 0,
+        bankName: notiParsed.walletHint || '',
+        rawText: text.substring(0, 200)
+      }
+      // Continue processing with fallback
+      return await processSmsTransaction(fallbackParsed, text, userId, env)
+    }
+
+    // Save as pending
     const pending = (await getJSON<PendingNotification[]>(env.SMART_NOTE_KV, `users/${userId}/finance/pending`)) || []
     pending.push({
       id: generateId(),
@@ -1103,30 +1213,71 @@ async function handleSmsWebhook(request: Request, env: Env): Promise<Response> {
     })
   }
 
+  return await processSmsTransaction(parsed, text, userId, env)
+}
+
+async function processSmsTransaction(
+  parsed: SmsParsedResult, 
+  originalText: string, 
+  userId: string, 
+  env: Env
+): Promise<Response> {
   const wallets = (await getJSON<WalletData[]>(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`)) || []
   const txs = (await getJSON<TransactionData[]>(env.SMART_NOTE_KV, `users/${userId}/finance/transactions`)) || []
 
-  // Map to correct wallet if hinted, otherwise default to first
+  // ── Match wallet by bank name ──
   let walletId = wallets[0]?.id || ''
-  if (predictedWalletHint) {
-    const found = wallets.find(w => w.name.toLowerCase().includes(predictedWalletHint.toLowerCase()))
-    if (found) walletId = found.id
+  if (parsed.bankName) {
+    // Direct match
+    const found = wallets.find(w => w.name.toLowerCase().includes(parsed.bankName.toLowerCase()))
+    if (found) {
+      walletId = found.id
+    } else {
+      // Try CASSO_BANK_MAP aliases
+      for (const [walletKey, aliases] of Object.entries(CASSO_BANK_MAP)) {
+        if (aliases.some(a => parsed.bankName.toLowerCase().includes(a))) {
+          const w = wallets.find(w => w.name.toLowerCase().includes(walletKey.toLowerCase()))
+          if (w) { walletId = w.id; break }
+        }
+      }
+    }
   }
   
-  // Prevent duplicate SMS: safe hash of text without btoa (to avoid unicode crash)
-  const safeText = text.replace(/[^a-zA-Z0-9]/g, '')
-  const smsHash = `[sms:${safeText.substring(0, 20)}]`
-  const alreadyExists = txs.some(t => t.note?.includes(smsHash))
-  if (alreadyExists) {
-    return jsonResponse({ success: true, message: 'Duplicate SMS skipped' })
+  // ── Duplicate detection ──
+  // Priority 1: Use SO GD (transaction reference) — most reliable
+  if (parsed.txRef) {
+    const alreadyExists = txs.some(t => t.note?.includes(`[ref:${parsed.txRef}]`))
+    if (alreadyExists) {
+      return jsonResponse({ 
+        success: true, 
+        message: 'Duplicate SMS skipped (same SO GD)',
+        data: { txRef: parsed.txRef, skipped: true }
+      })
+    }
   }
+  // Priority 2: Fallback hash using amount + date portion of text
+  const safeText = originalText.replace(/[^a-zA-Z0-9]/g, '')
+  const smsHash = parsed.txRef 
+    ? `[ref:${parsed.txRef}]` 
+    : `[sms:${safeText.substring(0, 40)}]`
+  
+  if (!parsed.txRef) {
+    const alreadyExists = txs.some(t => t.note?.includes(smsHash))
+    if (alreadyExists) {
+      return jsonResponse({ success: true, message: 'Duplicate SMS skipped' })
+    }
+  }
+
+  // ── Build note ──
+  const noteContent = parsed.note || parsed.rawText.substring(0, 80)
+  const bankLabel = parsed.bankName ? ` • ${parsed.bankName}` : ''
 
   const tx: TransactionData = {
     id: generateId(),
     type: parsed.type,
     amount: parsed.amount,
     category: parsed.type === 'income' ? 'other_income' : 'other_expense',
-    note: `${parsed.rawText} ${smsHash}`.trim(),
+    note: `${noteContent}${bankLabel} ${smsHash}`.trim(),
     walletId,
     source: 'sms',
     date: new Date().toISOString().substring(0, 10),
@@ -1141,17 +1292,17 @@ async function handleSmsWebhook(request: Request, env: Env): Promise<Response> {
     wallets[walletIdx].balance += parsed.type === 'income' ? parsed.amount : -parsed.amount
   }
 
-  // Noti
+  // Notification
   const walletName = wallets.find(w => w.id === walletId)?.name || 'ví'
   const notiList = (await getJSON<NotificationData[]>(env.SMART_NOTE_KV, `users/${userId}/notifications`)) || []
   notiList.unshift({
     id: generateId(),
     type: parsed.type === 'income' ? 'bank_in' : 'bank_out',
     title: parsed.type === 'income' ? 'Tiền vào tài khoản' : 'Tiền ra tài khoản',
-    body: `${parsed.type === 'income' ? '+' : '-'}${parsed.amount.toLocaleString('vi-VN')}đ • ${walletName} • SMS`,
+    body: `${parsed.type === 'income' ? '+' : '-'}${parsed.amount.toLocaleString('vi-VN')}đ • ${walletName} • ${parsed.bankName || 'SMS'}`,
     read: false,
     createdAt: new Date().toISOString(),
-    meta: { amount: parsed.amount, txType: parsed.type, walletName, bankName: 'SMS' }
+    meta: { amount: parsed.amount, txType: parsed.type, walletName, bankName: parsed.bankName || 'SMS' }
   })
   if (notiList.length > 100) notiList.splice(100)
   
@@ -1159,7 +1310,20 @@ async function handleSmsWebhook(request: Request, env: Env): Promise<Response> {
   await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/transactions`, txs)
   await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`, wallets)
 
-  return jsonResponse({ success: true, message: 'SMS transaction processed' })
+  return jsonResponse({ 
+    success: true, 
+    message: `${parsed.type === 'income' ? '+' : '-'}${parsed.amount.toLocaleString('vi-VN')}đ → ${walletName}`,
+    data: {
+      transactionId: tx.id,
+      type: parsed.type,
+      amount: parsed.amount,
+      note: parsed.note,
+      bankName: parsed.bankName,
+      walletName,
+      txRef: parsed.txRef,
+      balance: parsed.balance || undefined
+    }
+  })
 }
 
 // ====== PIN System ======

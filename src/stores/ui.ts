@@ -31,6 +31,18 @@ export const useUiStore = defineStore('ui', () => {
     resolve: null
   })
 
+  const pinState = ref<{
+    isOpen: boolean
+    title: string
+    message: string
+    resolve: ((value: boolean) => void) | null
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    resolve: null
+  })
+
   function toggleSidebar() {
     sidebarOpen.value = !sidebarOpen.value
   }
@@ -76,17 +88,61 @@ export const useUiStore = defineStore('ui', () => {
     }, 200)
   }
 
+  async function requestPinValidation(title = 'Xác nhận bằng PIN', message = 'Nhập mã PIN để tiếp tục'): Promise<boolean> {
+    try {
+      const { httpClient } = await import('@/shared/api/httpClient')
+      const data = await httpClient.get<{ hasPin: boolean }>('/api/pin')
+      
+      if (!data?.hasPin) {
+        const confirmed = await requestConfirm({
+          title: 'Yêu cầu mã PIN',
+          message: 'Để bảo vệ dữ liệu, bạn cần thiết lập Mã PIN trước khi thực hiện các thao tác quan trọng.',
+          confirmText: 'Thiết lập PIN ngay',
+          danger: false
+        })
+        if (confirmed) {
+          window.location.href = '/settings#pin'
+        }
+        return false
+      }
+      
+      return new Promise((resolve) => {
+        pinState.value = {
+          isOpen: true,
+          title,
+          message,
+          resolve
+        }
+      })
+    } catch {
+      return false
+    }
+  }
+
+  function resolvePin(result: boolean) {
+    if (pinState.value.resolve) {
+      pinState.value.resolve(result)
+    }
+    pinState.value.isOpen = false
+    setTimeout(() => {
+       pinState.value.resolve = null
+    }, 200)
+  }
+
   return {
     sidebarOpen,
     searchOpen,
     toasts,
     confirmState,
+    pinState,
     toggleSidebar,
     closeSidebar,
     toggleSearch,
     showToast,
     removeToast,
     requestConfirm,
-    resolveConfirm
+    resolveConfirm,
+    requestPinValidation,
+    resolvePin
   }
 })

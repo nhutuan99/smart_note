@@ -3,6 +3,7 @@ import AppHeader from './AppHeader.vue'
 import AppSidebar from './AppSidebar.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
+import PinDialog from '@/components/PinDialog.vue'
 import { useUiStore } from '@/stores/ui'
 
 const ui = useUiStore()
@@ -29,6 +30,13 @@ const ui = useUiStore()
     </main>
     <ToastContainer />
     <ConfirmDialog />
+    <PinDialog 
+      :show="ui.pinState.isOpen"
+      :title="ui.pinState.title"
+      :message="ui.pinState.message"
+      @confirmed="ui.resolvePin(true)"
+      @cancelled="ui.resolvePin(false)"
+    />
   </div>
 </template>
 
