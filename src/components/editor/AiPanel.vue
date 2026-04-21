@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useAi } from '@/composables/useGemini'
 import {
   Sparkles, X, Copy, Check, ChevronDown,
@@ -153,7 +153,7 @@ const hasResult = computed(() => ai.streamText.value.length > 0 || suggestedTags
 
       <!-- Tags Result -->
       <div v-else-if="suggestedTags.length" class="ai-result">
-        <p class="ai-result-label">{{ t('notes.ai.suggestedTags') }}</p>
+        <p class="ai-result-label mb-2">{{ t('notes.ai.suggestedTags') }}</p>
         <div class="flex flex-wrap gap-2 mb-3">
           <span v-for="tag in suggestedTags" :key="tag" class="ai-tag-badge">#{{ tag }}</span>
         </div>
@@ -165,16 +165,22 @@ const hasResult = computed(() => ai.streamText.value.length > 0 || suggestedTags
 
       <!-- Streaming Text Result -->
       <div v-else-if="ai.streamText.value" class="ai-result">
-        <p class="ai-result-label">{{ t('notes.ai.result') }}</p>
+        <div class="mb-2 flex items-center justify-between">
+          <p class="ai-result-label !mb-0">{{ t('notes.ai.result') }}</p>
+          <button
+            v-if="!ai.loading.value"
+            class="text-text-tertiary hover:text-text-primary flex items-center gap-1.5 text-[0.6875rem] font-medium transition-colors"
+            @click="copyResult"
+          >
+            <component :is="copied ? Check : Copy" :size="12" />
+            {{ copied ? t('common.copied') : t('common.copy') }}
+          </button>
+        </div>
         <div class="ai-result-text">
           {{ ai.streamText.value }}<span v-if="ai.loading.value" class="ai-cursor">▋</span>
         </div>
-        <div v-if="!ai.loading.value" class="flex gap-2 mt-3">
-          <button class="ai-copy-btn flex-1" @click="copyResult">
-            <component :is="copied ? Check : Copy" :size="13" />
-            {{ copied ? t('common.copied') : t('common.copy') }}
-          </button>
-          <button class="ai-insert-btn flex-1" @click="insertResult">
+        <div v-if="!ai.loading.value" class="mt-3">
+          <button class="ai-insert-btn w-full" @click="insertResult">
             <ChevronDown :size="13" />
             {{ t('notes.ai.insert') }}
           </button>
@@ -342,7 +348,6 @@ const hasResult = computed(() => ai.streamText.value.length > 0 || suggestedTags
   color: var(--text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  margin-bottom: 0.5rem;
 }
 
 .ai-result-text {

@@ -173,7 +173,7 @@ function handleLogout() {
                   v-for="n in notiStore.filtered"
                   :key="n.id"
                   class="hover:bg-bg-hover flex w-full items-start gap-3 px-4 py-3 text-left transition-colors duration-150"
-                  :class="!n.read ? 'bg-accent-subtle/30' : ''"
+                  :class="!n.read ? 'bg-bg-elevated' : ''"
                   @click="notiStore.markRead(n.id)"
                 >
                   <!-- Icon -->
@@ -196,7 +196,7 @@ function handleLogout() {
                         {{ n.title }}
                       </span>
                       <!-- Unread dot -->
-                      <span v-if="!n.read" class="bg-accent mt-1 h-2 w-2 shrink-0 rounded-full" />
+                      <span v-if="!n.read" class="bg-text-tertiary mt-1 h-2 w-2 shrink-0 rounded-full" />
                     </div>
                     <p class="text-text-tertiary mt-0.5 truncate text-[0.75rem]">{{ n.body }}</p>
                     <span class="text-text-disabled mt-1 block text-[0.6875rem]">
