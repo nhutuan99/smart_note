@@ -12,6 +12,7 @@
 
 import type { ApiResponse } from '@/types'
 import type { Router } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 // In dev, Vite proxy handles /api → localhost:8787
 // In production, use the full worker URL
@@ -42,9 +43,17 @@ function handle401() {
   // Cancel all in-flight requests immediately
   cancelAllRequests()
 
-  // Clear auth data
-  localStorage.removeItem('smart_note_token')
-  localStorage.removeItem('smart_note_user')
+  // Clear auth: MUST call logout() to clear Pinia reactive state,
+  // not just localStorage — otherwise router guard still sees isAuthenticated=true
+  // and redirects away from /login → black screen redirect loop.
+  try {
+    const auth = useAuthStore()
+    auth.logout()
+  } catch {
+    // Fallback if Pinia not ready
+    localStorage.removeItem('smart_note_token')
+    localStorage.removeItem('smart_note_user')
+  }
 
   // Navigate via Vue Router (SPA-safe, no page reload)
   if (_router) {
