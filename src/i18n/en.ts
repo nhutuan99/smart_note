@@ -219,6 +219,8 @@ export default {
     pinMismatch: 'PIN confirmation does not match',
     pinSuccess: 'PIN has been set successfully!',
     pinFailed: 'Failed to set PIN',
+    forgotPin: 'Forgot PIN?',
+    forgotPinDesc: 'Reset your PIN via email OTP',
     // Account
     account: 'Account',
     signOut: 'Sign Out',
@@ -249,7 +251,47 @@ export default {
     signIn: 'Sign in',
     signUp: 'Sign up',
     noAccount: "Don't have an account?",
-    hasAccount: 'Already have an account?'
+    hasAccount: 'Already have an account?',
+    forgotPassword: 'Forgot password?',
+    backToLogin: 'Back to login'
+  },
+
+  // ── Forgot Password / OTP ──
+  forgot: {
+    // Step 1
+    title: 'Forgot Password',
+    desc: 'Enter your registered email. We will send a 6-digit OTP to verify your identity.',
+    emailPlaceholder: 'you@example.com',
+    sendOtp: 'Send OTP',
+    sending: 'Sending...',
+    otpSent: 'OTP has been sent to your email!',
+    // Step 2
+    otpTitle: 'Enter OTP',
+    otpDesc: 'A 6-digit code was sent to {email}. Valid for 10 minutes.',
+    otpPlaceholder: 'Enter 6-digit code',
+    verifyOtp: 'Verify OTP',
+    verifying: 'Verifying...',
+    resend: 'Resend code',
+    resendIn: 'Resend in {s}s',
+    invalidOtp: 'Invalid or expired OTP',
+    // Step 3
+    newPassTitle: 'Set New Password',
+    newPassDesc: 'Create a new password for your account.',
+    newPassword: 'New Password',
+    confirmPassword: 'Confirm Password',
+    newPassPlaceholder: 'At least 6 characters',
+    confirmPassPlaceholder: 'Re-enter password',
+    resetPassword: 'Reset Password',
+    resetting: 'Resetting...',
+    resetSuccess: 'Password reset successfully! Please sign in again.',
+    passMismatch: 'Passwords do not match',
+    passMinLength: 'Password must be at least 6 characters',
+    // Forgot PIN
+    pinTitle: 'Reset PIN via OTP',
+    pinDesc: 'OTP has been sent to your email. Enter it to continue.',
+    pinNewTitle: 'Set New PIN',
+    pinNewDesc: 'Enter your new PIN (4-6 digits).',
+    pinResetSuccess: 'PIN reset successfully!'
   },
 
   // ── AutoSync ──

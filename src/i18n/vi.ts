@@ -219,6 +219,8 @@ export default {
     pinMismatch: 'PIN xác nhận không khớp',
     pinSuccess: 'PIN đã được thiết lập thành công!',
     pinFailed: 'Không thể thiết lập PIN',
+    forgotPin: 'Quên PIN?',
+    forgotPinDesc: 'Đặt lại PIN qua email OTP',
     // Account
     account: 'Tài khoản',
     signOut: 'Đăng xuất',
@@ -249,7 +251,47 @@ export default {
     signIn: 'Đăng nhập',
     signUp: 'Đăng ký',
     noAccount: 'Chưa có tài khoản?',
-    hasAccount: 'Đã có tài khoản?'
+    hasAccount: 'Đã có tài khoản?',
+    forgotPassword: 'Quên mật khẩu?',
+    backToLogin: 'Quay lại đăng nhập'
+  },
+
+  // ── Forgot Password / OTP ──
+  forgot: {
+    // Step 1
+    title: 'Quên mật khẩu',
+    desc: 'Nhập email đăng ký. Chúng tôi sẽ gửi mã OTP 6 số để xác minh.',
+    emailPlaceholder: 'you@example.com',
+    sendOtp: 'Gửi mã OTP',
+    sending: 'Đang gửi...',
+    otpSent: 'Mã OTP đã gửi về email của bạn!',
+    // Step 2
+    otpTitle: 'Nhập mã OTP',
+    otpDesc: 'Mã 6 số đã được gửi tới {email}. Có hiệu lực trong 10 phút.',
+    otpPlaceholder: 'Nhập 6 số',
+    verifyOtp: 'Xác nhận OTP',
+    verifying: 'Đang xác nhận...',
+    resend: 'Gửi lại mã',
+    resendIn: 'Gửi lại sau {s}s',
+    invalidOtp: 'Mã OTP không đúng hoặc đã hết hạn',
+    // Step 3
+    newPassTitle: 'Đặt mật khẩu mới',
+    newPassDesc: 'Tạo mật khẩu mới cho tài khoản của bạn.',
+    newPassword: 'Mật khẩu mới',
+    confirmPassword: 'Xác nhận mật khẩu',
+    newPassPlaceholder: 'Tối thiểu 6 ký tự',
+    confirmPassPlaceholder: 'Nhập lại mật khẩu',
+    resetPassword: 'Đặt lại mật khẩu',
+    resetting: 'Đang đặt lại...',
+    resetSuccess: 'Đặt lại mật khẩu thành công! Vui lòng đăng nhập lại.',
+    passMismatch: 'Mật khẩu xác nhận không khớp',
+    passMinLength: 'Mật khẩu phải có ít nhất 6 ký tự',
+    // Forgot PIN
+    pinTitle: 'Đặt lại PIN qua OTP',
+    pinDesc: 'Mã OTP đã gửi tới email của bạn. Nhập để tiếp tục.',
+    pinNewTitle: 'Đặt PIN mới',
+    pinNewDesc: 'Nhập PIN mới (4-6 chữ số).',
+    pinResetSuccess: 'Đặt lại PIN thành công!'
   },
 
   // ── AutoSync ──

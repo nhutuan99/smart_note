@@ -17,6 +17,7 @@ interface Env {
   TELEGRAM_WEBHOOK_SECRET: string
   CASSO_WEBHOOK_SECRET: string
   RESEND_API_KEY?: string
+  FROM_EMAIL?: string
   AI: Ai
 }
 
@@ -177,7 +178,47 @@ async function verifyJWT(
   }
 }
 
-// ====== KV Helpers ======
+// ====== Email (Resend) ======
+
+async function sendEmail(env: Env, to: string, subject: string, html: string): Promise<boolean> {
+  if (!env.RESEND_API_KEY) {
+    console.warn('[Email] RESEND_API_KEY not configured')
+    return false
+  }
+  const from = env.FROM_EMAIL || 'Smart Note <onboarding@resend.dev>'
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${env.RESEND_API_KEY}`
+    },
+    body: JSON.stringify({ from, to, subject, html })
+  })
+  if (!res.ok) {
+    const err = await res.text()
+    console.error('[Email] Resend error:', err)
+    return false
+  }
+  return true
+}
+
+function generateOtp(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString()
+}
+
+function otpEmailHtml(otp: string, title: string, description: string): string {
+  return `
+  <div style="font-family:sans-serif;max-width:480px;margin:0 auto;background:#0f0f0f;border:1px solid #222;border-radius:16px;padding:32px;">
+    <h2 style="color:#fff;margin-bottom:8px;">${title}</h2>
+    <p style="color:#888;margin-bottom:24px;font-size:14px;">${description}</p>
+    <div style="background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:24px;text-align:center;">
+      <span style="font-size:2.5rem;font-weight:700;letter-spacing:0.5rem;color:#a78bfa;">${otp}</span>
+    </div>
+    <p style="color:#555;font-size:12px;margin-top:20px;">Mã có hiệu lực trong <strong style="color:#888;">10 phút</strong>. Không chia sẻ mã này với bất kỳ ai.</p>
+    <hr style="border-color:#222;margin:20px 0;" />
+    <p style="color:#444;font-size:11px;">Smart Note &mdash; Trung tâm kiến thức cá nhân</p>
+  </div>`
+}
 
 async function getJSON<T>(kv: KVNamespace, key: string): Promise<T | null> {
   return kv.get<T>(key, 'json')
@@ -322,6 +363,139 @@ async function handleDeleteAccount(userId: string, request: Request, env: Env): 
   await env.SMART_NOTE_KV.delete(`users/${userId}/otp`)
 
   return jsonResponse({ success: true, message: 'Account deleted successfully' })
+}
+
+// ====== Forgot Password OTP ======
+
+async function handleForgotPassword(request: Request, env: Env): Promise<Response> {
+  const { email } = (await request.json()) as any
+  if (!email) return errorResponse('Email is required')
+
+  const usersIndex = (await getJSON<Record<string, string>>(env.SMART_NOTE_KV, 'users/_index')) || {}
+  const userId = usersIndex[email]
+  // Always return success to prevent email enumeration
+  if (!userId) return jsonResponse({ success: true, message: 'OTP sent if email exists' })
+
+  const otp = generateOtp()
+  const otpHash = await hashPassword(otp)
+  // Store OTP with 10-minute TTL
+  await env.SMART_NOTE_KV.put(`users/${userId}/otp/password`, otpHash, { expirationTtl: 600 })
+
+  await sendEmail(
+    env,
+    email,
+    '🔐 Smart Note - Đặt lại mật khẩu',
+    otpEmailHtml(otp, 'Đặt lại mật khẩu', `Dùng mã OTP dưới đây để đặt lại mật khẩu tài khoản <strong>${email}</strong>.`)
+  )
+
+  return jsonResponse({ success: true, message: 'OTP sent if email exists' })
+}
+
+async function handleVerifyOtp(request: Request, env: Env): Promise<Response> {
+  const { email, otp } = (await request.json()) as any
+  if (!email || !otp) return errorResponse('Email and OTP are required')
+
+  const usersIndex = (await getJSON<Record<string, string>>(env.SMART_NOTE_KV, 'users/_index')) || {}
+  const userId = usersIndex[email]
+  if (!userId) return errorResponse('Invalid OTP or expired', 400)
+
+  const storedHash = await env.SMART_NOTE_KV.get(`users/${userId}/otp/password`)
+  if (!storedHash) return errorResponse('OTP đã hết hạn hoặc không hợp lệ', 400)
+
+  const inputHash = await hashPassword(otp)
+  if (inputHash !== storedHash) return errorResponse('OTP không đúng', 400)
+
+  // Create short-lived reset token (store in KV with 15 min TTL)
+  const resetToken = generateId() + generateId()
+  const resetTokenHash = await hashPassword(resetToken)
+  await env.SMART_NOTE_KV.put(`users/${userId}/otp/reset_token`, resetTokenHash, { expirationTtl: 900 })
+  // Invalidate OTP immediately after verification
+  await env.SMART_NOTE_KV.delete(`users/${userId}/otp/password`)
+
+  return jsonResponse({ success: true, resetToken })
+}
+
+async function handleResetPassword(request: Request, env: Env): Promise<Response> {
+  const { email, resetToken, newPassword } = (await request.json()) as any
+  if (!email || !resetToken || !newPassword) return errorResponse('Missing required fields')
+  if (newPassword.length < 6) return errorResponse('Mật khẩu phải có ít nhất 6 ký tự')
+
+  const usersIndex = (await getJSON<Record<string, string>>(env.SMART_NOTE_KV, 'users/_index')) || {}
+  const userId = usersIndex[email]
+  if (!userId) return errorResponse('Yêu cầu không hợp lệ', 400)
+
+  const storedTokenHash = await env.SMART_NOTE_KV.get(`users/${userId}/otp/reset_token`)
+  if (!storedTokenHash) return errorResponse('Phiên đặt lại mật khẩu đã hết hạn. Vui lòng thử lại.', 400)
+
+  const inputHash = await hashPassword(resetToken)
+  if (inputHash !== storedTokenHash) return errorResponse('Reset token không hợp lệ', 400)
+
+  const user = await getJSON<UserData>(env.SMART_NOTE_KV, `users/${userId}/profile`)
+  if (!user) return errorResponse('User not found', 404)
+
+  user.passwordHash = await hashPassword(newPassword)
+  await putJSON(env.SMART_NOTE_KV, `users/${userId}/profile`, user)
+  await env.SMART_NOTE_KV.delete(`users/${userId}/otp/reset_token`)
+
+  return jsonResponse({ success: true, message: 'Đặt lại mật khẩu thành công' })
+}
+
+// ====== Forgot PIN OTP (requires valid JWT - user is logged in) ======
+
+async function handleForgotPin(userId: string, env: Env): Promise<Response> {
+  const user = await getJSON<UserData>(env.SMART_NOTE_KV, `users/${userId}/profile`)
+  if (!user) return errorResponse('User not found', 404)
+
+  const otp = generateOtp()
+  const otpHash = await hashPassword(otp)
+  await env.SMART_NOTE_KV.put(`users/${userId}/otp/pin`, otpHash, { expirationTtl: 600 })
+
+  await sendEmail(
+    env,
+    user.email,
+    '🔐 Smart Note - Đặt lại mã PIN',
+    otpEmailHtml(otp, 'Đặt lại mã PIN', `Dùng mã OTP dưới đây để đặt lại PIN Smart Note của bạn.`)
+  )
+
+  return jsonResponse({ success: true, message: 'OTP đã gửi về email của bạn' })
+}
+
+async function handleVerifyPinOtp(userId: string, request: Request, env: Env): Promise<Response> {
+  const { otp } = (await request.json()) as any
+  if (!otp) return errorResponse('OTP is required')
+
+  const storedHash = await env.SMART_NOTE_KV.get(`users/${userId}/otp/pin`)
+  if (!storedHash) return errorResponse('OTP đã hết hạn hoặc không hợp lệ', 400)
+
+  const inputHash = await hashPassword(otp)
+  if (inputHash !== storedHash) return errorResponse('OTP không đúng', 400)
+
+  const resetToken = generateId() + generateId()
+  const resetTokenHash = await hashPassword(resetToken)
+  await env.SMART_NOTE_KV.put(`users/${userId}/otp/pin_reset_token`, resetTokenHash, { expirationTtl: 900 })
+  await env.SMART_NOTE_KV.delete(`users/${userId}/otp/pin`)
+
+  return jsonResponse({ success: true, resetToken })
+}
+
+async function handleResetPin(userId: string, request: Request, env: Env): Promise<Response> {
+  const { resetToken, newPin } = (await request.json()) as any
+  if (!resetToken || !newPin) return errorResponse('Missing required fields')
+  if (!newPin || newPin.length < 4 || newPin.length > 6 || !/^\d+$/.test(newPin)) {
+    return errorResponse('PIN phải từ 4-6 chữ số')
+  }
+
+  const storedTokenHash = await env.SMART_NOTE_KV.get(`users/${userId}/otp/pin_reset_token`)
+  if (!storedTokenHash) return errorResponse('Phiên đặt lại PIN đã hết hạn. Vui lòng thử lại.', 400)
+
+  const inputHash = await hashPassword(resetToken)
+  if (inputHash !== storedTokenHash) return errorResponse('Reset token không hợp lệ', 400)
+
+  const pinHash = await hashPassword(newPin)
+  await putJSON(env.SMART_NOTE_KV, `users/${userId}/pin`, pinHash)
+  await env.SMART_NOTE_KV.delete(`users/${userId}/otp/pin_reset_token`)
+
+  return jsonResponse({ success: true, message: 'PIN đã được đặt lại thành công' })
 }
 
 // ====== Note Handlers ======
@@ -1591,6 +1765,16 @@ export default {
       if (path === '/api/auth/login' && request.method === 'POST') {
         return handleLogin(request, env)
       }
+      // Forgot password (unauthenticated)
+      if (path === '/api/auth/forgot-password' && request.method === 'POST') {
+        return handleForgotPassword(request, env)
+      }
+      if (path === '/api/auth/verify-otp' && request.method === 'POST') {
+        return handleVerifyOtp(request, env)
+      }
+      if (path === '/api/auth/reset-password' && request.method === 'POST') {
+        return handleResetPassword(request, env)
+      }
 
       // Webhooks (use webhook secret, not JWT)
       if (path === '/api/webhook/telegram' && request.method === 'POST') {
@@ -1685,6 +1869,16 @@ export default {
       }
       if (path === '/api/pin/verify' && request.method === 'POST') {
         return handleVerifyPin(userId, request, env)
+      }
+      // Forgot PIN (authenticated)
+      if (path === '/api/pin/forgot' && request.method === 'POST') {
+        return handleForgotPin(userId, env)
+      }
+      if (path === '/api/pin/verify-otp' && request.method === 'POST') {
+        return handleVerifyPinOtp(userId, request, env)
+      }
+      if (path === '/api/pin/reset' && request.method === 'POST') {
+        return handleResetPin(userId, request, env)
       }
 
       // Notifications
