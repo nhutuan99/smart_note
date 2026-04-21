@@ -180,8 +180,7 @@ function backToLoginFromDone() {
         <div class="bg-bg-elevated mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl border border-border-default shadow-sm">
           <Sparkles :size="28" class="text-accent" />
         </div>
-        <h1 class="mb-1 text-2xl font-bold tracking-tight">Smart Note</h1>
-        <p class="text-text-tertiary text-sm">{{ t('login.tagline') }}</p>
+        <h1 class="text-2xl font-bold tracking-tight">Smart Note</h1>
       </div>
 
       <!-- ══ STEP: LOGIN / REGISTER ══ -->
@@ -306,7 +305,7 @@ function backToLoginFromDone() {
           </div>
         </div>
 
-        <div class="flex flex-col gap-4">
+        <form @submit.prevent="sendOtp()" class="flex flex-col gap-4">
           <div class="flex flex-col gap-2">
             <label class="text-text-secondary text-sm font-medium">{{ t('login.email') }}</label>
             <div class="relative flex items-center">
@@ -316,7 +315,7 @@ function backToLoginFromDone() {
                 type="email"
                 :placeholder="t('forgot.emailPlaceholder')"
                 autocomplete="email"
-                @keyup.enter="sendOtp()"
+                required
                 class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border py-2.5 pr-3 pl-[2.375rem] text-sm transition-all duration-150 focus:ring-2 focus:outline-none"
               />
             </div>
@@ -327,7 +326,7 @@ function backToLoginFromDone() {
           </div>
 
           <button
-            @click="sendOtp()"
+            type="submit"
             :disabled="fpLoading || !fpEmail"
             class="btn-primary w-full justify-center py-3 disabled:opacity-50"
           >
@@ -337,7 +336,7 @@ function backToLoginFromDone() {
               <ArrowRight :size="16" />
             </template>
           </button>
-        </div>
+        </form>
       </div>
 
       <!-- ══ STEP 2: Enter OTP ══ -->
@@ -359,7 +358,7 @@ function backToLoginFromDone() {
           </div>
         </div>
 
-        <div class="flex flex-col gap-4">
+        <form @submit.prevent="verifyOtp" class="flex flex-col gap-4">
           <div class="flex flex-col gap-2">
             <label class="text-text-secondary text-sm font-medium">OTP</label>
             <input
@@ -367,8 +366,8 @@ function backToLoginFromDone() {
               type="text"
               inputmode="numeric"
               maxlength="6"
+              required
               :placeholder="t('forgot.otpPlaceholder')"
-              @keyup.enter="verifyOtp"
               class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border px-4 py-3 text-center text-2xl font-bold tracking-[0.5rem] transition-all duration-150 focus:ring-2 focus:outline-none"
               :class="{ 'border-error': fpError }"
             />
@@ -379,7 +378,7 @@ function backToLoginFromDone() {
           </div>
 
           <button
-            @click="verifyOtp"
+            type="submit"
             :disabled="fpLoading || fpOtp.length !== 6"
             class="btn-primary w-full justify-center py-3 disabled:opacity-50"
           >
@@ -396,6 +395,7 @@ function backToLoginFromDone() {
             <button
               v-if="resendCountdown <= 0"
               @click="sendOtp(true)"
+              type="button"
               :disabled="fpLoading"
               class="text-accent hover:text-accent-text font-medium transition-colors"
             >
@@ -405,7 +405,7 @@ function backToLoginFromDone() {
               {{ t('forgot.resendIn').replace('{s}', String(resendCountdown)) }}
             </span>
           </div>
-        </div>
+        </form>
       </div>
 
       <!-- ══ STEP 3: New Password ══ -->
@@ -420,7 +420,7 @@ function backToLoginFromDone() {
           </div>
         </div>
 
-        <div class="flex flex-col gap-4">
+        <form @submit.prevent="resetPassword" class="flex flex-col gap-4">
           <div class="flex flex-col gap-2">
             <label class="text-text-secondary text-sm font-medium">{{ t('forgot.newPassword') }}</label>
             <div class="relative">
@@ -428,6 +428,7 @@ function backToLoginFromDone() {
               <input
                 v-model="fpNewPass"
                 :type="fpShowNew ? 'text' : 'password'"
+                required
                 :placeholder="t('forgot.newPassPlaceholder')"
                 class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border py-2.5 pr-10 pl-[2.375rem] text-sm transition-all focus:ring-2 focus:outline-none"
               />
@@ -444,8 +445,8 @@ function backToLoginFromDone() {
               <input
                 v-model="fpConfirmPass"
                 :type="fpShowConfirm ? 'text' : 'password'"
+                required
                 :placeholder="t('forgot.confirmPassPlaceholder')"
-                @keyup.enter="resetPassword"
                 class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border py-2.5 pr-10 pl-[2.375rem] text-sm transition-all focus:ring-2 focus:outline-none"
               />
               <button type="button" @click="fpShowConfirm = !fpShowConfirm" class="text-text-tertiary hover:text-text-primary absolute top-1/2 right-3 -translate-y-1/2">
@@ -459,7 +460,7 @@ function backToLoginFromDone() {
           </div>
 
           <button
-            @click="resetPassword"
+            type="submit"
             :disabled="fpLoading || !fpNewPass || !fpConfirmPass"
             class="btn-primary w-full justify-center py-3 disabled:opacity-50"
           >
@@ -469,7 +470,7 @@ function backToLoginFromDone() {
               <ArrowRight :size="16" />
             </template>
           </button>
-        </div>
+        </form>
       </div>
 
       <!-- ══ DONE ══ -->

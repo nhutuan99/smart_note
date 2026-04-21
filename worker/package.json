@@ -8,7 +8,13 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260416.2",
+    "@types/blueimp-md5": "^2.18.2",
     "typescript": "^5.9.3",
     "wrangler": "^3.0.0"
+  },
+  "dependencies": {
+    "blueimp-md5": "^2.19.0",
+    "create-hash": "^1.2.0",
+    "pusher": "^5.3.3"
   }
 }

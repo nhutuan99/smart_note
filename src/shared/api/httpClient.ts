@@ -28,20 +28,12 @@ export function setHttpClientRouter(router: Router) {
   _router = router
 }
 
-// AbortController to cancel all in-flight requests on 401
-let _abortController = new AbortController()
-
-function cancelAllRequests() {
-  _abortController.abort()
-  _abortController = new AbortController() // reset for future requests
-}
+// Removed AbortController to prevent AbortError from bubbling up and causing unhandled rejections that might crash Vue
 
 function handle401() {
   if (_isHandling401) return
   _isHandling401 = true
 
-  // Cancel all in-flight requests immediately
-  cancelAllRequests()
 
   // Clear auth: MUST call logout() to clear Pinia reactive state,
   // not just localStorage — otherwise router guard still sees isAuthenticated=true
@@ -98,13 +90,23 @@ async function handleResponse<T>(response: Response): Promise<T> {
   // Handle non-JSON error responses (e.g. 500 plain text from worker)
   const contentType = response.headers.get('content-type') || ''
   if (!contentType.includes('application/json')) {
-    throw new Error(`Request failed (${response.status})`)
+    const errorMsg = `Request failed (${response.status})`
+    try {
+      const { useUiStore } = await import('@/stores/ui')
+      useUiStore().showToast('error', errorMsg)
+    } catch (e) {}
+    throw new Error(errorMsg)
   }
 
   const json: ApiResponse<T> = await response.json()
 
   if (!json.success) {
-    throw new Error(json.error || `Request failed (${response.status})`)
+    const errorMsg = json.error || `Request failed (${response.status})`
+    try {
+      const { useUiStore } = await import('@/stores/ui')
+      useUiStore().showToast('error', errorMsg)
+    } catch (e) {}
+    throw new Error(errorMsg)
   }
 
   return json.data as T
@@ -113,8 +115,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
 async function get<T>(url: string): Promise<T> {
   const response = await fetch(`${API_BASE}${url}`, {
     method: 'GET',
-    headers: buildHeaders(false),
-    signal: _abortController.signal
+    headers: buildHeaders(false)
   })
   return handleResponse<T>(response)
 }
@@ -123,8 +124,7 @@ async function post<T>(url: string, body?: unknown): Promise<T> {
   const response = await fetch(`${API_BASE}${url}`, {
     method: 'POST',
     headers: buildHeaders(true),
-    body: body ? JSON.stringify(body) : undefined,
-    signal: _abortController.signal
+    body: body ? JSON.stringify(body) : undefined
   })
   return handleResponse<T>(response)
 }
@@ -133,8 +133,7 @@ async function put<T>(url: string, body?: unknown): Promise<T> {
   const response = await fetch(`${API_BASE}${url}`, {
     method: 'PUT',
     headers: buildHeaders(true),
-    body: body ? JSON.stringify(body) : undefined,
-    signal: _abortController.signal
+    body: body ? JSON.stringify(body) : undefined
   })
   return handleResponse<T>(response)
 }
@@ -142,8 +141,7 @@ async function put<T>(url: string, body?: unknown): Promise<T> {
 async function del(url: string): Promise<void> {
   const response = await fetch(`${API_BASE}${url}`, {
     method: 'DELETE',
-    headers: buildHeaders(false),
-    signal: _abortController.signal
+    headers: buildHeaders(false)
   })
   await handleResponse<void>(response)
 }

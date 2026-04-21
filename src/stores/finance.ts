@@ -10,6 +10,10 @@ import type {
 } from '@/types'
 import { getCategoryConfig } from '@/constants/finance'
 import { httpClient } from '@/shared/api/httpClient'
+import { useAuthStore } from '@/stores/auth'
+import { useUiStore } from '@/stores/ui'
+import { useNotificationStore } from '@/stores/notifications'
+import Pusher from 'pusher-js'
 
 /** AbortError is expected when httpClient cancels requests on 401 — not a real error. */
 function isAbortError(err: unknown) {
@@ -27,10 +31,12 @@ export const useFinanceStore = defineStore('finance', () => {
     new Date().toISOString().substring(0, 7) // "2026-04"
   )
 
-  // ── Polling state (module-level, not reactive) ──
+  // ── Polling & Realtime state (module-level, not reactive) ──
   let _pollTimer: ReturnType<typeof setInterval> | null = null
   let _lastFetchTime = 0
-  const POLL_INTERVAL_MS = 30_000    // 30 seconds
+  let _pusher: Pusher | null = null
+  let _pusherChannel: any = null
+  const POLL_INTERVAL_MS = 60_000    // 1 minute (reduced because we have realtime)
   const VISIBILITY_STALE_MS = 10_000 // 10 seconds
 
   // ── Computed: Totals ──
@@ -189,28 +195,68 @@ export const useFinanceStore = defineStore('finance', () => {
     }
   }
 
-  // ── Auto-polling ──
+  // ── Auto-polling & Real-time ──
 
   /**
-   * Start a 30s polling interval.
-   * Call once in the main finance view's onMounted.
-   * Multiple views calling this is safe — only one timer runs.
+   * Start 60s polling interval and Pusher connection.
    */
   function startPolling() {
-    if (_pollTimer) return // already running, do nothing
-    _pollTimer = setInterval(() => {
-      silentRefresh()
-    }, POLL_INTERVAL_MS)
+    if (!_pollTimer) {
+      _pollTimer = setInterval(() => {
+        silentRefresh()
+      }, POLL_INTERVAL_MS)
+    }
+    
+    // Connect to Pusher
+    const authStore = useAuthStore()
+    const { VITE_PUSHER_KEY, VITE_PUSHER_CLUSTER } = import.meta.env
+    
+    if (!_pusher && authStore.user?.id && VITE_PUSHER_KEY && VITE_PUSHER_CLUSTER) {
+      _pusher = new Pusher(VITE_PUSHER_KEY, {
+        cluster: VITE_PUSHER_CLUSTER
+      })
+      
+      const channelName = `smart-note-user-${authStore.user.id}`
+      _pusherChannel = _pusher.subscribe(channelName)
+      
+      _pusherChannel.bind('new_transaction', (data: any) => {
+        // We received a real-time transaction!
+        const parsed = typeof data === 'string' ? JSON.parse(data) : data
+        const tx = parsed.tx
+        
+        if (tx && !transactions.value.some(t => t.id === tx.id)) {
+          // Add to local state and force new array reference for total reactivity on charts
+          transactions.value = [tx, ...transactions.value]
+          
+          if (parsed.walletBalance !== undefined && tx.walletId) {
+            // Force new array reference to update wallet cards instantly
+            wallets.value = wallets.value.map(w => 
+              w.id === tx.walletId ? { ...w, balance: parsed.walletBalance } : w
+            )
+          }
+          
+          if (parsed.notification) {
+            useNotificationStore().fetch() // trigger badge update
+          }
+          
+          useUiStore().showToast('success', `Giao dịch tự động: ${tx.type === 'income' ? '+' : '-'}${tx.amount.toLocaleString('vi-VN')}đ đã được thêm!`)
+        }
+      })
+    }
   }
 
   /**
-   * Stop the polling interval.
-   * Call in onUnmounted to clean up.
+   * Stop polling interval and cleanly disconnect Pusher.
    */
   function stopPolling() {
     if (_pollTimer) {
       clearInterval(_pollTimer)
       _pollTimer = null
+    }
+    if (_pusher) {
+      _pusher.disconnect()
+      _pusher = null
+      _pusherChannel = null
     }
   }
 

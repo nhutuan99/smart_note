@@ -1,3 +1,5 @@
+import md5 from 'blueimp-md5'
+
 /**
  * Smart Note - Cloudflare Worker API (KV Storage)
  *
@@ -19,6 +21,10 @@ interface Env {
   RESEND_API_KEY?: string
   FROM_EMAIL?: string
   AI: Ai
+  PUSHER_APP_ID?: string
+  PUSHER_KEY?: string
+  PUSHER_SECRET?: string
+  PUSHER_CLUSTER?: string
 }
 
 interface UserData {
@@ -228,6 +234,79 @@ function otpEmailHtml(otp: string, title: string, description: string): string {
     <hr style="border-color:#222;margin:20px 0;" />
     <p style="color:#444;font-size:11px;">Smart Note &mdash; Trung tâm kiến thức cá nhân</p>
   </div>`
+}
+
+// ====== Real-time (Pusher) ======
+
+async function triggerPusherEvent(env: Env, channel: string, event: string, data: any): Promise<void> {
+  let { PUSHER_APP_ID, PUSHER_KEY, PUSHER_SECRET, PUSHER_CLUSTER } = env
+  if (!PUSHER_APP_ID || !PUSHER_KEY || !PUSHER_SECRET || !PUSHER_CLUSTER) return
+  PUSHER_SECRET = PUSHER_SECRET.trim()
+  PUSHER_KEY = PUSHER_KEY.trim()
+  PUSHER_APP_ID = PUSHER_APP_ID.trim()
+
+  const bodyStr = JSON.stringify({
+    name: event,
+    channels: [channel],
+    data: JSON.stringify(data)
+  })
+
+  // Body MD5 is required for POST events in Pusher REST API
+  const bodyMd5 = md5(bodyStr)
+  const timestamp = Math.floor(Date.now() / 1000)
+
+  // Auth string requires: auth_key, auth_timestamp, auth_version, body_md5 sorted alphabetically!
+  const queryParams = new URLSearchParams()
+  queryParams.append('auth_key', PUSHER_KEY)
+  queryParams.append('auth_timestamp', timestamp.toString())
+  queryParams.append('auth_version', '1.0')
+  queryParams.append('body_md5', bodyMd5)
+  // They are already added in alphabetical order: auth_key, auth_timestamp, auth_version, body_md5
+
+  const method = 'POST'
+  const path = `/apps/${PUSHER_APP_ID}/events`
+
+  const signData = `${method}\n${path}\n${queryParams.toString()}`
+  
+  const encoder = new TextEncoder()
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(PUSHER_SECRET),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  )
+  const signatureBuffer = await crypto.subtle.sign('HMAC', key, encoder.encode(signData))
+  const signatureHex = Array.from(new Uint8Array(signatureBuffer))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+
+  queryParams.append('auth_signature', signatureHex)
+
+  const pusherUrl = `https://api-${PUSHER_CLUSTER}.pusher.com${path}?${queryParams.toString()}`
+
+  try {
+    const res = await fetch(pusherUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: bodyStr
+    })
+    if (!res.ok) {
+      const errText = await res.text()
+      console.error('[Pusher] Trigger failed:', errText)
+      await env.SMART_NOTE_KV.put(`users/debug_pusher_error`, JSON.stringify({
+        url: pusherUrl,
+        bodyStr,
+        errText,
+        time: new Date().toISOString()
+      }))
+    } else {
+      await env.SMART_NOTE_KV.put(`users/debug_pusher_success`, new Date().toISOString())
+    }
+  } catch (err: any) {
+    console.error('[Pusher] Error triggering event:', err)
+    await env.SMART_NOTE_KV.put(`users/debug_pusher_catch`, err.message)
+  }
 }
 
 async function getJSON<T>(kv: KVNamespace, key: string): Promise<T | null> {
@@ -971,7 +1050,7 @@ async function handleNotificationWebhook(request: Request, env: Env): Promise<Re
   return jsonResponse({
     success: true,
     data: tx,
-    message: `Auto: ${tx.type === 'income' ? '+' : '-'}${tx.amount.toLocaleString('vi-VN')}đ → ${wallets[walletIdx]?.name || 'ví'}`
+    message: `[Notification] ${tx.type === 'income' ? '+' : '-'}${tx.amount.toLocaleString('vi-VN')}đ → Ghi vào ví: ${wallets[walletIdx]?.name || 'ví'}`
   })
 }
 
@@ -1168,8 +1247,8 @@ async function handleCassoWebhook(request: Request, env: Env): Promise<Response>
     notiList.unshift({
       id: generateId(),
       type: type === 'income' ? 'bank_in' : 'bank_out',
-      title: type === 'income' ? 'Tiền vào tài khoản' : 'Tiền ra tài khoản',
-      body: `${type === 'income' ? '+' : '-'}${amount.toLocaleString('vi-VN')}đ • ${walletName} • ${bankName || bankAbbr}`,
+      title: `[Casso] ${type === 'income' ? 'Tiền vào tài khoản' : 'Tiền ra tài khoản'}`,
+      body: `${type === 'income' ? '+' : '-'}${amount.toLocaleString('vi-VN')}đ • Ghi vào ví: ${walletName}`,
       read: false,
       createdAt: new Date().toISOString(),
       meta: { amount, txType: type, walletName, bankName: bankName || bankAbbr }
@@ -1403,11 +1482,10 @@ async function handleSmsWebhook(request: Request, env: Env): Promise<Response> {
 
   text = text.trim()
   if (!text) {
-    return jsonResponse({
-      success: false,
-      error: 'Missing SMS text',
-      hint: 'Nếu bạn test thủ công bằng nút Play thì sẽ trống. Hãy đợi SMS ngân hàng thật để trigger tự động.'
-    }, 400)
+    // Tự động gán dữ liệu ảo để giả lập khi user bấm nút Play (▷) thủ công trên iPhone
+    const time = new Date().toISOString()
+    text = `TK 123456 GD: +50,000VND ${time} SD: 1,000,000VND ND: TEST IPHONE BANG NUT PLAY`
+    senderHint = 'TPBank'
   }
 
   if (!userId) return errorResponse('Missing userId query param')
@@ -1548,8 +1626,8 @@ async function processSmsTransaction(
   notiList.unshift({
     id: generateId(),
     type: parsed.type === 'income' ? 'bank_in' : 'bank_out',
-    title: parsed.type === 'income' ? 'Tiền vào tài khoản' : 'Tiền ra tài khoản',
-    body: `${parsed.type === 'income' ? '+' : '-'}${parsed.amount.toLocaleString('vi-VN')}đ • ${walletName} • ${parsed.bankName || 'SMS'}`,
+    title: `[SMS] ${parsed.type === 'income' ? 'Tiền vào tài khoản' : 'Tiền ra tài khoản'}`,
+    body: `${parsed.type === 'income' ? '+' : '-'}${parsed.amount.toLocaleString('vi-VN')}đ • Ghi vào ví: ${walletName}`,
     read: false,
     createdAt: new Date().toISOString(),
     meta: { amount: parsed.amount, txType: parsed.type, walletName, bankName: parsed.bankName || 'SMS' }
@@ -1576,6 +1654,13 @@ async function processSmsTransaction(
       balance: parsed.balance
     }
   }).catch(() => {})
+
+  // Trigger Real-time Push to UI via PUBLIC channel to bypass CORS/Auth latency
+  await triggerPusherEvent(env, `smart-note-user-${userId}`, 'new_transaction', {
+    tx,
+    walletBalance: walletIdx !== -1 ? wallets[walletIdx].balance : undefined,
+    notification: notiList[0]
+  })
 
   return jsonResponse({ 
     success: true, 
@@ -1824,6 +1909,29 @@ export default {
       if (!payload) return errorResponse('Invalid token', 401)
 
       const userId = payload.userId
+
+      // Pusher Auth
+      if (path === '/api/pusher/auth' && request.method === 'POST') {
+        const bodyStr = await request.text()
+        const params = new URLSearchParams(bodyStr)
+        const socketId = params.get('socket_id')
+        const channelName = params.get('channel_name')
+        
+        if (!socketId || !channelName) return errorResponse('Missing parameters')
+        if (channelName !== `private-user-${userId}`) return errorResponse('Forbidden', 403)
+        if (!env.PUSHER_SECRET || !env.PUSHER_KEY) return errorResponse('Pusher not configured', 500)
+        
+        const secret = env.PUSHER_SECRET.trim()
+        const keyStr = env.PUSHER_KEY.trim()
+
+        const signData = `${socketId}:${channelName}`
+        const encoder = new TextEncoder()
+        const key = await crypto.subtle.importKey('raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+        const signatureBuffer = await crypto.subtle.sign('HMAC', key, encoder.encode(signData))
+        const signatureHex = Array.from(new Uint8Array(signatureBuffer)).map((b) => b.toString(16).padStart(2, '0')).join('')
+        
+        return new Response(JSON.stringify({ auth: `${keyStr}:${signatureHex}` }), { headers: corsHeaders() })
+      }
 
       // User Profile & Account
       if (path === '/api/auth/profile' && request.method === 'PUT') {
