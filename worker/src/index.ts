@@ -466,12 +466,18 @@ async function handleForgotPin(userId: string, env: Env): Promise<Response> {
   const otpHash = await hashPassword(otp)
   await env.SMART_NOTE_KV.put(`users/${userId}/otp/pin`, otpHash, { expirationTtl: 600 })
 
-  await sendEmail(
-    env,
-    user.email,
-    '🔐 Smart Note - Đặt lại mã PIN',
-    otpEmailHtml(otp, 'Đặt lại mã PIN', `Dùng mã OTP dưới đây để đặt lại PIN Smart Note của bạn.`)
-  )
+  try {
+    await sendEmail(
+      env,
+      user.email,
+      '\uD83D\uDD10 Smart Note - Đặt lại mã PIN',
+      otpEmailHtml(otp, 'Đặt lại mã PIN', `Dùng mã OTP dưới đây để đặt lại PIN Smart Note của bạn.`)
+    )
+  } catch (emailErr: any) {
+    // Clean up OTP if email fails
+    await env.SMART_NOTE_KV.delete(`users/${userId}/otp/pin`)
+    return errorResponse(emailErr.message || 'Không thể gửi email OTP', 500)
+  }
 
   return jsonResponse({ success: true, message: 'OTP đã gửi về email của bạn' })
 }
