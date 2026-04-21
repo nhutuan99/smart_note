@@ -1,12 +1,39 @@
 <script setup lang="ts">
+import { onMounted, onUnmounted } from 'vue'
 import AppHeader from './AppHeader.vue'
 import AppSidebar from './AppSidebar.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import PinDialog from '@/components/PinDialog.vue'
 import { useUiStore } from '@/stores/ui'
+import { useFinanceStore } from '@/stores/finance'
+import { useNotificationStore } from '@/stores/notifications'
+import { useEventListener } from '@/composables/useEventListener'
 
 const ui = useUiStore()
+const financeStore = useFinanceStore()
+const notificationStore = useNotificationStore()
+
+let pollingInterval: number
+
+function syncData() {
+  if (document.visibilityState === 'visible') {
+    financeStore.fetchTransactions()
+    notificationStore.fetch(true)
+  }
+}
+
+onMounted(() => {
+  // Poll every 15 seconds while app is visible
+  pollingInterval = window.setInterval(syncData, 15000)
+  
+  // Sync immediately when user switches back to the app
+  useEventListener(document, 'visibilitychange', syncData)
+})
+
+onUnmounted(() => {
+  clearInterval(pollingInterval)
+})
 </script>
 
 <template>
