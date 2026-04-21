@@ -11,6 +11,11 @@ import type {
 import { getCategoryConfig } from '@/constants/finance'
 import { httpClient } from '@/shared/api/httpClient'
 
+/** AbortError is expected when httpClient cancels requests on 401 — not a real error. */
+function isAbortError(err: unknown) {
+  return err instanceof Error && (err.name === 'AbortError' || err.message === 'Session expired')
+}
+
 export const useFinanceStore = defineStore('finance', () => {
   // ── State ──
 
@@ -148,7 +153,7 @@ export const useFinanceStore = defineStore('finance', () => {
         wallets.value = []
       }
     } catch (err) {
-      console.error('Failed to fetch wallets:', err)
+      if (!isAbortError(err)) console.error('Failed to fetch wallets:', err)
     }
   }
 
@@ -157,7 +162,7 @@ export const useFinanceStore = defineStore('finance', () => {
       const data = await httpClient.get<Transaction[]>('/api/transactions')
       transactions.value = data || []
     } catch (err) {
-      console.error('Failed to fetch transactions:', err)
+      if (!isAbortError(err)) console.error('Failed to fetch transactions:', err)
     }
   }
 
@@ -179,8 +184,8 @@ export const useFinanceStore = defineStore('finance', () => {
     try {
       await Promise.all([fetchWallets(), fetchTransactions()])
       _lastFetchTime = Date.now()
-    } catch {
-      // silently fail — non-critical background update
+    } catch (err) {
+      if (!isAbortError(err)) console.error('silentRefresh error:', err)
     }
   }
 
