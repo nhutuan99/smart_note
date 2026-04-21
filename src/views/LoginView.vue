@@ -5,11 +5,12 @@ import { useUiStore } from '@/stores/ui'
 import { httpClient } from '@/shared/api/httpClient'
 import { useRouter } from 'vue-router'
 import { Sparkles, Mail, Lock, User, Eye, EyeOff, ArrowRight } from 'lucide-vue-next'
+import { useI18n } from 'vue-i18n'
 
 const auth = useAuthStore()
 const ui = useUiStore()
-
 const router = useRouter()
+const { t } = useI18n()
 
 const isLogin = ref(true)
 const loading = ref(false)
@@ -32,7 +33,7 @@ async function handleSubmit() {
     const result = await httpClient.post<{ token: string; user: any }>(endpoint, form.value)
     if (result) {
       auth.setAuth(result.token, result.user)
-      ui.showToast('success', `Welcome${isLogin.value ? ' back' : ''}, ${result.user.name}!`)
+      ui.showToast('success', `${t(isLogin.value ? 'login.welcomeBack' : 'common.confirm')}, ${result.user.name}!`)
       router.push('/')
     }
   } catch (err: any) {
@@ -68,17 +69,17 @@ async function handleSubmit() {
           <Sparkles :size="28" class="text-accent" />
         </div>
         <h1 class="mb-1 text-2xl font-bold tracking-tight">SmartNote</h1>
-        <p class="text-text-tertiary text-sm">Your personal knowledge hub</p>
+        <p class="text-text-tertiary text-sm">{{ t('login.tagline') }}</p>
       </div>
 
       <!-- Card -->
       <div class="bg-bg-surface border-border-default rounded-2xl border p-6 shadow-lg md:p-8">
         <div class="mb-6">
           <h2 class="mb-1 text-xl font-semibold">
-            {{ isLogin ? 'Welcome back' : 'Create account' }}
+            {{ isLogin ? t('login.welcomeBack') : t('login.createAccount') }}
           </h2>
           <p class="text-text-tertiary text-sm">
-            {{ isLogin ? 'Sign in to continue' : 'Start organizing your thoughts' }}
+            {{ isLogin ? t('login.signInDesc') : t('login.signUpDesc') }}
           </p>
         </div>
 
@@ -96,7 +97,7 @@ async function handleSubmit() {
                 for="name-input"
                 class="text-text-secondary text-sm font-medium"
               >
-                Name
+                {{ t('login.name') }}
               </label>
               <div class="relative flex items-center">
                 <User
@@ -107,7 +108,7 @@ async function handleSubmit() {
                   id="name-input"
                   v-model="form.name"
                   type="text"
-                  placeholder="Your full name"
+                  :placeholder="t('login.namePlaceholder')"
                   autocomplete="name"
                   class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border py-2.5 pr-3 pl-[2.375rem] text-sm transition-all duration-150 focus:ring-2 focus:outline-none"
                 />
@@ -121,7 +122,7 @@ async function handleSubmit() {
               for="email-input"
               class="text-text-secondary text-sm font-medium"
             >
-              Email
+              {{ t('login.email') }}
             </label>
             <div class="relative flex items-center">
               <Mail
@@ -146,7 +147,7 @@ async function handleSubmit() {
               for="password-input"
               class="text-text-secondary text-sm font-medium"
             >
-              Password
+              {{ t('login.password') }}
             </label>
             <div class="relative flex items-center">
               <Lock
@@ -195,7 +196,7 @@ async function handleSubmit() {
               class="h-[1.125rem] w-[1.125rem] animate-spin rounded-full border-2 border-black/20 border-l-black"
             ></span>
             <template v-else>
-              <span>{{ isLogin ? 'Sign in' : 'Create account' }}</span>
+              <span>{{ isLogin ? t('login.signIn') : t('login.signUp') }}</span>
               <ArrowRight :size="16" />
             </template>
           </button>
@@ -204,18 +205,18 @@ async function handleSubmit() {
         <div
           class="border-border-default text-text-tertiary mt-6 border-t pt-4 text-center text-sm"
         >
-          <span>{{ isLogin ? "Don't have an account?" : 'Already have an account?' }}</span>
+          <span>{{ isLogin ? t('login.noAccount') : t('login.hasAccount') }}</span>
           <button
             class="text-accent hover:text-accent-text ml-1 font-medium transition-colors duration-150"
             @click="isLogin = !isLogin; error = ''"
           >
-            {{ isLogin ? 'Sign up' : 'Sign in' }}
+            {{ isLogin ? t('login.signUp') : t('login.signIn') }}
           </button>
         </div>
       </div>
 
       <p class="text-text-disabled mt-6 text-center text-[0.6875rem]">
-        SmartNote v1.0.0
+        {{ t('common.version') }}
       </p>
     </div>
   </div>

@@ -7,8 +7,10 @@ import { httpClient } from '@/shared/api/httpClient'
 import { Plus, Trash2, Edit3, X, GripVertical } from 'lucide-vue-next'
 import PinDialog from '@/components/PinDialog.vue'
 import { useUiStore } from '@/stores/ui'
+import { useI18n } from 'vue-i18n'
 import type { Wallet } from '@/types'
 
+const { t } = useI18n()
 const ui = useUiStore()
 const finance = useFinanceStore()
 
@@ -57,10 +59,10 @@ async function requestDelete(id: string) {
     showPinDialog.value = true
   } else {
     const confirmed = await ui.requestConfirm({
-      title: 'Xóa ví',
-      message: 'Bạn có chắc chắn muốn xóa ví này?\nCác giao dịch hiện tại sẽ không bị xóa.',
+      title: t('wallets.deleteTitle'),
+      message: t('wallets.deleteMessage'),
       danger: true,
-      confirmText: 'Chắc chắn xóa'
+      confirmText: t('wallets.deleteConfirm')
     })
     if (confirmed) finance.deleteWallet(id)
   }
@@ -136,7 +138,7 @@ async function onDrop(e: DragEvent, targetWallet: Wallet) {
       await finance.updateWallet(wallets[i].id, { order: i })
     }
   } catch {
-    ui.showToast('error', 'Không thể lưu thứ tự ví')
+    ui.showToast('error', t('wallets.cannotSaveOrder'))
     await finance.fetchWallets()
   } finally {
     isDraggingSaving.value = false
@@ -155,31 +157,31 @@ function onDragEnd() {
   <div class="mx-auto max-w-[50rem]">
     <div class="mb-6 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <h1 class="text-2xl font-bold tracking-tight">Ví của tôi</h1>
+        <h1 class="text-2xl font-bold tracking-tight">{{ t('wallets.title') }}</h1>
         <span v-if="isDraggingSaving" class="text-text-disabled flex items-center gap-1 text-xs">
           <span class="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
-          Đang lưu...
+          {{ t('common.saving') }}
         </span>
       </div>
       <button @click="showAdd = !showAdd" class="btn-primary">
         <Plus :size="16" />
-        Thêm ví
+        {{ t('wallets.addWallet') }}
       </button>
     </div>
 
     <!-- Add Wallet Form -->
     <transition name="slide">
       <div v-if="showAdd" class="bg-bg-surface border-border-default mb-6 rounded-xl border p-5">
-        <h3 class="mb-4 text-sm font-semibold">Thêm ví mới</h3>
+        <h3 class="mb-4 text-sm font-semibold">{{ t('wallets.addNew') }}</h3>
         <div class="flex flex-col gap-4">
           <input
             v-model="newWallet.name"
-            placeholder="Tên ví (VD: Vietcombank, MoMo, Tiền mặt...)"
+            :placeholder="t('wallets.walletName')"
             class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border px-4 py-2.5 text-sm transition-all duration-150 focus:ring-2 focus:outline-none"
           />
 
           <div class="mb-2">
-            <span class="text-text-tertiary mb-2 block text-[0.6875rem]">Ngân hàng & Ví phổ biến</span>
+            <span class="text-text-tertiary mb-2 block text-[0.6875rem]">{{ t('wallets.popularBanks') }}</span>
             <div class="flex flex-wrap items-center gap-2">
               <button
                 v-for="brand in ['MoMo', 'ZaloPay', 'Techcombank', 'TPBank', 'Vietcombank', 'MBBank', 'Visa', 'Tiền mặt']"
@@ -195,7 +197,7 @@ function onDragEnd() {
 
           <!-- Brand preview -->
           <div v-if="newWallet.name.trim()">
-            <span class="text-text-tertiary mb-2 block text-[0.6875rem]">Preview</span>
+            <span class="text-text-tertiary mb-2 block text-[0.6875rem]">{{ t('common.preview') }}</span>
             <div class="flex items-center gap-3">
               <div
                 v-if="getWalletBrand(newWallet.name)"
@@ -212,7 +214,7 @@ function onDragEnd() {
           </div>
 
           <div>
-            <span class="text-text-tertiary mb-2 block text-[0.6875rem]">Màu (cho ví tùy chỉnh)</span>
+            <span class="text-text-tertiary mb-2 block text-[0.6875rem]">{{ t('wallets.colorCustom') }}</span>
             <div class="flex flex-wrap gap-2">
               <button
                 v-for="color in COLORS"
@@ -226,8 +228,8 @@ function onDragEnd() {
           </div>
 
           <div class="flex gap-2">
-            <button @click="showAdd = false" class="border-border-default text-text-secondary hover:bg-bg-hover flex-1 rounded-lg border py-2 text-sm transition-all duration-150">Hủy</button>
-            <button @click="addWallet" :disabled="!newWallet.name.trim()" class="btn-primary flex-1 justify-center py-2 disabled:opacity-40">Thêm</button>
+            <button @click="showAdd = false" class="border-border-default text-text-secondary hover:bg-bg-hover flex-1 rounded-lg border py-2 text-sm transition-all duration-150">{{ t('common.cancel') }}</button>
+            <button @click="addWallet" :disabled="!newWallet.name.trim()" class="btn-primary flex-1 justify-center py-2 disabled:opacity-40">{{ t('common.add') }}</button>
           </div>
         </div>
       </div>
@@ -311,10 +313,10 @@ function onDragEnd() {
             <span class="text-base font-bold" :class="w.balance >= 0 ? 'text-text-primary' : 'text-error'">
               {{ formatVND(w.balance) }}
             </span>
-            <button @click="startEdit(w.id)" class="text-text-tertiary hover:text-text-primary hover:bg-bg-hover rounded p-2 transition-all duration-150 touch-target" title="Sửa số dư">
+            <button @click="startEdit(w.id)" class="text-text-tertiary hover:text-text-primary hover:bg-bg-hover rounded p-2 transition-all duration-150 touch-target" :title="t('wallets.editBalance')">
               <Edit3 :size="16" />
             </button>
-            <button @click="requestDelete(w.id)" class="text-text-tertiary hover:text-error hover:bg-bg-hover rounded p-2 transition-all duration-150 touch-target" title="Xóa ví">
+            <button @click="requestDelete(w.id)" class="text-text-tertiary hover:text-error hover:bg-bg-hover rounded p-2 transition-all duration-150 touch-target" :title="t('wallets.deleteWallet')">
               <Trash2 :size="16" />
             </button>
           </div>
@@ -324,7 +326,7 @@ function onDragEnd() {
 
     <!-- Total -->
     <div class="bg-bg-elevated border-border-default mt-6 flex items-center justify-between rounded-xl border p-5">
-      <span class="text-text-secondary text-sm font-medium">Tổng tất cả ví</span>
+      <span class="text-text-secondary text-sm font-medium">{{ t('wallets.totalAll') }}</span>
       <span class="text-xl font-bold" :class="finance.totalBalance >= 0 ? 'text-accent' : 'text-error'">
         {{ formatVND(finance.totalBalance) }}
       </span>
@@ -333,8 +335,8 @@ function onDragEnd() {
     <!-- PIN Dialog -->
     <PinDialog
       :show="showPinDialog"
-      title="Xác nhận xóa ví"
-      message="Nhập mã PIN để xóa ví này"
+      :title="t('wallets.pinDeleteTitle')"
+      :message="t('wallets.pinDeleteMessage')"
       @confirmed="onPinConfirmed"
       @cancelled="showPinDialog = false; pendingDeleteId = null"
     />

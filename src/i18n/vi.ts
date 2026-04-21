@@ -1,0 +1,318 @@
+export default {
+  // ── Common ──
+  common: {
+    cancel: 'Hủy',
+    confirm: 'Xác nhận',
+    save: 'Lưu',
+    delete: 'Xóa',
+    add: 'Thêm',
+    edit: 'Sửa',
+    close: 'Đóng',
+    loading: 'Đang tải...',
+    saving: 'Đang lưu...',
+    today: 'Hôm nay',
+    yesterday: 'Hôm qua',
+    all: 'Tất cả',
+    menu: 'MENU',
+    preview: 'Xem trước',
+    copyLink: 'Copy Link',
+    export: 'Xuất dữ liệu',
+    version: 'SmartNote v1.0.0',
+    copy: 'Copy',
+    copied: 'Đã copy!'
+  },
+
+  // ── Time ──
+  time: {
+    minutesAgo: '{n} phút trước',
+    hoursAgo: '{n} giờ trước',
+    daysAgo: '{n} ngày trước',
+    mAgo: '{n}m trước',
+    hAgo: '{n}h trước',
+    dAgo: '{n}d trước'
+  },
+
+  // ── Days ──
+  days: {
+    short: ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'],
+    long: ['CN', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7']
+  },
+
+  // ── Months ──
+  months: [
+    'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
+    'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'
+  ],
+
+  // ── Navigation ──
+  nav: {
+    dashboard: 'Dashboard',
+    transactions: 'Giao dịch',
+    wallets: 'Ví',
+    notes: 'Notes',
+    settings: 'Cài đặt',
+    addTransaction: 'Thêm giao dịch',
+    walletSection: 'VÍ',
+    totalBalance: 'Tổng ví',
+    autoSync: 'Đồng bộ tự động'
+  },
+
+  // ── Notifications ──
+  notifications: {
+    title: 'Thông báo',
+    new: '{n} mới',
+    readAll: 'Đọc tất cả',
+    deleteAll: 'Xóa',
+    tabAll: 'Tất cả',
+    tabUnread: 'Chưa đọc',
+    emptyUnread: 'Không có thông báo chưa đọc',
+    empty: 'Chưa có thông báo',
+    emptyHint: 'Kết nối ngân hàng để nhận thông báo tự động'
+  },
+
+  // ── Dashboard ──
+  dashboard: {
+    totalBalance: 'Tổng số dư',
+    monthIncome: 'Thu nhập tháng',
+    monthExpense: 'Chi tiêu tháng',
+    myWallets: 'Ví của tôi',
+    manage: 'Quản lý',
+    weeklyChart: 'Thu chi 7 ngày',
+    income: 'Thu',
+    expense: 'Chi',
+    categoryBreakdown: 'Chi tiêu theo danh mục',
+    noDataThisMonth: 'Chưa có dữ liệu tháng này',
+    recentTransactions: 'Giao dịch gần đây',
+    viewAll: 'Xem tất cả',
+    noTransactions: 'Chưa có giao dịch',
+    noTransactionsHint: 'Thêm giao dịch đầu tiên hoặc chat trên Telegram',
+    addTransaction: 'Thêm giao dịch'
+  },
+
+  // ── Transactions ──
+  transactions: {
+    title: 'Giao dịch',
+    count: '{n} giao dịch',
+    add: 'Thêm',
+    filterAll: 'Tất cả',
+    filterExpense: 'Chi',
+    filterIncome: 'Thu',
+    allWallets: 'Tất cả ví',
+    deleteTitle: 'Xóa giao dịch',
+    deleteMessage: 'Giao dịch này sẽ bị xóa khỏi hệ thống.\nHành động này không thể hoàn tác.',
+    deleteConfirm: 'Xóa giao dịch',
+    empty: 'Chưa có giao dịch',
+    emptyHint: 'Thêm giao dịch thủ công hoặc chat qua Telegram',
+    addTransaction: 'Thêm giao dịch'
+  },
+
+  // ── Add Transaction ──
+  addTx: {
+    title: 'Thêm giao dịch',
+    expense: 'Chi tiêu',
+    income: 'Thu nhập',
+    amount: 'Số tiền',
+    category: 'Danh mục',
+    wallet: 'Ví',
+    addWallet: 'Thêm ví',
+    note: 'Ghi chú',
+    notePlaceholder: 'Ví dụ: Ăn sáng, Grab, ...',
+    date: 'Ngày',
+    submitExpense: 'Ghi chi tiêu',
+    submitIncome: 'Ghi thu nhập'
+  },
+
+  // ── Wallets ──
+  wallets: {
+    title: 'Ví của tôi',
+    addWallet: 'Thêm ví',
+    addNew: 'Thêm ví mới',
+    walletName: 'Tên ví (VD: Vietcombank, MoMo, Tiền mặt...)',
+    popularBanks: 'Ngân hàng & Ví phổ biến',
+    colorCustom: 'Màu (cho ví tùy chỉnh)',
+    totalAll: 'Tổng tất cả ví',
+    editBalance: 'Sửa số dư',
+    deleteWallet: 'Xóa ví',
+    deleteTitle: 'Xóa ví',
+    deleteMessage: 'Bạn có chắc chắn muốn xóa ví này?\nCác giao dịch hiện tại sẽ không bị xóa.',
+    deleteConfirm: 'Chắc chắn xóa',
+    cannotSaveOrder: 'Không thể lưu thứ tự ví',
+    pinDeleteTitle: 'Xác nhận xóa ví',
+    pinDeleteMessage: 'Nhập mã PIN để xóa ví này'
+  },
+
+  // ── Notes ──
+  notes: {
+    title: 'Notes',
+    count: '{n} notes',
+    newNote: 'Ghi chú mới',
+    searchPlaceholder: 'Tìm kiếm theo tiêu đề, nội dung hoặc tag...',
+    filterAll: 'Tất cả',
+    filterPinned: 'Ghim',
+    filterRecent: 'Gần đây',
+    noContent: 'Chưa có nội dung...',
+    deleteNote: 'Xóa ghi chú này?',
+    noteDeleted: 'Đã xóa ghi chú',
+    noResults: 'Không tìm thấy kết quả',
+    noNotes: 'Chưa có ghi chú',
+    tryDifferent: 'Thử từ khóa khác',
+    createFirst: 'Tạo ghi chú đầu tiên của bạn',
+    createNote: 'Tạo ghi chú',
+    ai: {
+      assistant: 'Trợ lý AI',
+      summarize: 'Tóm tắt',
+      continue: 'Viết tiếp',
+      improve: 'Cải thiện',
+      tags: 'Gợi ý tags',
+      ask: 'Hỏi AI về nội dung note...',
+      processing: 'Đang xử lý...',
+      suggestedTags: 'Gợi ý tags:',
+      applyTags: 'Áp dụng tags',
+      result: 'Kết quả:',
+      insert: 'Chèn vào note'
+    }
+  },
+
+  // ── Settings ──
+  settings: {
+    title: 'Cài đặt',
+    // Language
+    language: 'Ngôn ngữ',
+    languageDesc: 'Chọn ngôn ngữ hiển thị',
+    // Profile
+    profile: 'Hồ sơ',
+    editProfile: 'Chỉnh sửa hồ sơ',
+    displayName: 'Tên hiển thị',
+    avatarUrl: 'Đường dẫn ảnh đại diện',
+    avatarHint: 'Dán URL ảnh đại diện công khai.',
+    removeAvatar: 'Xóa ảnh đại diện',
+    saveChanges: 'Lưu thay đổi',
+    profileUpdated: 'Cập nhật hồ sơ thành công',
+    profileFailed: 'Không thể cập nhật hồ sơ',
+    // Storage
+    storage: 'Lưu trữ',
+    localStorageUsed: 'Dung lượng Local Storage',
+    totalNotes: 'Tổng Notes',
+    r2Limit: 'Giới hạn R2 Free Tier',
+    // Export
+    dataManagement: 'Quản lý dữ liệu',
+    exportNotes: 'Xuất Notes',
+    exportDesc: 'Tải xuống tất cả ghi chú dưới dạng JSON',
+    exportSuccess: 'Xuất notes thành công',
+    // PIN
+    pinSecurity: 'Bảo mật PIN',
+    changePin: 'Đổi mã PIN',
+    setupPin: 'Thiết lập mã PIN',
+    pinEnabled: 'PIN đang bật. Các thao tác quan trọng sẽ yêu cầu xác nhận PIN.',
+    pinDisabled: 'Bảo vệ các thao tác quan trọng bằng mã PIN.',
+    pinActive: 'Đã bật',
+    currentPin: 'PIN hiện tại',
+    currentPinPlaceholder: 'Nhập PIN cũ',
+    newPin: 'PIN mới (4-6 số)',
+    newPinPlaceholder: 'Nhập PIN mới',
+    confirmPin: 'Xác nhận PIN',
+    confirmPinPlaceholder: 'Nhập lại PIN',
+    savePin: 'Lưu PIN',
+    savingPin: 'Đang lưu...',
+    pinLengthError: 'PIN phải từ 4-6 chữ số',
+    pinDigitsOnly: 'PIN chỉ được chứa số',
+    pinMismatch: 'PIN xác nhận không khớp',
+    pinSuccess: 'PIN đã được thiết lập thành công!',
+    pinFailed: 'Không thể thiết lập PIN',
+    // Account
+    account: 'Tài khoản',
+    signOut: 'Đăng xuất',
+    signOutDesc: 'Đăng xuất khỏi tài khoản',
+    deleteAccount: 'Xóa tài khoản',
+    deleteAccountDesc: 'Xóa vĩnh viễn tài khoản và toàn bộ dữ liệu',
+    deleteAccountTitle: 'Xóa tài khoản',
+    deleteAccountWarning: 'Hành động này <strong>không thể hoàn tác</strong>. Mọi dữ liệu (ví, giao dịch, ghi chú) sẽ bị xóa vĩnh viễn.',
+    confirmPassword: 'Mật khẩu xác nhận',
+    passwordPlaceholder: 'Nhập mật khẩu của bạn',
+    deleteForever: 'Xóa vĩnh viễn',
+    passwordRequired: 'Vui lòng nhập mật khẩu',
+    accountDeleted: 'Tài khoản đã được xóa vĩnh viễn',
+    wrongPassword: 'Mật khẩu không chính xác'
+  },
+
+  // ── Login ──
+  login: {
+    tagline: 'Trung tâm kiến thức cá nhân',
+    welcomeBack: 'Chào mừng trở lại',
+    createAccount: 'Tạo tài khoản',
+    signInDesc: 'Đăng nhập để tiếp tục',
+    signUpDesc: 'Bắt đầu tổ chức suy nghĩ của bạn',
+    name: 'Tên',
+    namePlaceholder: 'Họ và tên',
+    email: 'Email',
+    password: 'Mật khẩu',
+    signIn: 'Đăng nhập',
+    signUp: 'Đăng ký',
+    noAccount: 'Chưa có tài khoản?',
+    hasAccount: 'Đã có tài khoản?'
+  },
+
+  // ── AutoSync ──
+  autoSync: {
+    title: 'Đồng bộ tự động (iOS)',
+    desc: 'Ghi nhận giao dịch ngân hàng vào SmartNote hoàn toàn tự động và an toàn tuyệt đối thông qua iOS Shortcuts.',
+    whyTitle: 'Tại sao nên dùng SMS Shortcuts?',
+    security: '<strong>Bảo mật 100%:</strong> Không cần cung cấp mật khẩu đăng nhập ngân hàng.',
+    native: '<strong>Apple Native:</strong> Sử dụng Phím tắt (Shortcuts) mặc định của iPhone.',
+    free: '<strong>Miễn phí:</strong> Không cần qua trung gian bên thứ 3 nào.',
+    instant: '<strong>Tức thì:</strong> Vừa có SMS biến động số dư là có trên SmartNote.',
+    step1Title: '1. Đường dẫn Webhook của bạn',
+    step1Desc: 'Đường dẫn này chứa mã định danh duy nhất của bạn. Tuyệt đối không chia sẻ cho người khác.',
+    step2Title: '2. Hướng dẫn thiết lập trên iPhone',
+    s1Title: 'Tạo Tự động hóa mới',
+    s1Desc: 'Mở ứng dụng <strong>Phím tắt (Shortcuts)</strong> có sẵn trên iPhone. Chuyển sang tab <strong>Tự động hóa</strong> ở dưới cùng và bấm dấu <strong>+</strong> ở góc trên bên phải.',
+    s2Title: 'Chọn điều kiện kích hoạt',
+    s2Desc: 'Cuộn xuống chọn mục <strong>Tin nhắn</strong>.',
+    s2Li1: 'Ở phần <strong>Người gửi</strong>, nhập tên tổng đài (VD: <code>Techcombank</code>, <code>TPBank</code>).',
+    s2Li2: 'Chọn <strong>Chạy ngay lập tức (Run Immediately)</strong> để tự động chạy ngầm.',
+    s2Next: 'Bấm <strong>Tiếp</strong> → chọn <strong>Tạo tự động hóa trống</strong>.',
+    s3Title: 'Gắn đường dẫn Webhook',
+    s3Desc: 'Bấm <strong>Thêm hành động</strong>, tìm <strong>"URL"</strong> và chọn <strong>Lấy nội dung URL (Get Contents of URL)</strong>. Dán đường dẫn Webhook bạn vừa copy ở Bước 1 vào ô URL.',
+    s4Title: 'Cấu hình gửi dữ liệu',
+    s4Desc: 'Bấm vào mũi tên nhỏ (Hiển thị thêm) ở hành động vừa thêm:',
+    s4Li1: 'Đổi Phương thức thành <strong>POST</strong>.',
+    s4Li2: 'Kéo xuống phần <strong>Nội dung yêu cầu</strong> (Thêm trường mới dạng Văn bản).',
+    s4Li3: 'Nhập khóa (Key) là <kbd>text</kbd>',
+    s4Li4: 'Phần giá trị (Value) chọn <strong>Đầu vào phím tắt (Shortcut Input)</strong>.',
+    s4Done: 'Bấm <strong>Xong</strong> để lưu. Giao dịch sẽ tự động đổ về từ tin nhắn tiếp theo!',
+    copySuccess: 'Đã copy đường dẫn thành công!',
+    copyFailed: 'Không thể copy, vui lòng thử lại.'
+  },
+
+  // ── PinDialog ──
+  pin: {
+    title: 'Xác nhận bằng PIN',
+    message: 'Nhập mã PIN để tiếp tục',
+    fillAll: 'Vui lòng nhập đủ PIN',
+    wrong: 'PIN không đúng',
+    confirm: 'Xác nhận',
+    requireTitle: 'Yêu cầu mã PIN',
+    requireMessage: 'Để bảo vệ dữ liệu, bạn cần thiết lập Mã PIN trước khi thực hiện các thao tác quan trọng.',
+    setupNow: 'Thiết lập PIN ngay'
+  },
+
+  // ── Categories ──
+  categories: {
+    food: 'Ăn uống',
+    transport: 'Di chuyển',
+    shopping: 'Shopping',
+    entertainment: 'Giải trí',
+    bills: 'Hóa đơn',
+    health: 'Sức khỏe',
+    education: 'Học tập',
+    rent: 'Nhà/Thuê',
+    gift: 'Quà tặng',
+    other_expense: 'Khác',
+    salary: 'Lương',
+    freelance: 'Freelance',
+    investment: 'Đầu tư',
+    bonus: 'Thưởng',
+    refund: 'Hoàn tiền',
+    other_income: 'Thu khác'
+  }
+}

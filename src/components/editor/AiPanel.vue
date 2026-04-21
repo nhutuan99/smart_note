@@ -5,13 +5,15 @@ import {
   Sparkles, X, Copy, Check, ChevronDown,
   AlignLeft, PenLine, Wand2, Tag, MessageSquare, Loader2
 } from 'lucide-vue-next'
-import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps<{
   title: string
   content: string
   visible: boolean
 }>()
+
+const { t } = useI18n()
 
 const emit = defineEmits<{
   close: []
@@ -96,7 +98,7 @@ const hasResult = computed(() => ai.streamText.value.length > 0 || suggestedTags
           <div class="ai-icon-badge">
             <Sparkles :size="14" />
           </div>
-          <span class="ai-panel-title">AI Assistant</span>
+          <span class="ai-panel-title">{{ t('notes.ai.assistant') }}</span>
           <span class="ai-model-badge">Workers AI</span>
         </div>
         <button class="ai-close-btn" @click="emit('close')">
@@ -108,19 +110,19 @@ const hasResult = computed(() => ai.streamText.value.length > 0 || suggestedTags
       <div class="ai-actions">
         <button class="ai-action-btn" :class="{ active: activeMode === 'summarize' }" @click="runSummarize" :disabled="ai.loading.value || !hasContent">
           <AlignLeft :size="14" />
-          Tóm tắt
+          {{ t('notes.ai.summarize') }}
         </button>
         <button class="ai-action-btn" :class="{ active: activeMode === 'continue' }" @click="runContinue" :disabled="ai.loading.value || !hasContent">
           <PenLine :size="14" />
-          Viết tiếp
+          {{ t('notes.ai.continue') }}
         </button>
         <button class="ai-action-btn" :class="{ active: activeMode === 'improve' }" @click="runImprove" :disabled="ai.loading.value || !hasContent">
           <Wand2 :size="14" />
-          Cải thiện
+          {{ t('notes.ai.improve') }}
         </button>
         <button class="ai-action-btn" :class="{ active: activeMode === 'tags' }" @click="runSuggestTags" :disabled="ai.loading.value || !hasContent">
           <Tag :size="14" />
-          Gợi ý tags
+          {{ t('notes.ai.tags') }}
         </button>
       </div>
 
@@ -128,7 +130,7 @@ const hasResult = computed(() => ai.streamText.value.length > 0 || suggestedTags
       <div class="ai-ask-row">
         <input
           v-model="question"
-          placeholder="Hỏi AI về nội dung note..."
+          :placeholder="t('notes.ai.ask')"
           class="ai-ask-input"
           @keyup.enter="runAsk"
           :disabled="ai.loading.value"
@@ -141,7 +143,7 @@ const hasResult = computed(() => ai.streamText.value.length > 0 || suggestedTags
       <!-- Loading (only before first chunk arrives) -->
       <div v-if="ai.loading.value && !ai.streamText.value && !suggestedTags.length" class="ai-loading">
         <Loader2 :size="16" class="animate-spin" />
-        <span>Đang xử lý...</span>
+        <span>{{ t('notes.ai.processing') }}</span>
       </div>
 
       <!-- Error -->
@@ -151,30 +153,30 @@ const hasResult = computed(() => ai.streamText.value.length > 0 || suggestedTags
 
       <!-- Tags Result -->
       <div v-else-if="suggestedTags.length" class="ai-result">
-        <p class="ai-result-label">Gợi ý tags:</p>
+        <p class="ai-result-label">{{ t('notes.ai.suggestedTags') }}</p>
         <div class="flex flex-wrap gap-2 mb-3">
           <span v-for="tag in suggestedTags" :key="tag" class="ai-tag-badge">#{{ tag }}</span>
         </div>
         <button class="ai-insert-btn w-full" @click="applyTags">
           <Tag :size="13" />
-          Áp dụng tags
+          {{ t('notes.ai.applyTags') }}
         </button>
       </div>
 
       <!-- Streaming Text Result -->
       <div v-else-if="ai.streamText.value" class="ai-result">
-        <p class="ai-result-label">Kết quả:</p>
+        <p class="ai-result-label">{{ t('notes.ai.result') }}</p>
         <div class="ai-result-text">
           {{ ai.streamText.value }}<span v-if="ai.loading.value" class="ai-cursor">▋</span>
         </div>
         <div v-if="!ai.loading.value" class="flex gap-2 mt-3">
           <button class="ai-copy-btn flex-1" @click="copyResult">
             <component :is="copied ? Check : Copy" :size="13" />
-            {{ copied ? 'Copied!' : 'Copy' }}
+            {{ copied ? t('common.copied') : t('common.copy') }}
           </button>
           <button class="ai-insert-btn flex-1" @click="insertResult">
             <ChevronDown :size="13" />
-            Chèn vào note
+            {{ t('notes.ai.insert') }}
           </button>
         </div>
       </div>

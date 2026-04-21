@@ -9,9 +9,11 @@ import {
   INCOME_CATEGORIES
 } from '@/constants/finance'
 import { getWalletBrand } from '@/constants/walletBrands'
+import { useI18n } from 'vue-i18n'
 import type { TransactionType } from '@/types'
 import { ArrowLeft, Check, ChevronDown, ArrowUpRight, ArrowDownRight, Calendar, Plus } from 'lucide-vue-next'
 
+const { t, tm } = useI18n()
 const router = useRouter()
 const finance = useFinanceStore()
 
@@ -66,11 +68,6 @@ function formattedAmount() {
 // --- Date Picker Logic ---
 const showDatePicker = ref(false)
 const datePickerRef = ref<HTMLElement | null>(null)
-
-const monthNames = [
-  'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
-  'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'
-]
 
 const currentMonth = ref(new Date().getMonth())
 const currentYear = ref(new Date().getFullYear())
@@ -151,7 +148,7 @@ async function submit() {
       >
         <ArrowLeft :size="18" />
       </button>
-      <h1 class="text-xl font-bold tracking-tight">Thêm giao dịch</h1>
+      <h1 class="text-xl font-bold tracking-tight">{{ t('addTx.title') }}</h1>
     </div>
 
     <!-- Type Toggle -->
@@ -166,7 +163,7 @@ async function submit() {
         @click="type = 'expense'; category = 'food'"
       >
         <ArrowDownRight :size="16" />
-        Chi tiêu
+        {{ t('addTx.expense') }}
       </button>
       <button
         class="flex flex-1 items-center justify-center gap-2 py-3 text-sm font-medium transition-all duration-150"
@@ -178,13 +175,13 @@ async function submit() {
         @click="type = 'income'; category = 'salary'"
       >
         <ArrowUpRight :size="16" />
-        Thu nhập
+        {{ t('addTx.income') }}
       </button>
     </div>
 
     <!-- Amount -->
     <div class="mb-6">
-      <label class="text-text-secondary mb-2 block text-sm font-medium">Số tiền</label>
+      <label class="text-text-secondary mb-2 block text-sm font-medium">{{ t('addTx.amount') }}</label>
       <div class="relative">
         <input
           :value="formattedAmount()"
@@ -204,14 +201,14 @@ async function submit() {
 
     <!-- Category -->
     <div class="mb-6">
-      <label class="text-text-secondary mb-2 block text-sm font-medium">Danh mục</label>
+      <label class="text-text-secondary mb-2 block text-sm font-medium">{{ t('addTx.category') }}</label>
       <button
         class="border-border-default bg-bg-surface hover:border-border-strong flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition-all duration-150"
         @click="showCategoryPicker = !showCategoryPicker"
       >
         <span class="flex items-center gap-2">
           <span class="text-lg">{{ selectedCategory.icon }}</span>
-          <span class="text-text-primary text-sm">{{ selectedCategory.label }}</span>
+          <span class="text-text-primary text-sm">{{ t(`categories.${selectedCategory.key}`) }}</span>
         </span>
         <ChevronDown
           :size="16"
@@ -238,7 +235,7 @@ async function submit() {
             @click="category = cat.key; showCategoryPicker = false"
           >
             <span class="text-xl">{{ cat.icon }}</span>
-            <span class="text-text-secondary text-[0.6875rem]">{{ cat.label }}</span>
+            <span class="text-text-secondary text-[0.6875rem]">{{ t(`categories.${cat.key}`) }}</span>
           </button>
         </div>
       </transition>
@@ -246,7 +243,7 @@ async function submit() {
 
     <!-- Wallet -->
     <div class="mb-6">
-      <label class="text-text-secondary mb-2 block text-sm font-medium">Ví</label>
+      <label class="text-text-secondary mb-2 block text-sm font-medium">{{ t('addTx.wallet') }}</label>
       <div class="grid grid-cols-3 gap-2">
         <button
           v-for="w in finance.wallets"
@@ -289,7 +286,7 @@ async function submit() {
              <Plus :size="16" />
           </div>
           <span class="text-text-secondary w-full truncate text-center text-[0.6875rem]">
-            Thêm ví
+            {{ t('addTx.addWallet') }}
           </span>
         </button>
       </div>
@@ -297,18 +294,18 @@ async function submit() {
 
     <!-- Note -->
     <div class="mb-6">
-      <label class="text-text-secondary mb-2 block text-sm font-medium">Ghi chú</label>
+      <label class="text-text-secondary mb-2 block text-sm font-medium">{{ t('addTx.note') }}</label>
       <input
         v-model="note"
         type="text"
-        placeholder="Ví dụ: Ăn sáng, Grab, ..."
+        :placeholder="t('addTx.notePlaceholder')"
         class="border-border-default bg-bg-surface text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-2.5 text-sm transition-all duration-150 focus:ring-2 focus:outline-none"
       />
     </div>
 
     <!-- Date (Custom Picker) -->
     <div class="mb-8 relative" ref="datePickerRef">
-      <label class="text-text-secondary mb-2 block text-sm font-medium">Ngày</label>
+      <label class="text-text-secondary mb-2 block text-sm font-medium">{{ t('addTx.date') }}</label>
       <button
         @click="showDatePicker = !showDatePicker"
         class="border-border-default bg-bg-surface text-text-primary hover:border-border-strong focus:border-accent focus:ring-accent-subtle flex w-full items-center justify-between rounded-xl border px-4 py-2.5 text-sm transition-all duration-150 focus:ring-2 focus:outline-none"
@@ -325,11 +322,11 @@ async function submit() {
         >
           <div class="mb-4 flex items-center justify-between">
             <button @click="changeMonth(-1)" class="p-1 hover:bg-bg-hover rounded-lg transition-colors"><ChevronDown :size="16" class="rotate-90" /></button>
-            <span class="text-sm font-bold">{{ monthNames[currentMonth] }} {{ currentYear }}</span>
+            <span class="text-sm font-bold">{{ (tm('months') as string[])[currentMonth] }} {{ currentYear }}</span>
             <button @click="changeMonth(1)" class="p-1 hover:bg-bg-hover rounded-lg transition-colors"><ChevronDown :size="16" class="-rotate-90" /></button>
           </div>
           <div class="grid grid-cols-7 gap-1 mb-2 text-center text-[0.6875rem] text-text-tertiary font-semibold">
-            <span v-for="d in ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7']" :key="d">{{ d }}</span>
+            <span v-for="d in (tm('days.short') as string[])" :key="d">{{ d }}</span>
           </div>
           <div class="grid grid-cols-7 gap-1">
             <div v-for="blank in blankDays" :key="'blank-' + blank" class="h-8"></div>
@@ -344,8 +341,8 @@ async function submit() {
             </button>
           </div>
           <div class="mt-4 flex gap-2">
-             <button @click="selectToday" class="btn-secondary w-full py-1.5 text-xs">Hôm nay</button>
-             <button @click="showDatePicker = false" class="btn-secondary w-full py-1.5 text-xs">Đóng</button>
+             <button @click="selectToday" class="btn-secondary w-full py-1.5 text-xs">{{ t('common.today') }}</button>
+             <button @click="showDatePicker = false" class="btn-secondary w-full py-1.5 text-xs">{{ t('common.close') }}</button>
           </div>
         </div>
       </transition>
@@ -363,7 +360,7 @@ async function submit() {
       "
     >
       <Check :size="18" />
-      {{ type === 'expense' ? 'Ghi chi tiêu' : 'Ghi thu nhập' }}
+      {{ type === 'expense' ? t('addTx.submitExpense') : t('addTx.submitIncome') }}
     </button>
   </div>
 </template>

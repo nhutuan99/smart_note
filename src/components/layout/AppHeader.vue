@@ -5,8 +5,10 @@ import { useUiStore } from '@/stores/ui'
 import { useNotificationStore } from '@/stores/notifications'
 import { useEventListener } from '@/composables/useEventListener'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { Menu, Bell, Settings, LogOut, Sparkles, ArrowUpRight, ArrowDownRight, CheckCheck, Trash2, BellOff, Zap } from 'lucide-vue-next'
 
+const { t } = useI18n()
 const auth = useAuthStore()
 const ui = useUiStore()
 const notiStore = useNotificationStore()
@@ -75,7 +77,7 @@ function handleLogout() {
       <router-link
         to="/auto-sync"
         class="text-text-secondary hover:bg-bg-hover hover:text-accent relative flex h-[2.125rem] w-[2.125rem] items-center justify-center rounded-lg transition-all duration-150"
-        title="Đồng bộ tự động"
+        :title="t('nav.autoSync')"
       >
         <Zap :size="18" />
       </router-link>
@@ -113,32 +115,32 @@ function handleLogout() {
             <div class="border-border-default flex items-center justify-between border-b px-4 py-3">
               <div class="flex items-center gap-2">
                 <Bell :size="15" class="text-text-secondary" />
-                <span class="text-sm font-semibold">Thông báo</span>
+                <span class="text-sm font-semibold">{{ t('notifications.title') }}</span>
                 <span
                   v-if="notiStore.unreadCount > 0"
                   class="bg-error/15 text-error rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold"
                 >
-                  {{ notiStore.unreadCount }} mới
+                  {{ t('notifications.new', { n: notiStore.unreadCount }) }}
                 </span>
               </div>
               <div class="flex items-center gap-1">
                 <button
                   v-if="notiStore.unreadCount > 0"
                   class="text-text-tertiary hover:bg-bg-hover hover:text-accent flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-[0.6875rem] transition-colors duration-150"
-                  title="Đánh dấu tất cả đã đọc"
+                  :title="t('notifications.readAll')"
                   @click="notiStore.markAllRead()"
                 >
                   <CheckCheck :size="14" />
-                  <span class="hidden sm:inline">Đọc tất cả</span>
+                  <span class="hidden sm:inline">{{ t('notifications.readAll') }}</span>
                 </button>
                 <button
                   v-if="notiStore.notifications.length > 0"
                   class="text-text-tertiary hover:bg-error/10 hover:text-error flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-[0.6875rem] transition-colors duration-150"
-                  title="Xóa tất cả"
+                  :title="t('notifications.deleteAll')"
                   @click="notiStore.clearAll()"
                 >
                   <Trash2 :size="14" />
-                  <span class="hidden sm:inline">Xóa</span>
+                  <span class="hidden sm:inline">{{ t('notifications.deleteAll') }}</span>
                 </button>
               </div>
             </div>
@@ -146,7 +148,7 @@ function handleLogout() {
             <!-- Filter Tabs -->
             <div class="border-border-default flex border-b">
               <button
-                v-for="tab in [{ key: 'all', label: 'Tất cả' }, { key: 'unread', label: 'Chưa đọc' }]"
+                v-for="tab in [{ key: 'all', labelKey: 'notifications.tabAll' }, { key: 'unread', labelKey: 'notifications.tabUnread' }]"
                 :key="tab.key"
                 class="border-border-default flex-1 border-r py-2 text-[0.75rem] font-medium transition-colors duration-150 last:border-r-0"
                 :class="notiStore.filter === tab.key
@@ -154,7 +156,7 @@ function handleLogout() {
                   : 'text-text-secondary hover:bg-bg-hover'"
                 @click="notiStore.filter = tab.key as any"
               >
-                {{ tab.label }}
+                {{ t(tab.labelKey) }}
               </button>
             </div>
 
@@ -208,10 +210,10 @@ function handleLogout() {
               <div v-else class="flex flex-col items-center py-10 text-center">
                 <BellOff :size="32" class="text-text-disabled mb-3" />
                 <p class="text-text-tertiary text-sm font-medium">
-                  {{ notiStore.filter === 'unread' ? 'Không có thông báo chưa đọc' : 'Chưa có thông báo' }}
+                  {{ notiStore.filter === 'unread' ? t('notifications.emptyUnread') : t('notifications.empty') }}
                 </p>
                 <p class="text-text-disabled mt-1 text-[0.75rem]">
-                  Kết nối ngân hàng để nhận thông báo tự động
+                  {{ t('notifications.emptyHint') }}
                 </p>
               </div>
             </div>

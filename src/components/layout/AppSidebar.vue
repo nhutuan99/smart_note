@@ -6,6 +6,7 @@ import { useNotesStore } from '@/stores/notes'
 import { useDevice } from '@/composables/useDevice'
 import { formatVNDShort } from '@/constants/finance'
 import { getWalletBrand } from '@/constants/walletBrands'
+import { useI18n } from 'vue-i18n'
 import {
   LayoutDashboard,
   ArrowLeftRight,
@@ -18,6 +19,7 @@ import {
   ChevronLeft
 } from 'lucide-vue-next'
 
+const { t } = useI18n()
 const router = useRouter()
 const route = useRoute()
 const ui = useUiStore()
@@ -26,11 +28,11 @@ const notesStore = useNotesStore()
 const { isMobileOrTablet } = useDevice()
 
 const navItems = [
-  { label: 'Dashboard', icon: LayoutDashboard, route: '/' },
-  { label: 'Giao dịch', icon: ArrowLeftRight, route: '/transactions' },
-  { label: 'Ví', icon: Wallet, route: '/wallets' },
-  { label: 'Notes', icon: FileText, route: '/notes' },
-  { label: 'Cài đặt', icon: Settings, route: '/settings' }
+  { key: 'nav.dashboard', icon: LayoutDashboard, route: '/' },
+  { key: 'nav.transactions', icon: ArrowLeftRight, route: '/transactions' },
+  { key: 'nav.wallets', icon: Wallet, route: '/wallets' },
+  { key: 'nav.notes', icon: FileText, route: '/notes' },
+  { key: 'nav.settings', icon: Settings, route: '/settings' }
 ]
 
 const isActive = (path: string) => (path === '/' ? route.path === '/' : route.path.startsWith(path))
@@ -77,7 +79,7 @@ function navigateWallet(walletId: string) {
         :class="{ 'justify-center px-2': !ui.sidebarOpen }"
       >
         <Plus class="shrink-0" :size="ui.sidebarOpen ? 16 : 22" />
-        <span v-if="ui.sidebarOpen">Thêm giao dịch</span>
+        <span v-if="ui.sidebarOpen">{{ t('nav.addTransaction') }}</span>
       </button>
 
       <!-- Nav -->
@@ -86,7 +88,7 @@ function navigateWallet(walletId: string) {
           v-if="ui.sidebarOpen"
           class="text-text-tertiary px-3 py-2 text-[0.6875rem] font-semibold tracking-wider"
         >
-          MENU
+          {{ t('common.menu') }}
         </div>
         <router-link
           v-for="item in navItems"
@@ -103,7 +105,7 @@ function navigateWallet(walletId: string) {
             :is="item.icon"
             :size="ui.sidebarOpen ? 18 : 22"
           />
-          <span v-if="ui.sidebarOpen">{{ item.label }}</span>
+          <span v-if="ui.sidebarOpen">{{ t(item.key) }}</span>
         </router-link>
       </nav>
 
@@ -113,7 +115,7 @@ function navigateWallet(walletId: string) {
         class="mb-4"
       >
         <div class="text-text-tertiary px-3 py-2 text-[0.6875rem] font-semibold tracking-wider">
-          VÍ
+          {{ t('nav.walletSection') }}
         </div>
         <div
           v-for="w in finance.wallets.slice(0, 5)"
@@ -153,7 +155,7 @@ function navigateWallet(walletId: string) {
         class="border-border-default mt-auto border-t pt-3"
       >
         <div class="flex items-center justify-between px-3 py-1">
-          <span class="text-text-tertiary text-[0.6875rem]">Tổng ví</span>
+          <span class="text-text-tertiary text-[0.6875rem]">{{ t('nav.totalBalance') }}</span>
           <span class="text-accent text-[0.6875rem] font-semibold">
             {{ formatVNDShort(finance.totalBalance) }}
           </span>

@@ -3,8 +3,10 @@ import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useNotesStore } from '@/stores/notes'
 import { useUiStore } from '@/stores/ui'
+import { useI18n } from 'vue-i18n'
 import { Search, Plus, LayoutGrid, List, Pin, Trash2, Clock, FileText } from 'lucide-vue-next'
 
+const { t } = useI18n()
 const router = useRouter()
 const notesStore = useNotesStore()
 const ui = useUiStore()
@@ -15,12 +17,12 @@ onMounted(() => notesStore.fetchNotes())
 function formatDate(d: string) {
   const diff = Date.now() - new Date(d).getTime()
   const m = Math.floor(diff / 60000)
-  if (m < 60) return `${m}m ago`
+  if (m < 60) return t('time.mAgo', { n: m })
   const h = Math.floor(m / 60)
-  if (h < 24) return `${h}h ago`
+  if (h < 24) return t('time.hAgo', { n: h })
   const days = Math.floor(h / 24)
   return days < 7
-    ? `${days}d ago`
+    ? t('time.dAgo', { n: days })
     : new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
@@ -36,7 +38,7 @@ async function createNote() {
 
 async function handleDelete(id: string) {
   if (await notesStore.deleteNote(id)) {
-    ui.showToast('success', 'Note deleted')
+    ui.showToast('success', t('notes.noteDeleted'))
     showDeleteConfirm.value = null
   }
 }
@@ -53,8 +55,8 @@ async function handleTogglePin(id: string, e: Event) {
     <!-- Header -->
     <div class="mb-6 flex items-center justify-between">
       <div class="flex items-baseline gap-3">
-        <h1 class="text-2xl font-bold tracking-tight">Notes</h1>
-        <span class="text-text-tertiary text-sm">{{ notesStore.filteredNotes.length }} notes</span>
+        <h1 class="text-2xl font-bold tracking-tight">{{ t('notes.title') }}</h1>
+        <span class="text-text-tertiary text-sm">{{ t('notes.count', { n: notesStore.filteredNotes.length }) }}</span>
       </div>
       <button
         id="notes-new-btn"
@@ -62,7 +64,7 @@ async function handleTogglePin(id: string, e: Event) {
         class="btn-primary"
       >
         <Plus :size="16" />
-        New Note
+        {{ t('notes.newNote') }}
       </button>
     </div>
 
@@ -77,7 +79,7 @@ async function handleTogglePin(id: string, e: Event) {
           id="notes-search-input"
           v-model="notesStore.searchQuery"
           type="text"
-          placeholder="Search notes by title, content, or tag..."
+          :placeholder="t('notes.searchPlaceholder')"
           class="border-border-default bg-bg-surface text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border py-2.5 pr-3 pl-[2.375rem] text-sm transition-all duration-150 focus:ring-2 focus:outline-none"
         />
       </div>
@@ -86,9 +88,9 @@ async function handleTogglePin(id: string, e: Event) {
         <div class="border-border-default flex overflow-hidden rounded-lg border">
           <button
             v-for="f in [
-              { key: 'all', label: 'All' },
-              { key: 'pinned', label: 'Pinned', icon: Pin },
-              { key: 'recent', label: 'Recent', icon: Clock }
+              { key: 'all', labelKey: 'notes.filterAll' },
+              { key: 'pinned', labelKey: 'notes.filterPinned', icon: Pin },
+              { key: 'recent', labelKey: 'notes.filterRecent', icon: Clock }
             ]"
             :key="f.key"
             class="text-text-secondary bg-bg-surface border-border-default hover:bg-bg-hover flex items-center gap-1 border-r px-3.5 py-2 text-sm transition-all duration-150 last:border-r-0"
@@ -100,7 +102,7 @@ async function handleTogglePin(id: string, e: Event) {
               :is="f.icon"
               :size="12"
             />
-            {{ f.label }}
+            {{ t(f.labelKey) }}
           </button>
         </div>
         <!-- View toggle -->
@@ -195,7 +197,7 @@ async function handleTogglePin(id: string, e: Event) {
             class="text-text-tertiary line-clamp-2 flex-1 text-sm leading-relaxed"
             :class="notesStore.viewMode === 'list' ? 'line-clamp-1 flex-1' : ''"
           >
-            {{ note.excerpt || 'No content...' }}
+            {{ note.excerpt || t('notes.noContent') }}
           </p>
           <div
             class="border-border-subtle mt-3 flex items-center justify-between border-t pt-3"
@@ -227,19 +229,19 @@ async function handleTogglePin(id: string, e: Event) {
             class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-xl bg-black/85"
             @click.stop
           >
-            <p class="text-text-primary font-medium">Delete this note?</p>
+            <p class="text-text-primary font-medium">{{ t('notes.deleteNote') }}</p>
             <div class="flex gap-2">
               <button
                 class="border-border-default text-text-secondary hover:bg-bg-hover rounded-lg border px-4 py-1.5 text-sm transition-all duration-150"
                 @click="showDeleteConfirm = null"
               >
-                Cancel
+                {{ t('common.cancel') }}
               </button>
               <button
                 class="btn-danger"
                 @click="handleDelete(note.id)"
               >
-                Delete
+                {{ t('common.delete') }}
               </button>
             </div>
           </div>
@@ -257,13 +259,13 @@ async function handleTogglePin(id: string, e: Event) {
         class="text-text-disabled mb-4"
       />
       <h3 class="mb-2 text-lg font-semibold">
-        {{ notesStore.searchQuery ? 'No results found' : 'No notes yet' }}
+        {{ notesStore.searchQuery ? t('notes.noResults') : t('notes.noNotes') }}
       </h3>
       <p class="text-text-tertiary mb-6 text-sm">
         {{
           notesStore.searchQuery
-            ? 'Try a different search term'
-            : 'Create your first note to get started'
+            ? t('notes.tryDifferent')
+            : t('notes.createFirst')
         }}
       </p>
       <button
@@ -272,7 +274,7 @@ async function handleTogglePin(id: string, e: Event) {
         class="btn-secondary"
       >
         <Plus :size="16" />
-        Create Note
+        {{ t('notes.createNote') }}
       </button>
     </div>
   </div>

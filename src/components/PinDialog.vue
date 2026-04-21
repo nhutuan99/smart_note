@@ -2,6 +2,9 @@
 import { ref, watch, nextTick } from 'vue'
 import { ShieldCheck, X } from 'lucide-vue-next'
 import { httpClient } from '@/shared/api/httpClient'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   show: boolean
@@ -62,7 +65,7 @@ const filledPin = () => pin.value.slice(0, pinLength.value).join('')
 async function verifyPin() {
   const pinStr = filledPin()
   if (pinStr.length < pinLength.value) {
-    error.value = 'Vui lòng nhập đủ PIN'
+    error.value = t('pin.fillAll')
     return
   }
 
@@ -73,7 +76,7 @@ async function verifyPin() {
     await httpClient.post('/api/pin/verify', { pin: pinStr })
     emit('confirmed')
   } catch (err: any) {
-    error.value = err.message || 'PIN không đúng'
+    error.value = err.message || t('pin.wrong')
     pin.value = ['', '', '', '', '', '']
     nextTick(() => inputRefs.value[0]?.focus())
   } finally {
@@ -114,10 +117,10 @@ async function verifyPin() {
 
           <!-- Title -->
           <h3 class="mb-1 text-center text-lg font-semibold">
-            {{ title || 'Xác nhận bằng PIN' }}
+            {{ title || t('pin.title') }}
           </h3>
           <p class="text-text-tertiary mb-6 text-center text-sm">
-            {{ message || 'Nhập mã PIN để tiếp tục' }}
+            {{ message || t('pin.message') }}
           </p>
 
           <!-- PIN inputs -->
@@ -158,7 +161,7 @@ async function verifyPin() {
               v-if="loading"
               class="h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-l-black"
             ></span>
-            <span v-else>Xác nhận</span>
+            <span v-else>{{ t('pin.confirm') }}</span>
           </button>
         </div>
       </div>

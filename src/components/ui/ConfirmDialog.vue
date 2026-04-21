@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { useUiStore } from '@/stores/ui'
 import { AlertCircle, AlertTriangle, X } from 'lucide-vue-next'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const ui = useUiStore()
 
@@ -49,14 +52,14 @@ function handleCancel() {
             @click="handleCancel"
             class="hover:bg-bg-hover text-text-secondary border-border-default flex-1 rounded-xl border py-2.5 text-sm font-semibold transition-all duration-150"
           >
-            {{ ui.confirmState.options.cancelText || 'Hủy' }}
+            {{ ui.confirmState.options.cancelText || t('common.cancel') }}
           </button>
           <button
             @click="handleConfirm"
             class="flex-1 rounded-xl py-2.5 text-sm font-semibold transition-all duration-150 text-white"
             :class="ui.confirmState.options.danger ? 'bg-error hover:bg-error/90' : 'bg-accent hover:bg-accent/90'"
           >
-            {{ ui.confirmState.options.confirmText || 'Xác nhận' }}
+            {{ ui.confirmState.options.confirmText || t('common.confirm') }}
           </button>
         </div>
       </div>

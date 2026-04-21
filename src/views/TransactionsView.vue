@@ -6,6 +6,7 @@ import { useFinanceStore } from '@/stores/finance'
 import { useUiStore } from '@/stores/ui'
 import { formatVND, getCategoryConfig } from '@/constants/finance'
 import { getWalletBrand } from '@/constants/walletBrands'
+import { useI18n } from 'vue-i18n'
 import type { Transaction } from '@/types'
 import {
   Search,
@@ -20,6 +21,7 @@ import {
   Wallet
 } from 'lucide-vue-next'
 
+const { t, tm } = useI18n()
 const router = useRouter()
 const finance = useFinanceStore()
 const ui = useUiStore()
@@ -42,10 +44,10 @@ function formatDateGroup(dateStr: string) {
   const yesterday = new Date()
   yesterday.setDate(yesterday.getDate() - 1)
 
-  if (dateStr === today.toISOString().substring(0, 10)) return 'Hôm nay'
-  if (dateStr === yesterday.toISOString().substring(0, 10)) return 'Hôm qua'
+  if (dateStr === today.toISOString().substring(0, 10)) return t('common.today')
+  if (dateStr === yesterday.toISOString().substring(0, 10)) return t('common.yesterday')
 
-  const days = ['CN', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7']
+  const days = tm('days.long') as string[]
   return `${days[d.getDay()]}, ${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`
 }
 
@@ -57,10 +59,10 @@ function dayTotal(txs: Transaction[]) {
 
 async function deleteTx(id: string) {
   const confirmed = await ui.requestConfirm({
-    title: 'Xóa giao dịch',
-    message: 'Giao dịch này sẽ bị xóa khỏi hệ thống.\nHành động này không thể hoàn tác.',
+    title: t('transactions.deleteTitle'),
+    message: t('transactions.deleteMessage'),
     danger: true,
-    confirmText: 'Xóa giao dịch'
+    confirmText: t('transactions.deleteConfirm')
   })
   
   if (confirmed) {
@@ -97,9 +99,9 @@ useEventListener(document, 'click', handleClickOutside)
     <!-- Header -->
     <div class="mb-6 flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-bold tracking-tight">Giao dịch</h1>
+        <h1 class="text-2xl font-bold tracking-tight">{{ t('transactions.title') }}</h1>
         <p class="text-text-tertiary mt-1 text-sm">
-          {{ finance.filteredTransactions.length }} giao dịch
+          {{ t('transactions.count', { n: finance.filteredTransactions.length }) }}
         </p>
       </div>
       <button
@@ -107,7 +109,7 @@ useEventListener(document, 'click', handleClickOutside)
         class="btn-primary"
       >
         <Plus :size="16" />
-        Thêm
+        {{ t('transactions.add') }}
       </button>
     </div>
 
@@ -117,9 +119,9 @@ useEventListener(document, 'click', handleClickOutside)
       <div class="border-border-default flex overflow-hidden rounded-lg border">
         <button
           v-for="f in [
-            { key: 'all', label: 'Tất cả' },
-            { key: 'expense', label: 'Chi' },
-            { key: 'income', label: 'Thu' }
+            { key: 'all', labelKey: 'transactions.filterAll' },
+            { key: 'expense', labelKey: 'transactions.filterExpense' },
+            { key: 'income', labelKey: 'transactions.filterIncome' }
           ]"
           :key="f.key"
           class="bg-bg-surface border-border-default border-r px-3 py-1.5 text-sm transition-all duration-150 last:border-r-0"
@@ -130,7 +132,7 @@ useEventListener(document, 'click', handleClickOutside)
           "
           @click="finance.filter = { ...finance.filter, type: f.key as any }"
         >
-          {{ f.label }}
+          {{ t(f.labelKey) }}
         </button>
       </div>
 
@@ -160,7 +162,7 @@ useEventListener(document, 'click', handleClickOutside)
           </span>
           <span v-else class="text-text-secondary flex items-center gap-1.5">
             <Wallet :size="14" />
-            <span>Tất cả ví</span>
+            <span>{{ t('transactions.allWallets') }}</span>
           </span>
           <ChevronDown
             :size="14"
@@ -187,7 +189,7 @@ useEventListener(document, 'click', handleClickOutside)
               >
                 <Wallet :size="14" :class="!finance.filter.walletId ? 'text-accent' : 'text-text-tertiary'" />
               </span>
-              <span :class="!finance.filter.walletId ? 'text-accent font-medium' : 'text-text-secondary'">Tất cả ví</span>
+              <span :class="!finance.filter.walletId ? 'text-accent font-medium' : 'text-text-secondary'">{{ t('transactions.allWallets') }}</span>
               <Check
                 v-if="!finance.filter.walletId"
                 :size="14"
@@ -298,7 +300,7 @@ useEventListener(document, 'click', handleClickOutside)
             <!-- Info -->
             <div class="min-w-0 flex-1">
               <div class="truncate text-sm font-medium">
-                {{ tx.note || getCategoryConfig(tx.category).label }}
+                {{ tx.note || t(`categories.${tx.category}`) }}
               </div>
               <div class="text-text-disabled flex items-center gap-2 text-[0.6875rem]">
                 <span>{{ finance.getWalletName(tx.walletId) }}</span>
@@ -349,14 +351,14 @@ useEventListener(document, 'click', handleClickOutside)
           :size="48"
           class="text-text-disabled mb-4"
         />
-        <h3 class="mb-2 text-lg font-semibold">Chưa có giao dịch</h3>
-        <p class="text-text-tertiary mb-6 text-sm">Thêm giao dịch thủ công hoặc chat qua Telegram</p>
+        <h3 class="mb-2 text-lg font-semibold">{{ t('transactions.empty') }}</h3>
+        <p class="text-text-tertiary mb-6 text-sm">{{ t('transactions.emptyHint') }}</p>
         <button
           @click="router.push('/transactions/add')"
           class="btn-secondary"
         >
           <Plus :size="16" />
-          Thêm giao dịch
+          {{ t('transactions.addTransaction') }}
         </button>
       </div>
     </template>

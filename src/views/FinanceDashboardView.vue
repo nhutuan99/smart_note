@@ -5,6 +5,7 @@ import { useFinanceStore } from '@/stores/finance'
 import { useAuthStore } from '@/stores/auth'
 import { formatVND, formatVNDShort, getCategoryConfig } from '@/constants/finance'
 import { getWalletBrand } from '@/constants/walletBrands'
+import { useI18n } from 'vue-i18n'
 import {
   Wallet,
   TrendingUp,
@@ -17,6 +18,7 @@ import {
   BarChart3
 } from 'lucide-vue-next'
 
+const { t, tm } = useI18n()
 const router = useRouter()
 const auth = useAuthStore()
 const finance = useFinanceStore()
@@ -30,20 +32,7 @@ const greeting = computed(() => {
 
 const monthLabel = computed(() => {
   const [y, m] = finance.selectedMonth.split('-')
-  const months = [
-    'Tháng 1',
-    'Tháng 2',
-    'Tháng 3',
-    'Tháng 4',
-    'Tháng 5',
-    'Tháng 6',
-    'Tháng 7',
-    'Tháng 8',
-    'Tháng 9',
-    'Tháng 10',
-    'Tháng 11',
-    'Tháng 12'
-  ]
+  const months = tm('months') as string[]
   return `${months[parseInt(m) - 1]}, ${y}`
 })
 
@@ -57,7 +46,7 @@ const maxDailyAmount = computed(() => {
 
 function dayLabel(dateStr: string) {
   const d = new Date(dateStr)
-  const days = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7']
+  const days = tm('days.short') as string[]
   return days[d.getDay()]
 }
 
@@ -69,10 +58,10 @@ function formatDateShort(dateStr: string) {
 function timeSince(dateStr: string) {
   const diff = Date.now() - new Date(dateStr).getTime()
   const m = Math.floor(diff / 60000)
-  if (m < 60) return `${m} phút trước`
+  if (m < 60) return t('time.minutesAgo', { n: m })
   const h = Math.floor(m / 60)
-  if (h < 24) return `${h} giờ trước`
-  return `${Math.floor(h / 24)} ngày trước`
+  if (h < 24) return t('time.hoursAgo', { n: h })
+  return t('time.daysAgo', { n: Math.floor(h / 24) })
 }
 </script>
 
@@ -100,7 +89,7 @@ function timeSince(dateStr: string) {
         class="btn-primary relative z-10 self-start"
       >
         <Plus :size="18" />
-        Thêm giao dịch
+        {{ t('dashboard.addTransaction') }}
       </button>
     </div>
 
@@ -115,7 +104,7 @@ function timeSince(dateStr: string) {
               class="text-accent"
             />
           </div>
-          <span class="text-text-tertiary text-sm">Tổng số dư</span>
+          <span class="text-text-tertiary text-sm">{{ t('dashboard.totalBalance') }}</span>
         </div>
         <div v-if="finance.loading" class="skeleton h-8 w-40 mt-1"></div>
         <div v-else class="text-2xl font-bold tracking-tight">
@@ -132,7 +121,7 @@ function timeSince(dateStr: string) {
               class="text-success"
             />
           </div>
-          <span class="text-text-tertiary text-sm">Thu nhập tháng</span>
+          <span class="text-text-tertiary text-sm">{{ t('dashboard.monthIncome') }}</span>
         </div>
         <div v-if="finance.loading" class="skeleton h-8 w-32 mt-1"></div>
         <div v-else class="text-success text-2xl font-bold tracking-tight">
@@ -149,7 +138,7 @@ function timeSince(dateStr: string) {
               class="text-error"
             />
           </div>
-          <span class="text-text-tertiary text-sm">Chi tiêu tháng</span>
+          <span class="text-text-tertiary text-sm">{{ t('dashboard.monthExpense') }}</span>
         </div>
         <div v-if="finance.loading" class="skeleton h-8 w-32 mt-1"></div>
         <div v-else class="text-error text-2xl font-bold tracking-tight">
@@ -161,12 +150,12 @@ function timeSince(dateStr: string) {
     <!-- Wallets -->
     <div class="mb-6">
       <div class="mb-4 flex items-center justify-between">
-        <h3 class="text-lg font-semibold">Ví của tôi</h3>
+        <h3 class="text-lg font-semibold">{{ t('dashboard.myWallets') }}</h3>
         <router-link
           to="/wallets"
           class="text-accent hover:text-accent-text flex items-center gap-1 text-sm transition-colors"
         >
-          Quản lý
+          {{ t('dashboard.manage') }}
           <ArrowRight :size="14" />
         </router-link>
       </div>
@@ -224,7 +213,7 @@ function timeSince(dateStr: string) {
             :size="18"
             class="text-text-tertiary"
           />
-          <h3 class="text-sm font-semibold">Thu chi 7 ngày</h3>
+          <h3 class="text-sm font-semibold">{{ t('dashboard.weeklyChart') }}</h3>
         </div>
         <div class="flex h-[9.375rem] items-end gap-2">
           <div
@@ -261,18 +250,18 @@ function timeSince(dateStr: string) {
         <div class="border-border-subtle mt-3 flex items-center justify-center gap-4 border-t pt-3">
           <span class="text-text-tertiary flex items-center gap-1 text-[0.6875rem]">
             <span class="bg-success/60 h-2 w-2 rounded-full"></span>
-            Thu
+            {{ t('dashboard.income') }}
           </span>
           <span class="text-text-tertiary flex items-center gap-1 text-[0.6875rem]">
             <span class="bg-error/60 h-2 w-2 rounded-full"></span>
-            Chi
+            {{ t('dashboard.expense') }}
           </span>
         </div>
       </div>
 
       <!-- Category Breakdown -->
       <div class="bg-bg-surface border-border-default rounded-xl border p-5">
-        <h3 class="mb-4 text-sm font-semibold">Chi tiêu theo danh mục</h3>
+        <h3 class="mb-4 text-sm font-semibold">{{ t('dashboard.categoryBreakdown') }}</h3>
 
         <div
           v-if="finance.expenseByCategoryThisMonth.length"
@@ -286,7 +275,7 @@ function timeSince(dateStr: string) {
               <span class="flex items-center gap-2 text-sm">
                 <span>{{ cat.icon }}</span>
                 <span class="text-text-secondary">
-                  {{ getCategoryConfig(cat.category).label }}
+                  {{ t(`categories.${cat.category}`) }}
                 </span>
               </span>
               <span class="text-sm font-medium">
@@ -309,7 +298,7 @@ function timeSince(dateStr: string) {
           v-else
           class="text-text-disabled flex h-[9.375rem] items-center justify-center text-sm"
         >
-          Chưa có dữ liệu tháng này
+          {{ t('dashboard.noDataThisMonth') }}
         </div>
       </div>
     </div>
@@ -317,12 +306,12 @@ function timeSince(dateStr: string) {
     <!-- Recent Transactions -->
     <div class="mb-6">
       <div class="mb-4 flex items-center justify-between">
-        <h3 class="text-lg font-semibold">Giao dịch gần đây</h3>
+        <h3 class="text-lg font-semibold">{{ t('dashboard.recentTransactions') }}</h3>
         <router-link
           to="/transactions"
           class="text-accent hover:text-accent-text flex items-center gap-1 text-sm transition-colors"
         >
-          Xem tất cả
+          {{ t('dashboard.viewAll') }}
           <ArrowRight :size="14" />
         </router-link>
       </div>
@@ -341,7 +330,7 @@ function timeSince(dateStr: string) {
           </div>
           <div class="min-w-0 flex-1">
             <div class="truncate text-sm font-medium">
-              {{ tx.note || getCategoryConfig(tx.category).label }}
+              {{ tx.note || t(`categories.${tx.category}`) }}
             </div>
             <div class="text-text-disabled flex items-center gap-2 text-[0.6875rem]">
               <span>{{ finance.getWalletName(tx.walletId) }}</span>
@@ -376,16 +365,16 @@ function timeSince(dateStr: string) {
           :size="48"
           class="text-text-disabled mb-4"
         />
-        <h4 class="mb-2 text-lg font-semibold">Chưa có giao dịch</h4>
+        <h4 class="mb-2 text-lg font-semibold">{{ t('dashboard.noTransactions') }}</h4>
         <p class="text-text-tertiary mb-6 text-sm">
-          Thêm giao dịch đầu tiên hoặc chat trên Telegram
+          {{ t('dashboard.noTransactionsHint') }}
         </p>
         <button
           @click="router.push('/transactions/add')"
           class="btn-secondary"
         >
           <Plus :size="16" />
-          Thêm giao dịch
+          {{ t('dashboard.addTransaction') }}
         </button>
       </div>
     </div>

@@ -5,9 +5,12 @@ import { useUiStore } from '@/stores/ui'
 import { useRouter } from 'vue-router'
 import { computed, ref, onMounted, watch } from 'vue'
 import { httpClient } from '@/shared/api/httpClient'
+import { useI18n } from 'vue-i18n'
+import { setLocale, currentLocale } from '@/i18n'
 import type { User } from '@/types'
-import { User as UserIcon, Database, Download, LogOut, HardDrive, FileText, Shield, Lock, Eye, EyeOff, AlertTriangle, Trash2, Camera, Save, Link } from 'lucide-vue-next'
+import { User as UserIcon, Database, Download, LogOut, HardDrive, FileText, Shield, Lock, Eye, EyeOff, AlertTriangle, Trash2, Camera, Save, Link, Globe } from 'lucide-vue-next'
 
+const { t } = useI18n()
 const auth = useAuthStore()
 const notesStore = useNotesStore()
 const ui = useUiStore()
@@ -17,6 +20,14 @@ const imgError = ref(false)
 watch(() => auth.user?.avatarUrl, () => {
   imgError.value = false
 })
+
+// ── Language ──
+const selectedLocale = ref(currentLocale())
+
+function changeLocale(locale: 'vi' | 'en') {
+  selectedLocale.value = locale
+  setLocale(locale)
+}
 
 const storageUsed = computed(() => {
   let t = 0
@@ -42,7 +53,7 @@ function exportNotes() {
   a.download = `smart-note-export-${new Date().toISOString().split('T')[0]}.json`
   a.click()
   URL.revokeObjectURL(a.href)
-  ui.showToast('success', 'Notes exported successfully')
+  ui.showToast('success', t('settings.exportSuccess'))
 }
 
 // ── Profile Management ──
@@ -57,10 +68,10 @@ async function saveProfile() {
     if (data && data.data) {
       auth.updateUser(data.data)
       isEditingProfile.value = false
-      ui.showToast('success', 'Profile updated successfully')
+      ui.showToast('success', t('settings.profileUpdated'))
     }
   } catch (err: any) {
-    ui.showToast('error', err.message || 'Failed to update profile')
+    ui.showToast('error', err.message || t('settings.profileFailed'))
   } finally {
     profileLoading.value = false
   }
@@ -73,16 +84,16 @@ const deletePasswordForm = ref({ password: '' })
 const showDeletePassword = ref(false)
 
 async function confirmDeleteAccount() {
-  if (!deletePasswordForm.value.password) return ui.showToast('error', 'Vui lòng nhập mật khẩu')
+  if (!deletePasswordForm.value.password) return ui.showToast('error', t('settings.passwordRequired'))
   try {
     deleteLoading.value = true
     await httpClient.post('/api/auth/delete-account', { password: deletePasswordForm.value.password })
-    ui.showToast('success', 'Tài khoản đã được xóa vĩnh viễn')
+    ui.showToast('success', t('settings.accountDeleted'))
     isDeleteModalOpen.value = false
     auth.logout()
     router.push('/login')
   } catch (err: any) {
-    ui.showToast('error', err.message || 'Mật khẩu không chính xác')
+    ui.showToast('error', err.message || t('settings.wrongPassword'))
   } finally {
     deleteLoading.value = false
   }
@@ -103,19 +114,18 @@ onMounted(async () => {
     hasPin.value = data?.hasPin || false
   } catch { /* ignore */ }
 })
-// ── PIN Management ──
 
 async function savePin() {
   if (pinForm.value.newPin.length < 4 || pinForm.value.newPin.length > 6) {
-    ui.showToast('error', 'PIN phải từ 4-6 chữ số')
+    ui.showToast('error', t('settings.pinLengthError'))
     return
   }
   if (!/^\d+$/.test(pinForm.value.newPin)) {
-    ui.showToast('error', 'PIN chỉ được chứa số')
+    ui.showToast('error', t('settings.pinDigitsOnly'))
     return
   }
   if (pinForm.value.newPin !== pinForm.value.confirmPin) {
-    ui.showToast('error', 'PIN xác nhận không khớp')
+    ui.showToast('error', t('settings.pinMismatch'))
     return
   }
 
@@ -128,9 +138,9 @@ async function savePin() {
     hasPin.value = true
     showPinForm.value = false
     pinForm.value = { currentPin: '', newPin: '', confirmPin: '' }
-    ui.showToast('success', 'PIN đã được thiết lập thành công!')
+    ui.showToast('success', t('settings.pinSuccess'))
   } catch (err: any) {
-    ui.showToast('error', err.message || 'Không thể thiết lập PIN')
+    ui.showToast('error', err.message || t('settings.pinFailed'))
   } finally {
     pinLoading.value = false
   }
@@ -139,13 +149,45 @@ async function savePin() {
 
 <template>
   <div class="max-w-[43.75rem]">
-    <h1 class="mb-6 text-2xl font-bold tracking-tight md:mb-8">Settings</h1>
+    <h1 class="mb-6 text-2xl font-bold tracking-tight md:mb-8">{{ t('settings.title') }}</h1>
+
+    <!-- Language -->
+    <div class="mb-6">
+      <div class="text-text-secondary mb-3 flex items-center gap-2">
+        <Globe :size="18" />
+        <h3 class="text-sm font-semibold">{{ t('settings.language') }}</h3>
+      </div>
+      <div class="bg-bg-surface border-border-default rounded-xl border p-5">
+        <div class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+          <div>
+            <h4 class="mb-0.5 text-sm font-semibold">{{ t('settings.language') }}</h4>
+            <p class="text-text-tertiary text-sm">{{ t('settings.languageDesc') }}</p>
+          </div>
+          <div class="border-border-default flex overflow-hidden rounded-lg border">
+            <button
+              class="px-4 py-2 text-sm font-medium transition-all duration-150"
+              :class="selectedLocale === 'vi' ? 'bg-accent-subtle text-accent' : 'bg-bg-surface text-text-secondary hover:bg-bg-hover'"
+              @click="changeLocale('vi')"
+            >
+              🇻🇳 Tiếng Việt
+            </button>
+            <button
+              class="border-border-default border-l px-4 py-2 text-sm font-medium transition-all duration-150"
+              :class="selectedLocale === 'en' ? 'bg-accent-subtle text-accent' : 'bg-bg-surface text-text-secondary hover:bg-bg-hover'"
+              @click="changeLocale('en')"
+            >
+              🇺🇸 English
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Profile -->
     <div class="mb-6">
       <div class="text-text-secondary mb-3 flex items-center gap-2">
         <UserIcon :size="18" />
-        <h3 class="text-sm font-semibold">Profile</h3>
+        <h3 class="text-sm font-semibold">{{ t('settings.profile') }}</h3>
       </div>
       <div class="card-premium p-5">
         <div v-if="!isEditingProfile" class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
@@ -174,23 +216,23 @@ async function savePin() {
             @click="isEditingProfile = true"
             class="btn-secondary whitespace-nowrap"
           >
-            Edit Profile
+            {{ t('settings.editProfile') }}
           </button>
         </div>
 
         <!-- Edit Profile Form -->
         <div v-else class="flex flex-col gap-4">
           <div>
-            <label class="text-text-secondary mb-1 block text-[0.6875rem] font-medium">Display Name</label>
+            <label class="text-text-secondary mb-1 block text-[0.6875rem] font-medium">{{ t('settings.displayName') }}</label>
             <input
               v-model="profileForm.name"
               type="text"
-              placeholder="Your name"
+              :placeholder="t('login.namePlaceholder')"
               class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border px-3 py-2 text-sm transition-all focus:ring-2 focus:outline-none"
             />
           </div>
           <div>
-            <label class="text-text-secondary mb-1 block text-[0.6875rem] font-medium">Avatar URL</label>
+            <label class="text-text-secondary mb-1 block text-[0.6875rem] font-medium">{{ t('settings.avatarUrl') }}</label>
             <div class="flex items-center gap-2">
               <Camera :size="16" class="text-text-tertiary" />
               <input
@@ -203,19 +245,19 @@ async function savePin() {
                 v-if="profileForm.avatarUrl"
                 @click="profileForm.avatarUrl = ''"
                 class="text-text-tertiary hover:text-error rounded-lg p-2 transition-colors"
-                title="Remove Avatar"
+                :title="t('settings.removeAvatar')"
               >
                 <Trash2 :size="16" />
               </button>
             </div>
-            <p class="text-text-tertiary mt-1 text-[0.6875rem]">Paste a public image URL for your avatar.</p>
+            <p class="text-text-tertiary mt-1 text-[0.6875rem]">{{ t('settings.avatarHint') }}</p>
           </div>
           <div class="mt-2 flex items-center justify-end gap-2">
             <button
               @click="isEditingProfile = false; profileForm = { name: auth.user?.name || '', avatarUrl: auth.user?.avatarUrl || '' }"
               class="text-text-secondary hover:text-text-primary rounded-lg px-4 py-2 text-sm transition-colors"
             >
-              Cancel
+              {{ t('common.cancel') }}
             </button>
             <button
               @click="saveProfile"
@@ -224,7 +266,7 @@ async function savePin() {
             >
               <span v-if="profileLoading" class="h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-l-black"></span>
               <Save v-else :size="14" />
-              <span>Save Changes</span>
+              <span>{{ t('settings.saveChanges') }}</span>
             </button>
           </div>
         </div>
@@ -235,7 +277,7 @@ async function savePin() {
     <div class="mb-6">
       <div class="text-text-secondary mb-3 flex items-center gap-2">
         <Database :size="18" />
-        <h3 class="text-sm font-semibold">Storage</h3>
+        <h3 class="text-sm font-semibold">{{ t('settings.storage') }}</h3>
       </div>
       <div class="card-premium p-5">
         <div class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -246,7 +288,7 @@ async function savePin() {
             />
             <div>
               <div class="text-base font-semibold">{{ storageUsed }} KB</div>
-              <div class="text-text-tertiary text-[0.6875rem]">Local Storage Used</div>
+              <div class="text-text-tertiary text-[0.6875rem]">{{ t('settings.localStorageUsed') }}</div>
             </div>
           </div>
           <div class="flex items-center gap-3">
@@ -256,7 +298,7 @@ async function savePin() {
             />
             <div>
               <div class="text-base font-semibold">{{ notesStore.totalNotes }}</div>
-              <div class="text-text-tertiary text-[0.6875rem]">Total Notes</div>
+              <div class="text-text-tertiary text-[0.6875rem]">{{ t('settings.totalNotes') }}</div>
             </div>
           </div>
           <div class="flex items-center gap-3">
@@ -266,7 +308,7 @@ async function savePin() {
             />
             <div>
               <div class="text-base font-semibold">10 GB</div>
-              <div class="text-text-tertiary text-[0.6875rem]">R2 Free Tier Limit</div>
+              <div class="text-text-tertiary text-[0.6875rem]">{{ t('settings.r2Limit') }}</div>
             </div>
           </div>
         </div>
@@ -286,13 +328,13 @@ async function savePin() {
     <div class="mb-6">
       <div class="text-text-secondary mb-3 flex items-center gap-2">
         <Download :size="18" />
-        <h3 class="text-sm font-semibold">Data Management</h3>
+        <h3 class="text-sm font-semibold">{{ t('settings.dataManagement') }}</h3>
       </div>
       <div class="bg-bg-surface border-border-default rounded-xl border p-5">
         <div class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
           <div>
-            <h4 class="mb-0.5 text-sm font-semibold">Export Notes</h4>
-            <p class="text-text-tertiary text-sm">Download all your notes as a JSON file</p>
+            <h4 class="mb-0.5 text-sm font-semibold">{{ t('settings.exportNotes') }}</h4>
+            <p class="text-text-tertiary text-sm">{{ t('settings.exportDesc') }}</p>
           </div>
           <button
             id="export-notes-btn"
@@ -300,7 +342,7 @@ async function savePin() {
             class="border-border-default text-text-secondary hover:bg-bg-hover hover:text-text-primary flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-150"
           >
             <Download :size="16" />
-            Export
+            {{ t('common.export') }}
           </button>
         </div>
       </div>
@@ -310,16 +352,16 @@ async function savePin() {
     <div class="mb-6">
       <div class="text-text-secondary mb-3 flex items-center gap-2">
         <Lock :size="18" />
-        <h3 class="text-sm font-semibold">Bảo mật PIN</h3>
+        <h3 class="text-sm font-semibold">{{ t('settings.pinSecurity') }}</h3>
       </div>
       <div class="bg-bg-surface border-border-default rounded-xl border p-5">
         <div class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
           <div>
             <h4 class="mb-0.5 text-sm font-semibold">
-              {{ hasPin ? 'Đổi mã PIN' : 'Thiết lập mã PIN' }}
+              {{ hasPin ? t('settings.changePin') : t('settings.setupPin') }}
             </h4>
             <p class="text-text-tertiary text-sm">
-              {{ hasPin ? 'PIN đang bật. Các thao tác quan trọng sẽ yêu cầu xác nhận PIN.' : 'Bảo vệ các thao tác quan trọng bằng mã PIN.' }}
+              {{ hasPin ? t('settings.pinEnabled') : t('settings.pinDisabled') }}
             </p>
           </div>
           <div class="flex items-center gap-2">
@@ -327,14 +369,14 @@ async function savePin() {
               v-if="hasPin"
               class="bg-success/10 text-success rounded-full px-2.5 py-0.5 text-[0.6875rem] font-medium"
             >
-              Đã bật
+              {{ t('settings.pinActive') }}
             </span>
             <button
               @click="showPinForm = !showPinForm"
               class="border-border-default text-text-secondary hover:bg-bg-hover hover:text-text-primary flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-150"
             >
               <Lock :size="16" />
-              {{ hasPin ? 'Đổi PIN' : 'Thiết lập PIN' }}
+              {{ hasPin ? t('settings.changePin') : t('settings.setupPin') }}
             </button>
           </div>
         </div>
@@ -348,14 +390,14 @@ async function savePin() {
             <div class="flex max-w-[20rem] flex-col gap-3">
               <!-- Current PIN (only if has existing PIN) -->
               <div v-if="hasPin">
-                <label class="text-text-secondary mb-1 block text-[0.6875rem] font-medium">PIN hiện tại</label>
+                <label class="text-text-secondary mb-1 block text-[0.6875rem] font-medium">{{ t('settings.currentPin') }}</label>
                 <div class="relative">
                   <input
                     v-model="pinForm.currentPin"
                     :type="showCurrentPin ? 'text' : 'password'"
                     inputmode="numeric"
                     maxlength="6"
-                    placeholder="Nhập PIN cũ"
+                    :placeholder="t('settings.currentPinPlaceholder')"
                     class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border px-3 py-2 text-sm transition-all focus:ring-2 focus:outline-none"
                   />
                   <button
@@ -370,14 +412,14 @@ async function savePin() {
 
               <!-- New PIN -->
               <div>
-                <label class="text-text-secondary mb-1 block text-[0.6875rem] font-medium">PIN mới (4-6 số)</label>
+                <label class="text-text-secondary mb-1 block text-[0.6875rem] font-medium">{{ t('settings.newPin') }}</label>
                 <div class="relative">
                   <input
                     v-model="pinForm.newPin"
                     :type="showNewPin ? 'text' : 'password'"
                     inputmode="numeric"
                     maxlength="6"
-                    placeholder="Nhập PIN mới"
+                    :placeholder="t('settings.newPinPlaceholder')"
                     class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border px-3 py-2 text-sm transition-all focus:ring-2 focus:outline-none"
                   />
                   <button
@@ -392,13 +434,13 @@ async function savePin() {
 
               <!-- Confirm PIN -->
               <div>
-                <label class="text-text-secondary mb-1 block text-[0.6875rem] font-medium">Xác nhận PIN</label>
+                <label class="text-text-secondary mb-1 block text-[0.6875rem] font-medium">{{ t('settings.confirmPin') }}</label>
                 <input
                   v-model="pinForm.confirmPin"
                   type="password"
                   inputmode="numeric"
                   maxlength="6"
-                  placeholder="Nhập lại PIN"
+                  :placeholder="t('settings.confirmPinPlaceholder')"
                   class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border px-3 py-2 text-sm transition-all focus:ring-2 focus:outline-none"
                 />
               </div>
@@ -408,14 +450,14 @@ async function savePin() {
                   @click="showPinForm = false; pinForm = { currentPin: '', newPin: '', confirmPin: '' }"
                   class="border-border-default text-text-secondary hover:bg-bg-hover flex-1 rounded-lg border py-2 text-sm"
                 >
-                  Hủy
+                  {{ t('common.cancel') }}
                 </button>
                 <button
                   @click="savePin"
                   :disabled="pinLoading || !pinForm.newPin || !pinForm.confirmPin"
                   class="btn-primary flex-1 justify-center py-2 disabled:opacity-40"
                 >
-                  {{ pinLoading ? 'Đang lưu...' : 'Lưu PIN' }}
+                  {{ pinLoading ? t('settings.savingPin') : t('settings.savePin') }}
                 </button>
               </div>
             </div>
@@ -428,13 +470,13 @@ async function savePin() {
     <div class="mb-6">
       <div class="text-text-secondary mb-3 flex items-center gap-2">
         <Shield :size="18" />
-        <h3 class="text-sm font-semibold">Account</h3>
+        <h3 class="text-sm font-semibold">{{ t('settings.account') }}</h3>
       </div>
       <div class="card-premium p-5">
         <div class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
           <div>
-            <h4 class="mb-0.5 text-sm font-semibold">Sign Out</h4>
-            <p class="text-text-tertiary text-sm">Log out of your account</p>
+            <h4 class="mb-0.5 text-sm font-semibold">{{ t('settings.signOut') }}</h4>
+            <p class="text-text-tertiary text-sm">{{ t('settings.signOutDesc') }}</p>
           </div>
           <button
             id="logout-btn"
@@ -442,22 +484,22 @@ async function savePin() {
             class="border-border-default hover:bg-bg-hover hover:text-text-primary rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-150 flex items-center gap-2 text-text-secondary"
           >
             <LogOut :size="16" />
-            Sign Out
+            {{ t('settings.signOut') }}
           </button>
         </div>
 
         <div class="border-border-default mt-5 border-t pt-5">
           <div class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
             <div>
-              <h4 class="mb-0.5 text-sm font-semibold text-error">Delete Account</h4>
-              <p class="text-text-tertiary text-[0.8125rem]">Permanently delete your account and all data</p>
+              <h4 class="mb-0.5 text-sm font-semibold text-error">{{ t('settings.deleteAccount') }}</h4>
+              <p class="text-text-tertiary text-[0.8125rem]">{{ t('settings.deleteAccountDesc') }}</p>
             </div>
             <button
               @click="isDeleteModalOpen = true"
               class="border-error text-error hover:bg-error/10 flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-150"
             >
               <Trash2 :size="16" />
-              Delete Account
+              {{ t('settings.deleteAccount') }}
             </button>
           </div>
         </div>
@@ -477,20 +519,18 @@ async function savePin() {
               </div>
             </div>
             
-            <h3 class="mb-2 text-center text-lg font-bold text-error">Xóa tài khoản</h3>
-            <p class="text-text-secondary mb-6 text-center text-sm">
-              Hành động này <strong class="text-text-primary">không thể hoàn tác</strong>. Mọi dữ liệu (ví, giao dịch, ghi chú) sẽ bị xóa viễn viễn.
-            </p>
+            <h3 class="mb-2 text-center text-lg font-bold text-error">{{ t('settings.deleteAccountTitle') }}</h3>
+            <p class="text-text-secondary mb-6 text-center text-sm" v-html="t('settings.deleteAccountWarning')"></p>
 
             <div class="flex flex-col gap-4">
               <div>
-                <label class="text-text-secondary mb-1 block text-sm font-medium">Mật khẩu xác nhận</label>
+                <label class="text-text-secondary mb-1 block text-sm font-medium">{{ t('settings.confirmPassword') }}</label>
                 <div class="relative">
                   <Lock :size="18" class="text-text-tertiary absolute top-1/2 left-3 -translate-y-1/2" />
                   <input
                     v-model="deletePasswordForm.password"
                     :type="showDeletePassword ? 'text' : 'password'"
-                    placeholder="Nhập mật khẩu của bạn"
+                    :placeholder="t('settings.passwordPlaceholder')"
                     class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-error focus:ring-error/20 w-full rounded-xl border py-3 pr-10 pl-10 text-sm transition-all focus:ring-2 focus:outline-none"
                     @keyup.enter="confirmDeleteAccount"
                   />
@@ -508,7 +548,7 @@ async function savePin() {
                   @click="isDeleteModalOpen = false; deletePasswordForm.password = ''"
                   class="border-border-default text-text-secondary hover:bg-bg-hover flex-1 rounded-xl border py-2.5 font-medium transition-colors"
                 >
-                  Hủy
+                  {{ t('common.cancel') }}
                 </button>
                 <button
                   @click="confirmDeleteAccount"
@@ -516,7 +556,7 @@ async function savePin() {
                   class="bg-error hover:bg-error/90 flex-1 justify-center flex items-center rounded-xl py-2.5 font-semibold text-white transition-colors disabled:opacity-50"
                 >
                   <span v-if="deleteLoading" class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-l-white"></span>
-                  <span v-else>Xóa vĩnh viễn</span>
+                  <span v-else>{{ t('settings.deleteForever') }}</span>
                 </button>
               </div>
             </div>
@@ -528,7 +568,7 @@ async function savePin() {
     <!-- Footer -->
     <div class="border-border-default mt-8 border-t pt-4 text-center">
       <p class="text-text-disabled text-[0.6875rem]">
-        SmartNote v1.0.0
+        {{ t('common.version') }}
       </p>
     </div>
   </div>
