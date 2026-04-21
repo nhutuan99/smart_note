@@ -67,7 +67,7 @@ function handleLogout() {
         <div class="bg-bg-elevated border-border-default flex h-[1.875rem] w-[1.875rem] items-center justify-center rounded-[0.4rem] border shadow-sm transition-all duration-150 group-hover:scale-105 group-hover:shadow-md">
           <Sparkles :size="16" class="text-accent" />
         </div>
-        <span class="hidden md:inline group-hover:text-accent transition-colors duration-150">SmartNote</span>
+        <span class="hidden md:inline group-hover:text-accent transition-colors duration-150">Smart Note</span>
       </router-link>
     </div>
 

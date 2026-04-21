@@ -17,7 +17,7 @@ export default {
     preview: 'Xem trước',
     copyLink: 'Copy Link',
     export: 'Xuất dữ liệu',
-    version: 'SmartNote v1.0.0',
+    version: 'Smart Note v1.0.0',
     copy: 'Copy',
     copied: 'Đã copy!'
   },
@@ -255,12 +255,12 @@ export default {
   // ── AutoSync ──
   autoSync: {
     title: 'Đồng bộ tự động (iOS)',
-    desc: 'Ghi nhận giao dịch ngân hàng vào SmartNote hoàn toàn tự động và an toàn tuyệt đối thông qua iOS Shortcuts.',
+    desc: 'Ghi nhận giao dịch ngân hàng vào Smart Note hoàn toàn tự động và an toàn tuyệt đối thông qua iOS Shortcuts.',
     whyTitle: 'Tại sao nên dùng SMS Shortcuts?',
     security: '<strong>Bảo mật 100%:</strong> Không cần cung cấp mật khẩu đăng nhập ngân hàng.',
     native: '<strong>Apple Native:</strong> Sử dụng Phím tắt (Shortcuts) mặc định của iPhone.',
     free: '<strong>Miễn phí:</strong> Không cần qua trung gian bên thứ 3 nào.',
-    instant: '<strong>Tức thì:</strong> Vừa có SMS biến động số dư là có trên SmartNote.',
+    instant: '<strong>Tức thì:</strong> Vừa có SMS biến động số dư là có trên Smart Note.',
     step1Title: '1. Đường dẫn Webhook của bạn',
     step1Desc: 'Đường dẫn này chứa mã định danh duy nhất của bạn. Tuyệt đối không chia sẻ cho người khác.',
     step2Title: '2. Hướng dẫn thiết lập trên iPhone',

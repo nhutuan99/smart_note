@@ -17,7 +17,7 @@ export default {
     preview: 'Preview',
     copyLink: 'Copy Link',
     export: 'Export',
-    version: 'SmartNote v1.0.0',
+    version: 'Smart Note v1.0.0',
     copy: 'Copy',
     copied: 'Copied!'
   },
@@ -255,12 +255,12 @@ export default {
   // ── AutoSync ──
   autoSync: {
     title: 'Auto Sync (iOS)',
-    desc: 'Automatically record bank transactions to SmartNote securely via iOS Shortcuts.',
+    desc: 'Automatically record bank transactions to Smart Note securely via iOS Shortcuts.',
     whyTitle: 'Why use SMS Shortcuts?',
     security: '<strong>100% Secure:</strong> No bank login credentials required.',
     native: '<strong>Apple Native:</strong> Uses the built-in Shortcuts app on iPhone.',
     free: '<strong>Free:</strong> No third-party intermediaries needed.',
-    instant: '<strong>Instant:</strong> SMS balance notifications appear in SmartNote immediately.',
+    instant: '<strong>Instant:</strong> SMS balance notifications appear in Smart Note immediately.',
     step1Title: '1. Your Webhook URL',
     step1Desc: 'This URL contains your unique identifier. Do not share it with anyone.',
     step2Title: '2. Setup Guide for iPhone',

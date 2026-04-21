@@ -68,7 +68,7 @@ async function handleSubmit() {
         >
           <Sparkles :size="28" class="text-accent" />
         </div>
-        <h1 class="mb-1 text-2xl font-bold tracking-tight">SmartNote</h1>
+        <h1 class="mb-1 text-2xl font-bold tracking-tight">Smart Note</h1>
         <p class="text-text-tertiary text-sm">{{ t('login.tagline') }}</p>
       </div>
 
