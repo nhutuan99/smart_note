@@ -5,15 +5,15 @@
  * setInterval is NOT a DOM event → useEventListener does not apply here.
  */
 
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, type ComputedRef } from 'vue'
 
 export interface ClockState {
   /** HH:mm part of current time */
-  hhmm: ReturnType<typeof computed<string>>
+  hhmm: ComputedRef<string>
   /** ss part of current time */
-  seconds: ReturnType<typeof computed<string>>
+  seconds: ComputedRef<string>
   /** Full localized date string (weekday, day, month, year) */
-  dateStr: ReturnType<typeof computed<string>>
+  dateStr: ComputedRef<string>
 }
 
 export function useClock(): ClockState {
