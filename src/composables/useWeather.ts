@@ -8,7 +8,8 @@
  *  - Browser Geolocation API (primary location source)
  */
 
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useEventListener } from '@/composables/useEventListener'
 
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -239,41 +240,38 @@ export function useWeather() {
           pm25: Math.round(cur.pm2_5  ?? 0),
         }
       }
-    } catch (e: any) {
-      error.value = e.message || 'Không thể tải dữ liệu thời tiết'
+    } catch (e: unknown) {
+      error.value = e instanceof Error ? e.message : 'Không thể tải dữ liệu thời tiết'
     } finally {
       loading.value = false
     }
   }
 
   // ── Visibility-based refresh ─────────────────────────────────────────────
-  // API is called ONLY on mount (once) and when the tab becomes visible again.
-  // A 5-minute cooldown prevents redundant calls if the user rapidly switches tabs.
-  // _lastFetchAt is per-instance (not module-level) to avoid cross-mount interference.
+  // Fetch on mount (once), then again whenever the tab becomes visible.
+  // 5-minute cooldown prevents redundant calls on rapid tab switching.
+  // _lastFetchAt is per-instance to avoid cross-mount interference.
 
-  const COOLDOWN_MS = 5 * 60 * 1000   // 5 minutes
-  let   _lastFetchAt = 0              // per-instance, reset on every composable call
+  const COOLDOWN_MS = 5 * 60 * 1000
+  let _lastFetchAt = 0
 
-  function _onVisible() {
-    if (document.visibilityState !== 'visible') return
-    const now = Date.now()
-    if (now - _lastFetchAt < COOLDOWN_MS) return
-    fetchWeather()
-  }
-
-  // Override fetchWeather to track last fetch time after completion
+  // Override fetchWeather to track last-fetch timestamp after completion
   const _rawFetch = fetchWeather
   async function fetchWeatherWithTracking() {
     await _rawFetch()
     _lastFetchAt = Date.now()
   }
 
+  function _onVisibilityChange() {
+    if (document.visibilityState !== 'visible') return
+    if (Date.now() - _lastFetchAt < COOLDOWN_MS) return
+    fetchWeatherWithTracking()
+  }
+
   onMounted(() => fetchWeatherWithTracking())
 
-  // Manual cleanup for visibilitychange (useEventListener only works in setup context)
-  const _onVisibleWrapper = _onVisible
-  document.addEventListener('visibilitychange', _onVisibleWrapper)
-  onUnmounted(() => document.removeEventListener('visibilitychange', _onVisibleWrapper))
+  // ✅ useEventListener — auto-cleanup on unmount, no manual removeEventListener
+  useEventListener(document, 'visibilitychange', _onVisibilityChange)
 
   return { weather, airQuality, loading, error, fetchWeather: fetchWeatherWithTracking }
 }
