@@ -64,7 +64,13 @@ const router = createRouter({
 router.beforeEach((to) => {
   const auth = useAuthStore()
   if (to.meta.requiresAuth && !auth.isAuthenticated) return '/login'
-  if (to.meta.requiresGuest && auth.isAuthenticated) return '/'
+  if (to.meta.requiresGuest && auth.isAuthenticated) {
+    // Allow Google OAuth callback to hit /login even if there is a stale token
+    if (to.path === '/login' && to.query.code && to.query.state) {
+      return
+    }
+    return '/'
+  }
 })
 
 export default router
