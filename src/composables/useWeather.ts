@@ -155,6 +155,28 @@ export function useWeather() {
     // 1. Browser Geolocation (most accurate)
     if (typeof navigator !== 'undefined' && navigator.geolocation) {
       try {
+        // Prevent [Violation] Permissions policy violation in console
+        if (typeof document !== 'undefined') {
+          const policy = (document as any).permissionsPolicy || (document as any).featurePolicy;
+          if (policy && typeof policy.allowsFeature === 'function') {
+            if (!policy.allowsFeature('geolocation')) {
+              throw new Error('Geolocation blocked by permissions policy');
+            }
+          }
+        }
+
+        // Also check permissions directly to prevent prompting if denied
+        if (navigator.permissions && navigator.permissions.query) {
+          try {
+            const perm = await navigator.permissions.query({ name: 'geolocation' })
+            if (perm.state === 'denied') {
+              throw new Error('Geolocation denied')
+            }
+          } catch {
+            // ignore
+          }
+        }
+
         const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject, {
             timeout: 6000,
