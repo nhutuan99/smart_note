@@ -68,12 +68,18 @@ async function handleTogglePin(id: string, e: Event) {
 </script>
 
 <template>
-  <div class="max-w-[75rem]">
+  <div class="notes-page max-w-[75rem]">
+    <!-- Ambient background orbs -->
+    <div class="ambient-orbs" aria-hidden="true">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
+    </div>
     <!-- Weather Widget -->
     <WeatherWidget />
 
     <!-- Header -->
-    <div class="mb-6 flex items-center justify-between">
+    <div class="mb-6 flex items-center justify-between header-row">
       <div class="flex items-baseline gap-3">
         <h1 class="text-2xl font-bold tracking-tight">{{ t('notes.title') }}</h1>
         <span class="text-text-tertiary text-sm">{{ t('notes.count', { n: notesStore.filteredNotes.length }) }}</span>
@@ -175,11 +181,13 @@ async function handleTogglePin(id: string, e: Event) {
           : 'flex flex-col'
       "
     >
+      <!-- stagger index is set via CSS variable for per-card delay -->
       <div
-        v-for="note in notesStore.filteredNotes"
+        v-for="(note, idx) in notesStore.filteredNotes"
         :key="note.id"
-        class="relative"
+        class="relative note-card-wrapper"
         :id="`note-item-${note.id}`"
+        :style="`--i: ${idx}`"
       >
         <router-link
           :to="`/notes/${note.id}`"
@@ -249,12 +257,11 @@ async function handleTogglePin(id: string, e: Event) {
     <!-- Empty -->
     <div
       v-else
-      class="flex flex-col items-center py-12 text-center"
+      class="empty-state flex flex-col items-center py-12 text-center"
     >
-      <FileText
-        :size="48"
-        class="text-text-disabled mb-4"
-      />
+      <div class="empty-icon-wrap mb-5">
+        <FileText :size="40" class="empty-icon" />
+      </div>
       <h3 class="mb-2 text-lg font-semibold">
         {{ notesStore.searchQuery ? t('notes.noResults') : t('notes.noNotes') }}
       </h3>
@@ -268,7 +275,7 @@ async function handleTogglePin(id: string, e: Event) {
       <button
         v-if="!notesStore.searchQuery"
         @click="createNote"
-        class="btn-secondary"
+        class="btn-secondary empty-cta"
         :disabled="isCreating"
       >
         <Plus :size="16" />
@@ -286,5 +293,124 @@ async function handleTogglePin(id: string, e: Event) {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+/* ── Page wrapper ─────────────────────────────────────── */
+.notes-page {
+  position: relative;
+}
+
+/* ── Header entrance ─────────────────────────────────── */
+.header-row {
+  animation: headerSlideIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes headerSlideIn {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Note card stagger entrance ──────────────────────── */
+.note-card-wrapper {
+  animation: cardAppear 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 55ms + 80ms);
+}
+@keyframes cardAppear {
+  from { opacity: 0; transform: translateY(18px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── Ambient orbs ────────────────────────────────────── */
+.ambient-orbs {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.18;
+  animation: orbDrift ease-in-out infinite;
+}
+.orb-1 {
+  width: 28rem;
+  height: 28rem;
+  background: radial-gradient(circle, #10b981 0%, transparent 70%);
+  top: -6rem;
+  left: -4rem;
+  animation-duration: 18s;
+  animation-delay: 0s;
+}
+.orb-2 {
+  width: 22rem;
+  height: 22rem;
+  background: radial-gradient(circle, #3b82f6 0%, transparent 70%);
+  bottom: 10rem;
+  right: -5rem;
+  animation-duration: 22s;
+  animation-delay: -7s;
+}
+.orb-3 {
+  width: 18rem;
+  height: 18rem;
+  background: radial-gradient(circle, #8b5cf6 0%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation-duration: 28s;
+  animation-delay: -14s;
+}
+@keyframes orbDrift {
+  0%   { transform: translate(0, 0) scale(1); }
+  33%  { transform: translate(2%, 3%) scale(1.05); }
+  66%  { transform: translate(-2%, 1%) scale(0.97); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+/* orb-3 has its own base transform */
+.orb-3 {
+  animation-name: orbDrift3;
+}
+@keyframes orbDrift3 {
+  0%   { transform: translate(-50%, -50%) scale(1); }
+  33%  { transform: translate(-48%, -52%) scale(1.07); }
+  66%  { transform: translate(-52%, -48%) scale(0.95); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+/* ── Empty state ──────────────────────────────────────── */
+.empty-state {
+  animation: fadeUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both 0.1s;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.empty-icon-wrap {
+  width: 5rem;
+  height: 5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-subtle);
+  border: 1px solid var(--border-default);
+  animation: iconBounce 2.4s ease-in-out infinite;
+}
+.empty-icon {
+  color: var(--accent);
+}
+@keyframes iconBounce {
+  0%, 100% { transform: translateY(0); }
+  45%       { transform: translateY(-6px); }
+  55%       { transform: translateY(-6px); }
+}
+.empty-cta {
+  animation: pulseCta 3s ease-in-out infinite;
+}
+@keyframes pulseCta {
+  0%, 100% { box-shadow: 0 0 0 0 var(--accent-glow); }
+  50%       { box-shadow: 0 0 0 6px transparent; }
 }
 </style>

@@ -7,10 +7,12 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import PinDialog from '@/components/PinDialog.vue'
 import { useUiStore } from '@/stores/ui'
 import { useNotificationStore } from '@/stores/notifications'
+import { useNotesStore } from '@/stores/notes'
 import { useEventListener } from '@/composables/useEventListener'
 
 const ui = useUiStore()
 const notificationStore = useNotificationStore()
+const notesStore = useNotesStore()
 
 let _lastSyncTime = 0
 
@@ -22,8 +24,12 @@ function syncOnVisible() {
 }
 
 onMounted(() => {
-  // Initial fetch
+  // Initial fetches
   notificationStore.fetch()
+  // Fetch notes so sidebar "Ghi chú gần đây" is populated on first load
+  if (notesStore.notes.length === 0) {
+    notesStore.fetchNotes()
+  }
   _lastSyncTime = Date.now()
 })
 
