@@ -5,6 +5,7 @@ import { useFinancePolling } from '@/composables/useFinancePolling'
 import { useAuthStore } from '@/stores/auth'
 import { formatVND, formatVNDShort, getCategoryConfig } from '@/constants/finance'
 import { getWalletBrand } from '@/constants/walletBrands'
+import { useUiStore } from '@/stores/ui'
 import { useI18n } from 'vue-i18n'
 import {
   Wallet,
@@ -15,12 +16,15 @@ import {
   Sparkles,
   ArrowUpRight,
   ArrowDownRight,
-  BarChart3
+  BarChart3,
+  Eye,
+  EyeOff
 } from 'lucide-vue-next'
 
 const { t, tm } = useI18n()
 const router = useRouter()
 const auth = useAuthStore()
+const ui = useUiStore()
 const finance = useFinancePolling()
 
 const greeting = computed(() => {
@@ -105,6 +109,14 @@ function timeSince(dateStr: string) {
             />
           </div>
           <span class="text-text-tertiary text-sm">{{ t('dashboard.totalBalance') }}</span>
+          <button 
+            @click="ui.toggleHideBalances()" 
+            class="ml-auto text-text-tertiary hover:text-accent flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-bg-hover"
+            title="Ẩn/hiện số dư"
+          >
+            <EyeOff v-if="ui.hideBalances" :size="16" />
+            <Eye v-else :size="16" />
+          </button>
         </div>
         <div v-if="finance.loading" class="skeleton h-8 w-40 mt-1 relative z-10"></div>
         <div v-else class="text-3xl font-bold tracking-tight text-text-primary relative z-10">
