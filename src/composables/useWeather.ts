@@ -211,8 +211,8 @@ export function useWeather() {
       }
     } catch { /* ignore */ }
 
-    // 3. Default to Hanoi
-    return { lat: 21.0285, lon: 105.8542, city: 'Hà Nội', country: 'Việt Nam' }
+    // 3. Default to Ho Chi Minh City
+    return { lat: 10.8231, lon: 106.6297, city: 'Hồ Chí Minh', country: 'Việt Nam' }
   }
 
   // ── Fetch weather + AQI ───────────────────────────────────────────────────
