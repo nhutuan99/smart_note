@@ -111,7 +111,7 @@ function navigateWallet(walletId: string) {
 
       <!-- Wallet Balances -->
       <div
-        v-if="ui.sidebarOpen"
+        v-if="ui.sidebarOpen && finance.wallets.length > 0"
         class="mb-4"
       >
         <div class="text-text-tertiary px-3 py-2 text-[0.6875rem] font-semibold tracking-wider">

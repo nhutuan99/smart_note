@@ -60,6 +60,20 @@ function handleAmountInput(e: Event) {
   amount.value = raw
 }
 
+/** Block non-numeric keys at the keydown level to prevent text from appearing. */
+function blockNonNumeric(e: KeyboardEvent) {
+  // Allow control keys: Backspace, Delete, Tab, Escape, Enter, arrows
+  const allowed = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter',
+    'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End']
+  if (allowed.includes(e.key)) return
+  // Allow Ctrl/Cmd shortcuts (copy, paste, select all)
+  if (e.ctrlKey || e.metaKey) return
+  // Block anything that's not a digit
+  if (!/^\d$/.test(e.key)) {
+    e.preventDefault()
+  }
+}
+
 function formattedAmount() {
   const num = parseInt(amount.value || '0')
   return num > 0 ? new Intl.NumberFormat('vi-VN').format(num) : ''
@@ -194,8 +208,10 @@ async function submit() {
         <input
           :value="formattedAmount()"
           @input="handleAmountInput"
-          type="text"
+          @keydown="blockNonNumeric"
+          type="tel"
           inputmode="numeric"
+          pattern="[0-9]*"
           placeholder="0"
           class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-4 text-center text-3xl font-bold transition-all duration-150 focus:ring-2 focus:outline-none"
         />
