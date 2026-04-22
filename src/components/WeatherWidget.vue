@@ -6,7 +6,6 @@ import { computed, ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 
 // 3. Composables
-import { useClock } from '@/composables/useClock'
 import {
   useWeather,
   getWeatherInfo,
@@ -23,7 +22,6 @@ import { RefreshCw, MapPin, Wind, Droplets, Zap, Car, Leaf, ChevronDown } from '
 // ── State ──────────────────────────────────────────────────────────────────────
 
 const auth    = useAuthStore()
-const { hhmm, seconds, dateStr } = useClock()
 const { weather, airQuality, loading, fetchWeather } = useWeather()
 
 const COLLAPSED_KEY = 'weather_widget_collapsed'
@@ -39,6 +37,7 @@ function toggleCollapse() {
 const { locale } = useI18n()
 
 const greeting    = computed(() => getGreeting(auth.user?.name ?? undefined, locale.value))
+const dateStr     = computed(() => new Intl.DateTimeFormat(locale.value === 'vi' ? 'vi-VN' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date()))
 const traffic     = computed(() => getTrafficLevel(locale.value))
 const weatherInfo = computed(() => weather.value ? getWeatherInfo(weather.value.weatherCode, locale.value) : null)
 const aqiInfo     = computed(() => airQuality.value ? getAqiInfo(airQuality.value.aqi, locale.value) : null)
@@ -80,9 +79,6 @@ const trafficBg = computed(() => {
         <span class="text-text-disabled">·</span>
         <span class="text-text-tertiary">{{ weatherInfo?.label }}</span>
         <span class="text-text-disabled">·</span>
-        <!-- Clock inside mini-bar -->
-        <span class="font-mono font-medium text-text-primary">{{ hhmm }}</span>
-        <span class="text-text-disabled ml-auto">·</span>
         <span class="font-semibold" :style="`color: ${trafficColor}`">
           {{ traffic.emoji }} {{ traffic.label }}
         </span>
@@ -128,17 +124,8 @@ const trafficBg = computed(() => {
               <div class="text-[0.6875rem] text-text-tertiary mt-0.5">Cảm giác như {{ weather.feelsLike }}°</div>
             </div>
             
-            <!-- Clock inside widget -->
-            <div class="clock-box ml-auto shrink-0 mt-2 sm:mt-0">
-              <span class="clock-colon-group">
-                <span class="clock-hm">{{ hhmm }}</span>
-                <span class="clock-sep">:</span>
-                <span class="clock-sec">{{ seconds }}</span>
-              </span>
-            </div>
-
             <!-- Location with added padding -->
-            <div class="flex items-center gap-1.5 text-[0.75rem] text-text-tertiary bg-bg-elevated border border-border-subtle rounded-full px-3.5 py-1.5 whitespace-nowrap shrink-0 mt-2 sm:mt-0 shadow-[0_1px_2px_rgba(0,0,0,0.1)]">
+            <div class="flex items-center gap-1.5 text-[0.75rem] text-text-tertiary bg-bg-elevated border border-border-subtle rounded-full px-3.5 py-1.5 whitespace-nowrap shrink-0 mt-2 sm:mt-0 shadow-[0_1px_2px_rgba(0,0,0,0.1)] ml-auto">
               <MapPin :size="14" />
               <span>{{ weather.city }}</span>
             </div>
@@ -223,49 +210,6 @@ const trafficBg = computed(() => {
   0%, 100% { transform: translateY(0); }
   50%       { transform: translateY(-3px); }
 }
-@keyframes blinkSep {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.15; }
-}
-
-/* ── Clock ── */
-.clock-box {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-default);
-  border-radius: 0.75rem;
-  padding: 0.4rem 0.9rem;
-  display: flex;
-  align-items: center;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 2px 8px rgba(0,0,0,0.3);
-}
-.clock-colon-group {
-  display: flex;
-  align-items: baseline;
-  gap: 0.05em;
-  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.06em;
-}
-.clock-hm {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: #F5F0E8;
-  text-shadow: 0 0 20px rgba(245,240,232,.25), 0 0 40px rgba(245,240,232,.08);
-}
-.clock-sep {
-  font-size: 1.3rem;
-  font-weight: 300;
-  color: rgba(245,240,232,.35);
-  animation: blinkSep 1s step-end infinite;
-  padding: 0 0.04em;
-}
-.clock-sec {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: rgba(245,240,232,.55);
-  align-self: flex-end;
-  margin-bottom: 0.1rem;
-}
 
 /* ── Main card ── */
 .widget-card {
@@ -316,10 +260,4 @@ const trafficBg = computed(() => {
 .expand-enter-active, .expand-leave-active { transition: all 0.3s cubic-bezier(0.22,1,0.36,1); overflow: hidden; }
 .expand-enter-from,   .expand-leave-to    { opacity: 0; transform: translateY(-6px) scale(0.99); max-height: 0; }
 .expand-enter-to,     .expand-leave-from  { max-height: 300px; }
-
-/* ── Responsive ── */
-@media (max-width: 640px) {
-  .clock-hm  { font-size: 1.1rem; }
-  .clock-sec { font-size: 0.75rem; }
-}
 </style>

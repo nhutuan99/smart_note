@@ -295,29 +295,16 @@ export function useWeather() {
 
   // ── Visibility-based refresh ─────────────────────────────────────────────
   // Fetch on mount (once), then again whenever the tab becomes visible.
-  // 5-minute cooldown prevents redundant calls on rapid tab switching.
-  // _lastFetchAt is per-instance to avoid cross-mount interference.
-
-  const COOLDOWN_MS = 5 * 60 * 1000
-  let _lastFetchAt = 0
-
-  // Override fetchWeather to track last-fetch timestamp after completion
-  const _rawFetch = fetchWeather
-  async function fetchWeatherWithTracking() {
-    await _rawFetch()
-    _lastFetchAt = Date.now()
-  }
-
+  
   function _onVisibilityChange() {
     if (document.visibilityState !== 'visible') return
-    if (Date.now() - _lastFetchAt < COOLDOWN_MS) return
-    fetchWeatherWithTracking()
+    fetchWeather()
   }
 
-  onMounted(() => fetchWeatherWithTracking())
+  onMounted(() => fetchWeather())
 
   // ✅ useEventListener — auto-cleanup on unmount, no manual removeEventListener
   useEventListener(document, 'visibilitychange', _onVisibilityChange)
 
-  return { weather, airQuality, loading, error, fetchWeather: fetchWeatherWithTracking }
+  return { weather, airQuality, loading, error, fetchWeather }
 }
