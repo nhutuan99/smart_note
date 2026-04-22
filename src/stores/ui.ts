@@ -56,6 +56,16 @@ export const useUiStore = defineStore('ui', () => {
     resolve: null
   })
 
+  const hideBalances = ref(localStorage.getItem('sn_hide_balances') === 'true')
+
+  watch(hideBalances, (val) => {
+    localStorage.setItem('sn_hide_balances', val.toString())
+  })
+
+  function toggleHideBalances() {
+    hideBalances.value = !hideBalances.value
+  }
+
   function toggleSidebar() {
     sidebarOpen.value = !sidebarOpen.value
   }
@@ -149,6 +159,8 @@ export const useUiStore = defineStore('ui', () => {
     theme,
     confirmState,
     pinState,
+    hideBalances,
+    toggleHideBalances,
     toggleSidebar,
     closeSidebar,
     toggleSearch,

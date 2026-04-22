@@ -149,6 +149,27 @@ function navigateWallet(walletId: string) {
         </div>
       </div>
 
+      <!-- Recent Notes -->
+      <div
+        v-if="ui.sidebarOpen && notesStore.notes.length > 0"
+        class="mb-4"
+      >
+        <div class="text-text-tertiary px-3 py-2 text-[0.6875rem] font-semibold tracking-wider">
+          GHI CHÚ GẦN ĐÂY
+        </div>
+        <div
+          v-for="note in notesStore.notes.slice(0, 5)"
+          :key="note.id"
+          class="hover:bg-bg-hover flex cursor-pointer items-center justify-between rounded-lg px-3 py-1.5 text-sm transition-all duration-150"
+          @click="router.push('/notes/' + note.id); closeSidebarOnMobile()"
+        >
+          <span class="text-text-secondary flex items-center gap-2 min-w-0">
+            <FileText :size="14" class="shrink-0 text-text-tertiary" />
+            <span class="truncate text-[0.75rem]">{{ note.title || 'Không có tiêu đề' }}</span>
+          </span>
+        </div>
+      </div>
+
       <!-- Stats Footer -->
       <div
         v-if="ui.sidebarOpen"

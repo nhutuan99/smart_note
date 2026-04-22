@@ -7,7 +7,7 @@ import { useFinanceStore } from '@/stores/finance'
 import { useEventListener } from '@/composables/useEventListener'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { Menu, Bell, Settings, LogOut, Sparkles, ArrowUpRight, ArrowDownRight, CheckCheck, Trash2, BellOff, Zap, Sun, Moon } from 'lucide-vue-next'
+import { Menu, Bell, Settings, LogOut, Sparkles, ArrowUpRight, ArrowDownRight, CheckCheck, Trash2, BellOff, Zap, Sun, Moon, Eye, EyeOff } from 'lucide-vue-next'
 
 const { t } = useI18n()
 const auth = useAuthStore()
@@ -76,6 +76,16 @@ function handleLogout() {
 
     <!-- Right -->
     <div class="flex items-center gap-1">
+      <!-- Hide Balances Toggle -->
+      <button
+        class="text-text-secondary hover:bg-bg-hover hover:text-accent relative flex h-[2.125rem] w-[2.125rem] items-center justify-center rounded-lg transition-all duration-150"
+        title="Toggle Balances Visibility"
+        @click="ui.toggleHideBalances()"
+      >
+        <EyeOff v-if="ui.hideBalances" :size="18" />
+        <Eye v-else :size="18" />
+      </button>
+
       <!-- Theme Toggle -->
       <button
         class="text-text-secondary hover:bg-bg-hover hover:text-accent relative flex h-[2.125rem] w-[2.125rem] items-center justify-center rounded-lg transition-all duration-150"
