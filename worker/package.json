@@ -13,8 +13,6 @@
     "wrangler": "^3.0.0"
   },
   "dependencies": {
-    "blueimp-md5": "^2.19.0",
-    "create-hash": "^1.2.0",
-    "pusher": "^5.3.3"
+    "create-hash": "^1.2.0"
   }
 }

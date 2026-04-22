@@ -10,10 +10,6 @@ import type {
 } from '@/types'
 import { getCategoryConfig } from '@/constants/finance'
 import { httpClient } from '@/shared/api/httpClient'
-import { useAuthStore } from '@/stores/auth'
-import { useUiStore } from '@/stores/ui'
-import { useNotificationStore } from '@/stores/notifications'
-import Pusher from 'pusher-js'
 
 /** AbortError is expected when httpClient cancels requests on 401 — not a real error. */
 function isAbortError(err: unknown) {
@@ -31,13 +27,9 @@ export const useFinanceStore = defineStore('finance', () => {
     new Date().toISOString().substring(0, 7) // "2026-04"
   )
 
-  // ── Polling & Realtime state (module-level, not reactive) ──
-  let _pollTimer: ReturnType<typeof setInterval> | null = null
+  // ── Sync state (module-level, not reactive) ──
   let _lastFetchTime = 0
-  let _pusher: Pusher | null = null
-  let _pusherChannel: any = null
-  const POLL_INTERVAL_MS = 60_000    // 1 minute (reduced because we have realtime)
-  const VISIBILITY_STALE_MS = 10_000 // 10 seconds
+  const VISIBILITY_STALE_MS = 5_000 // 5 seconds — refresh when user returns to tab
 
   // ── Computed: Totals ──
 
@@ -195,74 +187,11 @@ export const useFinanceStore = defineStore('finance', () => {
     }
   }
 
-  // ── Auto-polling & Real-time ──
+  // ── Visibility-based sync ──
 
   /**
-   * Start 60s polling interval and Pusher connection.
-   */
-  function startPolling() {
-    if (!_pollTimer) {
-      _pollTimer = setInterval(() => {
-        silentRefresh()
-      }, POLL_INTERVAL_MS)
-    }
-    
-    // Connect to Pusher
-    const authStore = useAuthStore()
-    const { VITE_PUSHER_KEY, VITE_PUSHER_CLUSTER } = import.meta.env
-    
-    if (!_pusher && authStore.user?.id && VITE_PUSHER_KEY && VITE_PUSHER_CLUSTER) {
-      _pusher = new Pusher(VITE_PUSHER_KEY, {
-        cluster: VITE_PUSHER_CLUSTER
-      })
-      
-      const channelName = `smart-note-user-${authStore.user.id}`
-      _pusherChannel = _pusher.subscribe(channelName)
-      
-      _pusherChannel.bind('new_transaction', (data: any) => {
-        // We received a real-time transaction!
-        const parsed = typeof data === 'string' ? JSON.parse(data) : data
-        const tx = parsed.tx
-        
-        if (tx && !transactions.value.some(t => t.id === tx.id)) {
-          // Add to local state and force new array reference for total reactivity on charts
-          transactions.value = [tx, ...transactions.value]
-          
-          if (parsed.walletBalance !== undefined && tx.walletId) {
-            // Force new array reference to update wallet cards instantly
-            wallets.value = wallets.value.map(w => 
-              w.id === tx.walletId ? { ...w, balance: parsed.walletBalance } : w
-            )
-          }
-          
-          if (parsed.notification) {
-            useNotificationStore().fetch() // trigger badge update
-          }
-          
-          useUiStore().showToast('success', `Giao dịch tự động: ${tx.type === 'income' ? '+' : '-'}${tx.amount.toLocaleString('vi-VN')}đ đã được thêm!`)
-        }
-      })
-    }
-  }
-
-  /**
-   * Stop polling interval and cleanly disconnect Pusher.
-   */
-  function stopPolling() {
-    if (_pollTimer) {
-      clearInterval(_pollTimer)
-      _pollTimer = null
-    }
-    if (_pusher) {
-      _pusher.disconnect()
-      _pusher = null
-      _pusherChannel = null
-    }
-  }
-
-  /**
-   * Refresh if data is stale when user returns to the tab/window.
-   * Wire this to document visibilitychange in each finance view.
+   * Refresh data when user returns to the tab.
+   * No interval polling — API is only called on mount + tab focus.
    */
   function refreshOnVisible() {
     if (document.visibilityState === 'visible') {
@@ -278,7 +207,6 @@ export const useFinanceStore = defineStore('finance', () => {
    * MUST be called on logout to prevent data leakage between users.
    */
   function reset() {
-    stopPolling()
     wallets.value = []
     transactions.value = []
     filter.value = { type: 'all' }
@@ -384,8 +312,6 @@ export const useFinanceStore = defineStore('finance', () => {
     fetchTransactions,
     fetchAll,
     silentRefresh,
-    startPolling,
-    stopPolling,
     refreshOnVisible,
     reset
   }

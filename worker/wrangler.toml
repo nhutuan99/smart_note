@@ -14,6 +14,3 @@ binding = "AI"
 # Environment variables (set secrets via: npx wrangler secret put JWT_SECRET)
 [vars]
 ENVIRONMENT = "production"
-PUSHER_APP_ID = "2144597"
-PUSHER_KEY = "10c2e6be01ef69f2fd91"
-PUSHER_CLUSTER = "ap1"

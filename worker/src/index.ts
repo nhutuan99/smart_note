@@ -1,4 +1,3 @@
-import md5 from 'blueimp-md5'
 
 /**
  * Smart Note - Cloudflare Worker API (KV Storage)
@@ -21,10 +20,6 @@ interface Env {
   RESEND_API_KEY?: string
   FROM_EMAIL?: string
   AI: Ai
-  PUSHER_APP_ID?: string
-  PUSHER_KEY?: string
-  PUSHER_SECRET?: string
-  PUSHER_CLUSTER?: string
 }
 
 interface UserData {
@@ -236,78 +231,6 @@ function otpEmailHtml(otp: string, title: string, description: string): string {
   </div>`
 }
 
-// ====== Real-time (Pusher) ======
-
-async function triggerPusherEvent(env: Env, channel: string, event: string, data: any): Promise<void> {
-  let { PUSHER_APP_ID, PUSHER_KEY, PUSHER_SECRET, PUSHER_CLUSTER } = env
-  if (!PUSHER_APP_ID || !PUSHER_KEY || !PUSHER_SECRET || !PUSHER_CLUSTER) return
-  PUSHER_SECRET = PUSHER_SECRET.trim()
-  PUSHER_KEY = PUSHER_KEY.trim()
-  PUSHER_APP_ID = PUSHER_APP_ID.trim()
-
-  const bodyStr = JSON.stringify({
-    name: event,
-    channels: [channel],
-    data: JSON.stringify(data)
-  })
-
-  // Body MD5 is required for POST events in Pusher REST API
-  const bodyMd5 = md5(bodyStr)
-  const timestamp = Math.floor(Date.now() / 1000)
-
-  // Auth string requires: auth_key, auth_timestamp, auth_version, body_md5 sorted alphabetically!
-  const queryParams = new URLSearchParams()
-  queryParams.append('auth_key', PUSHER_KEY)
-  queryParams.append('auth_timestamp', timestamp.toString())
-  queryParams.append('auth_version', '1.0')
-  queryParams.append('body_md5', bodyMd5)
-  // They are already added in alphabetical order: auth_key, auth_timestamp, auth_version, body_md5
-
-  const method = 'POST'
-  const path = `/apps/${PUSHER_APP_ID}/events`
-
-  const signData = `${method}\n${path}\n${queryParams.toString()}`
-  
-  const encoder = new TextEncoder()
-  const key = await crypto.subtle.importKey(
-    'raw',
-    encoder.encode(PUSHER_SECRET),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign']
-  )
-  const signatureBuffer = await crypto.subtle.sign('HMAC', key, encoder.encode(signData))
-  const signatureHex = Array.from(new Uint8Array(signatureBuffer))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('')
-
-  queryParams.append('auth_signature', signatureHex)
-
-  const pusherUrl = `https://api-${PUSHER_CLUSTER}.pusher.com${path}?${queryParams.toString()}`
-
-  try {
-    const res = await fetch(pusherUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: bodyStr
-    })
-    if (!res.ok) {
-      const errText = await res.text()
-      console.error('[Pusher] Trigger failed:', errText)
-      await env.SMART_NOTE_KV.put(`users/debug_pusher_error`, JSON.stringify({
-        url: pusherUrl,
-        bodyStr,
-        errText,
-        time: new Date().toISOString()
-      }))
-    } else {
-      await env.SMART_NOTE_KV.put(`users/debug_pusher_success`, new Date().toISOString())
-    }
-  } catch (err: any) {
-    console.error('[Pusher] Error triggering event:', err)
-    await env.SMART_NOTE_KV.put(`users/debug_pusher_catch`, err.message)
-  }
-}
 
 async function getJSON<T>(kv: KVNamespace, key: string): Promise<T | null> {
   return kv.get<T>(key, 'json')
@@ -1636,7 +1559,6 @@ async function processSmsTransaction(
   
   await putJSON(env.SMART_NOTE_KV, `users/${userId}/notifications`, notiList)
   await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/transactions`, txs)
-  await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/transactions`, txs)
   await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`, wallets)
 
   // Update latest_request with success details
@@ -1655,12 +1577,6 @@ async function processSmsTransaction(
     }
   }).catch(() => {})
 
-  // Trigger Real-time Push to UI via PUBLIC channel to bypass CORS/Auth latency
-  await triggerPusherEvent(env, `smart-note-user-${userId}`, 'new_transaction', {
-    tx,
-    walletBalance: walletIdx !== -1 ? wallets[walletIdx].balance : undefined,
-    notification: notiList[0]
-  })
 
   return jsonResponse({ 
     success: true, 
@@ -1910,28 +1826,6 @@ export default {
 
       const userId = payload.userId
 
-      // Pusher Auth
-      if (path === '/api/pusher/auth' && request.method === 'POST') {
-        const bodyStr = await request.text()
-        const params = new URLSearchParams(bodyStr)
-        const socketId = params.get('socket_id')
-        const channelName = params.get('channel_name')
-        
-        if (!socketId || !channelName) return errorResponse('Missing parameters')
-        if (channelName !== `private-user-${userId}`) return errorResponse('Forbidden', 403)
-        if (!env.PUSHER_SECRET || !env.PUSHER_KEY) return errorResponse('Pusher not configured', 500)
-        
-        const secret = env.PUSHER_SECRET.trim()
-        const keyStr = env.PUSHER_KEY.trim()
-
-        const signData = `${socketId}:${channelName}`
-        const encoder = new TextEncoder()
-        const key = await crypto.subtle.importKey('raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
-        const signatureBuffer = await crypto.subtle.sign('HMAC', key, encoder.encode(signData))
-        const signatureHex = Array.from(new Uint8Array(signatureBuffer)).map((b) => b.toString(16).padStart(2, '0')).join('')
-        
-        return new Response(JSON.stringify({ auth: `${keyStr}:${signatureHex}` }), { headers: corsHeaders() })
-      }
 
       // User Profile & Account
       if (path === '/api/auth/profile' && request.method === 'PUT') {
