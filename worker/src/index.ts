@@ -452,9 +452,12 @@ async function handleGoogleVerify(request: Request, env: Env): Promise<Response>
 }
 
 async function handleResetPassword(request: Request, env: Env): Promise<Response> {
-  const { email, resetToken, newPassword } = (await request.json()) as any
-  if (!email || !resetToken || !newPassword) return errorResponse('Missing required fields')
+  const { email, resetToken, newPassword, newPin } = (await request.json()) as any
+  if (!email || !resetToken || !newPassword || !newPin) return errorResponse('Missing required fields')
   if (newPassword.length < 6) return errorResponse('Mật khẩu phải có ít nhất 6 ký tự')
+  if (!newPin || newPin.length < 4 || newPin.length > 6 || !/^\d+$/.test(newPin)) {
+    return errorResponse('PIN phải từ 4-6 chữ số')
+  }
 
   const usersIndex = (await getJSON<Record<string, string>>(env.SMART_NOTE_KV, 'users/_index')) || {}
   const userId = usersIndex[email]
@@ -471,9 +474,13 @@ async function handleResetPassword(request: Request, env: Env): Promise<Response
 
   user.passwordHash = await hashPassword(newPassword)
   await putJSON(env.SMART_NOTE_KV, `users/${userId}/profile`, user)
+  
+  const pinHash = await hashPassword(newPin)
+  await putJSON(env.SMART_NOTE_KV, `users/${userId}/pin`, pinHash)
+  
   await env.SMART_NOTE_KV.delete(`users/${userId}/otp/reset_token`)
 
-  return jsonResponse({ success: true, message: 'Đặt lại mật khẩu thành công' })
+  return jsonResponse({ success: true, message: 'Đặt lại mật khẩu và mã PIN thành công' })
 }
 
 // ====== Forgot PIN (Password Verification — requires JWT) ======
