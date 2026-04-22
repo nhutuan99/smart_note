@@ -178,12 +178,29 @@ export function useWeather() {
       }
     }
 
-    // 2. IP-based fallback
+    // 2. IP-based fallback (using freeipapi which supports HTTPS)
     try {
-      const res  = await fetch('https://ip-api.com/json/?fields=status,city,country,lat,lon&lang=vi')
+      const res  = await fetch('https://freeipapi.com/api/json')
       const data = await res.json()
-      if (data.status === 'success') {
-        return { lat: data.lat, lon: data.lon, city: data.city, country: data.country }
+      if (data && data.latitude && data.longitude) {
+        let city = data.cityName || 'Vị trí của bạn'
+        if (city.includes('Ho Chi Minh') || city === 'Thành phố Hồ Chí Minh') city = 'Hồ Chí Minh'
+        if (city.includes('Ha Noi') || city === 'Hanoi') city = 'Hà Nội'
+        if (city.includes('Da Nang') || city === 'Danang') city = 'Đà Nẵng'
+        return { lat: data.latitude, lon: data.longitude, city, country: data.countryName }
+      }
+    } catch { /* ignore */ }
+
+    // 2.5 IP-based fallback alternative (ipapi.co)
+    try {
+      const res = await fetch('https://ipapi.co/json/')
+      const data = await res.json()
+      if (data && data.latitude && data.longitude) {
+        let city = data.city || 'Vị trí của bạn'
+        if (city.includes('Ho Chi Minh') || city === 'Thành phố Hồ Chí Minh') city = 'Hồ Chí Minh'
+        if (city.includes('Ha Noi') || city === 'Hanoi') city = 'Hà Nội'
+        if (city.includes('Da Nang') || city === 'Danang') city = 'Đà Nẵng'
+        return { lat: data.latitude, lon: data.longitude, city, country: data.country_name }
       }
     } catch { /* ignore */ }
 
