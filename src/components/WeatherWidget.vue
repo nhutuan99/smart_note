@@ -34,7 +34,7 @@ function toggleCollapse() {
 
 // ── Derived ───────────────────────────────────────────────────────────────────
 
-const { locale } = useI18n()
+const { locale, t, te } = useI18n()
 
 const greeting    = computed(() => getGreeting(auth.user?.name ?? undefined, locale.value))
 const dateStr     = computed(() => new Intl.DateTimeFormat(locale.value === 'vi' ? 'vi-VN' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date()))
@@ -42,6 +42,13 @@ const traffic     = computed(() => getTrafficLevel(locale.value))
 const weatherInfo = computed(() => weather.value ? getWeatherInfo(weather.value.weatherCode, locale.value) : null)
 const aqiInfo     = computed(() => airQuality.value ? getAqiInfo(airQuality.value.aqi, locale.value) : null)
 const uvInfo      = computed(() => weather.value ? getUvInfo(weather.value.uvIndex, locale.value) : null)
+
+const localizedCity = computed(() => {
+  if (!weather.value) return ''
+  // Use bracket notation to avoid issues with spaces in city names
+  const key = `weather.cities.${weather.value.city}`
+  return te(key) ? t(key) : weather.value.city
+})
 
 const trafficColor = computed(() => {
   const m = { low: '#10b981', medium: '#f59e0b', high: '#ef4444' } as const
@@ -127,7 +134,7 @@ const trafficBg = computed(() => {
             <!-- Mobile Location Pill -->
             <div class="sm:hidden flex items-center gap-1.5 text-[0.75rem] text-text-tertiary bg-bg-elevated border border-border-default rounded-full px-3.5 py-1.5 whitespace-nowrap shrink-0 mt-2 shadow-[0_1px_2px_rgba(0,0,0,0.1)] w-fit">
               <MapPin :size="14" />
-              <span>{{ weather.city }}</span>
+              <span>{{ localizedCity }}</span>
             </div>
           </div>
 
@@ -168,7 +175,7 @@ const trafficBg = computed(() => {
             <!-- Location -->
             <div class="flex items-center gap-1.5 text-[0.75rem] text-text-tertiary bg-bg-elevated border border-border-default rounded-full px-3.5 h-8 whitespace-nowrap shadow-[0_1px_2px_rgba(0,0,0,0.1)] max-sm:hidden">
               <MapPin :size="14" />
-              <span>{{ weather.city }}</span>
+              <span>{{ localizedCity }}</span>
             </div>
 
             <button

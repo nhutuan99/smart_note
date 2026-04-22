@@ -193,10 +193,10 @@ export function useWeather() {
           )
           const data = await res.json()
           const addr = data.address || {}
-          const city =
+          let city =
             addr.city || addr.town || addr.village || addr.county ||
             addr.state_district || addr.state || 'Vị trí của bạn'
-          const country = addr.country || ''
+          if (city.includes('Ho Chi Minh') || city === 'Thành phố Hồ Chí Minh' || city === 'TP.HCM' || city.includes('TP. HCM') || city === 'Hồ Chí Minh') city = 'Ho Chi Minh City'
           return { lat, lon, city, country }
         } catch {
           return { lat, lon, city: 'Vị trí của bạn', country: '' }
@@ -213,7 +213,7 @@ export function useWeather() {
       if (data && data.loc) {
         const [lat, lon] = data.loc.split(',')
         let city = data.city || 'Vị trí của bạn'
-        if (city.includes('Ho Chi Minh') || city === 'Thành phố Hồ Chí Minh') city = 'Hồ Chí Minh'
+        if (city.includes('Ho Chi Minh') || city === 'Thành phố Hồ Chí Minh' || city === 'TP.HCM' || city.includes('TP. HCM')) city = 'Ho Chi Minh City'
         if (city.includes('Ha Noi') || city === 'Hanoi') city = 'Hà Nội'
         if (city.includes('Da Nang') || city === 'Danang') city = 'Đà Nẵng'
         return { lat: parseFloat(lat), lon: parseFloat(lon), city, country: data.country || '' }
@@ -226,7 +226,7 @@ export function useWeather() {
       const data = await res.json()
       if (data && data.latitude && data.longitude) {
         let city = data.cityName || 'Vị trí của bạn'
-        if (city.includes('Ho Chi Minh') || city === 'Thành phố Hồ Chí Minh') city = 'Hồ Chí Minh'
+        if (city.includes('Ho Chi Minh') || city === 'Thành phố Hồ Chí Minh' || city === 'TP.HCM' || city.includes('TP. HCM')) city = 'Ho Chi Minh City'
         if (city.includes('Ha Noi') || city === 'Hanoi') city = 'Hà Nội'
         if (city.includes('Da Nang') || city === 'Danang') city = 'Đà Nẵng'
         return { lat: data.latitude, lon: data.longitude, city, country: data.countryName || '' }
@@ -234,7 +234,7 @@ export function useWeather() {
     } catch { /* ignore */ }
 
     // 3. Default to Ho Chi Minh City
-    return { lat: 10.8231, lon: 106.6297, city: 'Hồ Chí Minh', country: 'Việt Nam' }
+    return { lat: 10.8231, lon: 106.6297, city: 'Ho Chi Minh City', country: 'Việt Nam' }
   }
 
   // ── Fetch weather + AQI ───────────────────────────────────────────────────

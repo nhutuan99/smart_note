@@ -346,7 +346,14 @@ export default {
     refresh: 'Làm mới',
     collapse: 'Thu gọn',
     error: 'Không thể tải thời tiết',
-    retry: 'Thử lại'
+    retry: 'Thử lại',
+    cities: {
+      'Ho Chi Minh City': 'TP. Hồ Chí Minh',
+      'Hanoi': 'Hà Nội',
+      'Hà Nội': 'Hà Nội',
+      'Danang': 'Đà Nẵng',
+      'Đà Nẵng': 'Đà Nẵng'
+    }
   },
 
   // ── Categories ──

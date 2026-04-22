@@ -346,7 +346,14 @@ export default {
     refresh: 'Refresh',
     collapse: 'Collapse',
     error: 'Cannot load weather',
-    retry: 'Retry'
+    retry: 'Retry',
+    cities: {
+      'Ho Chi Minh City': 'Ho Chi Minh City',
+      'Hanoi': 'Hanoi',
+      'Hà Nội': 'Hanoi',
+      'Danang': 'Da Nang',
+      'Đà Nẵng': 'Da Nang'
+    }
   },
 
   // ── Categories ──
