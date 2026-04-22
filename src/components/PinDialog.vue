@@ -17,7 +17,7 @@ const emit = defineEmits<{
   cancelled: []
 }>()
 
-const pin = ref(['', '', '', '', '', ''])
+const pin = ref(['', '', '', ''])
 const pinLength = ref(4)
 const error = ref('')
 const loading = ref(false)
@@ -25,7 +25,7 @@ const inputRefs = ref<HTMLInputElement[]>([])
 
 watch(() => props.show, (val) => {
   if (val) {
-    pin.value = ['', '', '', '', '', '']
+    pin.value = ['', '', '', '']
     error.value = ''
     nextTick(() => inputRefs.value[0]?.focus())
   }
@@ -77,7 +77,7 @@ async function verifyPin() {
     emit('confirmed')
   } catch (err: any) {
     error.value = err.message || t('pin.wrong')
-    pin.value = ['', '', '', '', '', '']
+    pin.value = ['', '', '', '']
     nextTick(() => inputRefs.value[0]?.focus())
   } finally {
     loading.value = false

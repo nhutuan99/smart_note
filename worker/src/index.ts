@@ -506,8 +506,8 @@ async function handleForgotPin(userId: string, request: Request, env: Env): Prom
 async function handleResetPin(userId: string, request: Request, env: Env): Promise<Response> {
   const { resetToken, newPin } = (await request.json()) as any
   if (!resetToken || !newPin) return errorResponse('Missing required fields')
-  if (!newPin || newPin.length < 4 || newPin.length > 6 || !/^\d+$/.test(newPin)) {
-    return errorResponse('PIN phải từ 4-6 chữ số')
+  if (!newPin || newPin.length !== 4 || !/^\d+$/.test(newPin)) {
+    return errorResponse('PIN phải là 4 chữ số')
   }
 
   const storedTokenHash = await env.SMART_NOTE_KV.get(`users/${userId}/otp/pin_reset_token`)
@@ -1599,8 +1599,8 @@ async function processSmsTransaction(
 
 async function handleSetPin(userId: string, request: Request, env: Env): Promise<Response> {
   const { pin, currentPin } = (await request.json()) as any
-  if (!pin || pin.length < 4 || pin.length > 6) {
-    return errorResponse('PIN phải từ 4-6 chữ số')
+  if (!pin || pin.length !== 4) {
+    return errorResponse('PIN phải là 4 chữ số')
   }
   if (!/^\d+$/.test(pin)) {
     return errorResponse('PIN chỉ được chứa số')

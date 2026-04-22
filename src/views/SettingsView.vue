@@ -119,7 +119,7 @@ onMounted(async () => {
 })
 
 async function savePin() {
-  if (pinForm.value.newPin.length < 4 || pinForm.value.newPin.length > 6) {
+  if (pinForm.value.newPin.length !== 4) {
     ui.showToast('error', t('settings.pinLengthError'))
     return
   }
@@ -180,7 +180,7 @@ async function verifyPasswordForPin() {
 }
 
 async function resetPinWithPassword() {
-  if (forgotPinNew.value.length < 4 || forgotPinNew.value.length > 6) {
+  if (forgotPinNew.value.length !== 4) {
     forgotPinError.value = t('settings.pinLengthError')
     return
   }
@@ -472,7 +472,7 @@ function cancelForgotPin() {
                     v-model="pinForm.currentPin"
                     :type="showCurrentPin ? 'text' : 'password'"
                     inputmode="numeric"
-                    maxlength="6"
+                    maxlength="4"
                     :placeholder="t('settings.currentPinPlaceholder')"
                     class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border px-3 py-2 text-sm transition-all focus:ring-2 focus:outline-none"
                   />
@@ -494,7 +494,7 @@ function cancelForgotPin() {
                     v-model="pinForm.newPin"
                     :type="showNewPin ? 'text' : 'password'"
                     inputmode="numeric"
-                    maxlength="6"
+                    maxlength="4"
                     :placeholder="t('settings.newPinPlaceholder')"
                     class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border px-3 py-2 text-sm transition-all focus:ring-2 focus:outline-none"
                   />
@@ -515,7 +515,7 @@ function cancelForgotPin() {
                   v-model="pinForm.confirmPin"
                   type="password"
                   inputmode="numeric"
-                  maxlength="6"
+                  maxlength="4"
                   :placeholder="t('settings.confirmPinPlaceholder')"
                   class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border px-3 py-2 text-sm transition-all focus:ring-2 focus:outline-none"
                 />
@@ -628,7 +628,7 @@ function cancelForgotPin() {
                         v-model="forgotPinNew"
                         type="password"
                         inputmode="numeric"
-                        maxlength="6"
+                        maxlength="4"
                         :placeholder="t('settings.newPinPlaceholder')"
                         class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border px-3 py-2 text-sm transition-all focus:ring-2 focus:outline-none"
                       />
@@ -639,7 +639,7 @@ function cancelForgotPin() {
                         v-model="forgotPinConfirm"
                         type="password"
                         inputmode="numeric"
-                        maxlength="6"
+                        maxlength="4"
                         :placeholder="t('settings.confirmPinPlaceholder')"
                         class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border px-3 py-2 text-sm transition-all focus:ring-2 focus:outline-none"
                       />
