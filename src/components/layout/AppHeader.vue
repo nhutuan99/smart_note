@@ -245,31 +245,41 @@ function handleLogout() {
       <div class="bg-border-default mx-2 h-6 w-px"></div>
 
       <!-- User / Logout -->
-      <button
-        id="user-menu-btn"
-        class="hover:bg-bg-hover group flex items-center gap-2 rounded-lg px-2 py-1 transition-all duration-150"
-        @click="handleLogout"
-      >
-        <div
-          v-if="!auth.user?.avatarUrl || imgError"
-          class="bg-accent-subtle text-accent flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold"
+      <template v-if="auth.isAuthenticated">
+        <button
+          id="user-menu-btn"
+          class="hover:bg-bg-hover group flex items-center gap-2 rounded-lg px-2 py-1 transition-all duration-150"
+          @click="handleLogout"
         >
-          {{ auth.user?.name?.charAt(0)?.toUpperCase() || 'U' }}
-        </div>
-        <img
-          v-else
-          v-show="!imgError"
-          :src="auth.user?.avatarUrl"
-          alt="Avatar"
-          class="h-7 w-7 rounded-full object-cover"
-          referrerpolicy="no-referrer"
-          @error="imgError = true"
-        />
-        <LogOut
-          :size="14"
-          class="text-text-tertiary opacity-100 md:opacity-0 transition-opacity duration-150 group-hover:opacity-100"
-        />
-      </button>
+          <div
+            v-if="!auth.user?.avatarUrl || imgError"
+            class="bg-accent-subtle text-accent flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold"
+          >
+            {{ auth.user?.name?.charAt(0)?.toUpperCase() || 'U' }}
+          </div>
+          <img
+            v-else
+            v-show="!imgError"
+            :src="auth.user?.avatarUrl"
+            alt="Avatar"
+            class="h-7 w-7 rounded-full object-cover"
+            referrerpolicy="no-referrer"
+            @error="imgError = true"
+          />
+          <LogOut
+            :size="14"
+            class="text-text-tertiary opacity-100 md:opacity-0 transition-opacity duration-150 group-hover:opacity-100"
+          />
+        </button>
+      </template>
+      <template v-else>
+        <router-link
+          to="/login"
+          class="bg-accent text-bg-primary hover:bg-accent-hover flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-sm font-semibold transition-colors"
+        >
+          {{ t('common.login') }}
+        </router-link>
+      </template>
     </div>
   </header>
 </template>

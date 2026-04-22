@@ -10,6 +10,12 @@ import type {
 } from '@/types'
 import { getCategoryConfig } from '@/constants/finance'
 import { httpClient } from '@/shared/api/httpClient'
+import { AUTH_TOKEN_KEY } from '@/constants/auth'
+
+/** Quick check without importing auth store (avoids circular deps). */
+function isLoggedIn() {
+  return !!localStorage.getItem(AUTH_TOKEN_KEY)
+}
 
 /** AbortError is expected when httpClient cancels requests on 401 — not a real error. */
 function isAbortError(err: unknown) {
@@ -143,6 +149,7 @@ export const useFinanceStore = defineStore('finance', () => {
   // ── Actions: Fetch from API ──
 
   async function fetchWallets() {
+    if (!isLoggedIn()) return
     try {
       const data = await httpClient.get<Wallet[]>('/api/wallets')
       if (data) {
@@ -156,6 +163,7 @@ export const useFinanceStore = defineStore('finance', () => {
   }
 
   async function fetchTransactions() {
+    if (!isLoggedIn()) return
     try {
       const data = await httpClient.get<Transaction[]>('/api/transactions')
       transactions.value = data || []
@@ -179,6 +187,7 @@ export const useFinanceStore = defineStore('finance', () => {
    * Used by polling and visibility-change handler.
    */
   async function silentRefresh() {
+    if (!isLoggedIn()) return
     try {
       await Promise.all([fetchWallets(), fetchTransactions()])
       _lastFetchTime = Date.now()

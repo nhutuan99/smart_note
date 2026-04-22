@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { httpClient } from '@/shared/api/httpClient'
+import { AUTH_TOKEN_KEY } from '@/constants/auth'
 
 export interface AppNotification {
   id: string
@@ -33,6 +34,7 @@ export const useNotificationStore = defineStore('notifications', () => {
   )
 
   async function fetch(force = false) {
+    if (!localStorage.getItem(AUTH_TOKEN_KEY)) return
     const now = Date.now()
     // Rate limit: prevent spamming API if called within 5 seconds unless forced
     if (!force && now - lastFetchTime < 5000 && notifications.value.length > 0) {

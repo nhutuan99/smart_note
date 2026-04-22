@@ -13,57 +13,49 @@ const router = createRouter({
     {
       path: '/',
       name: 'dashboard',
-      component: () => import('@/views/FinanceDashboardView.vue'),
-      meta: { requiresAuth: true }
+      component: () => import('@/views/FinanceDashboardView.vue')
     },
     {
       path: '/transactions',
       name: 'transactions',
-      component: () => import('@/views/TransactionsView.vue'),
-      meta: { requiresAuth: true }
+      component: () => import('@/views/TransactionsView.vue')
     },
     {
       path: '/transactions/add',
       name: 'add-transaction',
-      component: () => import('@/views/AddTransactionView.vue'),
-      meta: { requiresAuth: true }
+      component: () => import('@/views/AddTransactionView.vue')
     },
     {
       path: '/wallets',
       name: 'wallets',
-      component: () => import('@/views/WalletsView.vue'),
-      meta: { requiresAuth: true }
+      component: () => import('@/views/WalletsView.vue')
     },
     {
       path: '/notes',
       name: 'notes',
-      component: () => import('@/views/NotesView.vue'),
-      meta: { requiresAuth: true }
+      component: () => import('@/views/NotesView.vue')
     },
     {
       path: '/notes/:id',
       name: 'note-detail',
-      component: () => import('@/views/NoteDetailView.vue'),
-      meta: { requiresAuth: true }
+      component: () => import('@/views/NoteDetailView.vue')
     },
     {
       path: '/settings',
       name: 'settings',
-      component: () => import('@/views/SettingsView.vue'),
-      meta: { requiresAuth: true }
+      component: () => import('@/views/SettingsView.vue')
     },
     {
       path: '/auto-sync',
       name: 'auto-sync',
-      component: () => import('@/views/AutoSyncView.vue'),
-      meta: { requiresAuth: true }
+      component: () => import('@/views/AutoSyncView.vue')
     }
   ]
 })
 
 router.beforeEach((to) => {
   const auth = useAuthStore()
-  if (to.meta.requiresAuth && !auth.isAuthenticated) return '/login'
+  // Only guard: redirect authenticated users away from /login
   if (to.meta.requiresGuest && auth.isAuthenticated) {
     // Allow Google OAuth callback to hit /login even if there is a stale token
     if (to.path === '/login' && to.query.code && to.query.state) {

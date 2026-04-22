@@ -19,7 +19,8 @@ export default {
     export: 'Export',
     version: 'Smart Note v1.0.0',
     copy: 'Copy',
-    copied: 'Copied!'
+    copied: 'Copied!',
+    login: 'Login'
   },
 
   // ── Time ──

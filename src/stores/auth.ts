@@ -1,8 +1,11 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { User } from '@/types'
+import type { Router } from 'vue-router'
 
 import { AUTH_TOKEN_KEY, AUTH_USER_KEY } from '@/constants/auth'
+
+const SYNC_GUIDE_KEY = 'sn_sync_guide_shown'
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(localStorage.getItem(AUTH_TOKEN_KEY))
@@ -31,6 +34,8 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = null
     localStorage.removeItem(AUTH_TOKEN_KEY)
     localStorage.removeItem(AUTH_USER_KEY)
+    // Clear tips guide cache so it resets for next session/user
+    localStorage.removeItem(SYNC_GUIDE_KEY)
   }
 
   function getToken(): string | null {
@@ -42,6 +47,17 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user.value))
   }
 
+  /**
+   * Check if user is authenticated. If not, redirect to /login.
+   * Call this before any action that requires syncing data to server.
+   * Returns true if authenticated, false if redirecting.
+   */
+  function guardAuth(router: Router): boolean {
+    if (isAuthenticated.value) return true
+    router.push('/login')
+    return false
+  }
+
   return {
     token,
     user,
@@ -49,6 +65,7 @@ export const useAuthStore = defineStore('auth', () => {
     setAuth,
     logout,
     getToken,
-    updateUser
+    updateUser,
+    guardAuth
   }
 })

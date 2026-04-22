@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import type { Note, NoteListItem, NoteFilter, ViewMode } from '@/types'
 import { httpClient } from '@/shared/api/httpClient'
 import { useObsidianSync } from '@/composables/useObsidianSync'
+import { AUTH_TOKEN_KEY } from '@/constants/auth'
 
 export const useNotesStore = defineStore('notes', () => {
   const obsidian = useObsidianSync()
@@ -56,6 +57,7 @@ export const useNotesStore = defineStore('notes', () => {
   // ── Actions ──
 
   async function fetchNotes() {
+    if (!localStorage.getItem(AUTH_TOKEN_KEY)) return
     loading.value = true
     try {
       const data = await httpClient.get<NoteListItem[]>('/api/notes')
@@ -68,6 +70,7 @@ export const useNotesStore = defineStore('notes', () => {
   }
 
   async function fetchNote(id: string) {
+    if (!localStorage.getItem(AUTH_TOKEN_KEY)) return null
     loading.value = true
     try {
       const data = await httpClient.get<Note>(`/api/notes/${id}`)

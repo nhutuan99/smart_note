@@ -19,7 +19,8 @@ export default {
     export: 'Xuất dữ liệu',
     version: 'Smart Note v1.0.0',
     copy: 'Copy',
-    copied: 'Đã copy!'
+    copied: 'Đã copy!',
+    login: 'Đăng nhập'
   },
 
   // ── Time ──

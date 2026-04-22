@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, onBeforeUnmount } from 'vue'
 import AppHeader from './AppHeader.vue'
 import AppSidebar from './AppSidebar.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
@@ -9,6 +9,7 @@ import { useUiStore } from '@/stores/ui'
 import { useNotificationStore } from '@/stores/notifications'
 import { useNotesStore } from '@/stores/notes'
 import { useFinanceStore } from '@/stores/finance'
+import { useAuthStore } from '@/stores/auth'
 import { useEventListener } from '@/composables/useEventListener'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -17,6 +18,7 @@ const ui = useUiStore()
 const notificationStore = useNotificationStore()
 const notesStore = useNotesStore()
 const financeStore = useFinanceStore()
+const auth = useAuthStore()
 const router = useRouter()
 const { t } = useI18n()
 
@@ -30,32 +32,66 @@ function syncOnVisible() {
   }
 }
 
+// ── Sync Guide: 5-minute delay ──
+// sessionStorage: don't show again in this tab
+// localStorage ('sn_sync_guide_shown'): permanent dismiss after clicking "Tìm hiểu"
+// On logout → localStorage key is cleared so guide resets for next user/session
+
+const GUIDE_LOCAL_KEY = 'sn_sync_guide_shown'
+const GUIDE_SESSION_KEY = 'sn_sync_guide_session'
+const GUIDE_DELAY_MS = 5 * 60 * 1000 // 5 minutes
+
+let guideTimer: ReturnType<typeof setTimeout> | null = null
+
+function scheduleGuide() {
+  // Already permanently dismissed (user clicked "Tìm hiểu" before)
+  if (localStorage.getItem(GUIDE_LOCAL_KEY)) return
+  // Already shown in this tab session
+  if (sessionStorage.getItem(GUIDE_SESSION_KEY)) return
+  // Only show to logged-in users
+  if (!auth.isAuthenticated) return
+
+  guideTimer = setTimeout(async () => {
+    // Re-check conditions (user may have logged out or navigated away)
+    if (localStorage.getItem(GUIDE_LOCAL_KEY)) return
+    if (sessionStorage.getItem(GUIDE_SESSION_KEY)) return
+    if (!auth.isAuthenticated) return
+
+    // Mark as shown for this tab (sessionStorage)
+    sessionStorage.setItem(GUIDE_SESSION_KEY, 'true')
+
+    const confirmed = await ui.requestConfirm({
+      title: t('guide.syncTitle'),
+      message: t('guide.syncMessage'),
+      confirmText: t('guide.syncAction'),
+      cancelText: t('common.close'),
+      danger: false
+    })
+
+    if (confirmed) {
+      // User clicked "Tìm hiểu" → permanent cache in localStorage
+      localStorage.setItem(GUIDE_LOCAL_KEY, 'true')
+      router.push('/auto-sync')
+    }
+  }, GUIDE_DELAY_MS)
+}
+
 onMounted(() => {
-  // Initial fetches
+  // Initial data fetches (guarded by auth inside each store)
   notificationStore.fetch()
-  // Fetch notes so sidebar "Ghi chú gần đây" is populated on first load
   if (notesStore.notes.length === 0) {
     notesStore.fetchNotes()
   }
   _lastSyncTime = Date.now()
 
-  // Handle mini tip guide for auto-sync
-  const syncGuideKey = 'sn_sync_guide_shown'
-  if (!localStorage.getItem(syncGuideKey)) {
-    setTimeout(async () => {
-      const confirmed = await ui.requestConfirm({
-        title: t('guide.syncTitle'),
-        message: t('guide.syncMessage'),
-        confirmText: t('guide.syncAction'),
-        cancelText: t('common.close'),
-        danger: false
-      })
-      // Cache after user clicks to dismiss/confirm
-      localStorage.setItem(syncGuideKey, 'true')
-      if (confirmed) {
-        router.push('/auto-sync')
-      }
-    }, 1500)
+  // Schedule sync guide after 5 minutes
+  scheduleGuide()
+})
+
+onBeforeUnmount(() => {
+  if (guideTimer) {
+    clearTimeout(guideTimer)
+    guideTimer = null
   }
 })
 
