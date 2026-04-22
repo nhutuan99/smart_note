@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
 import { httpClient } from '@/shared/api/httpClient'
@@ -167,13 +167,17 @@ function backToLoginFromDone() {
 }
 
 // ── Handle OAuth callback on page load ──
-onMounted(() => {
-  const code = route.query.code as string
-  const state = route.query.state as string
-  if (code && state) {
-    handleOAuthCallback(code, state)
-  }
-})
+watch(
+  () => route.query,
+  (query) => {
+    const code = query.code as string
+    const state = query.state as string
+    if (code && state && fpStep.value === 'login') {
+      handleOAuthCallback(code, state)
+    }
+  },
+  { immediate: true }
+)
 </script>
 
 <template>
