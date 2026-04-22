@@ -261,7 +261,7 @@ export default {
     // Forgot Password
     title: 'Forgot Password',
     desc: 'Enter your registered email to verify via Google and reset your password.',
-    emailPlaceholder: 'you@example.com',
+    emailPlaceholder: 'you{\'@\'}example.com',
     googleOAuthHint: 'You will be redirected to Google to verify email ownership. Please sign in with the Google account you registered with.',
     verifyWithGoogle: 'Verify with Google',
     googleVerifying: 'Verifying...',

@@ -261,7 +261,7 @@ export default {
     // Forgot Password
     title: 'Quên mật khẩu',
     desc: 'Nhập email đăng ký để xác minh qua Google và đặt lại mật khẩu.',
-    emailPlaceholder: 'you@example.com',
+    emailPlaceholder: 'you{\'@\'}example.com',
     googleOAuthHint: 'Bạn sẽ được chuyển đến Google để xác minh quyền sở hữu email. Vui lòng đăng nhập đúng tài khoản Google đã đăng ký.',
     verifyWithGoogle: 'Xác minh bằng Google',
     googleVerifying: 'Đang xác minh...',
