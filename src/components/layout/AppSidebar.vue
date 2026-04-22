@@ -154,8 +154,8 @@ function navigateWallet(walletId: string) {
         v-if="ui.sidebarOpen && notesStore.notes.length > 0"
         class="mb-4"
       >
-        <div class="text-text-tertiary px-3 py-2 text-[0.6875rem] font-semibold tracking-wider">
-          GHI CHÚ GẦN ĐÂY
+        <div class="text-text-tertiary px-3 py-2 text-[0.6875rem] font-semibold tracking-wider uppercase">
+          {{ t('nav.recentNotes') }}
         </div>
         <div
           v-for="note in notesStore.notes.slice(0, 5)"
@@ -182,7 +182,7 @@ function navigateWallet(walletId: string) {
           </span>
         </div>
         <div class="flex items-center justify-between px-3 py-1">
-          <span class="text-text-tertiary text-[0.6875rem]">Notes</span>
+          <span class="text-text-tertiary text-[0.6875rem]">{{ t('nav.notes') }}</span>
           <span class="text-text-secondary text-[0.6875rem] font-medium">
             {{ notesStore.totalNotes }}
           </span>

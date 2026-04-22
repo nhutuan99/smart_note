@@ -54,7 +54,8 @@ export default {
     addTransaction: 'Add Transaction',
     walletSection: 'WALLETS',
     totalBalance: 'Total Balance',
-    autoSync: 'Auto Sync'
+    autoSync: 'Auto Sync',
+    recentNotes: 'Recent Notes'
   },
 
   // ── Notifications ──

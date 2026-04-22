@@ -54,7 +54,8 @@ export default {
     addTransaction: 'Thêm giao dịch',
     walletSection: 'VÍ',
     totalBalance: 'Tổng ví',
-    autoSync: 'Đồng bộ tự động'
+    autoSync: 'Đồng bộ tự động',
+    recentNotes: 'Ghi chú gần đây'
   },
 
   // ── Notifications ──

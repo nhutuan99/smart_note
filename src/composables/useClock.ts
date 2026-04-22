@@ -6,6 +6,7 @@
  */
 
 import { ref, computed, onMounted, onUnmounted, type ComputedRef } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 export interface ClockState {
   /** HH:mm part of current time */
@@ -17,6 +18,8 @@ export interface ClockState {
 }
 
 export function useClock(): ClockState {
+  const { locale } = useI18n()
+  const lang = computed(() => locale.value === 'vi' ? 'vi-VN' : 'en-US')
   const now = ref(new Date())
   let tid = 0
 
@@ -27,15 +30,15 @@ export function useClock(): ClockState {
   onUnmounted(() => window.clearInterval(tid))
 
   const hhmm = computed(() =>
-    now.value.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false })
+    now.value.toLocaleTimeString(lang.value, { hour: '2-digit', minute: '2-digit', hour12: false })
   )
 
   const seconds = computed(() =>
-    now.value.toLocaleTimeString('vi-VN', { second: '2-digit', hour12: false })
+    now.value.toLocaleTimeString(lang.value, { second: '2-digit', hour12: false })
   )
 
   const dateStr = computed(() =>
-    now.value.toLocaleDateString('vi-VN', {
+    now.value.toLocaleDateString(lang.value, {
       weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
     })
   )

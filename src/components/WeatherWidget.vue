@@ -15,6 +15,7 @@ import {
   getGreeting,
   getTrafficLevel,
 } from '@/composables/useWeather'
+import { useI18n } from 'vue-i18n'
 
 // 6. Icons
 import { RefreshCw, MapPin, Wind, Droplets, Zap, Car, Leaf, ChevronDown } from 'lucide-vue-next'
@@ -35,11 +36,13 @@ function toggleCollapse() {
 
 // ── Derived ───────────────────────────────────────────────────────────────────
 
-const greeting    = computed(() => getGreeting(auth.user?.name ?? undefined))
-const traffic     = computed(() => getTrafficLevel())
-const weatherInfo = computed(() => weather.value ? getWeatherInfo(weather.value.weatherCode) : null)
-const aqiInfo     = computed(() => airQuality.value ? getAqiInfo(airQuality.value.aqi) : null)
-const uvInfo      = computed(() => weather.value ? getUvInfo(weather.value.uvIndex) : null)
+const { locale } = useI18n()
+
+const greeting    = computed(() => getGreeting(auth.user?.name ?? undefined, locale.value))
+const traffic     = computed(() => getTrafficLevel(locale.value))
+const weatherInfo = computed(() => weather.value ? getWeatherInfo(weather.value.weatherCode, locale.value) : null)
+const aqiInfo     = computed(() => airQuality.value ? getAqiInfo(airQuality.value.aqi, locale.value) : null)
+const uvInfo      = computed(() => weather.value ? getUvInfo(weather.value.uvIndex, locale.value) : null)
 
 const trafficColor = computed(() => {
   const m = { low: '#10b981', medium: '#f59e0b', high: '#ef4444' } as const

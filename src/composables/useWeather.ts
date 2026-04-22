@@ -40,55 +40,58 @@ export interface TrafficLevel {
 
 // ── WMO Weather Code Map ──────────────────────────────────────────────────────
 
-export const WMO_MAP: Record<number, { label: string; emoji: string }> = {
-  0:  { label: 'Trời quang',        emoji: '☀️' },
-  1:  { label: 'Ít mây',            emoji: '🌤️' },
-  2:  { label: 'Có mây',            emoji: '⛅' },
-  3:  { label: 'Nhiều mây',         emoji: '☁️' },
-  45: { label: 'Sương mù',          emoji: '🌫️' },
-  48: { label: 'Sương mù đặc',      emoji: '🌫️' },
-  51: { label: 'Mưa phùn nhẹ',      emoji: '🌦️' },
-  53: { label: 'Mưa phùn',          emoji: '🌦️' },
-  55: { label: 'Mưa phùn dày',      emoji: '🌧️' },
-  61: { label: 'Mưa nhẹ',           emoji: '🌧️' },
-  63: { label: 'Mưa vừa',           emoji: '🌧️' },
-  65: { label: 'Mưa to',            emoji: '🌧️' },
-  71: { label: 'Tuyết nhẹ',         emoji: '🌨️' },
-  73: { label: 'Tuyết vừa',         emoji: '🌨️' },
-  75: { label: 'Tuyết dày',         emoji: '❄️' },
-  80: { label: 'Mưa rào nhẹ',       emoji: '🌦️' },
-  81: { label: 'Mưa rào vừa',       emoji: '🌦️' },
-  82: { label: 'Mưa rào to',        emoji: '⛈️' },
-  95: { label: 'Dông',              emoji: '⛈️' },
-  99: { label: 'Dông + mưa đá',     emoji: '⛈️' },
+export const WMO_MAP: Record<number, { vi: string; en: string; emoji: string }> = {
+  0:  { vi: 'Trời quang',        en: 'Clear sky', emoji: '☀️' },
+  1:  { vi: 'Ít mây',            en: 'Mainly clear', emoji: '🌤️' },
+  2:  { vi: 'Có mây',            en: 'Partly cloudy', emoji: '⛅' },
+  3:  { vi: 'Nhiều mây',         en: 'Overcast', emoji: '☁️' },
+  45: { vi: 'Sương mù',          en: 'Fog', emoji: '🌫️' },
+  48: { vi: 'Sương mù đặc',      en: 'Depositing rime fog', emoji: '🌫️' },
+  51: { vi: 'Mưa phùn nhẹ',      en: 'Light drizzle', emoji: '🌦️' },
+  53: { vi: 'Mưa phùn',          en: 'Moderate drizzle', emoji: '🌦️' },
+  55: { vi: 'Mưa phùn dày',      en: 'Dense drizzle', emoji: '🌧️' },
+  61: { vi: 'Mưa nhẹ',           en: 'Slight rain', emoji: '🌧️' },
+  63: { vi: 'Mưa vừa',           en: 'Moderate rain', emoji: '🌧️' },
+  65: { vi: 'Mưa to',            en: 'Heavy rain', emoji: '🌧️' },
+  71: { vi: 'Tuyết nhẹ',         en: 'Slight snow fall', emoji: '🌨️' },
+  73: { vi: 'Tuyết vừa',         en: 'Moderate snow fall', emoji: '🌨️' },
+  75: { vi: 'Tuyết dày',         en: 'Heavy snow fall', emoji: '❄️' },
+  80: { vi: 'Mưa rào nhẹ',       en: 'Slight rain showers', emoji: '🌦️' },
+  81: { vi: 'Mưa rào vừa',       en: 'Moderate rain showers', emoji: '🌦️' },
+  82: { vi: 'Mưa rào to',        en: 'Violent rain showers', emoji: '⛈️' },
+  95: { vi: 'Dông',              en: 'Thunderstorm', emoji: '⛈️' },
+  99: { vi: 'Dông + mưa đá',     en: 'Thunderstorm with hail', emoji: '⛈️' },
 }
 
-export function getWeatherInfo(code: number) {
-  // Find nearest code match
-  if (WMO_MAP[code]) return WMO_MAP[code]
-  // Fallback by range
-  if (code <= 3)  return WMO_MAP[code] ?? WMO_MAP[0]
-  if (code <= 49) return WMO_MAP[45]
-  if (code <= 67) return WMO_MAP[61]
-  if (code <= 77) return WMO_MAP[71]
-  if (code <= 82) return WMO_MAP[80]
-  return WMO_MAP[95]
+export function getWeatherInfo(code: number, locale: string = 'vi') {
+  let match = WMO_MAP[code]
+  if (!match) {
+    if (code <= 3)  match = WMO_MAP[code] ?? WMO_MAP[0]
+    else if (code <= 49) match = WMO_MAP[45]
+    else if (code <= 67) match = WMO_MAP[61]
+    else if (code <= 77) match = WMO_MAP[71]
+    else if (code <= 82) match = WMO_MAP[80]
+    else match = WMO_MAP[95]
+  }
+  return { label: locale === 'en' ? match.en : match.vi, emoji: match.emoji }
 }
 
 // ── AQI Helpers ───────────────────────────────────────────────────────────────
 
-export function getAqiInfo(aqi: number): { label: string; color: string; emoji: string } {
-  if (aqi <= 50)  return { label: 'Tốt',             color: '#10b981', emoji: '😊' }
-  if (aqi <= 100) return { label: 'Trung bình',      color: '#f59e0b', emoji: '😐' }
-  if (aqi <= 150) return { label: 'Không tốt',       color: '#f97316', emoji: '😷' }
-  if (aqi <= 200) return { label: 'Xấu',             color: '#ef4444', emoji: '🤧' }
-  if (aqi <= 300) return { label: 'Rất xấu',         color: '#7c3aed', emoji: '☠️' }
-  return           { label: 'Nguy hiểm',             color: '#7f1d1d', emoji: '☠️' }
+export function getAqiInfo(aqi: number, locale: string = 'vi'): { label: string; color: string; emoji: string } {
+  const isEn = locale === 'en'
+  if (aqi <= 50)  return { label: isEn ? 'Good' : 'Tốt', color: '#10b981', emoji: '😊' }
+  if (aqi <= 100) return { label: isEn ? 'Moderate' : 'Trung bình', color: '#f59e0b', emoji: '😐' }
+  if (aqi <= 150) return { label: isEn ? 'Unhealthy (Sens)' : 'Không tốt', color: '#f97316', emoji: '😷' }
+  if (aqi <= 200) return { label: isEn ? 'Unhealthy' : 'Xấu', color: '#ef4444', emoji: '🤧' }
+  if (aqi <= 300) return { label: isEn ? 'Very Unhealthy' : 'Rất xấu', color: '#7c3aed', emoji: '☠️' }
+  return { label: isEn ? 'Hazardous' : 'Nguy hiểm', color: '#7f1d1d', emoji: '☠️' }
 }
 
 // ── Traffic Estimate (time-based, Vietnam patterns) ───────────────────────────
 
-export function getTrafficLevel(): TrafficLevel {
+export function getTrafficLevel(locale: string = 'vi'): TrafficLevel {
+  const isEn  = locale === 'en'
   const now   = new Date()
   const hour  = now.getHours()
   const min   = now.getMinutes()
@@ -97,41 +100,44 @@ export function getTrafficLevel(): TrafficLevel {
 
   // Weekend → generally light
   if (day === 0 || day === 6) {
-    if (t >= 10 && t < 12) return { level: 'medium', label: 'Hơi đông',    emoji: '🟡' }
-    return                         { level: 'low',    label: 'Thông thoáng', emoji: '🟢' }
+    if (t >= 10 && t < 12) return { level: 'medium', label: isEn ? 'Moderate' : 'Hơi đông', emoji: '🟡' }
+    return { level: 'low', label: isEn ? 'Clear' : 'Thông thoáng', emoji: '🟢' }
   }
 
   // Weekday peak: morning rush 7–9, evening rush 17–19:30
   if ((t >= 7 && t < 9.5) || (t >= 17 && t < 19.5)) {
-    return { level: 'high',   label: 'Đông đúc',    emoji: '🔴' }
+    return { level: 'high', label: isEn ? 'Heavy' : 'Đông đúc', emoji: '🔴' }
   }
   // Semi-peak: lunch 11:30–13, post-evening 19:30–20:30
   if ((t >= 11.5 && t < 13.5) || (t >= 9.5 && t < 11) || (t >= 19.5 && t < 20.5)) {
-    return { level: 'medium', label: 'Hơi đông',    emoji: '🟡' }
+    return { level: 'medium', label: isEn ? 'Moderate' : 'Hơi đông', emoji: '🟡' }
   }
-  return   { level: 'low',    label: 'Thông thoáng', emoji: '🟢' }
+  return { level: 'low', label: isEn ? 'Clear' : 'Thông thoáng', emoji: '🟢' }
 }
 
 // ── UV Index Helpers ──────────────────────────────────────────────────────────
 
-export function getUvInfo(uv: number): { label: string; color: string } {
-  if (uv <= 2)  return { label: 'Thấp',     color: '#10b981' }
-  if (uv <= 5)  return { label: 'Trung bình', color: '#f59e0b' }
-  if (uv <= 7)  return { label: 'Cao',       color: '#f97316' }
-  if (uv <= 10) return { label: 'Rất cao',   color: '#ef4444' }
-  return         { label: 'Cực cao',         color: '#7c3aed' }
+export function getUvInfo(uv: number, locale: string = 'vi'): { label: string; color: string } {
+  const isEn = locale === 'en'
+  if (uv <= 2)  return { label: isEn ? 'Low' : 'Thấp', color: '#10b981' }
+  if (uv <= 5)  return { label: isEn ? 'Moderate' : 'Trung bình', color: '#f59e0b' }
+  if (uv <= 7)  return { label: isEn ? 'High' : 'Cao', color: '#f97316' }
+  if (uv <= 10) return { label: isEn ? 'Very High' : 'Rất cao', color: '#ef4444' }
+  return { label: isEn ? 'Extreme' : 'Cực cao', color: '#7c3aed' }
 }
 
 // ── Greeting ──────────────────────────────────────────────────────────────────
 
-export function getGreeting(name?: string): string {
-  const h   = new Date().getHours()
-  const who = name ? `, ${name.split(' ').pop()}` : ''
-  if (h >= 5  && h < 12) return `Chào buổi sáng${who} ☀️`
-  if (h >= 12 && h < 14) return `Chào buổi trưa${who} 🌤️`
-  if (h >= 14 && h < 18) return `Chào buổi chiều${who} ⛅`
-  if (h >= 18 && h < 22) return `Chào buổi tối${who} 🌆`
-  return                         `Còn thức muộn thế${who}? 🌙`
+export function getGreeting(name?: string, locale: string = 'vi'): string {
+  const isEn = locale === 'en'
+  const h = new Date().getHours()
+  const who = name ? (isEn ? ` ${name.split(' ').pop()}` : `, ${name.split(' ').pop()}`) : ''
+  
+  if (h >= 5  && h < 12) return isEn ? `Good morning${who} ☀️` : `Chào buổi sáng${who} ☀️`
+  if (h >= 12 && h < 14) return isEn ? `Good noon${who} 🌤️` : `Chào buổi trưa${who} 🌤️`
+  if (h >= 14 && h < 18) return isEn ? `Good afternoon${who} ⛅` : `Chào buổi chiều${who} ⛅`
+  if (h >= 18 && h < 22) return isEn ? `Good evening${who} 🌆` : `Chào buổi tối${who} 🌆`
+  return isEn ? `Up late${who}? 🌙` : `Còn thức muộn thế${who}? 🌙`
 }
 
 // ── Main Composable ───────────────────────────────────────────────────────────
@@ -178,29 +184,30 @@ export function useWeather() {
       }
     }
 
-    // 2. IP-based fallback (using freeipapi which supports HTTPS)
+    // 2. IP-based fallback (using ipinfo.io which is highly reliable and CORS-friendly)
     try {
-      const res  = await fetch('https://freeipapi.com/api/json')
+      const res  = await fetch('https://ipinfo.io/json')
+      const data = await res.json()
+      if (data && data.loc) {
+        const [lat, lon] = data.loc.split(',')
+        let city = data.city || 'Vị trí của bạn'
+        if (city.includes('Ho Chi Minh') || city === 'Thành phố Hồ Chí Minh') city = 'Hồ Chí Minh'
+        if (city.includes('Ha Noi') || city === 'Hanoi') city = 'Hà Nội'
+        if (city.includes('Da Nang') || city === 'Danang') city = 'Đà Nẵng'
+        return { lat: parseFloat(lat), lon: parseFloat(lon), city, country: data.country || '' }
+      }
+    } catch { /* ignore */ }
+
+    // 2.5 IP-based fallback alternative (freeipapi)
+    try {
+      const res = await fetch('https://freeipapi.com/api/json')
       const data = await res.json()
       if (data && data.latitude && data.longitude) {
         let city = data.cityName || 'Vị trí của bạn'
         if (city.includes('Ho Chi Minh') || city === 'Thành phố Hồ Chí Minh') city = 'Hồ Chí Minh'
         if (city.includes('Ha Noi') || city === 'Hanoi') city = 'Hà Nội'
         if (city.includes('Da Nang') || city === 'Danang') city = 'Đà Nẵng'
-        return { lat: data.latitude, lon: data.longitude, city, country: data.countryName }
-      }
-    } catch { /* ignore */ }
-
-    // 2.5 IP-based fallback alternative (ipapi.co)
-    try {
-      const res = await fetch('https://ipapi.co/json/')
-      const data = await res.json()
-      if (data && data.latitude && data.longitude) {
-        let city = data.city || 'Vị trí của bạn'
-        if (city.includes('Ho Chi Minh') || city === 'Thành phố Hồ Chí Minh') city = 'Hồ Chí Minh'
-        if (city.includes('Ha Noi') || city === 'Hanoi') city = 'Hà Nội'
-        if (city.includes('Da Nang') || city === 'Danang') city = 'Đà Nẵng'
-        return { lat: data.latitude, lon: data.longitude, city, country: data.country_name }
+        return { lat: data.latitude, lon: data.longitude, city, country: data.countryName || '' }
       }
     } catch { /* ignore */ }
 
