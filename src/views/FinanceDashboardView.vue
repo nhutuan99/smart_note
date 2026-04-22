@@ -70,34 +70,18 @@ function timeSince(dateStr: string) {
 
 <template>
   <div class="max-w-[75rem]">
-    <!-- Weather Widget -->
-    <WeatherWidget />
-
-    <!-- Hero -->
-    <div
-      class="card-premium relative mb-6 flex flex-col gap-4 overflow-hidden p-5 md:flex-row md:items-start md:justify-between md:p-8"
-    >
-      <div class="relative z-10">
-        <div class="mb-2 flex items-center gap-2">
-          <Sparkles
-            :size="20"
-            class="text-accent"
-          />
-          <span class="text-accent text-sm font-medium">{{ greeting }}</span>
-        </div>
-        <h1 class="mb-1 text-2xl font-bold tracking-tight md:text-3xl">
-          {{ auth.user?.name || 'User' }}
-        </h1>
-        <p class="text-text-tertiary text-sm">{{ monthLabel }}</p>
-      </div>
-      <button
-        @click="router.push('/transactions/add')"
-        class="btn-primary relative z-10 self-start"
-      >
-        <Plus :size="18" />
-        {{ t('dashboard.addTransaction') }}
-      </button>
-    </div>
+    <!-- Weather Widget (Acts as Hero) -->
+    <WeatherWidget>
+      <template #actions>
+        <button
+          @click="router.push('/transactions/add')"
+          class="btn-primary"
+        >
+          <Plus :size="16" />
+          <span class="hidden sm:inline">{{ t('dashboard.addTransaction') }}</span>
+        </button>
+      </template>
+    </WeatherWidget>
 
     <!-- Balance + Income/Expense Cards -->
     <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">

@@ -62,6 +62,7 @@ const trafficBg = computed(() => {
       </div>
 
       <div class="flex items-center gap-2 shrink-0">
+        <slot name="actions" />
         <!-- Clock -->
         <div class="clock-box">
           <span class="clock-colon-group">
