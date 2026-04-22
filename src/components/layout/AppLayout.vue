@@ -8,6 +8,7 @@ import PinDialog from '@/components/PinDialog.vue'
 import { useUiStore } from '@/stores/ui'
 import { useNotificationStore } from '@/stores/notifications'
 import { useNotesStore } from '@/stores/notes'
+import { useFinanceStore } from '@/stores/finance'
 import { useEventListener } from '@/composables/useEventListener'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -15,6 +16,7 @@ import { useI18n } from 'vue-i18n'
 const ui = useUiStore()
 const notificationStore = useNotificationStore()
 const notesStore = useNotesStore()
+const financeStore = useFinanceStore()
 const router = useRouter()
 const { t } = useI18n()
 
@@ -23,6 +25,7 @@ let _lastSyncTime = 0
 function syncOnVisible() {
   if (document.visibilityState === 'visible' && Date.now() - _lastSyncTime > 5_000) {
     notificationStore.fetch(true)
+    financeStore.silentRefresh()
     _lastSyncTime = Date.now()
   }
 }
