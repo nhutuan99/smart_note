@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onUnmounted, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
 import { useNotificationStore } from '@/stores/notifications'
@@ -38,9 +38,8 @@ function handleOutsideClick(e: MouseEvent) {
 
 useEventListener(document, 'click', handleOutsideClick as EventListener)
 
-onMounted(() => {
-  notiStore.fetch()
-})
+// Initial fetch is handled by AppLayout.vue (single source of truth).
+// AppHeader only re-fetches when the user explicitly opens the bell dropdown.
 
 // ─── Auth ───────────────────────────────────────────────────────────────────
 function handleLogout() {

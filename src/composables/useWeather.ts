@@ -8,8 +8,8 @@
  *  - Browser Geolocation API (primary location source)
  */
 
-import { ref, onMounted } from 'vue'
-import { useEventListener } from '@/composables/useEventListener'
+import { ref, onMounted, onUnmounted } from 'vue'
+
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -249,26 +249,31 @@ export function useWeather() {
   // ── Visibility-based refresh ─────────────────────────────────────────────
   // API is called ONLY on mount (once) and when the tab becomes visible again.
   // A 5-minute cooldown prevents redundant calls if the user rapidly switches tabs.
-  // Uses useEventListener for lifecycle-aware, auto-cleaned-up event registration.
+  // _lastFetchAt is per-instance (not module-level) to avoid cross-mount interference.
 
   const COOLDOWN_MS = 5 * 60 * 1000   // 5 minutes
-  let   _lastFetchAt = 0
+  let   _lastFetchAt = 0              // per-instance, reset on every composable call
 
   function _onVisible() {
     if (document.visibilityState !== 'visible') return
     const now = Date.now()
     if (now - _lastFetchAt < COOLDOWN_MS) return
-    _lastFetchAt = now
     fetchWeather()
   }
 
-  onMounted(() => {
-    fetchWeather()
+  // Override fetchWeather to track last fetch time after completion
+  const _rawFetch = fetchWeather
+  async function fetchWeatherWithTracking() {
+    await _rawFetch()
     _lastFetchAt = Date.now()
-  })
+  }
 
-  // Auto-cleaned up on component unmount via useEventListener
-  useEventListener(document, 'visibilitychange', _onVisible)
+  onMounted(() => fetchWeatherWithTracking())
 
-  return { weather, airQuality, loading, error, fetchWeather }
+  // Manual cleanup for visibilitychange (useEventListener only works in setup context)
+  const _onVisibleWrapper = _onVisible
+  document.addEventListener('visibilitychange', _onVisibleWrapper)
+  onUnmounted(() => document.removeEventListener('visibilitychange', _onVisibleWrapper))
+
+  return { weather, airQuality, loading, error, fetchWeather: fetchWeatherWithTracking }
 }
