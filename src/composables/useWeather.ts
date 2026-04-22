@@ -8,7 +8,8 @@
  *  - Browser Geolocation API (primary location source)
  */
 
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useEventListener } from '@/composables/useEventListener'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -248,6 +249,7 @@ export function useWeather() {
   // ── Visibility-based refresh ─────────────────────────────────────────────
   // API is called ONLY on mount (once) and when the tab becomes visible again.
   // A 5-minute cooldown prevents redundant calls if the user rapidly switches tabs.
+  // Uses useEventListener for lifecycle-aware, auto-cleaned-up event registration.
 
   const COOLDOWN_MS = 5 * 60 * 1000   // 5 minutes
   let   _lastFetchAt = 0
@@ -256,18 +258,17 @@ export function useWeather() {
     if (document.visibilityState !== 'visible') return
     const now = Date.now()
     if (now - _lastFetchAt < COOLDOWN_MS) return
+    _lastFetchAt = now
     fetchWeather()
   }
 
   onMounted(() => {
     fetchWeather()
     _lastFetchAt = Date.now()
-    document.addEventListener('visibilitychange', _onVisible)
   })
 
-  onUnmounted(() => {
-    document.removeEventListener('visibilitychange', _onVisible)
-  })
+  // Auto-cleaned up on component unmount via useEventListener
+  useEventListener(document, 'visibilitychange', _onVisible)
 
   return { weather, airQuality, loading, error, fetchWeather }
 }
