@@ -20,6 +20,7 @@ import {
   Eye,
   EyeOff
 } from 'lucide-vue-next'
+import WeatherWidget from '@/components/WeatherWidget.vue'
 
 const { t, tm } = useI18n()
 const router = useRouter()
@@ -69,6 +70,9 @@ function timeSince(dateStr: string) {
 
 <template>
   <div class="max-w-[75rem]">
+    <!-- Weather Widget -->
+    <WeatherWidget />
+
     <!-- Hero -->
     <div
       class="card-premium relative mb-6 flex flex-col gap-4 overflow-hidden p-5 md:flex-row md:items-start md:justify-between md:p-8"

@@ -5,8 +5,6 @@ import { useNotesStore } from '@/stores/notes'
 import { useUiStore } from '@/stores/ui'
 import { useI18n } from 'vue-i18n'
 import { Search, Plus, LayoutGrid, List, Pin, Trash2, Clock, FileText } from 'lucide-vue-next'
-import WeatherWidget from '@/components/WeatherWidget.vue'
-
 
 const { t } = useI18n()
 const router = useRouter()
@@ -75,8 +73,6 @@ async function handleTogglePin(id: string, e: Event) {
       <div class="orb orb-2"></div>
       <div class="orb orb-3"></div>
     </div>
-    <!-- Weather Widget -->
-    <WeatherWidget />
 
     <!-- Header -->
     <div class="mb-6 flex items-center justify-between header-row">
