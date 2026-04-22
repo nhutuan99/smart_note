@@ -57,7 +57,7 @@ const trafficBg = computed(() => {
 
 <template>
   <div class="mb-6 animate-[fadeSlideIn_0.4s_ease_both]">
-    <!-- ── Top bar: greeting + clock + toggle ── -->
+    <!-- ── Top bar: greeting + actions ── -->
     <div class="flex items-start justify-between gap-3 mb-3">
       <div>
         <p class="text-[1.125rem] font-bold text-text-primary tracking-tight leading-snug">{{ greeting }}</p>
@@ -66,24 +66,6 @@ const trafficBg = computed(() => {
 
       <div class="flex items-center gap-2 shrink-0">
         <slot name="actions" />
-        <!-- Clock -->
-        <div class="clock-box">
-          <span class="clock-colon-group">
-            <span class="clock-hm">{{ hhmm }}</span>
-            <span class="clock-sep">:</span>
-            <span class="clock-sec">{{ seconds }}</span>
-          </span>
-        </div>
-
-        <!-- Collapse toggle -->
-        <button
-          class="w-[1.875rem] h-[1.875rem] flex items-center justify-center rounded-lg bg-bg-elevated border border-border-default text-text-tertiary transition-all duration-200 hover:text-accent hover:border-accent hover:bg-accent-subtle cursor-pointer"
-          :title="isCollapsed ? 'Mở rộng widget' : 'Thu gọn widget'"
-          :aria-expanded="!isCollapsed"
-          @click="toggleCollapse"
-        >
-          <ChevronDown :size="14" :class="['transition-transform duration-300', isCollapsed ? 'rotate-180' : '']" />
-        </button>
       </div>
     </div>
 
@@ -91,19 +73,27 @@ const trafficBg = computed(() => {
     <Transition name="mini">
       <div
         v-if="isCollapsed && weather"
-        class="flex items-center gap-1.5 bg-bg-surface border border-border-default rounded-xl px-3.5 py-2 text-[0.75rem] text-text-secondary overflow-hidden"
+        class="flex items-center gap-1.5 bg-bg-surface border border-border-default rounded-xl px-3.5 py-2 text-[0.75rem] text-text-secondary overflow-hidden relative pr-10"
       >
         <span class="text-base leading-none">{{ weatherInfo?.emoji }}</span>
         <span class="font-bold text-text-primary">{{ weather.temperature }}°C</span>
         <span class="text-text-disabled">·</span>
         <span class="text-text-tertiary">{{ weatherInfo?.label }}</span>
         <span class="text-text-disabled">·</span>
-        <MapPin :size="11" class="text-text-disabled shrink-0" />
-        <span class="text-text-tertiary">{{ weather.city }}</span>
+        <!-- Clock inside mini-bar -->
+        <span class="font-mono font-medium text-text-primary">{{ hhmm }}</span>
         <span class="text-text-disabled ml-auto">·</span>
         <span class="font-semibold" :style="`color: ${trafficColor}`">
           {{ traffic.emoji }} {{ traffic.label }}
         </span>
+        
+        <!-- Collapse toggle inside mini-bar -->
+        <button
+          class="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-lg text-text-tertiary hover:bg-bg-hover hover:text-text-primary transition-colors cursor-pointer"
+          @click="toggleCollapse"
+        >
+          <ChevronDown :size="16" class="rotate-180" />
+        </button>
       </div>
     </Transition>
 
@@ -126,7 +116,7 @@ const trafficBg = computed(() => {
 
         <!-- Loaded -->
         <template v-else-if="weather">
-          <div class="flex items-center gap-4 flex-wrap relative z-10">
+          <div class="flex items-center gap-4 flex-wrap relative z-10 pr-20">
             <div class="text-[3rem] leading-none shrink-0 drop-shadow-[0_2px_8px_rgba(0,0,0,.3)] animate-[iconFloat_3s_ease-in-out_infinite]">
               {{ weatherInfo?.emoji }}
             </div>
@@ -137,8 +127,19 @@ const trafficBg = computed(() => {
               <div class="text-[0.875rem] font-semibold text-accent-text mt-0.5">{{ weatherInfo?.label }}</div>
               <div class="text-[0.6875rem] text-text-tertiary mt-0.5">Cảm giác như {{ weather.feelsLike }}°</div>
             </div>
-            <div class="flex items-center gap-1 text-[0.6875rem] text-text-tertiary bg-bg-elevated border border-border-subtle rounded-full px-2.5 py-1 whitespace-nowrap ml-auto shrink-0">
-              <MapPin :size="13" />
+            
+            <!-- Clock inside widget -->
+            <div class="clock-box ml-auto shrink-0 mt-2 sm:mt-0">
+              <span class="clock-colon-group">
+                <span class="clock-hm">{{ hhmm }}</span>
+                <span class="clock-sep">:</span>
+                <span class="clock-sec">{{ seconds }}</span>
+              </span>
+            </div>
+
+            <!-- Location with added padding -->
+            <div class="flex items-center gap-1.5 text-[0.75rem] text-text-tertiary bg-bg-elevated border border-border-subtle rounded-full px-3.5 py-1.5 whitespace-nowrap shrink-0 mt-2 sm:mt-0 shadow-[0_1px_2px_rgba(0,0,0,0.1)]">
+              <MapPin :size="14" />
               <span>{{ weather.city }}</span>
             </div>
           </div>
@@ -175,15 +176,24 @@ const trafficBg = computed(() => {
             </div>
           </div>
 
-          <!-- Refresh -->
-          <button
-            class="absolute top-3.5 right-3.5 w-[1.875rem] h-[1.875rem] flex items-center justify-center rounded-full bg-bg-elevated border border-border-default text-text-tertiary cursor-pointer transition-all duration-150 z-20 hover:text-accent hover:border-accent hover:bg-accent-subtle"
-            :class="{ '[&_svg]:animate-spin': loading }"
-            title="Làm mới"
-            @click="fetchWeather"
-          >
-            <RefreshCw :size="14" />
-          </button>
+          <!-- Action Buttons (Refresh & Collapse) -->
+          <div class="absolute top-4 right-4 flex items-center gap-2 z-20">
+            <button
+              class="w-8 h-8 flex items-center justify-center rounded-full bg-bg-elevated border border-border-default text-text-tertiary cursor-pointer transition-all duration-150 shadow-[0_1px_2px_rgba(0,0,0,0.1)] hover:text-accent hover:border-accent hover:bg-accent-subtle"
+              :class="{ '[&_svg]:animate-spin': loading }"
+              title="Làm mới"
+              @click="fetchWeather"
+            >
+              <RefreshCw :size="14" />
+            </button>
+            <button
+              class="w-8 h-8 flex items-center justify-center rounded-full bg-bg-elevated border border-border-default text-text-tertiary cursor-pointer transition-all duration-150 shadow-[0_1px_2px_rgba(0,0,0,0.1)] hover:text-accent hover:border-accent hover:bg-accent-subtle"
+              title="Thu gọn"
+              @click="toggleCollapse"
+            >
+              <ChevronDown :size="14" />
+            </button>
+          </div>
         </template>
 
         <!-- Error -->
