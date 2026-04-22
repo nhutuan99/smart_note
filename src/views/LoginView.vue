@@ -11,9 +11,8 @@ const auth = useAuthStore()
 const ui = useUiStore()
 const router = useRouter()
 const route = useRoute()
-const { t } = useI18n()
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
+const { t, locale } = useI18n()
+import { setLocale, currentLocale } from '@/i18n'
 
 // ── Login / Register ──────────────────────────────────────────────────────────
 const isLogin = ref(true)
@@ -181,7 +180,24 @@ watch(
 </script>
 
 <template>
-  <div class="bg-bg-primary relative flex min-h-screen items-center justify-center overflow-hidden">
+  <div class="bg-bg-base text-text-primary relative flex min-h-screen items-center justify-center p-4">
+    <!-- Language Switcher -->
+    <div class="absolute right-6 top-6 flex items-center gap-2 z-10">
+      <button 
+        @click="setLocale('vi')"
+        :class="['text-sm font-semibold transition-colors', locale === 'vi' ? 'text-accent' : 'text-text-tertiary hover:text-text-primary']"
+      >
+        VI
+      </button>
+      <span class="text-border-strong text-sm">|</span>
+      <button 
+        @click="setLocale('en')"
+        :class="['text-sm font-semibold transition-colors', locale === 'en' ? 'text-accent' : 'text-text-tertiary hover:text-text-primary']"
+      >
+        EN
+      </button>
+    </div>
+
     <!-- Background grid -->
     <div class="pointer-events-none absolute inset-0">
       <div
