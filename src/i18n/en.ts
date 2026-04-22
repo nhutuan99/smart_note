@@ -374,5 +374,12 @@ export default {
     bonus: 'Bonus',
     refund: 'Refund',
     other_income: 'Other Income'
+  },
+
+  // ── Guide ──
+  guide: {
+    syncTitle: 'Did you know?',
+    syncMessage: 'Smart Note supports automatic bank transaction sync via iOS Shortcuts without requiring bank credentials.',
+    syncAction: 'Learn More'
   }
 }

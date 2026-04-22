@@ -374,5 +374,12 @@ export default {
     bonus: 'Thưởng',
     refund: 'Hoàn tiền',
     other_income: 'Thu khác'
+  },
+
+  // ── Guide ──
+  guide: {
+    syncTitle: 'Bạn có biết?',
+    syncMessage: 'Smart Note hỗ trợ đồng bộ giao dịch ngân hàng tự động qua iOS Shortcuts mà không cần đăng nhập tài khoản ngân hàng.',
+    syncAction: 'Tìm hiểu ngay'
   }
 }

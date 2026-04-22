@@ -197,7 +197,7 @@ export function useWeather() {
             addr.city || addr.town || addr.village || addr.county ||
             addr.state_district || addr.state || 'Vị trí của bạn'
           if (city.includes('Ho Chi Minh') || city === 'Thành phố Hồ Chí Minh' || city === 'TP.HCM' || city.includes('TP. HCM') || city === 'Hồ Chí Minh') city = 'Ho Chi Minh City'
-          return { lat, lon, city, country }
+          return { lat, lon, city, country: addr.country || '' }
         } catch {
           return { lat, lon, city: 'Vị trí của bạn', country: '' }
         }

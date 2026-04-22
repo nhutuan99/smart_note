@@ -9,10 +9,14 @@ import { useUiStore } from '@/stores/ui'
 import { useNotificationStore } from '@/stores/notifications'
 import { useNotesStore } from '@/stores/notes'
 import { useEventListener } from '@/composables/useEventListener'
+import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 
 const ui = useUiStore()
 const notificationStore = useNotificationStore()
 const notesStore = useNotesStore()
+const router = useRouter()
+const { t } = useI18n()
 
 let _lastSyncTime = 0
 
@@ -31,6 +35,25 @@ onMounted(() => {
     notesStore.fetchNotes()
   }
   _lastSyncTime = Date.now()
+
+  // Handle mini tip guide for auto-sync
+  const syncGuideKey = 'sn_sync_guide_shown'
+  if (!localStorage.getItem(syncGuideKey)) {
+    setTimeout(async () => {
+      const confirmed = await ui.requestConfirm({
+        title: t('guide.syncTitle'),
+        message: t('guide.syncMessage'),
+        confirmText: t('guide.syncAction'),
+        cancelText: t('common.close'),
+        danger: false
+      })
+      // Cache after user clicks to dismiss/confirm
+      localStorage.setItem(syncGuideKey, 'true')
+      if (confirmed) {
+        router.push('/auto-sync')
+      }
+    }, 1500)
+  }
 })
 
 // Sync when user switches back to the app
