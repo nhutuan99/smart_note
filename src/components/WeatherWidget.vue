@@ -112,7 +112,7 @@ const trafficBg = computed(() => {
 
         <!-- Loaded -->
         <template v-else-if="weather">
-          <div class="flex items-center gap-4 flex-wrap relative z-10 pr-20">
+          <div class="flex items-center gap-4 flex-wrap relative z-10 pr-[14rem] max-sm:pr-[4rem]">
             <div class="text-[3rem] leading-none shrink-0 drop-shadow-[0_2px_8px_rgba(0,0,0,.3)] animate-[iconFloat_3s_ease-in-out_infinite]">
               {{ weatherInfo?.emoji }}
             </div>
@@ -123,16 +123,16 @@ const trafficBg = computed(() => {
               <div class="text-[0.875rem] font-semibold text-accent-text mt-0.5">{{ weatherInfo?.label }}</div>
               <div class="text-[0.6875rem] text-text-tertiary mt-0.5">Cảm giác như {{ weather.feelsLike }}°</div>
             </div>
-            
-            <!-- Location with added padding -->
-            <div class="flex items-center gap-1.5 text-[0.75rem] text-text-tertiary bg-bg-elevated border border-border-subtle rounded-full px-3.5 py-1.5 whitespace-nowrap shrink-0 mt-2 sm:mt-0 shadow-[0_1px_2px_rgba(0,0,0,0.1)] ml-auto">
+
+            <!-- Mobile Location Pill -->
+            <div class="sm:hidden flex items-center gap-1.5 text-[0.75rem] text-text-tertiary bg-bg-elevated border border-border-default rounded-full px-3.5 py-1.5 whitespace-nowrap shrink-0 mt-2 shadow-[0_1px_2px_rgba(0,0,0,0.1)] w-fit">
               <MapPin :size="14" />
               <span>{{ weather.city }}</span>
             </div>
           </div>
 
           <!-- Pills -->
-          <div class="flex gap-2 flex-wrap relative z-10">
+          <div class="flex gap-2 flex-wrap relative z-10 max-sm:mt-4">
             <div class="pill">
               <Droplets :size="13" class="text-accent shrink-0" />
               <span class="pill-label">Độ ẩm</span>
@@ -165,6 +165,12 @@ const trafficBg = computed(() => {
 
           <!-- Action Buttons (Refresh & Collapse) -->
           <div class="absolute top-4 right-4 flex items-center gap-2 z-20">
+            <!-- Location -->
+            <div class="flex items-center gap-1.5 text-[0.75rem] text-text-tertiary bg-bg-elevated border border-border-default rounded-full px-3.5 h-8 whitespace-nowrap shadow-[0_1px_2px_rgba(0,0,0,0.1)] max-sm:hidden">
+              <MapPin :size="14" />
+              <span>{{ weather.city }}</span>
+            </div>
+
             <button
               class="w-8 h-8 flex items-center justify-center rounded-full bg-bg-elevated border border-border-default text-text-tertiary cursor-pointer transition-all duration-150 shadow-[0_1px_2px_rgba(0,0,0,0.1)] hover:text-accent hover:border-accent hover:bg-accent-subtle"
               :class="{ '[&_svg]:animate-spin': loading }"
