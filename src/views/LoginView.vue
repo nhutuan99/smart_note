@@ -52,15 +52,10 @@ async function handleSubmit() {
 // step: 'login' | 'email' | 'google-pending' | 'newpass' | 'done'
 const fpStep = ref<'login' | 'email' | 'google-pending' | 'newpass' | 'done'>('login')
 const fpEmail = ref('')
-const fpResetToken = ref('')
 const fpNewPass = ref('')
 const fpConfirmPass = ref('')
-const fpNewPin = ref('')
-const fpConfirmPin = ref('')
 const fpShowNew = ref(false)
 const fpShowConfirm = ref(false)
-const fpShowNewPin = ref(false)
-const fpShowConfirmPin = ref(false)
 const fpLoading = ref(false)
 const fpError = ref('')
 
@@ -138,7 +133,7 @@ async function handleOAuthCallback(code: string, state: string) {
   }
 }
 
-/** Step 3: Set new password and PIN */
+/** Step 3: Set new password */
 async function resetPassword() {
   fpError.value = ''
   if (fpNewPass.value.length < 6) {
@@ -149,22 +144,12 @@ async function resetPassword() {
     fpError.value = t('forgot.passMismatch')
     return
   }
-  if (!fpNewPin.value || fpNewPin.value.length < 4 || fpNewPin.value.length > 6 || !/^\d+$/.test(fpNewPin.value)) {
-    fpError.value = 'Mã PIN phải từ 4-6 chữ số'
-    return
-  }
-  if (fpNewPin.value !== fpConfirmPin.value) {
-    fpError.value = 'Mã PIN không khớp'
-    return
-  }
-  
   fpLoading.value = true
   try {
     await httpClient.post('/api/auth/reset-password', {
       email: fpEmail.value,
       resetToken: fpResetToken.value,
-      newPassword: fpNewPass.value,
-      newPin: fpNewPin.value
+      newPassword: fpNewPass.value
     })
     fpStep.value = 'done'
     ui.showToast('success', t('forgot.resetSuccess'))
@@ -469,54 +454,14 @@ watch(
             </div>
           </div>
 
-          <div class="flex flex-col gap-2 mt-2">
-            <label class="text-text-secondary text-sm font-medium">Mã PIN mới (4-6 số)</label>
-            <div class="relative">
-              <KeyRound :size="16" class="text-text-tertiary pointer-events-none absolute top-1/2 left-3 -translate-y-1/2" />
-              <input
-                v-model="fpNewPin"
-                :type="fpShowNewPin ? 'text' : 'password'"
-                required
-                inputmode="numeric"
-                pattern="[0-9]*"
-                maxlength="6"
-                placeholder="Nhập mã PIN mới"
-                class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border py-2.5 pr-10 pl-[2.375rem] text-sm transition-all focus:ring-2 focus:outline-none"
-              />
-              <button type="button" @click="fpShowNewPin = !fpShowNewPin" class="text-text-tertiary hover:text-text-primary absolute top-1/2 right-3 -translate-y-1/2">
-                <component :is="fpShowNewPin ? EyeOff : Eye" :size="16" />
-              </button>
-            </div>
-          </div>
-
-          <div class="flex flex-col gap-2">
-            <label class="text-text-secondary text-sm font-medium">Xác nhận mã PIN</label>
-            <div class="relative">
-              <KeyRound :size="16" class="text-text-tertiary pointer-events-none absolute top-1/2 left-3 -translate-y-1/2" />
-              <input
-                v-model="fpConfirmPin"
-                :type="fpShowConfirmPin ? 'text' : 'password'"
-                required
-                inputmode="numeric"
-                pattern="[0-9]*"
-                maxlength="6"
-                placeholder="Nhập lại mã PIN mới"
-                class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border py-2.5 pr-10 pl-[2.375rem] text-sm transition-all focus:ring-2 focus:outline-none"
-              />
-              <button type="button" @click="fpShowConfirmPin = !fpShowConfirmPin" class="text-text-tertiary hover:text-text-primary absolute top-1/2 right-3 -translate-y-1/2">
-                <component :is="fpShowConfirmPin ? EyeOff : Eye" :size="16" />
-              </button>
-            </div>
-          </div>
-
           <div v-if="fpError" class="bg-error/10 border-error/20 text-error rounded-lg border px-3 py-3 text-sm">
             {{ fpError }}
           </div>
 
           <button
             type="submit"
-            :disabled="fpLoading || !fpNewPass || !fpConfirmPass || !fpNewPin || !fpConfirmPin"
-            class="btn-primary w-full justify-center py-3 disabled:opacity-50 mt-2"
+            :disabled="fpLoading || !fpNewPass || !fpConfirmPass"
+            class="btn-primary w-full justify-center py-3 disabled:opacity-50"
           >
             <span v-if="fpLoading" class="h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-l-black"></span>
             <template v-else>
