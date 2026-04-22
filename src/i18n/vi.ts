@@ -336,6 +336,19 @@ export default {
     setupNow: 'Thiết lập PIN ngay'
   },
 
+  // ── Weather ──
+  weather: {
+    feelsLike: 'Cảm giác như',
+    humidity: 'Độ ẩm',
+    wind: 'Gió',
+    airQuality: 'Không khí',
+    traffic: 'Giao thông',
+    refresh: 'Làm mới',
+    collapse: 'Thu gọn',
+    error: 'Không thể tải thời tiết',
+    retry: 'Thử lại'
+  },
+
   // ── Categories ──
   categories: {
     food: 'Ăn uống',

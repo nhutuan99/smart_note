@@ -121,7 +121,7 @@ const trafficBg = computed(() => {
                 {{ weather.temperature }}<span class="text-[1.25rem] font-normal text-text-tertiary ml-[0.1em]">°C</span>
               </div>
               <div class="text-[0.875rem] font-semibold text-accent-text mt-0.5">{{ weatherInfo?.label }}</div>
-              <div class="text-[0.6875rem] text-text-tertiary mt-0.5">Cảm giác như {{ weather.feelsLike }}°</div>
+              <div class="text-[0.6875rem] text-text-tertiary mt-0.5">{{ $t('weather.feelsLike') }} {{ weather.feelsLike }}°</div>
             </div>
 
             <!-- Mobile Location Pill -->
@@ -135,12 +135,12 @@ const trafficBg = computed(() => {
           <div class="flex gap-2 flex-wrap relative z-10 max-sm:mt-4">
             <div class="pill">
               <Droplets :size="13" class="text-accent shrink-0" />
-              <span class="pill-label">Độ ẩm</span>
+              <span class="pill-label">{{ $t('weather.humidity') }}</span>
               <span class="pill-val">{{ weather.humidity }}%</span>
             </div>
             <div class="pill">
               <Wind :size="13" class="text-accent shrink-0" />
-              <span class="pill-label">Gió</span>
+              <span class="pill-label">{{ $t('weather.wind') }}</span>
               <span class="pill-val">{{ weather.windSpeed }} km/h</span>
             </div>
             <div class="pill" :style="`--pill-accent: ${uvInfo?.color ?? '#10b981'}`">
@@ -150,7 +150,7 @@ const trafficBg = computed(() => {
             </div>
             <div v-if="airQuality" class="pill" :style="`--pill-accent: ${aqiInfo?.color ?? '#10b981'}`">
               <Leaf :size="13" class="shrink-0" style="color: var(--pill-accent)" />
-              <span class="pill-label">Không khí</span>
+              <span class="pill-label">{{ $t('weather.airQuality') }}</span>
               <span class="pill-val">{{ airQuality.aqi }} · {{ aqiInfo?.label }}</span>
             </div>
             <div
@@ -158,7 +158,7 @@ const trafficBg = computed(() => {
               :style="`background: ${trafficBg}; border-color: ${trafficColor}22`"
             >
               <Car :size="13" class="shrink-0" :style="`color: ${trafficColor}`" />
-              <span class="pill-label">Giao thông</span>
+              <span class="pill-label">{{ $t('weather.traffic') }}</span>
               <span class="pill-val" :style="`color: ${trafficColor}`">{{ traffic.emoji }} {{ traffic.label }}</span>
             </div>
           </div>
@@ -174,14 +174,14 @@ const trafficBg = computed(() => {
             <button
               class="w-8 h-8 flex items-center justify-center rounded-full bg-bg-elevated border border-border-default text-text-tertiary cursor-pointer transition-all duration-150 shadow-[0_1px_2px_rgba(0,0,0,0.1)] hover:text-accent hover:border-accent hover:bg-accent-subtle"
               :class="{ '[&_svg]:animate-spin': loading }"
-              title="Làm mới"
+              :title="$t('weather.refresh')"
               @click="fetchWeather"
             >
               <RefreshCw :size="14" />
             </button>
             <button
               class="w-8 h-8 flex items-center justify-center rounded-full bg-bg-elevated border border-border-default text-text-tertiary cursor-pointer transition-all duration-150 shadow-[0_1px_2px_rgba(0,0,0,0.1)] hover:text-accent hover:border-accent hover:bg-accent-subtle"
-              title="Thu gọn"
+              :title="$t('weather.collapse')"
               @click="toggleCollapse"
             >
               <ChevronDown :size="14" />
@@ -192,12 +192,12 @@ const trafficBg = computed(() => {
         <!-- Error -->
         <template v-else>
           <div class="flex items-center justify-between text-[0.8125rem] text-text-tertiary relative z-10">
-            <span>⚡ Không thể tải thời tiết</span>
+            <span>⚡ {{ $t('weather.error') }}</span>
             <button
               class="text-accent border border-accent rounded-lg px-2.5 py-1 text-[0.75rem] font-semibold bg-transparent cursor-pointer hover:bg-accent-subtle transition-colors duration-150"
               @click="fetchWeather"
             >
-              Thử lại
+              {{ $t('weather.retry') }}
             </button>
           </div>
         </template>

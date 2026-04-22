@@ -336,6 +336,19 @@ export default {
     setupNow: 'Setup PIN Now'
   },
 
+  // ── Weather ──
+  weather: {
+    feelsLike: 'Feels like',
+    humidity: 'Humidity',
+    wind: 'Wind',
+    airQuality: 'Air Quality',
+    traffic: 'Traffic',
+    refresh: 'Refresh',
+    collapse: 'Collapse',
+    error: 'Cannot load weather',
+    retry: 'Retry'
+  },
+
   // ── Categories ──
   categories: {
     food: 'Food & Drinks',
