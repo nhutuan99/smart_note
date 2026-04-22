@@ -52,6 +52,7 @@ async function handleSubmit() {
 // step: 'login' | 'email' | 'google-pending' | 'newpass' | 'done'
 const fpStep = ref<'login' | 'email' | 'google-pending' | 'newpass' | 'done'>('login')
 const fpEmail = ref('')
+const fpResetToken = ref('')
 const fpNewPass = ref('')
 const fpConfirmPass = ref('')
 const fpShowNew = ref(false)
