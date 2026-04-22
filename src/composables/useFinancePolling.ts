@@ -1,17 +1,17 @@
-import { onMounted, onBeforeUnmount } from 'vue'
+import { onMounted } from 'vue'
 import { useFinanceStore } from '@/stores/finance'
 import { useEventListener } from '@/composables/useEventListener'
 
 /**
- * Composable that syncs finance data on mount + tab visibility + periodic polling.
+ * Composable that syncs finance data on mount + tab visibility.
  *
- * API is called when:
+ * NO interval polling — API is only called when:
  * 1. Component mounts (initial load)
  * 2. User returns to the tab (visibilitychange)
- * 3. Every POLL_INTERVAL_MS while the tab is visible (background polling)
  *
- * Polling ensures data from external sources (iPhone SMS webhook, Casso, etc.)
- * appears automatically without requiring the user to refresh or switch tabs.
+ * Backend (Cloudflare Worker) always has complete data when called.
+ * Combined with AppLayout's global visibility handler syncing both
+ * notifications + finance, this keeps data fresh without polling overhead.
  *
  * Usage:
  * ```ts
@@ -19,37 +19,11 @@ import { useEventListener } from '@/composables/useEventListener'
  * useFinancePolling()
  * ```
  */
-
-const POLL_INTERVAL_MS = 30_000 // 30 seconds
-
 export function useFinancePolling() {
   const finance = useFinanceStore()
-  let pollTimer: ReturnType<typeof setInterval> | null = null
-
-  function startPolling() {
-    stopPolling()
-    pollTimer = setInterval(() => {
-      // Only poll when the tab is visible — skip if user switched away
-      if (document.visibilityState === 'visible') {
-        finance.silentRefresh()
-      }
-    }, POLL_INTERVAL_MS)
-  }
-
-  function stopPolling() {
-    if (pollTimer) {
-      clearInterval(pollTimer)
-      pollTimer = null
-    }
-  }
 
   onMounted(() => {
     finance.fetchAll()
-    startPolling()
-  })
-
-  onBeforeUnmount(() => {
-    stopPolling()
   })
 
   // useEventListener handles add + remove automatically via onBeforeUnmount
