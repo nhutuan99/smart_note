@@ -2,15 +2,14 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { User } from '@/types'
 
-const TOKEN_KEY = 'smart_note_token'
-const USER_KEY = 'smart_note_user'
+import { AUTH_TOKEN_KEY, AUTH_USER_KEY } from '@/constants/auth'
 
 export const useAuthStore = defineStore('auth', () => {
-  const token = ref<string | null>(localStorage.getItem(TOKEN_KEY))
+  const token = ref<string | null>(localStorage.getItem(AUTH_TOKEN_KEY))
   const user = ref<User | null>(
     (() => {
       try {
-        const raw = localStorage.getItem(USER_KEY)
+        const raw = localStorage.getItem(AUTH_USER_KEY)
         return raw ? JSON.parse(raw) : null
       } catch {
         return null
@@ -23,15 +22,15 @@ export const useAuthStore = defineStore('auth', () => {
   function setAuth(newToken: string, newUser: User) {
     token.value = newToken
     user.value = newUser
-    localStorage.setItem(TOKEN_KEY, newToken)
-    localStorage.setItem(USER_KEY, JSON.stringify(newUser))
+    localStorage.setItem(AUTH_TOKEN_KEY, newToken)
+    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(newUser))
   }
 
   function logout() {
     token.value = null
     user.value = null
-    localStorage.removeItem(TOKEN_KEY)
-    localStorage.removeItem(USER_KEY)
+    localStorage.removeItem(AUTH_TOKEN_KEY)
+    localStorage.removeItem(AUTH_USER_KEY)
   }
 
   function getToken(): string | null {
@@ -40,7 +39,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   function updateUser(updatedUser: User) {
     user.value = { ...user.value, ...updatedUser }
-    localStorage.setItem(USER_KEY, JSON.stringify(user.value))
+    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user.value))
   }
 
   return {

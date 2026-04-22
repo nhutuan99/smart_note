@@ -13,6 +13,7 @@
 import type { ApiResponse } from '@/types'
 import type { Router } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { AUTH_TOKEN_KEY, AUTH_USER_KEY } from '@/constants/auth'
 
 // In dev, Vite proxy handles /api → localhost:8787
 // In production, use the full worker URL
@@ -43,8 +44,8 @@ function handle401() {
     auth.logout()
   } catch {
     // Fallback if Pinia not ready
-    localStorage.removeItem('smart_note_token')
-    localStorage.removeItem('smart_note_user')
+    localStorage.removeItem(AUTH_TOKEN_KEY)
+    localStorage.removeItem(AUTH_USER_KEY)
   }
 
   // Navigate via Vue Router (SPA-safe, no page reload)
@@ -64,7 +65,7 @@ function handle401() {
 // ── Core ──────────────────────────────────────────────────────────────────────
 
 function getToken(): string | null {
-  return localStorage.getItem('smart_note_token')
+  return localStorage.getItem(AUTH_TOKEN_KEY)
 }
 
 function buildHeaders(hasBody: boolean): HeadersInit {

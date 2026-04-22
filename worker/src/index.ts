@@ -304,7 +304,7 @@ async function handleDeleteAccount(userId: string, request: Request, env: Env): 
 
   const hash = await hashPassword(password)
   if (hash !== user.passwordHash) {
-    return errorResponse('Mật khẩu không chính xác', 401)
+    return errorResponse('Mật khẩu không chính xác', 400)
   }
 
   // Cleanup data
@@ -492,7 +492,7 @@ async function handleForgotPin(userId: string, request: Request, env: Env): Prom
   // Verify password
   const hash = await hashPassword(password)
   if (hash !== user.passwordHash) {
-    return errorResponse('Mật khẩu không chính xác', 401)
+    return errorResponse('Mật khẩu không chính xác', 400)
   }
 
   // Password verified → generate reset token
@@ -1614,7 +1614,7 @@ async function handleSetPin(userId: string, request: Request, env: Env): Promise
   if (existingPin) {
     if (!currentPin) return errorResponse('Cần nhập PIN hiện tại')
     const currentHash = await hashPassword(currentPin)
-    if (currentHash !== existingPin) return errorResponse('PIN hiện tại không đúng', 401)
+    if (currentHash !== existingPin) return errorResponse('PIN hiện tại không đúng', 400)
   }
 
   const pinHash = await hashPassword(pin)
@@ -1631,7 +1631,7 @@ async function handleVerifyPin(userId: string, request: Request, env: Env): Prom
   if (!storedHash) return errorResponse('Chưa thiết lập PIN', 404)
 
   const inputHash = await hashPassword(pin)
-  if (inputHash !== storedHash) return errorResponse('PIN không đúng', 401)
+  if (inputHash !== storedHash) return errorResponse('PIN không đúng', 400)
 
   return jsonResponse({ success: true, message: 'PIN verified' })
 }

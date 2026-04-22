@@ -181,13 +181,13 @@ async function handleTogglePin(id: string, e: Event) {
           class="bg-bg-surface border-border-default hover:border-border-strong hover:bg-bg-elevated hover:shadow-card group flex flex-col rounded-xl border p-5 no-underline transition-all duration-150 hover:-translate-y-px"
           :class="
             notesStore.viewMode === 'list'
-              ? 'flex-row items-center gap-4 !py-4'
+              ? 'md:flex-row md:items-center gap-3 md:gap-4 !py-3 md:!py-4'
               : 'min-h-[9.375rem]'
           "
         >
           <div
             class="mb-2 flex items-start justify-between gap-2"
-            :class="notesStore.viewMode === 'list' ? 'mb-0 min-w-[12.5rem]' : ''"
+            :class="notesStore.viewMode === 'list' ? 'mb-0 md:min-w-[12.5rem]' : ''"
           >
             <h3 class="text-text-primary text-sm font-semibold">{{ note.title }}</h3>
             <div
@@ -211,7 +211,7 @@ async function handleTogglePin(id: string, e: Event) {
           </div>
           <p
             class="text-text-tertiary line-clamp-2 flex-1 text-sm leading-relaxed"
-            :class="notesStore.viewMode === 'list' ? 'line-clamp-1 flex-1' : ''"
+            :class="notesStore.viewMode === 'list' ? 'line-clamp-1' : ''"
           >
             {{ note.excerpt || t('notes.noContent') }}
           </p>
@@ -219,7 +219,7 @@ async function handleTogglePin(id: string, e: Event) {
             class="border-border-subtle mt-3 flex items-center justify-between border-t pt-3"
             :class="
               notesStore.viewMode === 'list'
-                ? 'mt-0 min-w-[11.25rem] justify-end border-t-0 pt-0'
+                ? 'mt-0 md:min-w-[11.25rem] justify-between md:justify-end border-t-0 pt-0'
                 : ''
             "
           >

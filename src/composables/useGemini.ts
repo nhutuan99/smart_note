@@ -22,7 +22,8 @@ export async function streamAi(
   onDone?: () => void
 ): Promise<void> {
   const apiBase = (import.meta.env.VITE_API_BASE_URL as string) || ''
-  const token = localStorage.getItem('smart_note_token')
+  const { AUTH_TOKEN_KEY } = await import('@/constants/auth')
+  const token = localStorage.getItem(AUTH_TOKEN_KEY)
 
   const res = await fetch(`${apiBase}/api/ai/stream`, {
     method: 'POST',
