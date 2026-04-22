@@ -45,11 +45,10 @@ async function handleSubmit() {
   }
 }
 
-// ── Forgot Password Flow ──────────────────────────────────────────────────────
-// step: 'login' | 'email' | 'otp' | 'newpass' | 'done'
-const fpStep = ref<'login' | 'email' | 'otp' | 'newpass' | 'done'>('login')
+// ── Forgot Password Flow (Direct Reset — No Email OTP) ────────────────────────
+// step: 'login' | 'email' | 'newpass' | 'done'
+const fpStep = ref<'login' | 'email' | 'newpass' | 'done'>('login')
 const fpEmail = ref('')
-const fpOtp = ref('')
 const fpResetToken = ref('')
 const fpNewPass = ref('')
 const fpConfirmPass = ref('')
@@ -57,25 +56,10 @@ const fpShowNew = ref(false)
 const fpShowConfirm = ref(false)
 const fpLoading = ref(false)
 const fpError = ref('')
-const resendCountdown = ref(0)
-let resendTimer: ReturnType<typeof setInterval> | null = null
-
-function startResendCountdown() {
-  resendCountdown.value = 60
-  if (resendTimer) clearInterval(resendTimer)
-  resendTimer = setInterval(() => {
-    resendCountdown.value--
-    if (resendCountdown.value <= 0 && resendTimer) {
-      clearInterval(resendTimer)
-      resendTimer = null
-    }
-  }, 1000)
-}
 
 function goForgot() {
   fpStep.value = 'email'
   fpEmail.value = ''
-  fpOtp.value = ''
   fpResetToken.value = ''
   fpNewPass.value = ''
   fpConfirmPass.value = ''
@@ -85,43 +69,20 @@ function goForgot() {
 function goBack() {
   fpError.value = ''
   if (fpStep.value === 'email') fpStep.value = 'login'
-  else if (fpStep.value === 'otp') fpStep.value = 'email'
-  else if (fpStep.value === 'newpass') fpStep.value = 'otp'
+  else if (fpStep.value === 'newpass') fpStep.value = 'email'
   else fpStep.value = 'login'
 }
 
-async function sendOtp(isResend = false) {
+async function requestReset() {
   if (!fpEmail.value) return
   fpLoading.value = true
   fpError.value = ''
   try {
-    await httpClient.post('/api/auth/forgot-password', { email: fpEmail.value })
-    fpStep.value = 'otp'
-    startResendCountdown()
-    if (isResend) ui.showToast('success', t('forgot.otpSent'))
-  } catch (err: any) {
-    fpError.value = err.message || 'Email không tồn tại trong hệ thống'
-  } finally {
-    fpLoading.value = false
-  }
-}
-
-async function verifyOtp() {
-  if (!fpOtp.value || fpOtp.value.length !== 6) {
-    fpError.value = t('forgot.invalidOtp')
-    return
-  }
-  fpLoading.value = true
-  fpError.value = ''
-  try {
-    const res = await httpClient.post<{ resetToken: string }>('/api/auth/verify-otp', {
-      email: fpEmail.value,
-      otp: fpOtp.value
-    })
+    const res = await httpClient.post<{ resetToken: string }>('/api/auth/forgot-password', { email: fpEmail.value })
     fpResetToken.value = res?.resetToken || ''
     fpStep.value = 'newpass'
   } catch (err: any) {
-    fpError.value = err.message || t('forgot.invalidOtp')
+    fpError.value = err.message || 'Email không tồn tại trong hệ thống'
   } finally {
     fpLoading.value = false
   }
@@ -305,7 +266,7 @@ function backToLoginFromDone() {
           </div>
         </div>
 
-        <form @submit.prevent="sendOtp()" class="flex flex-col gap-4">
+        <form @submit.prevent="requestReset()" class="flex flex-col gap-4">
           <div class="flex flex-col gap-2">
             <label class="text-text-secondary text-sm font-medium">{{ t('login.email') }}</label>
             <div class="relative flex items-center">
@@ -332,81 +293,13 @@ function backToLoginFromDone() {
           >
             <span v-if="fpLoading" class="h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-l-black"></span>
             <template v-else>
-              <span>{{ t('forgot.sendOtp') }}</span>
+              <span>{{ t('forgot.resetPassword') }}</span>
               <ArrowRight :size="16" />
             </template>
           </button>
         </form>
       </div>
 
-      <!-- ══ STEP 2: Enter OTP ══ -->
-      <div v-else-if="fpStep === 'otp'" class="bg-bg-surface border-border-default rounded-2xl border p-6 shadow-lg md:p-8">
-        <button @click="goBack" class="text-text-tertiary hover:text-text-primary mb-4 flex items-center gap-1.5 text-sm transition-colors">
-          <ChevronLeft :size="16" />
-          {{ t('login.backToLogin') }}
-        </button>
-
-        <div class="mb-6 flex items-start gap-3">
-          <div class="bg-warning/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
-            <Mail :size="20" class="text-warning" />
-          </div>
-          <div>
-            <h2 class="mb-0.5 text-xl font-semibold">{{ t('forgot.otpTitle') }}</h2>
-            <p class="text-text-tertiary text-sm">
-              {{ t('forgot.otpDesc').replace('{email}', fpEmail) }}
-            </p>
-          </div>
-        </div>
-
-        <form @submit.prevent="verifyOtp" class="flex flex-col gap-4">
-          <div class="flex flex-col gap-2">
-            <label class="text-text-secondary text-sm font-medium">OTP</label>
-            <input
-              v-model="fpOtp"
-              type="text"
-              inputmode="numeric"
-              maxlength="6"
-              required
-              :placeholder="t('forgot.otpPlaceholder')"
-              class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border px-4 py-3 text-center text-2xl font-bold tracking-[0.5rem] transition-all duration-150 focus:ring-2 focus:outline-none"
-              :class="{ 'border-error': fpError }"
-            />
-          </div>
-
-          <div v-if="fpError" class="bg-error/10 border-error/20 text-error rounded-lg border px-3 py-3 text-sm">
-            {{ fpError }}
-          </div>
-
-          <button
-            type="submit"
-            :disabled="fpLoading || fpOtp.length !== 6"
-            class="btn-primary w-full justify-center py-3 disabled:opacity-50"
-          >
-            <span v-if="fpLoading" class="h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-l-black"></span>
-            <template v-else>
-              <span>{{ t('forgot.verifyOtp') }}</span>
-              <ArrowRight :size="16" />
-            </template>
-          </button>
-
-          <!-- Resend -->
-          <div class="text-center text-sm">
-            <span class="text-text-tertiary">Không nhận được mã? </span>
-            <button
-              v-if="resendCountdown <= 0"
-              @click="sendOtp(true)"
-              type="button"
-              :disabled="fpLoading"
-              class="text-accent hover:text-accent-text font-medium transition-colors"
-            >
-              {{ t('forgot.resend') }}
-            </button>
-            <span v-else class="text-text-disabled">
-              {{ t('forgot.resendIn').replace('{s}', String(resendCountdown)) }}
-            </span>
-          </div>
-        </form>
-      </div>
 
       <!-- ══ STEP 3: New Password ══ -->
       <div v-else-if="fpStep === 'newpass'" class="bg-bg-surface border-border-default rounded-2xl border p-6 shadow-lg md:p-8">

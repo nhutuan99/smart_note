@@ -260,21 +260,9 @@ export default {
   forgot: {
     // Step 1
     title: 'Forgot Password',
-    desc: 'Enter your registered email. We will send a 6-digit OTP to verify your identity.',
+    desc: 'Enter your registered email to reset your password.',
     emailPlaceholder: 'you@example.com',
-    sendOtp: 'Send OTP',
-    sending: 'Sending...',
-    otpSent: 'OTP has been sent to your email!',
     // Step 2
-    otpTitle: 'Enter OTP',
-    otpDesc: 'A 6-digit code was sent to {email}. Valid for 10 minutes.',
-    otpPlaceholder: 'Enter 6-digit code',
-    verifyOtp: 'Verify OTP',
-    verifying: 'Verifying...',
-    resend: 'Resend code',
-    resendIn: 'Resend in {s}s',
-    invalidOtp: 'Invalid or expired OTP',
-    // Step 3
     newPassTitle: 'Set New Password',
     newPassDesc: 'Create a new password for your account.',
     newPassword: 'New Password',
@@ -287,8 +275,7 @@ export default {
     passMismatch: 'Passwords do not match',
     passMinLength: 'Password must be at least 6 characters',
     // Forgot PIN
-    pinTitle: 'Reset PIN via OTP',
-    pinDesc: 'OTP has been sent to your email. Enter it to continue.',
+    pinTitle: 'Reset PIN',
     pinNewTitle: 'Set New PIN',
     pinNewDesc: 'Enter your new PIN (4-6 digits).',
     pinResetSuccess: 'PIN reset successfully!'
