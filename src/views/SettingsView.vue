@@ -9,7 +9,7 @@ import { httpClient } from '@/shared/api/httpClient'
 import { useI18n } from 'vue-i18n'
 import { setLocale, currentLocale } from '@/i18n'
 import type { User } from '@/types'
-import { User as UserIcon, Database, Download, LogOut, HardDrive, FileText, Shield, Lock, Eye, EyeOff, AlertTriangle, Trash2, Camera, Save, Link, Globe, KeyRound, MailCheck, ShieldOff } from 'lucide-vue-next'
+import { User as UserIcon, Database, Download, LogOut, HardDrive, FileText, Shield, Lock, Eye, EyeOff, AlertTriangle, Trash2, Camera, Save, Link, Globe, KeyRound } from 'lucide-vue-next'
 
 const { t } = useI18n()
 const auth = useAuthStore()
@@ -149,65 +149,37 @@ async function savePin() {
   }
 }
 
-// ── Forgot PIN (OTP-based reset) ──
-// step: null | 'sent' | 'newpin'
-const forgotPinStep = ref<null | 'sent' | 'newpin'>(null)
-const forgotPinOtp = ref('')
+// ── Forgot PIN (Password-based reset) ──
+const forgotPinStep = ref<null | 'password' | 'newpin'>(null)
+const forgotPinPassword = ref('')
 const forgotPinResetToken = ref('')
 const forgotPinNew = ref('')
 const forgotPinConfirm = ref('')
 const forgotPinLoading = ref(false)
 const forgotPinError = ref('')
-const forgotPinResend = ref(0)
-let forgotPinTimer: ReturnType<typeof setInterval> | null = null
+const showForgotPinPassword = ref(false)
 
-function startForgotPinCountdown() {
-  forgotPinResend.value = 60
-  forgotPinTimer = setInterval(() => {
-    forgotPinResend.value--
-    if (forgotPinResend.value <= 0 && forgotPinTimer) {
-      clearInterval(forgotPinTimer)
-      forgotPinTimer = null
-    }
-  }, 1000)
-}
-
-async function sendForgotPinOtp(isResend = false) {
-  forgotPinLoading.value = true
-  forgotPinError.value = ''
-  try {
-    await httpClient.post('/api/pin/forgot', {})
-    forgotPinStep.value = 'sent'
-    startForgotPinCountdown()
-    if (isResend) ui.showToast('success', t('forgot.otpSent'))
-  } catch (err: any) {
-    forgotPinError.value = err.message || 'Gửi OTP thất bại'
-  } finally {
-    forgotPinLoading.value = false
-  }
-}
-
-async function verifyForgotPinOtp() {
-  if (!forgotPinOtp.value || forgotPinOtp.value.length !== 6) {
-    forgotPinError.value = t('forgot.invalidOtp')
+async function verifyPasswordForPin() {
+  if (!forgotPinPassword.value) {
+    forgotPinError.value = t('settings.passwordRequired')
     return
   }
   forgotPinLoading.value = true
   forgotPinError.value = ''
   try {
-    const res = await httpClient.post<{ resetToken: string }>('/api/pin/verify-otp', {
-      otp: forgotPinOtp.value
+    const res = await httpClient.post<{ resetToken: string }>('/api/pin/forgot', {
+      password: forgotPinPassword.value
     })
     forgotPinResetToken.value = res?.resetToken || ''
     forgotPinStep.value = 'newpin'
   } catch (err: any) {
-    forgotPinError.value = err.message || t('forgot.invalidOtp')
+    forgotPinError.value = err.message || t('settings.wrongPassword')
   } finally {
     forgotPinLoading.value = false
   }
 }
 
-async function resetPinWithOtp() {
+async function resetPinWithPassword() {
   if (forgotPinNew.value.length < 4 || forgotPinNew.value.length > 6) {
     forgotPinError.value = t('settings.pinLengthError')
     return
@@ -229,7 +201,7 @@ async function resetPinWithOtp() {
     })
     hasPin.value = true
     forgotPinStep.value = null
-    forgotPinOtp.value = ''
+    forgotPinPassword.value = ''
     forgotPinNew.value = ''
     forgotPinConfirm.value = ''
     forgotPinResetToken.value = ''
@@ -243,12 +215,11 @@ async function resetPinWithOtp() {
 
 function cancelForgotPin() {
   forgotPinStep.value = null
-  forgotPinOtp.value = ''
+  forgotPinPassword.value = ''
   forgotPinNew.value = ''
   forgotPinConfirm.value = ''
   forgotPinError.value = ''
   forgotPinResetToken.value = ''
-  if (forgotPinTimer) { clearInterval(forgotPinTimer); forgotPinTimer = null }
 }
 </script>
 
@@ -569,7 +540,7 @@ function cancelForgotPin() {
               <!-- Forgot PIN link (only when editing existing PIN) -->
               <div v-if="hasPin" class="text-center">
                 <button
-                  @click="showPinForm = false; sendForgotPinOtp()"
+                  @click="showPinForm = false; forgotPinStep = 'password'"
                   class="text-text-tertiary hover:text-accent text-xs transition-colors"
                 >
                   {{ t('settings.forgotPin') }}
@@ -579,57 +550,62 @@ function cancelForgotPin() {
           </div>
         </transition>
 
-        <!-- ── Forgot PIN OTP Modal ── -->
+        <!-- ── Forgot PIN Password Modal ── -->
         <Teleport to="body">
           <Transition name="fade">
             <div v-if="forgotPinStep !== null" class="fixed inset-0 z-50 flex items-center justify-center p-4">
               <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="cancelForgotPin"></div>
               <div class="bg-bg-surface border-border-default relative w-full max-w-[22rem] rounded-2xl border p-6 shadow-xl">
 
-                <!-- Step: sent – verify OTP -->
-                <template v-if="forgotPinStep === 'sent'">
+                <!-- Step: password – verify identity -->
+                <template v-if="forgotPinStep === 'password'">
                   <div class="mb-5 flex items-center gap-3">
                     <div class="bg-warning/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
-                      <MailCheck :size="20" class="text-warning" />
+                      <Lock :size="20" class="text-warning" />
                     </div>
                     <div>
                       <h3 class="font-semibold">{{ t('forgot.pinTitle') }}</h3>
-                      <p class="text-text-tertiary text-xs">{{ t('forgot.pinDesc') }}</p>
+                      <p class="text-text-tertiary text-xs">{{ t('forgot.pinVerifyPasswordDesc') }}</p>
                     </div>
                   </div>
 
                   <div class="flex flex-col gap-3">
-                    <input
-                      v-model="forgotPinOtp"
-                      type="text"
-                      inputmode="numeric"
-                      maxlength="6"
-                      placeholder="000000"
-                      class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-3 text-center text-2xl font-bold tracking-[0.5rem] transition-all focus:ring-2 focus:outline-none"
-                      :class="{ 'border-error': forgotPinError }"
-                    />
+                    <div>
+                      <label class="text-text-secondary mb-1 block text-xs font-medium">{{ t('settings.confirmPassword') }}</label>
+                      <div class="relative">
+                        <Lock :size="16" class="text-text-tertiary pointer-events-none absolute top-1/2 left-3 -translate-y-1/2" />
+                        <input
+                          v-model="forgotPinPassword"
+                          :type="showForgotPinPassword ? 'text' : 'password'"
+                          :placeholder="t('settings.passwordPlaceholder')"
+                          class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border py-2.5 pr-10 pl-[2.375rem] text-sm transition-all focus:ring-2 focus:outline-none"
+                          :class="{ 'border-error': forgotPinError }"
+                          @keyup.enter="verifyPasswordForPin"
+                        />
+                        <button
+                          type="button"
+                          class="text-text-tertiary hover:text-text-primary absolute top-1/2 right-3 -translate-y-1/2"
+                          @click="showForgotPinPassword = !showForgotPinPassword"
+                        >
+                          <component :is="showForgotPinPassword ? EyeOff : Eye" :size="14" />
+                        </button>
+                      </div>
+                    </div>
 
                     <p v-if="forgotPinError" class="text-error text-center text-sm">{{ forgotPinError }}</p>
 
                     <button
-                      @click="verifyForgotPinOtp"
-                      :disabled="forgotPinLoading || forgotPinOtp.length !== 6"
+                      @click="verifyPasswordForPin"
+                      :disabled="forgotPinLoading || !forgotPinPassword"
                       class="btn-primary w-full justify-center py-2.5 disabled:opacity-50"
                     >
                       <span v-if="forgotPinLoading" class="h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-l-black"></span>
-                      <span v-else>{{ t('forgot.verifyOtp') }}</span>
+                      <span v-else>{{ t('common.confirm') }}</span>
                     </button>
 
-                    <div class="flex items-center justify-between">
-                      <button @click="cancelForgotPin" class="text-text-tertiary hover:text-text-primary text-sm transition-colors">{{ t('common.cancel') }}</button>
-                      <button
-                        v-if="forgotPinResend <= 0"
-                        @click="sendForgotPinOtp(true)"
-                        :disabled="forgotPinLoading"
-                        class="text-accent text-sm"
-                      >{{ t('forgot.resend') }}</button>
-                      <span v-else class="text-text-disabled text-sm">{{ t('forgot.resendIn').replace('{s}', String(forgotPinResend)) }}</span>
-                    </div>
+                    <button @click="cancelForgotPin" class="text-text-tertiary hover:text-text-primary text-center text-sm transition-colors">
+                      {{ t('common.cancel') }}
+                    </button>
                   </div>
                 </template>
 
@@ -674,7 +650,7 @@ function cancelForgotPin() {
                     <div class="flex gap-2">
                       <button @click="cancelForgotPin" class="border-border-default text-text-secondary hover:bg-bg-hover flex-1 rounded-lg border py-2 text-sm">{{ t('common.cancel') }}</button>
                       <button
-                        @click="resetPinWithOtp"
+                        @click="resetPinWithPassword"
                         :disabled="forgotPinLoading || !forgotPinNew || !forgotPinConfirm"
                         class="btn-primary flex-1 justify-center py-2 disabled:opacity-50"
                       >

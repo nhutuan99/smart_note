@@ -220,7 +220,7 @@ export default {
     pinSuccess: 'PIN has been set successfully!',
     pinFailed: 'Failed to set PIN',
     forgotPin: 'Forgot PIN?',
-    forgotPinDesc: 'Reset your PIN via email OTP',
+    forgotPinDesc: 'Reset your PIN with account password',
     // Account
     account: 'Account',
     signOut: 'Sign Out',
@@ -256,13 +256,22 @@ export default {
     backToLogin: 'Back to login'
   },
 
-  // ── Forgot Password / OTP ──
+  // ── Forgot Password / PIN ──
   forgot: {
-    // Step 1
+    // Forgot Password
     title: 'Forgot Password',
-    desc: 'Enter your registered email to reset your password.',
+    desc: 'Enter your registered email to verify via Google and reset your password.',
     emailPlaceholder: 'you@example.com',
-    // Step 2
+    googleOAuthHint: 'You will be redirected to Google to verify email ownership. Please sign in with the Google account you registered with.',
+    verifyWithGoogle: 'Verify with Google',
+    googleVerifying: 'Verifying...',
+    googleVerifyingDesc: 'Please wait while we verify your Google account.',
+    googleVerified: 'Google verification successful!',
+    googleVerifyFailed: 'Verification failed',
+    emailVerified: 'Email {email} has been verified',
+    tryAgain: 'Try again',
+    doneTitle: 'Success!',
+    // New password
     newPassTitle: 'Set New Password',
     newPassDesc: 'Create a new password for your account.',
     newPassword: 'New Password',
@@ -276,6 +285,7 @@ export default {
     passMinLength: 'Password must be at least 6 characters',
     // Forgot PIN
     pinTitle: 'Reset PIN',
+    pinVerifyPasswordDesc: 'Enter your account password to verify your identity.',
     pinNewTitle: 'Set New PIN',
     pinNewDesc: 'Enter your new PIN (4-6 digits).',
     pinResetSuccess: 'PIN reset successfully!'

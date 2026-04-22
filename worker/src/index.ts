@@ -17,6 +17,8 @@ interface Env {
   JWT_SECRET: string
   TELEGRAM_WEBHOOK_SECRET: string
   CASSO_WEBHOOK_SECRET: string
+  GOOGLE_CLIENT_ID: string
+  GOOGLE_CLIENT_SECRET: string
   AI: Ai
 }
 
@@ -323,22 +325,130 @@ async function handleDeleteAccount(userId: string, request: Request, env: Env): 
   return jsonResponse({ success: true, message: 'Account deleted successfully' })
 }
 
-// ====== Forgot Password (Direct Reset — No Email OTP) ======
+// ====== Forgot Password (Google OAuth Verification) ======
 
-async function handleForgotPassword(request: Request, env: Env): Promise<Response> {
-  const { email } = (await request.json()) as any
+/**
+ * Generate Google OAuth URL for email verification.
+ * The user must prove ownership of their registered email via Google Sign-In.
+ */
+async function handleGoogleOAuthUrl(request: Request, env: Env): Promise<Response> {
+  const { email, redirectUri } = (await request.json()) as any
   if (!email) return errorResponse('Email is required')
+  if (!redirectUri) return errorResponse('Redirect URI is required')
 
+  // Verify email exists in our system
   const usersIndex = (await getJSON<Record<string, string>>(env.SMART_NOTE_KV, 'users/_index')) || {}
   const userId = usersIndex[email]
   if (!userId) return errorResponse('Email không tồn tại trong hệ thống', 400)
 
-  // Generate reset token directly (no OTP, no email)
+  if (!env.GOOGLE_CLIENT_ID) return errorResponse('Google OAuth not configured', 503)
+
+  // Create a nonce to prevent CSRF and tie state to this email
+  const nonce = generateId() + generateId()
+  const nonceHash = await hashPassword(nonce)
+  // Store nonce → email mapping (expires in 10 minutes)
+  await env.SMART_NOTE_KV.put(`oauth_nonce/${nonceHash}`, email, { expirationTtl: 600 })
+
+  // Build Google OAuth URL
+  const state = btoa(JSON.stringify({ nonce, email }))
+  const params = new URLSearchParams({
+    client_id: env.GOOGLE_CLIENT_ID,
+    redirect_uri: redirectUri,
+    response_type: 'code',
+    scope: 'email profile',
+    access_type: 'online',
+    state,
+    prompt: 'select_account',
+    login_hint: email
+  })
+
+  const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
+  return jsonResponse({ success: true, data: { url: oauthUrl } })
+}
+
+/**
+ * Verify Google OAuth code — exchange for token, extract email, compare with registered email.
+ * If email matches → generate resetToken → user can set new password.
+ */
+async function handleGoogleVerify(request: Request, env: Env): Promise<Response> {
+  const { code, state, redirectUri } = (await request.json()) as any
+  if (!code || !state || !redirectUri) return errorResponse('Missing required fields')
+
+  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
+    return errorResponse('Google OAuth not configured', 503)
+  }
+
+  // Decode state
+  let stateData: { nonce: string; email: string }
+  try {
+    stateData = JSON.parse(atob(state))
+  } catch {
+    return errorResponse('Invalid state parameter', 400)
+  }
+
+  // Verify nonce exists and matches email
+  const nonceHash = await hashPassword(stateData.nonce)
+  const storedEmail = await env.SMART_NOTE_KV.get(`oauth_nonce/${nonceHash}`)
+  if (!storedEmail || storedEmail !== stateData.email) {
+    return errorResponse('Phiên xác minh đã hết hạn hoặc không hợp lệ. Vui lòng thử lại.', 400)
+  }
+
+  // Exchange authorization code for tokens
+  const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      code,
+      client_id: env.GOOGLE_CLIENT_ID,
+      client_secret: env.GOOGLE_CLIENT_SECRET,
+      redirect_uri: redirectUri,
+      grant_type: 'authorization_code'
+    }).toString()
+  })
+
+  if (!tokenResponse.ok) {
+    const errorBody = await tokenResponse.text()
+    console.error('[GOOGLE_OAUTH] Token exchange failed:', errorBody)
+    return errorResponse('Xác minh Google thất bại. Vui lòng thử lại.', 400)
+  }
+
+  const tokenData = (await tokenResponse.json()) as any
+  const accessToken = tokenData.access_token
+  if (!accessToken) return errorResponse('No access token from Google', 400)
+
+  // Get user info from Google
+  const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+    headers: { Authorization: `Bearer ${accessToken}` }
+  })
+
+  if (!userInfoResponse.ok) {
+    return errorResponse('Không thể lấy thông tin từ Google', 400)
+  }
+
+  const googleUser = (await userInfoResponse.json()) as { email?: string; verified_email?: boolean }
+
+  if (!googleUser.email || !googleUser.verified_email) {
+    return errorResponse('Email Google chưa được xác minh', 400)
+  }
+
+  // Compare Google email with the registered email
+  if (googleUser.email.toLowerCase() !== stateData.email.toLowerCase()) {
+    return errorResponse('Email Google không khớp với email đăng ký. Vui lòng đăng nhập đúng tài khoản Google.', 400)
+  }
+
+  // Verified! Generate reset token
+  const usersIndex = (await getJSON<Record<string, string>>(env.SMART_NOTE_KV, 'users/_index')) || {}
+  const userId = usersIndex[stateData.email]
+  if (!userId) return errorResponse('User not found', 404)
+
   const resetToken = generateId() + generateId()
   const resetTokenHash = await hashPassword(resetToken)
   await env.SMART_NOTE_KV.put(`users/${userId}/otp/reset_token`, resetTokenHash, { expirationTtl: 900 })
 
-  return jsonResponse({ success: true, data: { resetToken } })
+  // Cleanup nonce
+  await env.SMART_NOTE_KV.delete(`oauth_nonce/${nonceHash}`)
+
+  return jsonResponse({ success: true, data: { resetToken, email: stateData.email } })
 }
 
 async function handleResetPassword(request: Request, env: Env): Promise<Response> {
@@ -366,13 +476,26 @@ async function handleResetPassword(request: Request, env: Env): Promise<Response
   return jsonResponse({ success: true, message: 'Đặt lại mật khẩu thành công' })
 }
 
-// ====== Forgot PIN (Direct Reset — No Email OTP, requires JWT) ======
+// ====== Forgot PIN (Password Verification — requires JWT) ======
 
-async function handleForgotPin(userId: string, env: Env): Promise<Response> {
+/**
+ * User is already authenticated via JWT.
+ * Verify their password to prove identity → return resetToken for PIN reset.
+ */
+async function handleForgotPin(userId: string, request: Request, env: Env): Promise<Response> {
+  const { password } = (await request.json()) as any
+  if (!password) return errorResponse('Vui lòng nhập mật khẩu', 400)
+
   const user = await getJSON<UserData>(env.SMART_NOTE_KV, `users/${userId}/profile`)
   if (!user) return errorResponse('User not found', 404)
 
-  // Generate reset token directly (user is already authenticated via JWT)
+  // Verify password
+  const hash = await hashPassword(password)
+  if (hash !== user.passwordHash) {
+    return errorResponse('Mật khẩu không chính xác', 401)
+  }
+
+  // Password verified → generate reset token
   const resetToken = generateId() + generateId()
   const resetTokenHash = await hashPassword(resetToken)
   await env.SMART_NOTE_KV.put(`users/${userId}/otp/pin_reset_token`, resetTokenHash, { expirationTtl: 900 })
@@ -1666,9 +1789,12 @@ export default {
       if (path === '/api/auth/login' && request.method === 'POST') {
         return handleLogin(request, env)
       }
-      // Forgot password (unauthenticated — direct reset, no email OTP)
-      if (path === '/api/auth/forgot-password' && request.method === 'POST') {
-        return handleForgotPassword(request, env)
+      // Forgot password (Google OAuth verification)
+      if (path === '/api/auth/google-oauth-url' && request.method === 'POST') {
+        return handleGoogleOAuthUrl(request, env)
+      }
+      if (path === '/api/auth/google-verify' && request.method === 'POST') {
+        return handleGoogleVerify(request, env)
       }
       if (path === '/api/auth/reset-password' && request.method === 'POST') {
         return handleResetPassword(request, env)
@@ -1769,9 +1895,9 @@ export default {
       if (path === '/api/pin/verify' && request.method === 'POST') {
         return handleVerifyPin(userId, request, env)
       }
-      // Forgot PIN (authenticated — direct reset, no email OTP)
+      // Forgot PIN (authenticated — password verification)
       if (path === '/api/pin/forgot' && request.method === 'POST') {
-        return handleForgotPin(userId, env)
+        return handleForgotPin(userId, request, env)
       }
       if (path === '/api/pin/reset' && request.method === 'POST') {
         return handleResetPin(userId, request, env)

@@ -220,7 +220,7 @@ export default {
     pinSuccess: 'PIN đã được thiết lập thành công!',
     pinFailed: 'Không thể thiết lập PIN',
     forgotPin: 'Quên PIN?',
-    forgotPinDesc: 'Đặt lại PIN qua email OTP',
+    forgotPinDesc: 'Đặt lại PIN bằng mật khẩu tài khoản',
     // Account
     account: 'Tài khoản',
     signOut: 'Đăng xuất',
@@ -256,13 +256,22 @@ export default {
     backToLogin: 'Quay lại đăng nhập'
   },
 
-  // ── Forgot Password / OTP ──
+  // ── Forgot Password / PIN ──
   forgot: {
-    // Step 1
+    // Forgot Password
     title: 'Quên mật khẩu',
-    desc: 'Nhập email đăng ký để đặt lại mật khẩu.',
+    desc: 'Nhập email đăng ký để xác minh qua Google và đặt lại mật khẩu.',
     emailPlaceholder: 'you@example.com',
-    // Step 2
+    googleOAuthHint: 'Bạn sẽ được chuyển đến Google để xác minh quyền sở hữu email. Vui lòng đăng nhập đúng tài khoản Google đã đăng ký.',
+    verifyWithGoogle: 'Xác minh bằng Google',
+    googleVerifying: 'Đang xác minh...',
+    googleVerifyingDesc: 'Vui lòng chờ trong khi chúng tôi xác minh tài khoản Google của bạn.',
+    googleVerified: 'Xác minh Google thành công!',
+    googleVerifyFailed: 'Xác minh thất bại',
+    emailVerified: 'Email {email} đã được xác minh',
+    tryAgain: 'Thử lại',
+    doneTitle: 'Thành công!',
+    // New password
     newPassTitle: 'Đặt mật khẩu mới',
     newPassDesc: 'Tạo mật khẩu mới cho tài khoản của bạn.',
     newPassword: 'Mật khẩu mới',
@@ -276,6 +285,7 @@ export default {
     passMinLength: 'Mật khẩu phải có ít nhất 6 ký tự',
     // Forgot PIN
     pinTitle: 'Đặt lại PIN',
+    pinVerifyPasswordDesc: 'Nhập mật khẩu tài khoản để xác minh danh tính.',
     pinNewTitle: 'Đặt PIN mới',
     pinNewDesc: 'Nhập PIN mới (4-6 chữ số).',
     pinResetSuccess: 'Đặt lại PIN thành công!'
