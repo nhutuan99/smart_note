@@ -2068,6 +2068,7 @@ interface BugReport {
   userId: string
   userName: string
   userEmail: string
+  type: 'bug' | 'feature'
   title: string
   description: string
   url: string
@@ -2082,7 +2083,7 @@ async function handleReportBug(userId: string, request: Request, env: Env): Prom
   if (!user) return errorResponse('User not found', 404)
 
   const body = (await request.json()) as any
-  const { title, description, url, userAgent, image } = body
+  const { type, title, description, url, userAgent, image } = body
 
   if (!title || !description) {
     return errorResponse('Vui lòng nhập đầy đủ tiêu đề và mô tả')
@@ -2093,6 +2094,7 @@ async function handleReportBug(userId: string, request: Request, env: Env): Prom
     userId,
     userName: user.name,
     userEmail: user.email,
+    type: type === 'feature' ? 'feature' : 'bug',
     title,
     description,
     url: url || '',
@@ -2116,22 +2118,31 @@ async function handleReportBug(userId: string, request: Request, env: Env): Prom
   // Send email notification to Admin via Resend (server-side, fire-and-forget)
   if (env.RESEND_API_KEY) {
     try {
+      const isFeature = report.type === 'feature'
+      const typeLabel = isFeature ? '✨ Feature Request' : '🐛 Bug Report'
+      const color = isFeature ? '#3b82f6' : '#ff6b6b'
+
       const emailHtml = `
-<div style="font-family:system-ui,-apple-system,sans-serif;max-width:600px;margin:0 auto;padding:20px">
-  <div style="background:#1a1a2e;border-radius:12px;padding:24px;color:#e0e0e0">
-    <h2 style="color:#ff6b6b;margin:0 0 16px">🐛 Bug Report: ${title}</h2>
-    <table style="width:100%;border-collapse:collapse;font-size:14px">
-      <tr><td style="padding:6px 0;color:#888">Người gửi</td><td style="padding:6px 0">${user.name} (${user.email})</td></tr>
-      <tr><td style="padding:6px 0;color:#888">URL</td><td style="padding:6px 0;word-break:break-all">${url || 'N/A'}</td></tr>
-      <tr><td style="padding:6px 0;color:#888">Thời gian</td><td style="padding:6px 0">${report.createdAt}</td></tr>
-      <tr><td style="padding:6px 0;color:#888">Device</td><td style="padding:6px 0;font-size:12px;word-break:break-all">${userAgent || 'N/A'}</td></tr>
+<div style="font-family:system-ui,-apple-system,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#f9f9f9">
+  <div style="background:#ffffff;border-radius:12px;padding:32px;color:#333;box-shadow:0 4px 6px rgba(0,0,0,0.05)">
+    <h2 style="color:${color};margin:0 0 20px;font-size:20px;display:flex;align-items:center;gap:8px">
+      ${typeLabel}: ${title}
+    </h2>
+    <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:24px">
+      <tr><td style="padding:8px 0;color:#666;width:100px;border-bottom:1px solid #eee">Người gửi</td><td style="padding:8px 0;border-bottom:1px solid #eee;font-weight:500">${user.name} (${user.email})</td></tr>
+      <tr><td style="padding:8px 0;color:#666;border-bottom:1px solid #eee">Thời gian</td><td style="padding:8px 0;border-bottom:1px solid #eee">${new Date(report.createdAt).toLocaleString('vi-VN')}</td></tr>
+      ${url ? `<tr><td style="padding:8px 0;color:#666;border-bottom:1px solid #eee">URL</td><td style="padding:8px 0;border-bottom:1px solid #eee;word-break:break-all"><a href="${url}" style="color:#3b82f6">${url}</a></td></tr>` : ''}
+      <tr><td style="padding:8px 0;color:#666">Device</td><td style="padding:8px 0;font-size:12px;word-break:break-all;color:#555">${userAgent || 'N/A'}</td></tr>
     </table>
-    <div style="margin-top:16px;padding:16px;background:#16213e;border-radius:8px;border-left:4px solid #ff6b6b">
-      <p style="margin:0 0 8px;color:#888;font-size:12px;text-transform:uppercase;letter-spacing:1px">Mô tả chi tiết</p>
-      <p style="margin:0;white-space:pre-wrap;line-height:1.6">${description}</p>
+    <div style="margin-top:20px;padding:20px;background:#f8fafc;border-radius:8px;border-left:4px solid ${color}">
+      <p style="margin:0 0 12px;color:${color};font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Mô tả chi tiết</p>
+      <p style="margin:0;white-space:pre-wrap;line-height:1.6;color:#334155;font-size:15px">${description}</p>
     </div>
-    ${report.image === '__has_image__' ? '<p style="margin-top:12px;color:#888;font-size:12px">📎 Có ảnh đính kèm — xem trong Admin Dashboard</p>' : ''}
-    <p style="margin-top:20px;padding-top:16px;border-top:1px solid #333;color:#666;font-size:11px;text-align:center">Smart Note Bug Reporter • Report ID: ${report.id}</p>
+    ${report.image === '__has_image__' ? '<div style="margin-top:20px;padding:12px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;color:#d97706;font-size:13px;display:inline-block">📎 Có ảnh đính kèm — vui lòng xem trong Admin Dashboard</div>' : ''}
+    <div style="margin-top:32px;padding-top:20px;border-top:1px solid #eee;text-align:center">
+      <p style="margin:0;color:#94a3b8;font-size:12px">Smart Note Feedback System</p>
+      <p style="margin:4px 0 0;color:#cbd5e1;font-size:11px;font-family:monospace">ID: ${report.id}</p>
+    </div>
   </div>
 </div>`
 
@@ -2144,7 +2155,7 @@ async function handleReportBug(userId: string, request: Request, env: Env): Prom
         body: JSON.stringify({
           from: 'Smart Note <onboarding@resend.dev>',
           to: ['tintphcm@gmail.com'],
-          subject: `[Bug Report] ${title}`,
+          subject: `[${isFeature ? 'Feature' : 'Bug'}] ${title}`,
           html: emailHtml
         })
       })

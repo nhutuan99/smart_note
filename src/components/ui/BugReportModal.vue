@@ -18,6 +18,7 @@ const ui = useUiStore()
 
 const title = ref('')
 const description = ref('')
+const reportType = ref<'bug' | 'feature'>('bug')
 const loading = ref(false)
 const imagePreview = ref<string | null>(null)
 const imageBase64 = ref<string | null>(null)
@@ -77,6 +78,7 @@ async function submitReport() {
   loading.value = true
   try {
     const payload: Record<string, any> = {
+      type: reportType.value,
       title: title.value,
       description: description.value,
       url: currentUrl.value,
@@ -92,6 +94,7 @@ async function submitReport() {
     // Reset form completely
     title.value = ''
     description.value = ''
+    reportType.value = 'bug'
     removeImage()
     emit('close')
   } catch (err: any) {
@@ -138,6 +141,27 @@ async function submitReport() {
           </p>
 
           <div class="space-y-4">
+            <!-- Report Type -->
+            <div>
+              <label class="block text-sm font-medium text-text-primary mb-2">{{ t('bugReport.typeLabel') }}</label>
+              <div class="grid grid-cols-2 gap-3">
+                <button 
+                  @click="reportType = 'bug'"
+                  class="flex items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all"
+                  :class="reportType === 'bug' ? 'bg-danger/10 border-danger text-danger' : 'bg-bg-tertiary/50 border-border-default/50 text-text-secondary hover:bg-bg-secondary hover:border-border-default'"
+                >
+                  {{ t('bugReport.typeBug') }}
+                </button>
+                <button 
+                  @click="reportType = 'feature'"
+                  class="flex items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all"
+                  :class="reportType === 'feature' ? 'bg-accent/10 border-accent text-accent' : 'bg-bg-tertiary/50 border-border-default/50 text-text-secondary hover:bg-bg-secondary hover:border-border-default'"
+                >
+                  {{ t('bugReport.typeFeature') }}
+                </button>
+              </div>
+            </div>
+
             <!-- Title -->
             <div>
               <label class="block text-sm font-medium text-text-primary mb-1.5">{{ t('bugReport.titleLabel') }} <span class="text-danger">*</span></label>

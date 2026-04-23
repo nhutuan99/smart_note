@@ -387,7 +387,9 @@ export default {
     // Modal
     modalTitle: 'Báo cáo lỗi / Góp ý',
     modalDesc: 'Cảm ơn bạn đã báo cáo! Thông tin lỗi sẽ được gửi trực tiếp đến Admin để xử lý.',
-    titleLabel: 'Tiêu đề lỗi',
+    typeLabel: 'Loại báo cáo',
+    typeBug: '🐛 Báo lỗi',
+    typeFeature: '✨ Góp ý / Tính năng mới',
     titlePlaceholder: 'VD: Không đồng bộ được SMS Casso',
     descLabel: 'Mô tả chi tiết',
     descPlaceholder: 'Mô tả các bước để tái hiện lỗi...',

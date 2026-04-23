@@ -387,7 +387,9 @@ export default {
     // Modal
     modalTitle: 'Bug Report / Feedback',
     modalDesc: 'Thanks for reporting! The details will be sent directly to the Admin for review.',
-    titleLabel: 'Bug Title',
+    typeLabel: 'Report Type',
+    typeBug: '🐛 Bug Report',
+    typeFeature: '✨ Feature Request',
     titlePlaceholder: 'e.g. Cannot sync Casso SMS',
     descLabel: 'Detailed Description',
     descPlaceholder: 'Describe the steps to reproduce the bug...',

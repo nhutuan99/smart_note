@@ -230,6 +230,7 @@ interface BugReport {
   userId: string
   userName: string
   userEmail: string
+  type?: 'bug' | 'feature'
   title: string
   description: string
   url: string
@@ -848,6 +849,12 @@ function cancelForgotPin() {
                       class="h-2 w-2 rounded-full shrink-0"
                       :class="report.status === 'new' ? 'bg-danger' : report.status === 'resolved' ? 'bg-success' : 'bg-text-tertiary'"
                     ></span>
+                    <span 
+                      class="text-[0.625rem] font-bold px-1.5 py-0.5 rounded-full shrink-0"
+                      :class="report.type === 'feature' ? 'bg-accent/15 text-accent' : 'bg-danger/15 text-danger'"
+                    >
+                      {{ report.type === 'feature' ? '✨ Góp ý' : '🐛 Lỗi' }}
+                    </span>
                     <span class="text-sm font-medium truncate">{{ report.title }}</span>
                     <ImageIcon v-if="report.image === '__has_image__'" :size="14" class="text-text-tertiary shrink-0" />
                   </div>
