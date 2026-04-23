@@ -27,6 +27,7 @@ import {
   Bot
 } from 'lucide-vue-next'
 import { httpClient } from '@/shared/api/httpClient'
+import { useAi } from '@/composables/useGemini'
 import WeatherWidget from '@/components/WeatherWidget.vue'
 
 // Chart.js
@@ -394,36 +395,44 @@ const insights = computed<Insight[]>(() => {
 // ── AI Generator ──
 const isInsightsCollapsed = ref(false)
 const aiPrompt = ref('')
-const isAiLoading = ref(false)
-const aiResponse = ref('')
+const { streamText: aiResponse, loading: isAiLoading, askAbout } = useAi()
 
 async function generateAiInsight() {
   if (isAiLoading.value || !aiPrompt.value.trim()) return
 
-  isAiLoading.value = true
-  aiResponse.value = ''
+  const promptStr = aiPrompt.value.trim()
+  aiPrompt.value = '' // clear immediately for better UX
 
-  const context = `Hãy đóng vai một chuyên gia tài chính cá nhân. Dựa vào dữ liệu thu chi tháng này của tôi, hãy trả lời câu hỏi của tôi một cách ngắn gọn, chuyên nghiệp và có tâm:
+  // Build rich context from app data
+  const walletSummary = finance.wallets.map(w => `- ${w.name}: ${formatMoneyShort(w.balance)}`).join('\n')
+  
+  const recentTxs = finance.monthTransactions.slice(0, 5).map(t => {
+    const wName = finance.wallets.find(w => w.id === t.walletId)?.name || 'Ví'
+    return `- ${t.date.split('T')[0]}: ${t.type === 'expense' ? 'Chi' : 'Thu'} ${formatMoneyShort(t.amount)} cho "${t.note || 'Không rõ'}" (tại ${wName})`
+  }).join('\n')
+
+  const context = `Bạn là chuyên gia tài chính cá nhân. Dựa vào toàn bộ dữ liệu ứng dụng dưới đây của người dùng ${auth.user?.name || 'tôi'}:
+
+[Số dư hiện tại]
+${walletSummary}
+
+[Thống kê tháng này]
 - Tổng thu: ${formatMoneyShort(finance.monthIncome)}
 - Tổng chi: ${formatMoneyShort(finance.monthExpense)}
 - Ngân sách tháng: ${monthlyBudget.value > 0 ? formatMoneyShort(monthlyBudget.value) : 'Chưa đặt'}
-- Còn lại so với ngân sách: ${monthlyBudget.value > 0 ? formatMoneyShort(budgetRemaining.value) : 'N/A'}
-- Ví chi tiêu nhiều nhất: ${expenseByWallet.value[0]?.name || 'Không có'} (${formatMoneyShort(expenseByWallet.value[0]?.total || 0)})
+- Còn lại: ${monthlyBudget.value > 0 ? formatMoneyShort(budgetRemaining.value) : 'N/A'}
+- Phân bổ chi tiêu: ${expenseByWallet.value.map(w => `${w.name} (${formatMoneyShort(w.total)})`).join(', ')}
+
+[5 giao dịch gần nhất]
+${recentTxs || 'Không có'}
+
+Quy tắc:
+1. Trả lời trực tiếp vào câu hỏi.
+2. Ngắn gọn, súc tích, format Markdown thân thiện dễ đọc.
+3. Đưa ra lời khuyên thực tế dựa trên số liệu cụ thể ở trên.
 `
 
-  try {
-    const res = await httpClient.post<{data: string}>('/api/ai', {
-      action: 'ask',
-      content: context,
-      question: aiPrompt.value
-    })
-    aiResponse.value = res as unknown as string // The response is just the string data, depending on how httpClient.post is typed, it might unwrap directly
-  } catch (err: any) {
-    ui.showToast('error', 'Không thể tạo phân tích AI: ' + err.message)
-  } finally {
-    isAiLoading.value = false
-    aiPrompt.value = ''
-  }
+  await askAbout(context, promptStr)
 }
 
 </script>
