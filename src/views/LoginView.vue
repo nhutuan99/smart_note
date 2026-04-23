@@ -21,8 +21,6 @@ const showPassword = ref(false)
 const error = ref('')
 const form = ref({ email: '', password: '', name: '' })
 
-// Show back button if user navigated here (has history)
-const canGoBack = computed(() => window.history.length > 1)
 
 const isValid = computed(() => {
   if (!form.value.email || !form.value.password) return false
@@ -274,16 +272,6 @@ watch(
 
 <template>
   <div class="bg-bg-base text-text-primary relative flex min-h-screen items-center justify-center p-4">
-    <!-- Back Button -->
-    <button 
-      v-if="canGoBack"
-      @click="router.back()"
-      class="absolute left-6 top-6 z-10 flex items-center gap-1.5 text-sm text-text-tertiary hover:text-text-primary transition-colors"
-    >
-      <ChevronLeft :size="18" />
-      <span class="hidden sm:inline">{{ t('login.goBack') }}</span>
-    </button>
-
     <!-- Language Switcher -->
     <div class="absolute right-6 top-6 flex items-center gap-2 z-10">
       <button 

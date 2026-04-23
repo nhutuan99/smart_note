@@ -62,13 +62,13 @@ router.beforeEach((to) => {
     if (to.path === '/login' && to.query.code && to.query.state) {
       return
     }
-    return '/'
+    return { path: '/', replace: true }
   }
 
   // Protected pages: redirect unauthenticated users to login
   // This prevents broken pages when user hits browser back after logout/401
   if (!to.meta.requiresGuest && to.path !== '/login' && !auth.isAuthenticated) {
-    return '/login'
+    return { path: '/login', replace: true }
   }
 })
 
