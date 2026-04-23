@@ -325,8 +325,26 @@ function timeSince(dateStr: string) {
           :key="tx.id"
           class="hover:bg-bg-hover flex items-center gap-3 px-4 py-3 transition-colors"
         >
-          <div class="text-xl">
-            {{ getCategoryConfig(tx.category).icon }}
+          <!-- Wallet Logo / Category Icon -->
+          <div
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl overflow-hidden"
+            :style="{ backgroundColor: getWalletBrand(finance.getWalletName(tx.walletId))?.logoUrl ? '#fff' : getCategoryConfig(tx.category).color + '15' }"
+          >
+            <img
+              v-if="getWalletBrand(finance.getWalletName(tx.walletId))?.logoUrl"
+              :src="getWalletBrand(finance.getWalletName(tx.walletId))!.logoUrl"
+              :alt="finance.getWalletName(tx.walletId)"
+              class="h-7 w-7 object-contain"
+              loading="lazy"
+            />
+            <span
+              v-else-if="getWalletBrand(finance.getWalletName(tx.walletId))"
+              class="text-[10px] font-bold"
+              :style="{ color: getWalletBrand(finance.getWalletName(tx.walletId))!.textColor, backgroundColor: getWalletBrand(finance.getWalletName(tx.walletId))!.bgColor }"
+            >
+              {{ getWalletBrand(finance.getWalletName(tx.walletId))!.abbr }}
+            </span>
+            <span v-else class="text-lg">{{ getCategoryConfig(tx.category).icon }}</span>
           </div>
           <div class="min-w-0 flex-1">
             <div class="truncate text-sm font-medium">
