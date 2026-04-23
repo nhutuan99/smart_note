@@ -1595,49 +1595,62 @@ async function handleSmsWebhook(request: Request, env: Env): Promise<Response> {
   }
 
   // ── Extract SMS text from rawBody based on content-type ──
-  let text = ''
-  let senderHint = '' // e.g. "TPBank" from iOS Shortcuts sender field
+  let items: { text: string; senderHint: string }[] = []
+
   try {
     if (contentType.includes('application/json')) {
       const body = JSON.parse(rawBody)
-      // iOS Shortcuts sends: {"text": "SMS content"} or {"text": {"body": "..."}}
-      const raw = body?.text ?? body?.message ?? body?.body ?? body?.content ?? body?.sms ?? ''
-      text = typeof raw === 'string' ? raw : (raw?.body ?? raw?.content ?? raw?.text ?? JSON.stringify(raw))
-      // Optional: sender/from helps bank detection when SMS body lacks bank prefix
-      senderHint = (body?.sender ?? body?.from ?? body?.bank ?? '').toString().trim()
+      if (Array.isArray(body)) {
+        items = body.map((item: any) => {
+          const raw = item?.text ?? item?.message ?? item?.body ?? item?.content ?? item?.sms ?? ''
+          const text = typeof raw === 'string' ? raw : (raw?.body ?? raw?.content ?? raw?.text ?? JSON.stringify(raw))
+          const senderHint = (item?.sender ?? item?.from ?? item?.bank ?? '').toString().trim()
+          return { text, senderHint }
+        })
+      } else {
+        const raw = body?.text ?? body?.message ?? body?.body ?? body?.content ?? body?.sms ?? ''
+        const text = typeof raw === 'string' ? raw : (raw?.body ?? raw?.content ?? raw?.text ?? JSON.stringify(raw))
+        const senderHint = (body?.sender ?? body?.from ?? body?.bank ?? '').toString().trim()
+        items.push({ text, senderHint })
+      }
     } else if (contentType.includes('application/x-www-form-urlencoded')) {
       const params = new URLSearchParams(rawBody)
-      text = (params.get('text') || params.get('message') || params.get('body') || params.get('sms') || '').toString()
-    } else if (contentType.includes('multipart/form-data')) {
-      // Fallback: try to parse JSON from raw, then treat as plain text
-      try {
-        const body = JSON.parse(rawBody)
-        const raw = body?.text ?? body?.message ?? body?.body ?? ''
-        text = typeof raw === 'string' ? raw : rawBody
-      } catch {
-        text = rawBody
-      }
+      const text = (params.get('text') || params.get('message') || params.get('body') || params.get('sms') || '').toString()
+      items.push({ text, senderHint: '' })
     } else {
-      // text/plain or no content-type → treat entire body as SMS text
-      // Also try to parse as JSON first in case iOS sent JSON without proper Content-Type header
+      let parsedBody = rawBody
       try {
         const body = JSON.parse(rawBody)
-        const raw = body?.text ?? body?.message ?? body?.body ?? body?.content ?? body?.sms ?? ''
-        text = typeof raw === 'string' && raw.length > 0 ? raw : rawBody
+        if (Array.isArray(body)) {
+          items = body.map((item: any) => {
+            const raw = item?.text ?? item?.message ?? item?.body ?? item?.content ?? item?.sms ?? ''
+            const text = typeof raw === 'string' ? raw : (raw?.body ?? raw?.content ?? raw?.text ?? JSON.stringify(raw))
+            const senderHint = (item?.sender ?? item?.from ?? item?.bank ?? '').toString().trim()
+            return { text, senderHint }
+          })
+        } else {
+          const raw = body?.text ?? body?.message ?? body?.body ?? body?.content ?? body?.sms ?? ''
+          parsedBody = typeof raw === 'string' && raw.length > 0 ? raw : rawBody
+          items.push({ text: parsedBody, senderHint: '' })
+        }
       } catch {
-        text = rawBody
+        items.push({ text: parsedBody, senderHint: '' })
       }
     }
   } catch (err) {
     return errorResponse('Invalid webhook payload')
   }
 
-  text = text.trim()
-  if (!text) {
+  // Filter out empty texts
+  items = items.map(i => ({ text: i.text.trim(), senderHint: i.senderHint })).filter(i => i.text)
+
+  if (items.length === 0) {
     // Tự động gán dữ liệu ảo để giả lập khi user bấm nút Play (▷) thủ công trên iPhone
     const time = new Date().toISOString()
-    text = `TK 123456 GD: +50,000VND ${time} SD: 1,000,000VND ND: TEST IPHONE BANG NUT PLAY`
-    senderHint = 'TPBank'
+    items.push({
+      text: `TK 123456 GD: +50,000VND ${time} SD: 1,000,000VND ND: TEST IPHONE BANG NUT PLAY`,
+      senderHint: 'TPBank'
+    })
   }
 
   if (!userId) return errorResponse('Missing userId query param')
@@ -1645,54 +1658,74 @@ async function handleSmsWebhook(request: Request, env: Env): Promise<Response> {
   const user = await getJSON<UserData>(env.SMART_NOTE_KV, `users/${userId}/profile`)
   if (!user) return errorResponse('User not found', 404)
 
-  // ── Parse SMS (pass senderHint for bank detection when body lacks bank prefix) ──
-  const parsed = parseSmsTransaction(text, senderHint)
+  const results: any[] = []
+  let hasSuccess = false
+  let lastResponse: Response | null = null
 
-  if (!parsed) {
-    // Fallback: try legacy parseNotification
-    const notiParsed = parseNotification('SMS', text)
-    if (notiParsed) {
-      // Use notiParsed as fallback — create a minimal parsed result
-      const fallbackParsed: SmsParsedResult = {
-        type: notiParsed.type,
-        amount: notiParsed.amount,
-        note: notiParsed.note || text.substring(0, 80),
-        txRef: '',
-        account: '',
-        balance: 0,
-        bankName: notiParsed.walletHint || senderHint || '',
-        rawText: text.substring(0, 200)
+  // ── Process each SMS independently ──
+  for (const item of items) {
+    const text = item.text
+    const senderHint = item.senderHint
+    const parsed = parseSmsTransaction(text, senderHint)
+
+    if (!parsed) {
+      // Fallback: try legacy parseNotification
+      const notiParsed = parseNotification('SMS', text)
+      if (notiParsed) {
+        const fallbackParsed: SmsParsedResult = {
+          type: notiParsed.type,
+          amount: notiParsed.amount,
+          note: notiParsed.note || text.substring(0, 80),
+          txRef: '',
+          account: '',
+          balance: 0,
+          bankName: notiParsed.walletHint || senderHint || '',
+          rawText: text.substring(0, 200)
+        }
+        lastResponse = await processSmsTransaction(fallbackParsed, text, userId, env)
+        results.push({ status: 'success (fallback)', text: text.substring(0, 50) })
+        hasSuccess = true
+        continue
       }
-      // Continue processing with fallback
-      return await processSmsTransaction(fallbackParsed, text, userId, env)
+
+      // Save as pending
+      const pending = (await getJSON<PendingNotification[]>(env.SMART_NOTE_KV, `users/${userId}/finance/pending`)) || []
+      pending.push({
+        id: generateId(),
+        rawText: text,
+        appName: 'SMS',
+        status: 'pending',
+        createdAt: new Date().toISOString()
+      })
+      await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/pending`, pending)
+      
+      results.push({ status: 'pending', text: text.substring(0, 50), error: 'Không thể nhận diện cú pháp giao dịch từ SMS' })
+      continue
     }
 
-    // Save as pending
-    const pending = (await getJSON<PendingNotification[]>(env.SMART_NOTE_KV, `users/${userId}/finance/pending`)) || []
-    pending.push({
-      id: generateId(),
-      rawText: text,
-      appName: 'SMS',
-      status: 'pending',
-      createdAt: new Date().toISOString()
-    })
-    await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/pending`, pending)
-    
-    // Update latest_request and history with error
-    await updateWebhookStatus(userId, env, {
-      rawDump: text,
-      status: 'pending',
-      error: 'Không thể nhận diện cú pháp giao dịch từ SMS'
-    }).catch(() => {})
-
-    return jsonResponse({
-      success: false,
-      error: 'Không thể nhận diện cú pháp giao dịch từ SMS, đã lưu vào mục pending',
-      data: { rawText: text, status: 'pending' }
-    })
+    lastResponse = await processSmsTransaction(parsed, text, userId, env)
+    results.push({ status: 'success', text: text.substring(0, 50) })
+    hasSuccess = true
   }
 
-  return await processSmsTransaction(parsed, text, userId, env)
+  // Update latest_request with summary if multiple items or if all failed
+  if (items.length > 1 || !hasSuccess) {
+    await updateWebhookStatus(userId, env, {
+      status: hasSuccess ? 'success' : 'pending',
+      error: hasSuccess ? undefined : 'Không thể nhận diện cú pháp từ SMS nào',
+      rawDump: `Processed ${items.length} items. Results:\n${JSON.stringify(results, null, 2)}\n\nOriginal Payload:\n${rawBody.substring(0, 1000)}`
+    }).catch(() => {})
+  }
+
+  if (items.length === 1 && lastResponse && hasSuccess) {
+    return lastResponse
+  }
+
+  return jsonResponse({
+    success: true,
+    message: `Đã xử lý xong ${items.length} tin nhắn`,
+    results
+  })
 }
 
 async function processSmsTransaction(
