@@ -32,28 +32,6 @@ function syncOnVisible() {
   }
 }
 
-// ── Periodic polling: check for new data every 5s while tab is visible ──
-let _pollTimer: ReturnType<typeof setInterval> | null = null
-const POLL_INTERVAL = 5_000 // 5 seconds
-
-function startPolling() {
-  if (_pollTimer) return
-  _pollTimer = setInterval(() => {
-    if (document.visibilityState === 'visible' && auth.isAuthenticated) {
-      notificationStore.fetch(true)
-      financeStore.silentRefresh()
-      _lastSyncTime = Date.now()
-    }
-  }, POLL_INTERVAL)
-}
-
-function stopPolling() {
-  if (_pollTimer) {
-    clearInterval(_pollTimer)
-    _pollTimer = null
-  }
-}
-
 // ── Sync Guide: 5-minute delay ──
 // sessionStorage: don't show again in this tab
 // localStorage ('sn_sync_guide_shown'): permanent dismiss after clicking "Tìm hiểu"
@@ -107,15 +85,11 @@ onMounted(() => {
   }
   _lastSyncTime = Date.now()
 
-  // Start periodic polling for new transactions/notifications
-  startPolling()
-
   // Schedule sync guide after 5 minutes
   scheduleGuide()
 })
 
 onBeforeUnmount(() => {
-  stopPolling()
   if (guideTimer) {
     clearTimeout(guideTimer)
     guideTimer = null
