@@ -500,7 +500,7 @@ Quy tắc:
       <!-- LEFT COLUMN -->
       <div class="flex flex-col gap-4 h-full">
         <!-- Monthly Budget Gauge -->
-        <div class="card-premium p-5 h-full flex flex-col justify-between">
+        <div class="card-premium p-5 h-full flex flex-col">
           <div class="mb-3 flex items-center justify-between">
             <h3 class="text-sm font-semibold flex items-center gap-2">
               <div class="bg-accent/10 flex h-7 w-7 items-center justify-center rounded-lg">
