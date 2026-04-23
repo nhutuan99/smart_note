@@ -2060,6 +2060,73 @@ async function handleAiStream(request: Request, env: Env): Promise<Response> {
   }
 }
 
+// ====== Bug Report ======
+
+async function handleReportBug(userId: string, request: Request, env: Env): Promise<Response> {
+  const user = await getJSON<UserData>(env.SMART_NOTE_KV, `users/${userId}/profile`)
+  if (!user) return errorResponse('User not found', 404)
+
+  const body = (await request.json()) as any
+  const { title, description, url, userAgent } = body
+
+  if (!title || !description) {
+    return errorResponse('Vui lòng nhập đầy đủ tiêu đề và mô tả')
+  }
+
+  // Use MailChannels to send email (Free API, no auth required for Cloudflare Workers)
+  const emailPayload = {
+    personalizations: [
+      {
+        to: [{ email: "tintphcm@gmail.com", name: "Admin" }],
+      },
+    ],
+    from: {
+      email: "bug-reporter@smart-note.workers.dev",
+      name: "Smart Note Bug Reporter",
+    },
+    subject: `[Bug Report] ${title}`,
+    content: [
+      {
+        type: "text/plain",
+        value: `Người gửi: ${user.name} (${user.email})\nURL: ${url}\nThiết bị: ${userAgent}\n\n=== Mô tả chi tiết ===\n${description}`,
+      },
+      {
+        type: "text/html",
+        value: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
+            <h2 style="color: #ef4444; margin-top: 0;">🐞 Bug Report Mới</h2>
+            <p><strong>Người gửi:</strong> ${user.name} (<a href="mailto:${user.email}">${user.email}</a>)</p>
+            <p><strong>URL phát sinh:</strong> <a href="${url}">${url}</a></p>
+            <p><strong>Thiết bị (User Agent):</strong> <code style="background: #f4f4f5; padding: 2px 4px; border-radius: 4px; font-size: 12px;">${userAgent}</code></p>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+            <h3 style="margin-bottom: 10px;">Chi tiết lỗi:</h3>
+            <div style="background: #fef2f2; padding: 15px; border-radius: 6px; white-space: pre-wrap;">${description.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
+          </div>
+        `
+      }
+    ],
+  }
+
+  try {
+    const res = await fetch("https://api.mailchannels.net/tx/v1/send", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(emailPayload),
+    })
+
+    if (!res.ok) {
+      const text = await res.text()
+      return errorResponse(`Lỗi khi gửi email (MailChannels): ${res.status} ${text}`, 500)
+    }
+
+    return jsonResponse({ success: true, message: 'Đã gửi báo cáo lỗi thành công!' })
+  } catch (err: any) {
+    return errorResponse(`Lỗi hệ thống: ${err.message}`, 500)
+  }
+}
+
 // ====== Main Router ======
 
 export default {
@@ -2128,6 +2195,11 @@ export default {
       }
       if (path === '/api/auth/delete-account' && request.method === 'POST') {
         return handleDeleteAccount(userId, request, env)
+      }
+
+      // Bug Report
+      if (path === '/api/report-bug' && request.method === 'POST') {
+        return handleReportBug(userId, request, env)
       }
 
       // Notes CRUD

@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import AppHeader from './AppHeader.vue'
 import AppSidebar from './AppSidebar.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import PinDialog from '@/components/PinDialog.vue'
+import BugReportModal from '@/components/ui/BugReportModal.vue'
+import { Bug } from 'lucide-vue-next'
 import { useUiStore } from '@/stores/ui'
 import { useNotificationStore } from '@/stores/notifications'
 import { useNotesStore } from '@/stores/notes'
@@ -21,6 +23,8 @@ const financeStore = useFinanceStore()
 const auth = useAuthStore()
 const router = useRouter()
 const { t } = useI18n()
+
+const showBugReport = ref(false)
 
 let _lastSyncTime = 0
 
@@ -101,7 +105,7 @@ useEventListener(document, 'visibilitychange', syncOnVisible)
 </script>
 
 <template>
-  <div class="bg-bg-primary min-h-screen">
+  <div class="bg-bg-primary min-h-screen relative">
     <AppHeader />
     <AppSidebar />
     <main
@@ -119,6 +123,20 @@ useEventListener(document, 'visibilitychange', syncOnVisible)
         </router-view>
       </div>
     </main>
+
+    <!-- Floating Action Button for Bug Report -->
+    <button 
+      v-if="auth.isAuthenticated"
+      @click="showBugReport = true"
+      class="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-danger text-white shadow-lg shadow-danger/30 hover:scale-105 hover:bg-danger-hover transition-all active:scale-95 group"
+      title="Báo cáo lỗi / Góp ý"
+    >
+      <Bug class="h-6 w-6" />
+      <span class="absolute right-full mr-3 whitespace-nowrap rounded-md bg-bg-secondary px-2.5 py-1.5 text-xs font-semibold text-text-primary opacity-0 shadow-sm ring-1 ring-border-default transition-all group-hover:opacity-100 pointer-events-none">
+        Báo lỗi / Góp ý
+      </span>
+    </button>
+
     <ToastContainer />
     <ConfirmDialog />
     <PinDialog 
@@ -127,6 +145,10 @@ useEventListener(document, 'visibilitychange', syncOnVisible)
       :message="ui.pinState.message"
       @confirmed="ui.resolvePin(true)"
       @cancelled="ui.resolvePin(false)"
+    />
+    <BugReportModal 
+      :show="showBugReport" 
+      @close="showBugReport = false" 
     />
   </div>
 </template>
