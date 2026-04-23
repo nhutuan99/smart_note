@@ -181,6 +181,10 @@ export default {
     // Language
     language: 'Ngôn ngữ',
     languageDesc: 'Chọn ngôn ngữ hiển thị',
+    // Currency
+    currency: 'Tiền tệ',
+    currencyDisplay: 'Đơn vị tiền tệ',
+    currencyDesc: 'Chọn đơn vị hiển thị. Tỷ giá được cập nhật tự động từ ECB.',
     // Profile
     profile: 'Hồ sơ',
     editProfile: 'Chỉnh sửa hồ sơ',

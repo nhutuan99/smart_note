@@ -93,20 +93,21 @@ export function getCategoryConfig(key: string): CategoryConfig {
 }
 
 // ── Format Helpers ──
+// These delegate to useCurrency composable for VND/USD support.
+// Old function names are preserved for backward compatibility.
+
+import { formatMoney, formatMoneyShort } from '@/composables/useCurrency'
 
 export function formatVND(amount: number): string {
   try {
     if (useUiStore().hideBalances) return '******'
   } catch (e) {}
-  return new Intl.NumberFormat('vi-VN').format(amount) + 'đ'
+  return formatMoney(amount)
 }
 
 export function formatVNDShort(amount: number): string {
   try {
     if (useUiStore().hideBalances) return '******'
   } catch (e) {}
-  if (amount >= 1_000_000_000) return (amount / 1_000_000_000).toFixed(1) + 'tỷ'
-  if (amount >= 1_000_000) return (amount / 1_000_000).toFixed(1) + 'tr'
-  if (amount >= 1_000) return (amount / 1_000).toFixed(0) + 'k'
-  return amount + 'đ'
+  return formatMoneyShort(amount)
 }

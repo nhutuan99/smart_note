@@ -181,6 +181,10 @@ export default {
     // Language
     language: 'Language',
     languageDesc: 'Choose display language',
+    // Currency
+    currency: 'Currency',
+    currencyDisplay: 'Display Currency',
+    currencyDesc: 'Choose display unit. Exchange rate auto-updated from ECB.',
     // Profile
     profile: 'Profile',
     editProfile: 'Edit Profile',

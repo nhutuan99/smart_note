@@ -9,7 +9,8 @@ import { httpClient } from '@/shared/api/httpClient'
 import { useI18n } from 'vue-i18n'
 import { setLocale, currentLocale } from '@/i18n'
 import type { User } from '@/types'
-import { User as UserIcon, Database, Download, LogOut, HardDrive, FileText, Shield, Lock, Eye, EyeOff, AlertTriangle, Trash2, Camera, Save, Link, Globe, KeyRound } from 'lucide-vue-next'
+import { User as UserIcon, Database, Download, LogOut, HardDrive, FileText, Shield, Lock, Eye, EyeOff, AlertTriangle, Trash2, Camera, Save, Link, Globe, KeyRound, DollarSign } from 'lucide-vue-next'
+import { useCurrency, type CurrencyCode } from '@/composables/useCurrency'
 
 const { t } = useI18n()
 const auth = useAuthStore()
@@ -29,6 +30,13 @@ const selectedLocale = ref(currentLocale())
 function changeLocale(locale: 'vi' | 'en') {
   selectedLocale.value = locale
   setLocale(locale)
+}
+
+// ── Currency ──
+const { currency, rateDisplay, rateLoading, rateError, setCurrency, fetchExchangeRate } = useCurrency()
+
+function changeCurrency(code: CurrencyCode) {
+  setCurrency(code)
 }
 
 const storageUsed = computed(() => {
@@ -253,6 +261,45 @@ function cancelForgotPin() {
               @click="changeLocale('en')"
             >
               🇺🇸 English
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Currency -->
+    <div class="mb-6">
+      <div class="text-text-secondary mb-3 flex items-center gap-2">
+        <DollarSign :size="18" />
+        <h3 class="text-sm font-semibold">{{ t('settings.currency') }}</h3>
+      </div>
+      <div class="bg-bg-surface border-border-default rounded-xl border p-5">
+        <div class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+          <div>
+            <h4 class="mb-0.5 text-sm font-semibold">{{ t('settings.currencyDisplay') }}</h4>
+            <p class="text-text-tertiary text-sm">{{ t('settings.currencyDesc') }}</p>
+            <p v-if="currency === 'USD' && rateDisplay" class="text-accent mt-1 text-xs font-medium">
+              📊 {{ rateDisplay }}
+            </p>
+            <p v-if="rateError && currency === 'USD'" class="text-warning mt-1 text-xs">
+              ⚠️ {{ rateError }} (using fallback rate)
+            </p>
+          </div>
+          <div class="border-border-default flex overflow-hidden rounded-lg border">
+            <button
+              class="px-4 py-2 text-sm font-medium transition-all duration-150"
+              :class="currency === 'VND' ? 'bg-accent-subtle text-accent' : 'bg-bg-surface text-text-secondary hover:bg-bg-hover'"
+              @click="changeCurrency('VND')"
+            >
+              🇻🇳 VND (đ)
+            </button>
+            <button
+              class="border-border-default border-l px-4 py-2 text-sm font-medium transition-all duration-150"
+              :class="currency === 'USD' ? 'bg-accent-subtle text-accent' : 'bg-bg-surface text-text-secondary hover:bg-bg-hover'"
+              @click="changeCurrency('USD')"
+            >
+              <span v-if="rateLoading" class="inline-block h-3 w-3 animate-spin rounded-full border-2 border-text-disabled border-l-accent mr-1"></span>
+              🇺🇸 USD ($)
             </button>
           </div>
         </div>

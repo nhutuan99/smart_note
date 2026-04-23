@@ -8,6 +8,7 @@ import {
   EXPENSE_CATEGORIES,
   INCOME_CATEGORIES
 } from '@/constants/finance'
+import { useCurrency } from '@/composables/useCurrency'
 import { getWalletBrand } from '@/constants/walletBrands'
 import { useI18n } from 'vue-i18n'
 import type { TransactionType } from '@/types'
@@ -16,6 +17,7 @@ import { ArrowLeft, Check, ChevronDown, ArrowUpRight, ArrowDownRight, Calendar, 
 const { t, tm } = useI18n()
 const router = useRouter()
 const finance = useFinanceStore()
+const { currencySymbol } = useCurrency()
 
 onMounted(() => finance.fetchWallets())
 
@@ -218,7 +220,7 @@ async function submit() {
         <span
           class="text-text-tertiary absolute top-1/2 right-4 -translate-y-1/2 text-lg font-medium"
         >
-          đ
+          {{ currencySymbol }}
         </span>
       </div>
     </div>
