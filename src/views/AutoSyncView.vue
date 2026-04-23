@@ -243,11 +243,13 @@ onMounted(() => {
               class="rounded-full px-2.5 py-0.5 text-xs font-bold"
               :class="debugLog.status === 'success'
                 ? 'bg-success/15 text-success'
-                : debugLog.status === 'pending'
-                  ? 'bg-warning/15 text-warning'
-                  : 'bg-error/15 text-error'"
+                : debugLog.status === 'skipped'
+                  ? 'bg-info/15 text-info'
+                  : debugLog.status === 'pending'
+                    ? 'bg-warning/15 text-warning'
+                    : 'bg-error/15 text-error'"
             >
-              {{ debugLog.status === 'success' ? '✅ Thành công' : debugLog.status === 'pending' ? '⏳ Pending' : '❌ Lỗi' }}
+              {{ debugLog.status === 'success' ? '✅ Thành công' : debugLog.status === 'skipped' ? '🔄 Bỏ qua (Trùng)' : debugLog.status === 'pending' ? '⏳ Pending' : '❌ Lỗi' }}
             </span>
           </div>
 
@@ -378,11 +380,13 @@ onMounted(() => {
                   class="rounded-full px-2 py-0.5 text-[0.625rem] font-bold"
                   :class="h.status === 'success'
                     ? 'bg-success/15 text-success'
-                    : h.status === 'pending'
-                      ? 'bg-warning/15 text-warning'
-                      : 'bg-info/15 text-info'"
+                    : h.status === 'skipped'
+                      ? 'bg-info/15 text-info'
+                      : h.status === 'pending'
+                        ? 'bg-warning/15 text-warning'
+                        : 'bg-error/15 text-error'"
                 >
-                  {{ h.status === 'success' ? '✅' : h.status === 'pending' ? '⏳' : '📩' }} {{ h.status || 'received' }}
+                  {{ h.status === 'success' ? '✅' : h.status === 'skipped' ? '🔄' : h.status === 'pending' ? '⏳' : '❌' }} {{ h.status || 'received' }}
                 </span>
                 <span class="text-[0.625rem] text-text-disabled">{{ formatDebugTime(h.time) }}</span>
               </div>

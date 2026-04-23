@@ -1494,6 +1494,20 @@ function parseSmsTransaction(text: string, senderHint = ''): SmsParsedResult | n
   }
 }
 
+async function updateWebhookStatus(userId: string, env: Env, updateData: any) {
+  // 1. Update latest_request
+  const latest = await getJSON<any>(env.SMART_NOTE_KV, `users/${userId}/finance/latest_request`) || {}
+  const merged = { ...latest, ...updateData }
+  await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/latest_request`, merged)
+
+  // 2. Update history
+  const history = await getJSON<any[]>(env.SMART_NOTE_KV, `users/${userId}/finance/request_history`) || []
+  if (history.length > 0) {
+    history[0] = { ...history[0], ...updateData }
+    await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/request_history`, history)
+  }
+}
+
 async function handleSmsWebhook(request: Request, env: Env): Promise<Response> {
   const contentType = request.headers.get('content-type') || ''
   const url = new URL(request.url)
@@ -1614,10 +1628,9 @@ async function handleSmsWebhook(request: Request, env: Env): Promise<Response> {
     })
     await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/pending`, pending)
     
-    // Update latest_request with error
-    await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/latest_request`, {
+    // Update latest_request and history with error
+    await updateWebhookStatus(userId, env, {
       rawDump: text,
-      time: new Date().toISOString(),
       status: 'pending',
       error: 'Không thể nhận diện cú pháp giao dịch từ SMS'
     }).catch(() => {})
@@ -1664,6 +1677,21 @@ async function processSmsTransaction(
   if (parsed.txRef) {
     const alreadyExists = txs.some(t => t.note?.includes(`[ref:${parsed.txRef}]`))
     if (alreadyExists) {
+      await updateWebhookStatus(userId, env, {
+        status: 'skipped',
+        error: 'Đã bỏ qua do trùng lặp (trùng mã giao dịch SO GD)',
+        parsedData: {
+          type: parsed.type,
+          amount: parsed.amount,
+          note: parsed.note,
+          bankName: parsed.bankName,
+          walletName: wallets.find(w => w.id === walletId)?.name || 'ví',
+          txRef: parsed.txRef,
+          balance: parsed.balance,
+          account: parsed.account
+        }
+      }).catch(() => {})
+
       return jsonResponse({ 
         success: true, 
         message: 'Duplicate SMS skipped (same SO GD)',
@@ -1722,10 +1750,8 @@ async function processSmsTransaction(
   await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/transactions`, txs)
   await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`, wallets)
 
-  // Update latest_request with success details (awaited — ensures debug data is persisted)
-  await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/latest_request`, {
-    rawDump: originalText.substring(0, 500),
-    time: new Date().toISOString(),
+  // Update latest_request and history with success details (awaited — ensures debug data is persisted)
+  await updateWebhookStatus(userId, env, {
     status: 'success',
     transactionId: tx.id,
     parsedData: {
