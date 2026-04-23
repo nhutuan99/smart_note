@@ -24,7 +24,7 @@ import {
 import WeatherWidget from '@/components/WeatherWidget.vue'
 
 // Chart.js
-import { Line, Doughnut } from 'vue-chartjs'
+import { Line } from 'vue-chartjs'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -203,51 +203,76 @@ const weeklyChartOptions = computed(() => ({
   }
 }))
 
-// ── Doughnut Chart ──
-const doughnutData = computed(() => {
-  const cats = finance.expenseByCategoryThisMonth
-  return {
-    labels: cats.map(c => t(`categories.${c.category}`)),
-    datasets: [{
-      data: cats.map(c => c.total),
-      backgroundColor: cats.map(c => c.color + 'cc'),
-      hoverBackgroundColor: cats.map(c => c.color),
-      borderWidth: 0,
-      spacing: 2,
-      hoverOffset: 6
-    }]
-  }
+// ── Expense by Wallet ──
+interface WalletStat {
+  walletId: string
+  name: string
+  total: number
+  percentage: number
+  color: string
+  logoUrl: string
+}
+
+const expenseByWallet = computed<WalletStat[]>(() => {
+  const map: Record<string, number> = {}
+  let total = 0
+
+  finance.monthTransactions
+    .filter((t: any) => t.type === 'expense')
+    .forEach((t: any) => {
+      map[t.walletId] = (map[t.walletId] || 0) + t.amount
+      total += t.amount
+    })
+
+  return Object.entries(map)
+    .map(([walletId, amount]) => {
+      const walletName = finance.getWalletName(walletId)
+      const brand = getWalletBrand(walletName)
+      const wallet = finance.wallets.find((w: any) => w.id === walletId)
+      return {
+        walletId,
+        name: walletName,
+        total: amount,
+        percentage: total > 0 ? (amount / total) * 100 : 0,
+        color: brand?.bgColor && brand.bgColor !== '#ffffff' ? brand.bgColor : (wallet?.color || '#6366f1'),
+        logoUrl: brand?.logoUrl || ''
+      }
+    })
+    .sort((a, b) => b.total - a.total)
 })
 
-const doughnutOptions = computed(() => ({
-  responsive: true,
-  maintainAspectRatio: false,
-  cutout: '70%',
-  animation: { duration: 800, easing: 'easeOutQuart' as const },
-  plugins: {
-    legend: { display: false },
-    tooltip: {
-      backgroundColor: 'rgba(10,10,10,0.95)',
-      titleColor: '#a3a3a3',
-      bodyColor: '#ffffff',
-      borderColor: 'rgba(255,255,255,0.08)',
-      borderWidth: 1,
-      cornerRadius: 8,
-      padding: { x: 12, y: 8 },
-      bodyFont: { weight: 'bold' as const, size: 13 },
-      displayColors: true,
-      boxWidth: 8,
-      boxHeight: 8,
-      boxPadding: 4,
-      callbacks: {
-        label: (ctx: any) => {
-          const pct = finance.expenseByCategoryThisMonth[ctx.dataIndex]?.percentage?.toFixed(1)
-          return ` ${formatMoneyShort(ctx.raw)} (${pct}%)`
-        }
+const incomeByWallet = computed<WalletStat[]>(() => {
+  const map: Record<string, number> = {}
+  let total = 0
+
+  finance.monthTransactions
+    .filter((t: any) => t.type === 'income')
+    .forEach((t: any) => {
+      map[t.walletId] = (map[t.walletId] || 0) + t.amount
+      total += t.amount
+    })
+
+  return Object.entries(map)
+    .map(([walletId, amount]) => {
+      const walletName = finance.getWalletName(walletId)
+      const brand = getWalletBrand(walletName)
+      const wallet = finance.wallets.find((w: any) => w.id === walletId)
+      return {
+        walletId,
+        name: walletName,
+        total: amount,
+        percentage: total > 0 ? (amount / total) * 100 : 0,
+        color: brand?.bgColor && brand.bgColor !== '#ffffff' ? brand.bgColor : (wallet?.color || '#10b981'),
+        logoUrl: brand?.logoUrl || ''
       }
-    }
-  }
-}))
+    })
+    .sort((a, b) => b.total - a.total)
+})
+
+const walletBreakdownTab = ref<'expense' | 'income'>('expense')
+const activeWalletStats = computed(() => walletBreakdownTab.value === 'expense' ? expenseByWallet.value : incomeByWallet.value)
+
+
 </script>
 
 <template>
@@ -420,31 +445,55 @@ const doughnutOptions = computed(() => ({
         </div>
       </div>
 
-      <!-- Category Breakdown (Doughnut + Legend) -->
+      <!-- Spending by Wallet -->
       <div class="bg-bg-surface border-border-default rounded-xl border p-5">
-        <h3 class="mb-4 text-sm font-semibold">{{ t('dashboard.categoryBreakdown') }}</h3>
-
-        <div v-if="finance.expenseByCategoryThisMonth.length" class="flex items-start gap-5">
-          <!-- Doughnut -->
-          <div class="relative h-[9.5rem] w-[9.5rem] shrink-0">
-            <Doughnut :data="doughnutData" :options="doughnutOptions" />
-            <!-- Center label -->
-            <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-              <span class="text-text-disabled text-[0.5625rem] uppercase tracking-wider">{{ t('dashboard.expense') }}</span>
-              <span class="text-text-primary text-[0.9375rem] font-bold">{{ formatVNDShort(finance.monthExpense) }}</span>
-            </div>
+        <!-- Header with tabs -->
+        <div class="mb-4 flex items-center justify-between">
+          <h3 class="text-sm font-semibold">{{ t('dashboard.walletBreakdown') || 'Chi tiêu theo ví' }}</h3>
+          <div class="flex items-center gap-1 rounded-lg bg-bg-elevated p-0.5">
+            <button
+              class="rounded-md px-2.5 py-1 text-[0.6875rem] font-medium transition-all"
+              :class="walletBreakdownTab === 'expense' ? 'bg-bg-surface text-error shadow-sm' : 'text-text-tertiary hover:text-text-secondary'"
+              @click="walletBreakdownTab = 'expense'"
+            >Chi</button>
+            <button
+              class="rounded-md px-2.5 py-1 text-[0.6875rem] font-medium transition-all"
+              :class="walletBreakdownTab === 'income' ? 'bg-bg-surface text-success shadow-sm' : 'text-text-tertiary hover:text-text-secondary'"
+              @click="walletBreakdownTab = 'income'"
+            >Thu</button>
           </div>
-          <!-- Legend -->
-          <div class="flex-1 space-y-2.5 min-w-0 pt-1">
-            <div
-              v-for="cat in finance.expenseByCategoryThisMonth.slice(0, 5)"
-              :key="cat.category"
-              class="flex items-center gap-2 group"
-            >
-              <span class="h-2.5 w-2.5 shrink-0 rounded-[3px] transition-transform group-hover:scale-125" :style="{ backgroundColor: cat.color }"></span>
-              <span class="text-text-secondary truncate text-[0.75rem] group-hover:text-text-primary transition-colors">{{ t(`categories.${cat.category}`) }}</span>
-              <span class="text-text-primary ml-auto text-[0.75rem] font-semibold whitespace-nowrap tabular-nums">{{ formatVNDShort(cat.total) }}</span>
-              <span class="text-text-disabled text-[0.625rem] w-[2.5rem] text-right tabular-nums">{{ cat.percentage.toFixed(0) }}%</span>
+        </div>
+
+        <div v-if="activeWalletStats.length" class="space-y-3">
+          <div
+            v-for="ws in activeWalletStats"
+            :key="ws.walletId"
+            class="group cursor-pointer"
+            @click="finance.filter = { walletId: ws.walletId }; router.push('/transactions')"
+          >
+            <div class="flex items-center gap-3 mb-1.5">
+              <!-- Wallet logo -->
+              <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg overflow-hidden bg-white shadow-sm">
+                <img
+                  v-if="ws.logoUrl"
+                  :src="ws.logoUrl"
+                  :alt="ws.name"
+                  class="h-5 w-5 object-contain"
+                  loading="lazy"
+                />
+                <span v-else class="text-[9px] font-bold" :style="{ color: ws.color }">{{ ws.name.substring(0, 2).toUpperCase() }}</span>
+              </div>
+              <!-- Name + Amount -->
+              <span class="text-text-secondary text-[0.8125rem] font-medium group-hover:text-text-primary transition-colors truncate">{{ ws.name }}</span>
+              <span class="text-text-primary ml-auto text-[0.8125rem] font-bold tabular-nums whitespace-nowrap">{{ formatVNDShort(ws.total) }}</span>
+              <span class="text-text-disabled text-[0.6875rem] w-[2.5rem] text-right tabular-nums">{{ ws.percentage.toFixed(0) }}%</span>
+            </div>
+            <!-- Progress bar -->
+            <div class="bg-bg-elevated h-1.5 overflow-hidden rounded-full">
+              <div
+                class="h-full rounded-full transition-all duration-500"
+                :style="{ width: ws.percentage + '%', backgroundColor: walletBreakdownTab === 'expense' ? '#ef4444' : '#10b981' }"
+              ></div>
             </div>
           </div>
         </div>

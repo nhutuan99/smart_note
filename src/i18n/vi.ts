@@ -84,6 +84,7 @@ export default {
     income: 'Thu',
     expense: 'Chi',
     categoryBreakdown: 'Chi tiêu theo danh mục',
+    walletBreakdown: 'Thống kê theo ví',
     noDataThisMonth: 'Chưa có dữ liệu tháng này',
     recentTransactions: 'Giao dịch gần đây',
     viewAll: 'Xem tất cả',

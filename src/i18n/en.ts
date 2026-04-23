@@ -84,6 +84,7 @@ export default {
     income: 'Income',
     expense: 'Expense',
     categoryBreakdown: 'Expense by Category',
+    walletBreakdown: 'Spending by Wallet',
     noDataThisMonth: 'No data this month',
     recentTransactions: 'Recent Transactions',
     viewAll: 'View all',
