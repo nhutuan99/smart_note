@@ -188,13 +188,13 @@ const weeklyChartOptions = computed(() => ({
     x: {
       grid: { display: false },
       border: { display: false },
-      ticks: { color: '#525252', font: { size: 10, weight: 'bold' as const }, maxRotation: 0 }
+      ticks: { color: '#737373', font: { size: 10, weight: 'bold' as const }, maxRotation: 0 }
     },
     y: {
       grid: { color: 'rgba(255, 255, 255, 0.04)', drawTicks: false },
       border: { display: false, dash: [4, 4] as number[] },
       ticks: {
-        color: '#525252',
+        color: '#737373',
         font: { size: 10 },
         padding: 8,
         callback: (v: any) => formatMoneyShort(v)
