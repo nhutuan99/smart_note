@@ -32,6 +32,14 @@ function copyWebhookUrl() {
 const debugLog = ref<any>(null)
 const debugLoading = ref(false)
 
+// ── Pending Transactions ──
+const pendingList = ref<any[]>([])
+const pendingLoading = ref(false)
+
+// ── Webhook Request History ──
+const webhookHistory = ref<any[]>([])
+const historyLoading = ref(false)
+
 async function fetchDebugLog() {
   debugLoading.value = true
   try {
@@ -40,6 +48,28 @@ async function fetchDebugLog() {
     debugLog.value = null
   } finally {
     debugLoading.value = false
+  }
+}
+
+async function fetchPending() {
+  pendingLoading.value = true
+  try {
+    pendingList.value = await httpClient.get<any[]>('/api/pending') || []
+  } catch {
+    pendingList.value = []
+  } finally {
+    pendingLoading.value = false
+  }
+}
+
+async function fetchHistory() {
+  historyLoading.value = true
+  try {
+    webhookHistory.value = await httpClient.get<any[]>('/api/webhook/sms/history') || []
+  } catch {
+    webhookHistory.value = []
+  } finally {
+    historyLoading.value = false
   }
 }
 
@@ -53,9 +83,15 @@ function formatDebugTime(iso: string): string {
   }
 }
 
+function refreshAll() {
+  fetchDebugLog()
+  fetchPending()
+  fetchHistory()
+}
+
 onMounted(() => {
   financeStore.fetchTransactions()
-  fetchDebugLog()
+  refreshAll()
 })
 </script>
 
@@ -179,10 +215,10 @@ onMounted(() => {
         <button
           class="text-text-secondary hover:text-accent flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors hover:bg-bg-hover"
           :class="debugLoading ? 'opacity-50 pointer-events-none' : ''"
-          @click="fetchDebugLog"
+          @click="refreshAll"
         >
           <RefreshCw :size="14" :class="debugLoading ? 'animate-spin' : ''" />
-          Refresh
+          Refresh All
         </button>
       </div>
 
@@ -276,6 +312,91 @@ onMounted(() => {
           <div v-if="debugLog.transactionId" class="px-5 py-2.5 flex items-center justify-between">
             <span class="text-xs text-text-tertiary">Transaction ID</span>
             <span class="text-xs font-mono text-accent">{{ debugLog.transactionId }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pending Transactions (unparsed SMS) -->
+    <div class="mt-6">
+      <div class="flex items-center gap-2 mb-3">
+        <h3 class="text-sm font-semibold uppercase tracking-wider text-text-tertiary">⚠️ Pending (chưa xử lý)</h3>
+        <span v-if="pendingList.length > 0" class="bg-warning/15 text-warning rounded-full px-2 py-0.5 text-[0.6875rem] font-bold">
+          {{ pendingList.length }}
+        </span>
+      </div>
+      <div class="card-premium p-0 overflow-hidden">
+        <div v-if="pendingLoading && pendingList.length === 0" class="p-6 text-center">
+          <div class="skeleton h-12 rounded-lg" />
+        </div>
+        <div v-else-if="pendingList.length === 0" class="p-5 text-center">
+          <p class="text-text-tertiary text-sm">✅ Không có giao dịch nào bị pending</p>
+        </div>
+        <div v-else class="divide-border-default divide-y">
+          <div
+            v-for="p in pendingList" :key="p.id"
+            class="px-5 py-3"
+          >
+            <div class="flex items-center justify-between mb-1.5">
+              <span
+                class="rounded-full px-2 py-0.5 text-[0.625rem] font-bold"
+                :class="p.status === 'pending' ? 'bg-warning/15 text-warning' : 'bg-success/15 text-success'"
+              >
+                {{ p.status === 'pending' ? '⏳ Chưa parse' : '✅ Đã xử lý' }}
+              </span>
+              <span class="text-[0.625rem] text-text-disabled">{{ formatDebugTime(p.createdAt) }}</span>
+            </div>
+            <div class="bg-bg-elevated border-border-default rounded-lg border p-2.5 text-xs font-mono text-text-primary whitespace-pre-wrap break-all max-h-24 overflow-y-auto">
+              {{ p.rawText }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Webhook Request History -->
+    <div class="mt-6">
+      <div class="flex items-center gap-2 mb-3">
+        <h3 class="text-sm font-semibold uppercase tracking-wider text-text-tertiary">📜 Lịch sử Webhook ({{ webhookHistory.length }})</h3>
+      </div>
+      <div class="card-premium p-0 overflow-hidden">
+        <div v-if="historyLoading && webhookHistory.length === 0" class="p-6 text-center">
+          <div class="skeleton h-12 rounded-lg" />
+        </div>
+        <div v-else-if="webhookHistory.length === 0" class="p-5 text-center">
+          <p class="text-text-tertiary text-sm">Chưa có webhook request nào</p>
+        </div>
+        <div v-else class="divide-border-default divide-y max-h-[32rem] overflow-y-auto">
+          <div
+            v-for="(h, idx) in webhookHistory" :key="idx"
+            class="px-5 py-3"
+          >
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-xs font-medium text-text-secondary">#{{ idx + 1 }}</span>
+              <div class="flex items-center gap-2">
+                <span
+                  class="rounded-full px-2 py-0.5 text-[0.625rem] font-bold"
+                  :class="h.status === 'success'
+                    ? 'bg-success/15 text-success'
+                    : h.status === 'pending'
+                      ? 'bg-warning/15 text-warning'
+                      : 'bg-info/15 text-info'"
+                >
+                  {{ h.status === 'success' ? '✅' : h.status === 'pending' ? '⏳' : '📩' }} {{ h.status || 'received' }}
+                </span>
+                <span class="text-[0.625rem] text-text-disabled">{{ formatDebugTime(h.time) }}</span>
+              </div>
+            </div>
+            <div class="bg-bg-elevated border-border-default rounded-lg border p-2 text-[0.6875rem] font-mono text-text-secondary whitespace-pre-wrap break-all max-h-16 overflow-y-auto">
+              {{ h.rawDump || '(trống)' }}
+            </div>
+            <div v-if="h.parsedData" class="mt-1.5 flex flex-wrap gap-2">
+              <span class="text-[0.625rem] bg-bg-elevated rounded px-1.5 py-0.5" :class="h.parsedData?.type === 'income' ? 'text-success' : 'text-error'">
+                {{ h.parsedData?.type === 'income' ? '+' : '-' }}{{ h.parsedData?.amount?.toLocaleString('vi-VN') }}đ
+              </span>
+              <span v-if="h.parsedData?.bankName" class="text-[0.625rem] text-text-disabled bg-bg-elevated rounded px-1.5 py-0.5">{{ h.parsedData.bankName }}</span>
+              <span v-if="h.transactionId" class="text-[0.625rem] text-accent bg-bg-elevated rounded px-1.5 py-0.5 font-mono">{{ h.transactionId }}</span>
+            </div>
           </div>
         </div>
       </div>

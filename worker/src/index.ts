@@ -1512,13 +1512,22 @@ async function handleSmsWebhook(request: Request, env: Env): Promise<Response> {
 
   // ── Debug: save raw request to KV for troubleshooting ──
   if (userId) {
-    // Non-blocking — don't await to keep webhook fast
-    putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/latest_request`, {
+    // AWAIT this write to ensure debug data is always persisted
+    // Also append to request_history (last 20 entries) for full audit trail
+    const logEntry = {
       contentType,
       rawDump: rawBody.substring(0, 2000), // cap at 2KB
       headers: Object.fromEntries([...request.headers]),
-      time: new Date().toISOString()
-    }).catch(() => {})
+      time: new Date().toISOString(),
+      status: 'received' // will be overwritten to 'success' or 'pending' later
+    }
+    await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/latest_request`, logEntry)
+
+    // Append to history log (keep last 20 entries)
+    const history = (await getJSON<any[]>(env.SMART_NOTE_KV, `users/${userId}/finance/request_history`)) || []
+    history.unshift(logEntry)
+    if (history.length > 20) history.splice(20)
+    await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/request_history`, history)
   }
 
   // ── Extract SMS text from rawBody based on content-type ──
@@ -1800,7 +1809,7 @@ async function handleListPending(userId: string, env: Env): Promise<Response> {
     env.SMART_NOTE_KV,
     `users/${userId}/finance/pending`
   )) || []
-  return jsonResponse({ success: true, data: pending.filter(p => p.status === 'pending') })
+  return jsonResponse({ success: true, data: pending })
 }
 
 async function handleResolvePending(userId: string, pendingId: string, env: Env): Promise<Response> {
@@ -1820,6 +1829,11 @@ async function handleResolvePending(userId: string, pendingId: string, env: Env)
 async function handleGetLatestSmsLog(userId: string, env: Env): Promise<Response> {
   const latest = await getJSON(env.SMART_NOTE_KV, `users/${userId}/finance/latest_request`)
   return jsonResponse({ success: true, data: latest || null })
+}
+
+async function handleGetWebhookHistory(userId: string, env: Env): Promise<Response> {
+  const history = (await getJSON<any[]>(env.SMART_NOTE_KV, `users/${userId}/finance/request_history`)) || []
+  return jsonResponse({ success: true, data: history })
 }
 
 // ====== Cloudflare Workers AI ======
@@ -2013,6 +2027,9 @@ export default {
       // Live Webhook Logs
       if (path === '/api/webhook/sms/latest' && request.method === 'GET') {
         return handleGetLatestSmsLog(userId, env)
+      }
+      if (path === '/api/webhook/sms/history' && request.method === 'GET') {
+        return handleGetWebhookHistory(userId, env)
       }
 
       // Finance: Wallets
