@@ -971,10 +971,27 @@ async function handleNotificationWebhook(request: Request, env: Env): Promise<Re
     await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`, wallets)
   }
 
+  // Create notification (was missing — only transaction was created before)
+  const walletName = wallets.find(w => w.id === walletId)?.name || 'ví'
+  const notiList = (await getJSON<NotificationData[]>(
+    env.SMART_NOTE_KV, `users/${userId}/notifications`
+  )) || []
+  notiList.unshift({
+    id: generateId(),
+    type: parsed.type === 'income' ? 'bank_in' : 'bank_out',
+    title: `[Notification] ${parsed.type === 'income' ? 'Tiền vào tài khoản' : 'Tiền ra tài khoản'}`,
+    body: `${parsed.type === 'income' ? '+' : '-'}${parsed.amount.toLocaleString('vi-VN')}đ • Ghi vào ví: ${walletName}`,
+    read: false,
+    createdAt: new Date().toISOString(),
+    meta: { amount: parsed.amount, txType: parsed.type, walletName, bankName: parsed.walletHint || appName || '' }
+  })
+  if (notiList.length > 100) notiList.splice(100)
+  await putJSON(env.SMART_NOTE_KV, `users/${userId}/notifications`, notiList)
+
   return jsonResponse({
     success: true,
     data: tx,
-    message: `[Notification] ${tx.type === 'income' ? '+' : '-'}${tx.amount.toLocaleString('vi-VN')}đ → Ghi vào ví: ${wallets[walletIdx]?.name || 'ví'}`
+    message: `[Notification] ${tx.type === 'income' ? '+' : '-'}${tx.amount.toLocaleString('vi-VN')}đ → Ghi vào ví: ${walletName}`
   })
 }
 
@@ -1507,18 +1524,14 @@ async function processSmsTransaction(
       })
     }
   }
-  // Priority 2: Fallback hash using amount + date portion of text
-  const safeText = originalText.replace(/[^a-zA-Z0-9]/g, '')
+  // Priority 2: Fallback hash using amount + type + date (not raw text — prevents false-positive dupes)
+  const today = new Date().toISOString().substring(0, 10)
   const smsHash = parsed.txRef 
     ? `[ref:${parsed.txRef}]` 
-    : `[sms:${safeText.substring(0, 40)}]`
+    : `[sms:${parsed.type}_${parsed.amount}_${today}_${parsed.bankName || 'unknown'}_${Date.now().toString(36)}]`
   
-  if (!parsed.txRef) {
-    const alreadyExists = txs.some(t => t.note?.includes(smsHash))
-    if (alreadyExists) {
-      return jsonResponse({ success: true, message: 'Duplicate SMS skipped' })
-    }
-  }
+  // Only check fallback duplicates using txRef (Priority 1 already handles it)
+  // Removed text-based duplicate check — it was too aggressive and blocked real transactions
 
   // ── Build note ──
   const noteContent = parsed.note || parsed.rawText.substring(0, 80)
@@ -1562,19 +1575,22 @@ async function processSmsTransaction(
   await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/transactions`, txs)
   await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`, wallets)
 
-  // Update latest_request with success details
+  // Update latest_request with success details (awaited — ensures debug data is persisted)
   await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/latest_request`, {
-    rawDump: originalText,
+    rawDump: originalText.substring(0, 500),
     time: new Date().toISOString(),
     status: 'success',
+    transactionId: tx.id,
     parsedData: {
       type: parsed.type,
       amount: parsed.amount,
       note: parsed.note,
       bankName: parsed.bankName,
       walletName,
+      walletId,
       txRef: parsed.txRef,
-      balance: parsed.balance
+      balance: parsed.balance,
+      account: parsed.account
     }
   }).catch(() => {})
 
