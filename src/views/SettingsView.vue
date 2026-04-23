@@ -329,7 +329,7 @@ function cancelForgotPin() {
               :class="selectedLocale === 'vi' ? 'bg-accent-subtle text-accent' : 'bg-bg-surface text-text-secondary hover:bg-bg-hover'"
               @click="changeLocale('vi')"
             >
-              🇻🇳 Tiếng Việt
+              Tiếng Việt
             </button>
             <button
               class="border-border-default border-l px-4 py-2 text-sm font-medium transition-all duration-150"
