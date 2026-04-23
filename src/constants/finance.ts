@@ -55,26 +55,31 @@ export const DEFAULT_WALLETS: Omit<Wallet, 'id'>[] = [
 ]
 
 // ── Categories ──
+// Premium icon set — clear, distinct, and visually appealing
 
 export const EXPENSE_CATEGORIES: CategoryConfig[] = [
-  { key: 'food', label: 'Ăn uống', icon: '🍜', color: '#f59e0b', type: 'expense' },
-  { key: 'transport', label: 'Di chuyển', icon: '🚗', color: '#3b82f6', type: 'expense' },
-  { key: 'shopping', label: 'Shopping', icon: '🛍️', color: '#ec4899', type: 'expense' },
-  { key: 'entertainment', label: 'Giải trí', icon: '🎮', color: '#8b5cf6', type: 'expense' },
-  { key: 'bills', label: 'Hóa đơn', icon: '📄', color: '#ef4444', type: 'expense' },
-  { key: 'health', label: 'Sức khỏe', icon: '💊', color: '#14b8a6', type: 'expense' },
-  { key: 'education', label: 'Học tập', icon: '📚', color: '#6366f1', type: 'expense' },
-  { key: 'rent', label: 'Nhà/Thuê', icon: '🏠', color: '#78716c', type: 'expense' },
+  { key: 'food', label: 'Ăn uống', icon: '🍔', color: '#f59e0b', type: 'expense' },
+  { key: 'transport', label: 'Di chuyển', icon: '🚕', color: '#3b82f6', type: 'expense' },
+  { key: 'shopping', label: 'Shopping', icon: '🛒', color: '#ec4899', type: 'expense' },
+  { key: 'entertainment', label: 'Giải trí', icon: '🎬', color: '#8b5cf6', type: 'expense' },
+  { key: 'bills', label: 'Hóa đơn', icon: '🧾', color: '#ef4444', type: 'expense' },
+  { key: 'health', label: 'Sức khỏe', icon: '🩺', color: '#14b8a6', type: 'expense' },
+  { key: 'education', label: 'Học tập', icon: '🎓', color: '#6366f1', type: 'expense' },
+  { key: 'rent', label: 'Nhà/Thuê', icon: '🏡', color: '#78716c', type: 'expense' },
   { key: 'gift', label: 'Quà tặng', icon: '🎁', color: '#f43f5e', type: 'expense' },
-  { key: 'other_expense', label: 'Khác', icon: '📦', color: '#737373', type: 'expense' }
+  { key: 'bank_transfer', label: 'Chuyển khoản', icon: '🏦', color: '#0ea5e9', type: 'expense' },
+  { key: 'bank_fee', label: 'Phí ngân hàng', icon: '💳', color: '#64748b', type: 'expense' },
+  { key: 'subscription', label: 'Đăng ký DV', icon: '📋', color: '#a855f7', type: 'expense' },
+  { key: 'other_expense', label: 'Khác', icon: '📌', color: '#737373', type: 'expense' }
 ]
 
 export const INCOME_CATEGORIES: CategoryConfig[] = [
   { key: 'salary', label: 'Lương', icon: '💰', color: '#10b981', type: 'income' },
   { key: 'freelance', label: 'Freelance', icon: '💻', color: '#06b6d4', type: 'income' },
-  { key: 'investment', label: 'Đầu tư', icon: '📈', color: '#f59e0b', type: 'income' },
-  { key: 'bonus', label: 'Thưởng', icon: '🎉', color: '#8b5cf6', type: 'income' },
+  { key: 'investment', label: 'Đầu tư', icon: '📊', color: '#f59e0b', type: 'income' },
+  { key: 'bonus', label: 'Thưởng', icon: '🏆', color: '#8b5cf6', type: 'income' },
   { key: 'refund', label: 'Hoàn tiền', icon: '↩️', color: '#3b82f6', type: 'income' },
+  { key: 'bank_receive', label: 'Nhận chuyển khoản', icon: '🏦', color: '#0ea5e9', type: 'income' },
   { key: 'other_income', label: 'Thu khác', icon: '📥', color: '#737373', type: 'income' }
 ]
 
@@ -85,7 +90,7 @@ export function getCategoryConfig(key: string): CategoryConfig {
     ALL_CATEGORIES.find((c) => c.key === key) || {
       key,
       label: key,
-      icon: '📦',
+      icon: '📌',
       color: '#737373',
       type: 'both' as const
     }

@@ -44,9 +44,13 @@ function getDisplayDate(isoString: string) {
   return isoString
 }
 
-const availableCategories = computed(() =>
-  type.value === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES
-)
+// Hide auto-only categories from manual entry (bank_transfer, bank_receive, bank_fee are assigned by SMS/webhook)
+const AUTO_ONLY_KEYS = new Set(['bank_transfer', 'bank_receive', 'bank_fee'])
+
+const availableCategories = computed(() => {
+  const cats = type.value === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES
+  return cats.filter(c => !AUTO_ONLY_KEYS.has(c.key))
+})
 
 const selectedCategory = computed(() => getCategoryConfig(category.value))
 

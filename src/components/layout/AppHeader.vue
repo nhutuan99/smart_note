@@ -7,6 +7,7 @@ import { useFinanceStore } from '@/stores/finance'
 import { useEventListener } from '@/composables/useEventListener'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { formatMoney } from '@/composables/useCurrency'
 import { Menu, Bell, Settings, LogOut, Sparkles, ArrowUpRight, ArrowDownRight, CheckCheck, Trash2, BellOff, Zap, Sun, Moon } from 'lucide-vue-next'
 
 const { t } = useI18n()
@@ -182,39 +183,61 @@ function handleLogout() {
               <!-- Items -->
               <template v-else-if="notiStore.filtered.length">
                 <button
-                  v-for="n in notiStore.filtered"
+                  v-for="(n, idx) in notiStore.filtered"
                   :key="n.id"
-                  class="hover:bg-bg-hover flex w-full items-start gap-3 px-4 py-3 text-left transition-colors duration-150"
-                  :class="!n.read ? 'bg-bg-elevated' : ''"
+                  class="noti-item hover:bg-bg-hover flex w-full items-start gap-3 px-4 py-3.5 text-left transition-all duration-200 relative"
+                  :class="!n.read ? 'bg-bg-elevated border-l-[3px] border-l-accent' : 'border-l-[3px] border-l-transparent'"
+                  :style="{ animationDelay: idx * 30 + 'ms' }"
                   @click="notiStore.markRead(n.id)"
                 >
                   <!-- Icon -->
                   <div
-                    class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
-                    :class="n.type === 'bank_in' ? 'bg-success/15' : n.type === 'bank_out' ? 'bg-error/15' : 'bg-info/15'"
+                    class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl shadow-sm"
+                    :class="n.type === 'bank_in'
+                      ? 'bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 ring-1 ring-emerald-500/20'
+                      : n.type === 'bank_out'
+                        ? 'bg-gradient-to-br from-red-500/20 to-red-500/5 ring-1 ring-red-500/20'
+                        : 'bg-gradient-to-br from-blue-500/20 to-blue-500/5 ring-1 ring-blue-500/20'"
                   >
-                    <ArrowUpRight v-if="n.type === 'bank_in'" :size="15" class="text-success" />
-                    <ArrowDownRight v-else-if="n.type === 'bank_out'" :size="15" class="text-error" />
-                    <Bell v-else :size="15" class="text-info" />
+                    <ArrowUpRight v-if="n.type === 'bank_in'" :size="16" class="text-success" />
+                    <ArrowDownRight v-else-if="n.type === 'bank_out'" :size="16" class="text-error" />
+                    <Bell v-else :size="16" class="text-info" />
                   </div>
 
                   <!-- Content -->
                   <div class="min-w-0 flex-1">
-                    <div class="flex items-start justify-between gap-2">
+                    <!-- Money Amount (hero) -->
+                    <div v-if="n.meta?.amount" class="mb-0.5">
                       <span
-                        class="text-[0.8125rem] leading-tight"
-                        :class="!n.read ? 'text-text-primary font-semibold' : 'text-text-secondary font-medium'"
+                        class="text-[0.9375rem] font-bold tracking-tight"
+                        :class="n.meta.txType === 'income' ? 'text-success' : 'text-error'"
                       >
-                        {{ n.title }}
+                        {{ n.meta.txType === 'income' ? '+' : '-' }}{{ formatMoney(n.meta.amount) }}
                       </span>
-                      <!-- Unread dot -->
-                      <span v-if="!n.read" class="bg-accent mt-1 h-2 w-2 shrink-0 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
                     </div>
-                    <p class="text-text-tertiary mt-0.5 truncate text-[0.75rem]">{{ n.body }}</p>
-                    <span class="text-text-disabled mt-1 block text-[0.6875rem]">
-                      {{ notiStore.timeSince(n.createdAt) }}
+                    <!-- Title -->
+                    <span
+                      class="text-[0.8125rem] leading-tight block"
+                      :class="!n.read ? 'text-text-primary font-semibold' : 'text-text-secondary font-medium'"
+                    >
+                      {{ n.title }}
                     </span>
+                    <!-- Wallet + Time row -->
+                    <div class="flex items-center gap-2 mt-1">
+                      <span
+                        v-if="n.meta?.walletName"
+                        class="bg-accent/10 text-accent inline-flex items-center rounded-md px-1.5 py-0.5 text-[0.625rem] font-semibold"
+                      >
+                        {{ n.meta.walletName }}
+                      </span>
+                      <span class="text-text-disabled text-[0.6875rem]">
+                        {{ notiStore.timeSince(n.createdAt) }}
+                      </span>
+                    </div>
                   </div>
+
+                  <!-- Unread dot -->
+                  <span v-if="!n.read" class="bg-accent mt-2 h-2 w-2 shrink-0 rounded-full shadow-[0_0_6px_rgba(16,185,129,0.5)]" />
                 </button>
               </template>
 
@@ -298,5 +321,12 @@ function handleLogout() {
 .dropdown-leave-to {
   opacity: 0;
   transform: translateY(-0.25rem) scale(0.98);
+}
+.noti-item {
+  animation: notiSlideIn 200ms ease both;
+}
+@keyframes notiSlideIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 </style>

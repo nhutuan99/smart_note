@@ -419,12 +419,16 @@ export default {
     education: 'Học tập',
     rent: 'Nhà/Thuê',
     gift: 'Quà tặng',
+    bank_transfer: 'Chuyển khoản',
+    bank_fee: 'Phí ngân hàng',
+    subscription: 'Đăng ký DV',
     other_expense: 'Khác',
     salary: 'Lương',
     freelance: 'Freelance',
     investment: 'Đầu tư',
     bonus: 'Thưởng',
     refund: 'Hoàn tiền',
+    bank_receive: 'Nhận CK',
     other_income: 'Thu khác'
   },
 

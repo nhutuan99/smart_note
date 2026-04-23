@@ -419,12 +419,16 @@ export default {
     education: 'Education',
     rent: 'Rent/Housing',
     gift: 'Gifts',
+    bank_transfer: 'Bank Transfer',
+    bank_fee: 'Bank Fee',
+    subscription: 'Subscription',
     other_expense: 'Other',
     salary: 'Salary',
     freelance: 'Freelance',
     investment: 'Investment',
     bonus: 'Bonus',
     refund: 'Refund',
+    bank_receive: 'Bank Received',
     other_income: 'Other Income'
   },
 
