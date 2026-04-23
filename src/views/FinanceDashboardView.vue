@@ -19,7 +19,8 @@ import {
   ArrowDownRight,
   BarChart3,
   Eye,
-  EyeOff
+  EyeOff,
+  Zap
 } from 'lucide-vue-next'
 import WeatherWidget from '@/components/WeatherWidget.vue'
 
@@ -272,6 +273,118 @@ const incomeByWallet = computed<WalletStat[]>(() => {
 const walletBreakdownTab = ref<'expense' | 'income'>('expense')
 const activeWalletStats = computed(() => walletBreakdownTab.value === 'expense' ? expenseByWallet.value : incomeByWallet.value)
 
+// ── Monthly Budget ──
+const BUDGET_KEY = 'smart_note_monthly_budget'
+const monthlyBudget = ref(parseInt(localStorage.getItem(BUDGET_KEY) || '0'))
+const showBudgetInput = ref(false)
+const budgetInputValue = ref('')
+
+function saveBudget() {
+  const val = parseInt(budgetInputValue.value.replace(/[^0-9]/g, ''))
+  if (val > 0) {
+    monthlyBudget.value = val
+    localStorage.setItem(BUDGET_KEY, String(val))
+  }
+  showBudgetInput.value = false
+  budgetInputValue.value = ''
+}
+
+const budgetUsedPercent = computed(() => {
+  if (!monthlyBudget.value) return 0
+  return Math.min((finance.monthExpense / monthlyBudget.value) * 100, 100)
+})
+
+const budgetRemaining = computed(() => {
+  if (!monthlyBudget.value) return 0
+  return Math.max(monthlyBudget.value - finance.monthExpense, 0)
+})
+
+const daysLeftInMonth = computed(() => {
+  const now = new Date()
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+  return lastDay - now.getDate()
+})
+
+const dailyBudgetRemaining = computed(() => {
+  if (!budgetRemaining.value || !daysLeftInMonth.value) return 0
+  return Math.round(budgetRemaining.value / daysLeftInMonth.value)
+})
+
+// ── Smart Financial Insights ──
+interface Insight {
+  icon: string
+  text: string
+  type: 'success' | 'warning' | 'info'
+}
+
+const insights = computed<Insight[]>(() => {
+  const result: Insight[] = []
+  const txs = finance.monthTransactions
+
+  // 1. Savings rate
+  if (finance.monthIncome > 0) {
+    const savingsRate = ((finance.monthIncome - finance.monthExpense) / finance.monthIncome * 100).toFixed(0)
+    const saved = finance.monthIncome > finance.monthExpense
+    result.push({
+      icon: saved ? '💰' : '⚠️',
+      text: saved
+        ? `Tỷ lệ tiết kiệm tháng này: ${savingsRate}%. Tuyệt vời!`
+        : `Chi nhiều hơn thu ${formatMoneyShort(finance.monthExpense - finance.monthIncome)}. Cần kiểm soát!`,
+      type: saved ? 'success' : 'warning'
+    })
+  }
+
+  // 2. Top spending wallet
+  if (expenseByWallet.value.length > 0) {
+    const top = expenseByWallet.value[0]
+    result.push({
+      icon: '🏦',
+      text: `Ví chi nhiều nhất: ${top.name} — ${formatMoneyShort(top.total)} (${top.percentage.toFixed(0)}%)`,
+      type: 'info'
+    })
+  }
+
+  // 3. Average daily spend
+  const today = new Date().getDate()
+  if (finance.monthExpense > 0 && today > 1) {
+    const avgDaily = Math.round(finance.monthExpense / today)
+    result.push({
+      icon: '📊',
+      text: `Chi tiêu trung bình: ${formatMoneyShort(avgDaily)}/ngày`,
+      type: 'info'
+    })
+  }
+
+  // 4. Budget warning
+  if (monthlyBudget.value > 0) {
+    const pct = budgetUsedPercent.value
+    if (pct >= 90) {
+      result.push({
+        icon: '🔴',
+        text: `Đã dùng ${pct.toFixed(0)}% ngân sách! Còn ${formatMoneyShort(budgetRemaining.value)} cho ${daysLeftInMonth.value} ngày`,
+        type: 'warning'
+      })
+    } else if (pct >= 70) {
+      result.push({
+        icon: '🟡',
+        text: `Đã dùng ${pct.toFixed(0)}% ngân sách. Mỗi ngày nên chi tối đa ${formatMoneyShort(dailyBudgetRemaining.value)}`,
+        type: 'warning'
+      })
+    }
+  }
+
+  // 5. Transaction count
+  const expenseCount = txs.filter((t: any) => t.type === 'expense').length
+  if (expenseCount > 0) {
+    result.push({
+      icon: '🧾',
+      text: `${expenseCount} giao dịch chi tiêu trong tháng`,
+      type: 'info'
+    })
+  }
+
+  return result
+})
 
 </script>
 
@@ -350,6 +463,121 @@ const activeWalletStats = computed(() => walletBreakdownTab.value === 'expense' 
         <div v-if="finance.loading" class="skeleton h-8 w-32 mt-1"></div>
         <div v-else class="text-error text-2xl font-bold tracking-tight">
           -{{ formatVND(finance.monthExpense) }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Budget Gauge + Smart Insights -->
+    <div class="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <!-- Monthly Budget Gauge -->
+      <div class="card-premium p-5">
+        <div class="mb-3 flex items-center justify-between">
+          <h3 class="text-sm font-semibold flex items-center gap-2">
+            <div class="bg-accent/10 flex h-7 w-7 items-center justify-center rounded-lg">
+              <Sparkles :size="14" class="text-accent" />
+            </div>
+            Ngân sách tháng
+          </h3>
+          <button
+            v-if="monthlyBudget > 0 && !showBudgetInput"
+            class="text-text-tertiary hover:text-accent text-[0.6875rem] transition-colors"
+            @click="showBudgetInput = true; budgetInputValue = String(monthlyBudget)"
+          >Chỉnh sửa</button>
+        </div>
+
+        <!-- No budget set -->
+        <div v-if="!monthlyBudget && !showBudgetInput" class="flex flex-col items-center gap-3 py-4">
+          <span class="text-text-disabled text-sm">Chưa đặt ngân sách</span>
+          <button
+            class="btn-primary text-sm px-4 py-1.5"
+            @click="showBudgetInput = true"
+          >Đặt ngân sách</button>
+        </div>
+
+        <!-- Budget input -->
+        <div v-if="showBudgetInput" class="flex items-center gap-2 py-3">
+          <input
+            v-model="budgetInputValue"
+            type="text"
+            inputmode="numeric"
+            placeholder="VD: 5000000"
+            class="input flex-1 text-sm"
+            @keyup.enter="saveBudget"
+          />
+          <button class="btn-primary text-sm px-3 py-1.5" @click="saveBudget">Lưu</button>
+          <button class="text-text-tertiary hover:text-text-primary text-sm px-2" @click="showBudgetInput = false">Hủy</button>
+        </div>
+
+        <!-- Gauge display -->
+        <div v-if="monthlyBudget > 0 && !showBudgetInput" class="flex items-center gap-5">
+          <!-- SVG Ring -->
+          <div class="relative h-24 w-24 shrink-0">
+            <svg viewBox="0 0 100 100" class="w-full h-full -rotate-90">
+              <!-- Background ring -->
+              <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" stroke-width="7" class="text-bg-elevated" />
+              <!-- Progress ring -->
+              <circle
+                cx="50" cy="50" r="42" fill="none"
+                :stroke="budgetUsedPercent >= 90 ? '#ef4444' : budgetUsedPercent >= 70 ? '#f59e0b' : '#10b981'"
+                stroke-width="7"
+                stroke-linecap="round"
+                :stroke-dasharray="`${budgetUsedPercent * 2.64} 264`"
+                class="transition-all duration-700"
+              />
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center">
+              <span class="text-lg font-bold" :class="budgetUsedPercent >= 90 ? 'text-error' : budgetUsedPercent >= 70 ? 'text-yellow-400' : 'text-success'">
+                {{ budgetUsedPercent.toFixed(0) }}%
+              </span>
+            </div>
+          </div>
+          <!-- Stats -->
+          <div class="flex-1 space-y-2 min-w-0">
+            <div class="flex justify-between text-[0.75rem]">
+              <span class="text-text-tertiary">Ngân sách</span>
+              <span class="text-text-primary font-semibold tabular-nums">{{ formatVNDShort(monthlyBudget) }}</span>
+            </div>
+            <div class="flex justify-between text-[0.75rem]">
+              <span class="text-text-tertiary">Đã chi</span>
+              <span class="text-error font-semibold tabular-nums">{{ formatVNDShort(finance.monthExpense) }}</span>
+            </div>
+            <div class="flex justify-between text-[0.75rem]">
+              <span class="text-text-tertiary">Còn lại</span>
+              <span class="text-success font-semibold tabular-nums">{{ formatVNDShort(budgetRemaining) }}</span>
+            </div>
+            <div class="border-border-subtle border-t pt-2 flex justify-between text-[0.6875rem]">
+              <span class="text-text-disabled">Mỗi ngày còn</span>
+              <span class="text-accent font-semibold tabular-nums">~{{ formatVNDShort(dailyBudgetRemaining) }}/ngày</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Smart Insights -->
+      <div class="card-premium p-5">
+        <h3 class="mb-3 text-sm font-semibold flex items-center gap-2">
+          <div class="bg-blue-500/10 flex h-7 w-7 items-center justify-center rounded-lg">
+            <Zap :size="14" class="text-blue-400" />
+          </div>
+          Phân tích thông minh
+        </h3>
+        <div v-if="insights.length" class="space-y-2.5">
+          <div
+            v-for="(insight, idx) in insights"
+            :key="idx"
+            class="flex items-start gap-2.5 rounded-lg px-3 py-2 transition-colors"
+            :class="{
+              'bg-success/5': insight.type === 'success',
+              'bg-yellow-500/5': insight.type === 'warning',
+              'bg-blue-500/5': insight.type === 'info'
+            }"
+          >
+            <span class="text-base shrink-0 mt-0.5">{{ insight.icon }}</span>
+            <span class="text-text-secondary text-[0.8125rem] leading-relaxed">{{ insight.text }}</span>
+          </div>
+        </div>
+        <div v-else class="text-text-disabled flex h-20 items-center justify-center text-sm">
+          Chưa đủ dữ liệu để phân tích
         </div>
       </div>
     </div>
