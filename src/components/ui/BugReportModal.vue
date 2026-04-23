@@ -76,7 +76,6 @@ async function submitReport() {
 
   loading.value = true
   try {
-    // 1. Save to backend KV (primary, always reliable)
     const payload: Record<string, any> = {
       title: title.value,
       description: description.value,
@@ -89,10 +88,8 @@ async function submitReport() {
 
     const res = await httpClient.post<{ message: string }>('/api/report-bug', payload)
 
-    // 2. Send email notification to Admin via Web3Forms (client-side, fire-and-forget)
-    sendEmailNotification(title.value, description.value, currentUrl.value, userAgent.value)
-
     ui.showToast('success', res?.message || t('bugReport.success'))
+    // Reset form completely
     title.value = ''
     description.value = ''
     removeImage()
@@ -102,26 +99,6 @@ async function submitReport() {
   } finally {
     loading.value = false
   }
-}
-
-/**
- * Client-side email via Web3Forms (free, no domain needed).
- * Fire-and-forget: failure does NOT block the user flow.
- * Access key is public (designed for client-side use).
- */
-async function sendEmailNotification(bugTitle: string, bugDesc: string, bugUrl: string, bugUA: string) {
-  try {
-    await fetch('https://api.web3forms.com/submit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({
-        access_key: 'YOUR_ACCESS_KEY', // TODO: replace after activating at https://web3forms.com
-        subject: `[Bug Report] ${bugTitle}`,
-        from_name: 'Smart Note Bug Reporter',
-        message: `Title: ${bugTitle}\n\nDescription:\n${bugDesc}\n\nURL: ${bugUrl}\nDevice: ${bugUA}`,
-      })
-    })
-  } catch { /* silent — email is best-effort */ }
 }
 </script>
 

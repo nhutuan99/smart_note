@@ -19,6 +19,7 @@ interface Env {
   CASSO_WEBHOOK_SECRET: string
   GOOGLE_CLIENT_ID: string
   GOOGLE_CLIENT_SECRET: string
+  RESEND_API_KEY: string
   AI: Ai
 }
 
@@ -2102,17 +2103,53 @@ async function handleReportBug(userId: string, request: Request, env: Env): Prom
 
   // Store image separately if provided (to keep the list payload small)
   if (image && typeof image === 'string' && image.startsWith('data:image/')) {
-    // Save image to its own KV key (max 25MB per value)
     await env.SMART_NOTE_KV.put(`bug_reports/${report.id}/image`, image)
-    report.image = `__has_image__` // marker — image fetched separately
+    report.image = `__has_image__`
   }
 
   // Append to global bug reports list
   const reports = (await getJSON<BugReport[]>(env.SMART_NOTE_KV, 'bug_reports/list')) || []
-  reports.unshift(report)  // newest first
-  // Keep max 100 reports
+  reports.unshift(report)
   if (reports.length > 100) reports.length = 100
   await putJSON(env.SMART_NOTE_KV, 'bug_reports/list', reports)
+
+  // Send email notification to Admin via Resend (server-side, fire-and-forget)
+  if (env.RESEND_API_KEY) {
+    try {
+      const emailHtml = `
+<div style="font-family:system-ui,-apple-system,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+  <div style="background:#1a1a2e;border-radius:12px;padding:24px;color:#e0e0e0">
+    <h2 style="color:#ff6b6b;margin:0 0 16px">🐛 Bug Report: ${title}</h2>
+    <table style="width:100%;border-collapse:collapse;font-size:14px">
+      <tr><td style="padding:6px 0;color:#888">Người gửi</td><td style="padding:6px 0">${user.name} (${user.email})</td></tr>
+      <tr><td style="padding:6px 0;color:#888">URL</td><td style="padding:6px 0;word-break:break-all">${url || 'N/A'}</td></tr>
+      <tr><td style="padding:6px 0;color:#888">Thời gian</td><td style="padding:6px 0">${report.createdAt}</td></tr>
+      <tr><td style="padding:6px 0;color:#888">Device</td><td style="padding:6px 0;font-size:12px;word-break:break-all">${userAgent || 'N/A'}</td></tr>
+    </table>
+    <div style="margin-top:16px;padding:16px;background:#16213e;border-radius:8px;border-left:4px solid #ff6b6b">
+      <p style="margin:0 0 8px;color:#888;font-size:12px;text-transform:uppercase;letter-spacing:1px">Mô tả chi tiết</p>
+      <p style="margin:0;white-space:pre-wrap;line-height:1.6">${description}</p>
+    </div>
+    ${report.image === '__has_image__' ? '<p style="margin-top:12px;color:#888;font-size:12px">📎 Có ảnh đính kèm — xem trong Admin Dashboard</p>' : ''}
+    <p style="margin-top:20px;padding-top:16px;border-top:1px solid #333;color:#666;font-size:11px;text-align:center">Smart Note Bug Reporter • Report ID: ${report.id}</p>
+  </div>
+</div>`
+
+      await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${env.RESEND_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          from: 'Smart Note <onboarding@resend.dev>',
+          to: ['tintphcm@gmail.com'],
+          subject: `[Bug Report] ${title}`,
+          html: emailHtml
+        })
+      })
+    } catch { /* email is best-effort, don't block response */ }
+  }
 
   return jsonResponse({ success: true, message: 'Đã gửi báo cáo lỗi thành công! Admin sẽ xem và xử lý.' })
 }
