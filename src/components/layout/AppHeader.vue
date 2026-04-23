@@ -8,6 +8,7 @@ import { useEventListener } from '@/composables/useEventListener'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { formatMoney } from '@/composables/useCurrency'
+import { getWalletBrand } from '@/constants/walletBrands'
 import { Menu, Bell, Settings, LogOut, Sparkles, ArrowUpRight, ArrowDownRight, CheckCheck, Trash2, BellOff, Zap, Sun, Moon } from 'lucide-vue-next'
 
 const { t } = useI18n()
@@ -190,8 +191,20 @@ function handleLogout() {
                   :style="{ animationDelay: idx * 30 + 'ms' }"
                   @click="notiStore.markRead(n.id)"
                 >
-                  <!-- Icon -->
+                  <!-- Icon: Bank logo or fallback arrow -->
                   <div
+                    v-if="n.meta?.bankName && getWalletBrand(n.meta.bankName)?.logoUrl"
+                    class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-white/10 overflow-hidden"
+                  >
+                    <img
+                      :src="getWalletBrand(n.meta.bankName)!.logoUrl"
+                      :alt="n.meta.bankName"
+                      class="h-6 w-6 object-contain"
+                      loading="lazy"
+                    />
+                  </div>
+                  <div
+                    v-else
                     class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl shadow-sm"
                     :class="n.type === 'bank_in'
                       ? 'bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 ring-1 ring-emerald-500/20'
