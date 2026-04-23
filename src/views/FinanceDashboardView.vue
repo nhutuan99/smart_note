@@ -317,85 +317,7 @@ const dailyBudgetRemaining = computed(() => {
   return Math.round(budgetRemaining.value / daysLeftInMonth.value)
 })
 
-// ── Smart Financial Insights ──
-interface Insight {
-  icon: string
-  text: string
-  type: 'success' | 'warning' | 'info'
-}
-
-const insights = computed<Insight[]>(() => {
-  const result: Insight[] = []
-  const txs = finance.monthTransactions
-
-  // 1. Savings rate
-  if (finance.monthIncome > 0) {
-    const savingsRate = ((finance.monthIncome - finance.monthExpense) / finance.monthIncome * 100).toFixed(0)
-    const saved = finance.monthIncome > finance.monthExpense
-    result.push({
-      icon: saved ? '💰' : '⚠️',
-      text: saved
-        ? `Tỷ lệ tiết kiệm tháng này: ${savingsRate}%. Tuyệt vời!`
-        : `Chi nhiều hơn thu ${formatMoneyShort(finance.monthExpense - finance.monthIncome)}. Cần kiểm soát!`,
-      type: saved ? 'success' : 'warning'
-    })
-  }
-
-  // 2. Top spending wallet
-  if (expenseByWallet.value.length > 0) {
-    const top = expenseByWallet.value[0]
-    result.push({
-      icon: '🏦',
-      text: `Ví chi nhiều nhất: ${top.name} — ${formatMoneyShort(top.total)} (${top.percentage.toFixed(0)}%)`,
-      type: 'info'
-    })
-  }
-
-  // 3. Average daily spend
-  const today = new Date().getDate()
-  if (finance.monthExpense > 0 && today > 1) {
-    const avgDaily = Math.round(finance.monthExpense / today)
-    result.push({
-      icon: '📊',
-      text: `Chi tiêu trung bình: ${formatMoneyShort(avgDaily)}/ngày`,
-      type: 'info'
-    })
-  }
-
-  // 4. Budget warning
-  if (monthlyBudget.value > 0) {
-    const pct = budgetUsedPercent.value
-    if (pct >= 90) {
-      result.push({
-        icon: '🔴',
-        text: `Đã dùng ${pct.toFixed(0)}% ngân sách! Còn ${formatMoneyShort(budgetRemaining.value)} cho ${daysLeftInMonth.value} ngày`,
-        type: 'warning'
-      })
-    } else if (pct >= 70) {
-      result.push({
-        icon: '🟡',
-        text: `Đã dùng ${pct.toFixed(0)}% ngân sách. Mỗi ngày nên chi tối đa ${formatMoneyShort(dailyBudgetRemaining.value)}`,
-        type: 'warning'
-      })
-    }
-  }
-
-  // 5. Transaction count
-  const expenseCount = txs.filter((t: any) => t.type === 'expense').length
-  if (expenseCount > 0) {
-    result.push({
-      icon: '🧾',
-      text: `${expenseCount} giao dịch chi tiêu trong tháng`,
-      type: 'info'
-    })
-  }
-
-  return result
-})
-
 // ── AI Generator ──
-const isInsightsCollapsed = ref(false)
-const isAiCollapsed = ref(false)
 const isSmartSectionCollapsed = ref(false)
 const aiPrompt = ref('')
 const { streamText: aiResponse, loading: isAiLoading, askAbout } = useAi()
@@ -544,16 +466,7 @@ Quy tắc:
             <div class="text-sm font-bold text-text-primary">{{ t('dashboard.aiReady') }}</div>
           </div>
         </div>
-        <!-- Insights summary -->
-        <div class="flex items-center gap-3 pl-6 shrink-0">
-          <div class="bg-yellow-500/10 flex h-8 w-8 items-center justify-center rounded-lg">
-            <Zap :size="16" class="text-yellow-400" />
-          </div>
-          <div>
-            <div class="text-[0.6875rem] text-text-tertiary font-medium">{{ t('dashboard.smartInsights') }}</div>
-            <div class="text-sm font-bold text-text-primary">{{ insights.length }} {{ t('dashboard.insightsCount') }}</div>
-          </div>
-        </div>
+
       </div>
       <button class="text-text-tertiary group-hover:text-text-primary transition-colors p-2 rounded-lg bg-bg-surface group-hover:bg-bg-elevated ml-4 shrink-0">
         <ChevronDown :size="18" />
@@ -572,9 +485,9 @@ Quy tắc:
       </div>
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <!-- LEFT COLUMN -->
-      <div class="flex flex-col gap-4">
+      <div class="flex flex-col gap-4 h-full">
         <!-- Monthly Budget Gauge -->
-        <div class="card-premium p-5">
+        <div class="card-premium p-5 h-full flex flex-col justify-between">
           <div class="mb-3 flex items-center justify-between">
             <h3 class="text-sm font-semibold flex items-center gap-2">
               <div class="bg-accent/10 flex h-7 w-7 items-center justify-center rounded-lg">
@@ -661,23 +574,21 @@ Quy tắc:
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- AI Chat Area -->
-        <div class="card-premium p-4 flex flex-col flex-1">
-          <div class="flex items-center justify-between cursor-pointer" :class="isAiCollapsed ? '' : 'mb-3'" @click="isAiCollapsed = !isAiCollapsed">
+      <!-- RIGHT COLUMN: AI Chat Area -->
+      <div class="flex flex-col gap-4 h-full">
+        <div class="card-premium p-4 flex flex-col h-full">
+          <div class="flex items-center justify-between mb-3">
             <h3 class="text-sm font-semibold text-text-primary flex items-center gap-2">
               <div class="bg-blue-500/10 flex h-7 w-7 items-center justify-center rounded-lg">
                 <Bot :size="14" class="text-blue-400" />
               </div>
               {{ t('dashboard.aiAssistant') }}
             </h3>
-            <button class="text-text-tertiary hover:text-text-primary p-1 rounded-md transition-colors">
-              <ChevronDown v-if="isAiCollapsed" :size="18" />
-              <ChevronUp v-else :size="18" />
-            </button>
           </div>
 
-          <div v-show="!isAiCollapsed" class="flex flex-col flex-1">
+          <div class="flex flex-col flex-1">
             <div class="flex flex-col flex-1 justify-end">
               <div v-if="aiResponse" class="mb-4 bg-bg-surface rounded-xl p-3.5 text-[0.8125rem] text-text-secondary leading-relaxed border border-border-subtle relative shadow-sm">
                 <div class="absolute -top-2.5 left-3 bg-bg-elevated px-1.5 flex items-center gap-1 text-blue-400 rounded-full text-[0.625rem] font-semibold border border-border-subtle shadow-sm">
@@ -713,43 +624,6 @@ Quy tắc:
                 </button>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- RIGHT COLUMN: Smart Insights -->
-      <div class="card-premium p-5 flex flex-col h-full">
-        <div class="flex items-center justify-between mb-1 cursor-pointer" @click="isInsightsCollapsed = !isInsightsCollapsed">
-          <h3 class="text-sm font-semibold flex items-center gap-2">
-            <div class="bg-yellow-500/10 flex h-7 w-7 items-center justify-center rounded-lg">
-              <Zap :size="14" class="text-yellow-400" />
-            </div>
-            {{ t('dashboard.smartInsights') }}
-          </h3>
-          <button class="text-text-tertiary hover:text-text-primary p-1 rounded-md transition-colors">
-            <ChevronDown v-if="isInsightsCollapsed" :size="18" />
-            <ChevronUp v-else :size="18" />
-          </button>
-        </div>
-
-        <div v-show="!isInsightsCollapsed" class="flex-1 flex flex-col mt-3">
-          <div v-if="insights.length" class="space-y-2.5">
-            <div
-              v-for="(insight, idx) in insights"
-              :key="idx"
-              class="flex items-start gap-2.5 rounded-lg px-3 py-2.5 transition-colors border border-transparent hover:border-border-subtle"
-              :class="{
-                'bg-success/5': insight.type === 'success',
-                'bg-yellow-500/5': insight.type === 'warning',
-                'bg-blue-500/5': insight.type === 'info'
-              }"
-            >
-              <span class="text-base shrink-0 mt-0.5">{{ insight.icon }}</span>
-              <span class="text-text-secondary text-[0.8125rem] leading-relaxed">{{ insight.text }}</span>
-            </div>
-          </div>
-          <div v-else class="text-text-disabled flex h-20 items-center justify-center text-sm">
-            {{ t('dashboard.notEnoughData') }}
           </div>
         </div>
       </div>
