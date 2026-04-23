@@ -18,6 +18,7 @@ export interface ConfirmOptions {
 export const useUiStore = defineStore('ui', () => {
   const sidebarOpen = ref(true)
   const searchOpen = ref(false)
+  const showBugReport = ref(false)
   const toasts = ref<Toast[]>([])
   const theme = ref<'dark' | 'light'>(
     (localStorage.getItem('sn_theme') as 'dark' | 'light') || 'dark'
@@ -170,6 +171,7 @@ export const useUiStore = defineStore('ui', () => {
     requestConfirm,
     resolveConfirm,
     requestPinValidation,
-    resolvePin
+    resolvePin,
+    showBugReport
   }
 })

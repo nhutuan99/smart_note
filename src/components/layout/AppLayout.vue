@@ -6,7 +6,7 @@ import ToastContainer from '@/components/ui/ToastContainer.vue'
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import PinDialog from '@/components/PinDialog.vue'
 import BugReportModal from '@/components/ui/BugReportModal.vue'
-import { Bug } from 'lucide-vue-next'
+import { ArrowUp } from 'lucide-vue-next'
 import { useUiStore } from '@/stores/ui'
 import { useNotificationStore } from '@/stores/notifications'
 import { useNotesStore } from '@/stores/notes'
@@ -24,7 +24,19 @@ const auth = useAuthStore()
 const router = useRouter()
 const { t } = useI18n()
 
-const showBugReport = ref(false)
+const showScrollTop = ref(false)
+const mainRef = ref<HTMLElement | null>(null)
+
+function handleScroll(e: Event) {
+  const target = e.target as HTMLElement
+  showScrollTop.value = target.scrollTop > 300
+}
+
+function scrollToTop() {
+  if (mainRef.value) {
+    mainRef.value.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+}
 
 let _lastSyncTime = 0
 
@@ -109,7 +121,9 @@ useEventListener(document, 'visibilitychange', syncOnVisible)
     <AppHeader />
     <AppSidebar />
     <main
-      class="fixed top-[3.5rem] right-0 bottom-0 w-full overflow-y-auto transition-all duration-300"
+      ref="mainRef"
+      @scroll="handleScroll"
+      class="fixed top-[3.5rem] right-0 bottom-0 w-full overflow-y-auto transition-all duration-300 scroll-smooth"
       :class="ui.sidebarOpen ? 'md:w-[calc(100%-16.25rem)]' : 'md:w-[calc(100%-3.75rem)]'"
     >
       <div class="mx-auto w-full max-w-5xl px-4 py-5 sm:px-6 sm:py-6 lg:px-10 lg:py-8">
@@ -124,18 +138,17 @@ useEventListener(document, 'visibilitychange', syncOnVisible)
       </div>
     </main>
 
-    <!-- Floating Action Button for Bug Report -->
-    <button 
-      v-if="auth.isAuthenticated"
-      @click="showBugReport = true"
-      class="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-danger text-white shadow-lg shadow-danger/30 hover:scale-105 hover:bg-danger-hover transition-all active:scale-95 group"
-      title="Báo cáo lỗi / Góp ý"
-    >
-      <Bug class="h-6 w-6" />
-      <span class="absolute right-full mr-3 whitespace-nowrap rounded-md bg-bg-secondary px-2.5 py-1.5 text-xs font-semibold text-text-primary opacity-0 shadow-sm ring-1 ring-border-default transition-all group-hover:opacity-100 pointer-events-none">
-        Báo lỗi / Góp ý
-      </span>
-    </button>
+    <!-- Scroll To Top Button -->
+    <transition name="fade">
+      <button 
+        v-if="showScrollTop"
+        @click="scrollToTop"
+        class="fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-bg-secondary text-text-primary shadow-lg ring-1 ring-border-default hover:bg-bg-tertiary transition-all active:scale-95"
+        title="Lên đầu trang"
+      >
+        <ArrowUp class="h-5 w-5" />
+      </button>
+    </transition>
 
     <ToastContainer />
     <ConfirmDialog />
@@ -147,8 +160,8 @@ useEventListener(document, 'visibilitychange', syncOnVisible)
       @cancelled="ui.resolvePin(false)"
     />
     <BugReportModal 
-      :show="showBugReport" 
-      @close="showBugReport = false" 
+      :show="ui.showBugReport" 
+      @close="ui.showBugReport = false" 
     />
   </div>
 </template>

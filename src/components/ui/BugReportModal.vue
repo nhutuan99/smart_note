@@ -96,7 +96,7 @@ async function submitReport() {
                 v-model="title"
                 type="text"
                 placeholder="VD: Không đồng bộ được SMS Casso"
-                class="input-premium w-full"
+                class="w-full rounded-xl bg-bg-tertiary/50 border border-border-default/50 px-4 py-2.5 text-sm text-text-primary placeholder:text-text-tertiary focus:bg-bg-secondary focus:border-accent/50 focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all"
                 :disabled="loading"
               />
             </div>
@@ -108,7 +108,7 @@ async function submitReport() {
                 v-model="description"
                 rows="4"
                 placeholder="Mô tả các bước để tái hiện lỗi..."
-                class="input-premium w-full resize-none"
+                class="w-full rounded-xl bg-bg-tertiary/50 border border-border-default/50 px-4 py-3 text-sm text-text-primary placeholder:text-text-tertiary focus:bg-bg-secondary focus:border-accent/50 focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all resize-none"
                 :disabled="loading"
               ></textarea>
             </div>
