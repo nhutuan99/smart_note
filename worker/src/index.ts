@@ -1419,15 +1419,15 @@ function parseSmsTransaction(text: string, senderHint = ''): SmsParsedResult | n
 
   // ── Extract structured fields (TPBank, Techcombank, etc.) ──
   // PS (Phát sinh): PS:-22.000VND or PS:+500.000VND
-  const psMatch = text.match(/PS\s*:\s*([+-])\s*([\d.,]+)\s*(?:VND|đ)/i)
+  const psMatch = text.match(/(?:PS|Phat sinh|So tien)[^:]*:\s*([+-])?\s*([\d.,]+)\s*(?:VND|đ|d)/i)
   // TK (Tài khoản): TK: xxxx8505201
-  const tkMatch = text.match(/TK\s*:\s*([^\n\r]+)/i)
-  // SD (Số dư): SD: 257.093VND
-  const sdMatch = text.match(/(?:^|\n)\s*SD\s*:\s*([\d.,]+)\s*(?:VND|đ)/im)
+  const tkMatch = text.match(/(?:TK|Tai khoan|Account)[^:]*:\s*([A-Za-z0-9*x]+)/i)
+  // SD (Số dư): SD: 257.093VND (tránh match 'SD KHA DUNG')
+  const sdMatch = text.match(/(?:SD|So du)(?:\s*cuoi[^:]*|\s*hien tai[^:]*)?\s*:\s*([+-]?[\d.,]+)\s*(?:VND|đ|d)/i)
   // ND (Nội dung): ND: NAP TIEN VI MOMO...
-  const ndMatch = text.match(/ND\s*:\s*([^\n\r]+)/i)
+  const ndMatch = text.match(/(?:ND|Noi dung|Noi dung GD|Desc)[^:]*:\s*([^\n\r]+)/i)
   // SO GD (Số giao dịch): SO GD: 918TTMB261
-  const soGdMatch = text.match(/SO\s*GD\s*:\s*([^\n\r\s]+)/i)
+  const soGdMatch = text.match(/(?:SO GD|Ma GD|Ref|Trace|Ma giao dich)[^:]*:\s*([A-Za-z0-9]+)/i)
 
   let type: 'income' | 'expense' = 'expense'
   let amount = 0
@@ -1438,7 +1438,8 @@ function parseSmsTransaction(text: string, senderHint = ''): SmsParsedResult | n
 
   // ── Strategy 1: Structured PS field (best for TPBank, etc.) ──
   if (psMatch) {
-    type = psMatch[1] === '+' ? 'income' : 'expense'
+    type = psMatch[1] === '+' || !psMatch[1] ? 'income' : 'expense'
+    if (psMatch[1] === '-') type = 'expense'
     amount = parseInt(psMatch[2].replace(/[.,]/g, ''), 10) || 0
   }
 
@@ -1708,8 +1709,15 @@ async function processSmsTransaction(
   // Only check fallback duplicates using txRef (Priority 1 already handles it)
   // Removed text-based duplicate check — it was too aggressive and blocked real transactions
 
-  // ── Build note ──
-  const noteContent = parsed.note || parsed.rawText.substring(0, 80)
+  // ── Build note with full details ──
+  let noteContent = parsed.note || parsed.rawText.substring(0, 80)
+  
+  // Append detected info for user
+  let extraInfo = ''
+  if (parsed.account) extraInfo += ` • TK: ${parsed.account}`
+  if (parsed.balance) extraInfo += ` • SD: ${parsed.balance.toLocaleString('vi-VN')}đ`
+  if (parsed.txRef) extraInfo += ` • GD: ${parsed.txRef}`
+
   const bankLabel = parsed.bankName ? ` • ${parsed.bankName}` : ''
 
   const tx: TransactionData = {
@@ -1717,7 +1725,7 @@ async function processSmsTransaction(
     type: parsed.type,
     amount: parsed.amount,
     category: parsed.type === 'income' ? 'other_income' : 'other_expense',
-    note: `${noteContent}${bankLabel} ${smsHash}`.trim(),
+    note: `${noteContent}${extraInfo}${bankLabel} ${smsHash}`.trim(),
     walletId,
     source: 'sms',
     date: new Date().toISOString().substring(0, 10),
@@ -1726,10 +1734,14 @@ async function processSmsTransaction(
 
   txs.push(tx)
 
-  // Cập nhật số dư
+  // Cập nhật số dư: Lấy chính xác SD của ngân hàng nếu có (đảm bảo chuẩn 100%)
   const walletIdx = wallets.findIndex(w => w.id === walletId)
   if (walletIdx !== -1) {
-    wallets[walletIdx].balance += parsed.type === 'income' ? parsed.amount : -parsed.amount
+    if (parsed.balance && parsed.balance > 0) {
+      wallets[walletIdx].balance = parsed.balance
+    } else {
+      wallets[walletIdx].balance += parsed.type === 'income' ? parsed.amount : -parsed.amount
+    }
   }
 
   // Notification
