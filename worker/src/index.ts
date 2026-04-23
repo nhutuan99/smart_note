@@ -2165,39 +2165,6 @@ async function handleReportBug(userId: string, request: Request, env: Env): Prom
   return jsonResponse({ success: true, message: 'Đã gửi báo cáo lỗi thành công! Admin sẽ xem và xử lý.' })
 }
 
-async function handleListBugReports(env: Env): Promise<Response> {
-  const reports = (await getJSON<BugReport[]>(env.SMART_NOTE_KV, 'bug_reports/list')) || []
-  return jsonResponse({ success: true, data: reports })
-}
-
-async function handleGetBugReportImage(reportId: string, env: Env): Promise<Response> {
-  const image = await env.SMART_NOTE_KV.get(`bug_reports/${reportId}/image`)
-  if (!image) return errorResponse('Image not found', 404)
-  return jsonResponse({ success: true, data: image })
-}
-
-async function handleUpdateBugReportStatus(reportId: string, request: Request, env: Env): Promise<Response> {
-  const body = (await request.json()) as any
-  const { status } = body
-  if (!['new', 'read', 'resolved'].includes(status)) return errorResponse('Invalid status')
-
-  const reports = (await getJSON<BugReport[]>(env.SMART_NOTE_KV, 'bug_reports/list')) || []
-  const idx = reports.findIndex(r => r.id === reportId)
-  if (idx === -1) return errorResponse('Report not found', 404)
-
-  reports[idx].status = status
-  await putJSON(env.SMART_NOTE_KV, 'bug_reports/list', reports)
-  return jsonResponse({ success: true, data: reports[idx] })
-}
-
-async function handleDeleteBugReport(reportId: string, env: Env): Promise<Response> {
-  const reports = (await getJSON<BugReport[]>(env.SMART_NOTE_KV, 'bug_reports/list')) || []
-  const filtered = reports.filter(r => r.id !== reportId)
-  await putJSON(env.SMART_NOTE_KV, 'bug_reports/list', filtered)
-  // Clean up image if exists
-  await env.SMART_NOTE_KV.delete(`bug_reports/${reportId}/image`)
-  return jsonResponse({ success: true })
-}
 
 // ====== Main Router ======
 
@@ -2273,22 +2240,6 @@ export default {
       if (path === '/api/report-bug' && request.method === 'POST') {
         return handleReportBug(userId, request, env)
       }
-      if (path === '/api/bug-reports' && request.method === 'GET') {
-        return handleListBugReports(env)
-      }
-      const bugImageMatch = path.match(/^\/api\/bug-reports\/(.+)\/image$/)
-      if (bugImageMatch && request.method === 'GET') {
-        return handleGetBugReportImage(bugImageMatch[1], env)
-      }
-      const bugStatusMatch = path.match(/^\/api\/bug-reports\/(.+)\/status$/)
-      if (bugStatusMatch && request.method === 'PUT') {
-        return handleUpdateBugReportStatus(bugStatusMatch[1], request, env)
-      }
-      const bugDeleteMatch = path.match(/^\/api\/bug-reports\/(.+)$/)
-      if (bugDeleteMatch && request.method === 'DELETE') {
-        return handleDeleteBugReport(bugDeleteMatch[1], env)
-      }
-
       // Notes CRUD
       if (path === '/api/notes' && request.method === 'GET') {
         return handleListNotes(userId, env)

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
-import { Bug, X, Send, Loader2, ImagePlus, Trash2 } from 'lucide-vue-next'
+import { Bug, X, Send, Loader2, ImagePlus, Trash2, ArrowLeft, Sparkles } from 'lucide-vue-next'
 import { httpClient } from '@/shared/api/httpClient'
 import { useUiStore } from '@/stores/ui'
 import { useI18n } from 'vue-i18n'
@@ -16,6 +16,7 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const ui = useUiStore()
 
+const step = ref(1)
 const title = ref('')
 const description = ref('')
 const reportType = ref<'bug' | 'feature'>('bug')
@@ -28,6 +29,7 @@ const fileInputRef = ref<HTMLInputElement | null>(null)
 // Reset the URL/UA each time the modal opens
 watch(() => props.show, (v) => {
   if (v) {
+    step.value = 1
     currentUrl.value = window.location.href
     userAgent.value = navigator.userAgent
   }
@@ -92,6 +94,7 @@ async function submitReport() {
 
     ui.showToast('success', res?.message || t('bugReport.success'))
     // Reset form completely
+    step.value = 1
     title.value = ''
     description.value = ''
     reportType.value = 'bug'
@@ -135,33 +138,57 @@ async function submitReport() {
         </div>
 
         <!-- Body -->
-        <div class="p-6 space-y-5">
+        <div class="p-6 space-y-5" v-if="step === 1">
           <p class="text-sm text-text-secondary">
             {{ t('bugReport.modalDesc') }}
           </p>
 
-          <div class="space-y-4">
-            <!-- Report Type -->
-            <div>
-              <label class="block text-sm font-medium text-text-primary mb-2">{{ t('bugReport.typeLabel') }}</label>
-              <div class="grid grid-cols-2 gap-3">
-                <button 
-                  @click="reportType = 'bug'"
-                  class="flex items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all"
-                  :class="reportType === 'bug' ? 'bg-danger/10 border-danger text-danger' : 'bg-bg-tertiary/50 border-border-default/50 text-text-secondary hover:bg-bg-secondary hover:border-border-default'"
-                >
-                  {{ t('bugReport.typeBug') }}
-                </button>
-                <button 
-                  @click="reportType = 'feature'"
-                  class="flex items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all"
-                  :class="reportType === 'feature' ? 'bg-accent/10 border-accent text-accent' : 'bg-bg-tertiary/50 border-border-default/50 text-text-secondary hover:bg-bg-secondary hover:border-border-default'"
-                >
-                  {{ t('bugReport.typeFeature') }}
-                </button>
-              </div>
-            </div>
+          <div class="space-y-4 pt-2">
+            <label class="block text-sm font-medium text-text-primary">{{ t('bugReport.typeLabel') }}</label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <!-- Bug Button -->
+              <button 
+                @click="reportType = 'bug'; step = 2"
+                class="group flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-border-default/50 bg-bg-tertiary/20 p-6 transition-all hover:border-danger/50 hover:bg-danger/5"
+              >
+                <div class="flex h-12 w-12 items-center justify-center rounded-full bg-danger/10 text-danger transition-transform group-hover:scale-110">
+                  <Bug class="h-6 w-6" />
+                </div>
+                <div class="text-center">
+                  <h4 class="font-semibold text-text-primary group-hover:text-danger transition-colors">{{ t('bugReport.typeBug') }}</h4>
+                </div>
+              </button>
 
+              <!-- Feature Button -->
+              <button 
+                @click="reportType = 'feature'; step = 2"
+                class="group flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-border-default/50 bg-bg-tertiary/20 p-6 transition-all hover:border-accent/50 hover:bg-accent/5"
+              >
+                <div class="flex h-12 w-12 items-center justify-center rounded-full bg-accent/10 text-accent transition-transform group-hover:scale-110">
+                  <Sparkles class="h-6 w-6" />
+                </div>
+                <div class="text-center">
+                  <h4 class="font-semibold text-text-primary group-hover:text-accent transition-colors">{{ t('bugReport.typeFeature') }}</h4>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-6 space-y-5" v-if="step === 2">
+          <div class="flex items-center mb-2">
+            <button @click="step = 1" class="flex items-center text-sm font-medium text-text-secondary hover:text-text-primary transition-colors">
+              <ArrowLeft class="h-4 w-4 mr-1.5" />
+              {{ t('common.back') || 'Quay lại' }}
+            </button>
+            <div class="ml-auto flex items-center px-2.5 py-1 rounded-full text-[0.625rem] font-bold" :class="reportType === 'feature' ? 'bg-accent/15 text-accent' : 'bg-danger/15 text-danger'">
+              <Sparkles v-if="reportType === 'feature'" class="h-3 w-3 mr-1" />
+              <Bug v-else class="h-3 w-3 mr-1" />
+              {{ reportType === 'feature' ? t('bugReport.typeFeature') : t('bugReport.typeBug') }}
+            </div>
+          </div>
+
+          <div class="space-y-4">
             <!-- Title -->
             <div>
               <label class="block text-sm font-medium text-text-primary mb-1.5">{{ t('bugReport.titleLabel') }} <span class="text-danger">*</span></label>
@@ -237,7 +264,7 @@ async function submitReport() {
         </div>
 
         <!-- Footer -->
-        <div class="flex items-center justify-end gap-3 border-t border-border-default px-6 py-4 bg-bg-secondary/50 sticky bottom-0">
+        <div class="flex items-center justify-end gap-3 border-t border-border-default px-6 py-4 bg-bg-secondary/50 sticky bottom-0" v-if="step === 2">
           <button 
             @click="emit('close')"
             class="btn-secondary"
