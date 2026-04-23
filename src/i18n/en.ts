@@ -184,7 +184,7 @@ export default {
     // Currency
     currency: 'Currency',
     currencyDisplay: 'Display Currency',
-    currencyDesc: 'Choose display unit. Exchange rate auto-updated from ECB.',
+    currencyDesc: 'Choose display unit. Exchange rate auto-updated daily.',
     // Profile
     profile: 'Profile',
     editProfile: 'Edit Profile',

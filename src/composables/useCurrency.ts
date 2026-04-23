@@ -58,10 +58,11 @@ async function fetchExchangeRate(): Promise<void> {
   rateLoading.value = true
   rateError.value = ''
   try {
-    const res = await fetch('https://api.frankfurter.dev/v2/latest?base=VND&symbols=USD')
+    // Using @fawazahmed0/currency-api (Free, no key, heavily cached via jsDelivr, supports VND)
+    const res = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/vnd.json')
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const data = await res.json()
-    const rate = data?.data?.rates?.USD ?? data?.rates?.USD
+    const rate = data?.vnd?.usd
     if (rate && typeof rate === 'number') {
       exchangeRate.value = rate
       localStorage.setItem(RATE_CACHE_KEY, JSON.stringify({
