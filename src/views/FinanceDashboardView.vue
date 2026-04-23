@@ -403,12 +403,12 @@ async function generateAiInsight() {
   isAiLoading.value = true
   aiResponse.value = ''
 
-  const context = `Thống kê tháng này của tôi:
+  const context = `Hãy đóng vai một chuyên gia tài chính cá nhân. Dựa vào dữ liệu thu chi tháng này của tôi, hãy trả lời câu hỏi của tôi một cách ngắn gọn, chuyên nghiệp và có tâm:
 - Tổng thu: ${formatMoneyShort(finance.monthIncome)}
 - Tổng chi: ${formatMoneyShort(finance.monthExpense)}
-- Ngân sách: ${monthlyBudget.value > 0 ? formatMoneyShort(monthlyBudget.value) : 'Không đặt'}
-- Dư dả (nếu có ngân sách): ${monthlyBudget.value > 0 ? formatMoneyShort(budgetRemaining.value) : 'N/A'}
-- Ví chi nhiều nhất: ${expenseByWallet.value[0]?.name || 'Không có'} (${formatMoneyShort(expenseByWallet.value[0]?.total || 0)})
+- Ngân sách tháng: ${monthlyBudget.value > 0 ? formatMoneyShort(monthlyBudget.value) : 'Chưa đặt'}
+- Còn lại so với ngân sách: ${monthlyBudget.value > 0 ? formatMoneyShort(budgetRemaining.value) : 'N/A'}
+- Ví chi tiêu nhiều nhất: ${expenseByWallet.value[0]?.name || 'Không có'} (${formatMoneyShort(expenseByWallet.value[0]?.total || 0)})
 `
 
   try {
@@ -509,98 +509,143 @@ async function generateAiInsight() {
 
     <!-- Budget Gauge + Smart Insights -->
     <div class="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
-      <!-- Monthly Budget Gauge -->
-      <div class="card-premium p-5">
-        <div class="mb-3 flex items-center justify-between">
-          <h3 class="text-sm font-semibold flex items-center gap-2">
-            <div class="bg-accent/10 flex h-7 w-7 items-center justify-center rounded-lg">
-              <Sparkles :size="14" class="text-accent" />
-            </div>
-            Ngân sách tháng
-          </h3>
-          <button
-            v-if="monthlyBudget > 0 && !showBudgetInput"
-            class="text-text-tertiary hover:text-accent text-[0.6875rem] transition-colors"
-            @click="showBudgetInput = true; budgetInputValue = String(monthlyBudget)"
-          >Chỉnh sửa</button>
-        </div>
+      <!-- LEFT COLUMN -->
+      <div class="flex flex-col gap-4">
+        <!-- Monthly Budget Gauge -->
+        <div class="card-premium p-5">
+          <div class="mb-3 flex items-center justify-between">
+            <h3 class="text-sm font-semibold flex items-center gap-2">
+              <div class="bg-accent/10 flex h-7 w-7 items-center justify-center rounded-lg">
+                <Sparkles :size="14" class="text-accent" />
+              </div>
+              Ngân sách tháng
+            </h3>
+            <button
+              v-if="monthlyBudget > 0 && !showBudgetInput"
+              class="text-text-tertiary hover:text-accent text-[0.6875rem] transition-colors"
+              @click="showBudgetInput = true; budgetInputValue = String(monthlyBudget)"
+            >Chỉnh sửa</button>
+          </div>
 
-        <!-- No budget set -->
-        <div v-if="!monthlyBudget && !showBudgetInput" class="flex flex-col items-center gap-3 py-4">
-          <span class="text-text-disabled text-sm">Chưa đặt ngân sách</span>
-          <button
-            class="btn-primary text-sm px-4 py-1.5"
-            @click="showBudgetInput = true"
-          >Đặt ngân sách</button>
-        </div>
+          <!-- No budget set -->
+          <div v-if="!monthlyBudget && !showBudgetInput" class="flex flex-col items-center gap-3 py-4">
+            <span class="text-text-disabled text-sm">Chưa đặt ngân sách</span>
+            <button
+              class="btn-primary text-sm px-4 py-1.5"
+              @click="showBudgetInput = true"
+            >Đặt ngân sách</button>
+          </div>
 
-        <!-- Budget input -->
-        <div v-if="showBudgetInput" class="flex items-center gap-2 py-3">
-          <input
-            v-model="budgetInputValue"
-            type="text"
-            inputmode="numeric"
-            placeholder="VD: 5000000"
-            class="input flex-1 text-sm"
-            @keyup.enter="saveBudget"
-          />
-          <button class="btn-primary text-sm px-3 py-1.5" @click="saveBudget">Lưu</button>
-          <button class="text-text-tertiary hover:text-text-primary text-sm px-2" @click="showBudgetInput = false">Hủy</button>
-        </div>
-
-        <!-- Gauge display -->
-        <div v-if="monthlyBudget > 0 && !showBudgetInput" class="flex items-center gap-5">
-          <!-- SVG Ring -->
-          <div class="relative h-24 w-24 shrink-0">
-            <svg viewBox="0 0 100 100" class="w-full h-full -rotate-90">
-              <!-- Background ring -->
-              <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" stroke-width="7" class="text-bg-elevated" />
-              <!-- Progress ring -->
-              <circle
-                cx="50" cy="50" r="42" fill="none"
-                :stroke="budgetUsedPercent >= 90 ? '#ef4444' : budgetUsedPercent >= 70 ? '#f59e0b' : '#10b981'"
-                stroke-width="7"
-                stroke-linecap="round"
-                :stroke-dasharray="`${budgetUsedPercent * 2.64} 264`"
-                class="transition-all duration-700"
+          <!-- Budget input -->
+          <div v-if="showBudgetInput" class="flex flex-col gap-2 pt-2 pb-4">
+            <div class="relative flex items-center">
+              <span class="absolute left-3 text-text-tertiary font-medium">đ</span>
+              <input
+                v-model="budgetInputValue"
+                type="text"
+                inputmode="numeric"
+                placeholder="Nhập số tiền..."
+                class="w-full bg-bg-surface border border-border-subtle rounded-xl pl-8 pr-24 py-2.5 text-sm font-medium text-text-primary focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all"
+                @keyup.enter="saveBudget"
               />
-            </svg>
-            <div class="absolute inset-0 flex flex-col items-center justify-center">
-              <span class="text-lg font-bold" :class="budgetUsedPercent >= 90 ? 'text-error' : budgetUsedPercent >= 70 ? 'text-yellow-400' : 'text-success'">
-                {{ budgetUsedPercent.toFixed(0) }}%
-              </span>
+              <div class="absolute right-1.5 flex items-center gap-1">
+                <button class="bg-accent/10 hover:bg-accent/20 text-accent rounded-lg px-3 py-1.5 text-[0.6875rem] font-semibold transition-colors" @click="saveBudget">Lưu</button>
+                <button class="hover:bg-bg-elevated text-text-tertiary hover:text-text-secondary rounded-lg p-1.5 transition-colors" @click="showBudgetInput = false">Hủy</button>
+              </div>
             </div>
           </div>
-          <!-- Stats -->
-          <div class="flex-1 space-y-2 min-w-0">
-            <div class="flex justify-between text-[0.75rem]">
-              <span class="text-text-tertiary">Ngân sách</span>
-              <span class="text-text-primary font-semibold tabular-nums">{{ formatVNDShort(monthlyBudget) }}</span>
+
+          <!-- Gauge display -->
+          <div v-if="monthlyBudget > 0 && !showBudgetInput" class="flex items-center gap-5">
+            <!-- SVG Ring -->
+            <div class="relative h-24 w-24 shrink-0">
+              <svg viewBox="0 0 100 100" class="w-full h-full -rotate-90">
+                <!-- Background ring -->
+                <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" stroke-width="7" class="text-bg-elevated" />
+                <!-- Progress ring -->
+                <circle
+                  cx="50" cy="50" r="42" fill="none"
+                  :stroke="budgetUsedPercent >= 90 ? '#ef4444' : budgetUsedPercent >= 70 ? '#f59e0b' : '#10b981'"
+                  stroke-width="7"
+                  stroke-linecap="round"
+                  :stroke-dasharray="`${budgetUsedPercent * 2.64} 264`"
+                  class="transition-all duration-700"
+                />
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center">
+                <span class="text-lg font-bold" :class="budgetUsedPercent >= 90 ? 'text-error' : budgetUsedPercent >= 70 ? 'text-yellow-400' : 'text-success'">
+                  {{ budgetUsedPercent.toFixed(0) }}%
+                </span>
+              </div>
             </div>
-            <div class="flex justify-between text-[0.75rem]">
-              <span class="text-text-tertiary">Đã chi</span>
-              <span class="text-error font-semibold tabular-nums">{{ formatVNDShort(finance.monthExpense) }}</span>
+            <!-- Stats -->
+            <div class="flex-1 space-y-2 min-w-0">
+              <div class="flex justify-between text-[0.75rem]">
+                <span class="text-text-tertiary">Ngân sách</span>
+                <span class="text-text-primary font-semibold tabular-nums">{{ formatVNDShort(monthlyBudget) }}</span>
+              </div>
+              <div class="flex justify-between text-[0.75rem]">
+                <span class="text-text-tertiary">Đã chi</span>
+                <span class="text-error font-semibold tabular-nums">{{ formatVNDShort(finance.monthExpense) }}</span>
+              </div>
+              <div class="flex justify-between text-[0.75rem]">
+                <span class="text-text-tertiary">Còn lại</span>
+                <span class="text-success font-semibold tabular-nums">{{ formatVNDShort(budgetRemaining) }}</span>
+              </div>
+              <div class="border-border-subtle border-t pt-2 flex justify-between text-[0.6875rem]">
+                <span class="text-text-disabled">Mỗi ngày còn</span>
+                <span class="text-accent font-semibold tabular-nums">~{{ formatVNDShort(dailyBudgetRemaining) }}/ngày</span>
+              </div>
             </div>
-            <div class="flex justify-between text-[0.75rem]">
-              <span class="text-text-tertiary">Còn lại</span>
-              <span class="text-success font-semibold tabular-nums">{{ formatVNDShort(budgetRemaining) }}</span>
+          </div>
+        </div>
+
+        <!-- AI Chat Area -->
+        <div class="card-premium p-4 flex flex-col">
+          <div class="flex items-center gap-2 mb-3">
+            <div class="bg-blue-500/10 flex h-7 w-7 items-center justify-center rounded-lg">
+              <Bot :size="14" class="text-blue-400" />
             </div>
-            <div class="border-border-subtle border-t pt-2 flex justify-between text-[0.6875rem]">
-              <span class="text-text-disabled">Mỗi ngày còn</span>
-              <span class="text-accent font-semibold tabular-nums">~{{ formatVNDShort(dailyBudgetRemaining) }}/ngày</span>
+            <h3 class="text-sm font-semibold text-text-primary">Trợ lý AI</h3>
+          </div>
+
+          <div v-if="aiResponse" class="mb-4 bg-bg-surface rounded-xl p-3.5 text-[0.8125rem] text-text-secondary leading-relaxed border border-border-subtle relative shadow-sm">
+            <div class="absolute -top-2.5 left-3 bg-bg-elevated px-1.5 flex items-center gap-1 text-blue-400 rounded-full text-[0.625rem] font-semibold border border-border-subtle shadow-sm">
+              <Sparkles :size="10" /> AI
             </div>
+            <div class="pt-1 whitespace-pre-wrap">{{ aiResponse }}</div>
+          </div>
+
+          <div class="relative flex items-center group">
+            <input
+              v-model="aiPrompt"
+              type="text"
+              placeholder="Hỏi AI cách tối ưu chi tiêu..."
+              class="w-full bg-bg-surface border border-border-subtle rounded-xl pl-3 pr-10 py-2.5 text-[0.8125rem] font-medium text-text-primary focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 outline-none transition-all placeholder:text-text-disabled shadow-sm"
+              @keyup.enter="generateAiInsight"
+              :disabled="isAiLoading"
+            />
+            <button
+              class="absolute right-1.5 p-1.5 rounded-lg transition-all"
+              :class="aiPrompt.trim() ? 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20' : 'text-text-disabled'"
+              :disabled="!aiPrompt.trim() || isAiLoading"
+              @click="generateAiInsight"
+            >
+              <div v-if="isAiLoading" class="h-4 w-4 rounded-full border-2 border-blue-400 border-t-transparent animate-spin"></div>
+              <Send v-else :size="14" />
+            </button>
           </div>
         </div>
       </div>
 
-      <!-- Smart Insights -->
-      <div class="card-premium p-5 flex flex-col">
+      <!-- RIGHT COLUMN: Smart Insights -->
+      <div class="card-premium p-5 flex flex-col h-fit">
         <div class="flex items-center justify-between mb-1 cursor-pointer" @click="isInsightsCollapsed = !isInsightsCollapsed">
           <h3 class="text-sm font-semibold flex items-center gap-2">
-            <div class="bg-blue-500/10 flex h-7 w-7 items-center justify-center rounded-lg">
-              <Zap :size="14" class="text-blue-400" />
+            <div class="bg-yellow-500/10 flex h-7 w-7 items-center justify-center rounded-lg">
+              <Zap :size="14" class="text-yellow-400" />
             </div>
-            Phân tích thông minh
+            Tổng quan tự động
           </h3>
           <button class="text-text-tertiary hover:text-text-primary p-1 rounded-md transition-colors">
             <ChevronDown v-if="isInsightsCollapsed" :size="18" />
@@ -609,12 +654,11 @@ async function generateAiInsight() {
         </div>
 
         <div v-show="!isInsightsCollapsed" class="flex-1 flex flex-col mt-3">
-          <!-- Static Insights -->
-          <div v-if="insights.length" class="space-y-2.5 mb-4">
+          <div v-if="insights.length" class="space-y-2.5">
             <div
               v-for="(insight, idx) in insights"
               :key="idx"
-              class="flex items-start gap-2.5 rounded-lg px-3 py-2 transition-colors"
+              class="flex items-start gap-2.5 rounded-lg px-3 py-2.5 transition-colors border border-transparent hover:border-border-subtle"
               :class="{
                 'bg-success/5': insight.type === 'success',
                 'bg-yellow-500/5': insight.type === 'warning',
@@ -625,39 +669,8 @@ async function generateAiInsight() {
               <span class="text-text-secondary text-[0.8125rem] leading-relaxed">{{ insight.text }}</span>
             </div>
           </div>
-          <div v-else class="text-text-disabled flex h-20 items-center justify-center text-sm mb-4">
+          <div v-else class="text-text-disabled flex h-20 items-center justify-center text-sm">
             Chưa đủ dữ liệu để phân tích
-          </div>
-
-          <!-- AI Chat Area -->
-          <div class="mt-auto border-t border-border-subtle pt-3">
-            <div v-if="aiResponse" class="mb-3 bg-bg-elevated rounded-lg p-3 text-[0.8125rem] text-text-secondary leading-relaxed border border-border-subtle relative">
-              <div class="absolute -top-3 left-3 bg-bg-surface px-1.5 flex items-center gap-1 text-blue-400">
-                <Bot :size="12" />
-                <span class="text-[0.625rem] font-semibold uppercase tracking-wider">AI Insight</span>
-              </div>
-              <div class="pt-1 whitespace-pre-wrap">{{ aiResponse }}</div>
-            </div>
-
-            <div class="relative flex items-center">
-              <input
-                v-model="aiPrompt"
-                type="text"
-                placeholder="Hỏi AI thêm về chi tiêu..."
-                class="input w-full pr-10 text-[0.8125rem] py-2 bg-bg-elevated border-border-subtle focus:border-blue-500/50"
-                @keyup.enter="generateAiInsight"
-                :disabled="isAiLoading"
-              />
-              <button
-                class="absolute right-1.5 p-1.5 rounded-md transition-colors"
-                :class="aiPrompt.trim() ? 'text-blue-400 hover:bg-blue-500/10' : 'text-text-disabled'"
-                :disabled="!aiPrompt.trim() || isAiLoading"
-                @click="generateAiInsight"
-              >
-                <div v-if="isAiLoading" class="h-4 w-4 rounded-full border-2 border-blue-400 border-t-transparent animate-spin"></div>
-                <Send v-else :size="14" />
-              </button>
-            </div>
           </div>
         </div>
       </div>
