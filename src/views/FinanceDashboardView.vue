@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useFinancePolling } from '@/composables/useFinancePolling'
 import { useAuthStore } from '@/stores/auth'
@@ -24,18 +24,21 @@ import {
 import WeatherWidget from '@/components/WeatherWidget.vue'
 
 // Chart.js
-import { Bar, Doughnut } from 'vue-chartjs'
+import { Line, Doughnut } from 'vue-chartjs'
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
+  PointElement,
+  LineElement,
   BarElement,
   ArcElement,
+  Filler,
   Tooltip,
   Legend
 } from 'chart.js'
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend)
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Filler, Tooltip, Legend)
 
 const { t, tm } = useI18n()
 const router = useRouter()
@@ -60,6 +63,11 @@ function dayLabel(dateStr: string) {
   return days[d.getDay()]
 }
 
+function formatDateShort(dateStr: string) {
+  const d = new Date(dateStr)
+  return `${d.getDate()}/${d.getMonth() + 1}`
+}
+
 function timeSince(dateStr: string) {
   const diff = Date.now() - new Date(dateStr).getTime()
   const m = Math.floor(diff / 60000)
@@ -69,29 +77,82 @@ function timeSince(dateStr: string) {
   return t('time.daysAgo', { n: Math.floor(h / 24) })
 }
 
-// ── Weekly Bar Chart ──
+// ── Hover state for header-value display (TokenTerminal pattern) ──
+const hoverIncome = ref<string | null>(null)
+const hoverExpense = ref<string | null>(null)
+const hoverDay = ref<string | null>(null)
+
+// ── Crosshair plugin (vertical line on hover) ──
+const crosshairPlugin = {
+  id: 'crosshair',
+  afterDraw(chart: any) {
+    const tooltip = chart.tooltip
+    if (!tooltip || !tooltip.getActiveElements().length) return
+    const ctx = chart.ctx
+    const x = tooltip.caretX
+    const topY = chart.scales.y.top
+    const bottomY = chart.scales.y.bottom
+    ctx.save()
+    ctx.beginPath()
+    ctx.moveTo(x, topY)
+    ctx.lineTo(x, bottomY)
+    ctx.lineWidth = 1
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)'
+    ctx.setLineDash([4, 3])
+    ctx.stroke()
+    ctx.restore()
+  }
+}
+
+// ── Weekly Line Chart (TokenTerminal style) ──
 const weeklyChartData = computed(() => ({
-  labels: finance.weeklyStats.map(d => dayLabel(d.date)),
+  labels: finance.weeklyStats.map(d => `${dayLabel(d.date)} ${formatDateShort(d.date)}`),
   datasets: [
     {
       label: t('dashboard.income'),
       data: finance.weeklyStats.map(d => d.income),
-      backgroundColor: 'rgba(16, 185, 129, 0.7)',
-      hoverBackgroundColor: 'rgba(16, 185, 129, 0.9)',
-      borderRadius: 6,
-      borderSkipped: false as const,
-      barPercentage: 0.6,
-      categoryPercentage: 0.7
+      borderColor: '#10b981',
+      backgroundColor: (ctx: any) => {
+        const chart = ctx.chart
+        const { ctx: c, chartArea } = chart
+        if (!chartArea) return 'rgba(16, 185, 129, 0.1)'
+        const gradient = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom)
+        gradient.addColorStop(0, 'rgba(16, 185, 129, 0.25)')
+        gradient.addColorStop(0.6, 'rgba(16, 185, 129, 0.05)')
+        gradient.addColorStop(1, 'rgba(16, 185, 129, 0)')
+        return gradient
+      },
+      borderWidth: 2,
+      pointRadius: 0,
+      pointHoverRadius: 5,
+      pointHoverBackgroundColor: '#10b981',
+      pointHoverBorderColor: '#ffffff',
+      pointHoverBorderWidth: 2,
+      tension: 0.4,
+      fill: true
     },
     {
       label: t('dashboard.expense'),
       data: finance.weeklyStats.map(d => d.expense),
-      backgroundColor: 'rgba(239, 68, 68, 0.7)',
-      hoverBackgroundColor: 'rgba(239, 68, 68, 0.9)',
-      borderRadius: 6,
-      borderSkipped: false as const,
-      barPercentage: 0.6,
-      categoryPercentage: 0.7
+      borderColor: '#ef4444',
+      backgroundColor: (ctx: any) => {
+        const chart = ctx.chart
+        const { ctx: c, chartArea } = chart
+        if (!chartArea) return 'rgba(239, 68, 68, 0.1)'
+        const gradient = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom)
+        gradient.addColorStop(0, 'rgba(239, 68, 68, 0.15)')
+        gradient.addColorStop(0.6, 'rgba(239, 68, 68, 0.03)')
+        gradient.addColorStop(1, 'rgba(239, 68, 68, 0)')
+        return gradient
+      },
+      borderWidth: 2,
+      pointRadius: 0,
+      pointHoverRadius: 5,
+      pointHoverBackgroundColor: '#ef4444',
+      pointHoverBorderColor: '#ffffff',
+      pointHoverBorderWidth: 2,
+      tension: 0.4,
+      fill: true
     }
   ]
 }))
@@ -99,21 +160,27 @@ const weeklyChartData = computed(() => ({
 const weeklyChartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
-  animation: { duration: 600, easing: 'easeOutQuart' as const },
+  animation: { duration: 700, easing: 'easeOutQuart' as const },
   interaction: { mode: 'index' as const, intersect: false },
   plugins: {
     legend: { display: false },
     tooltip: {
-      backgroundColor: 'rgba(10,10,10,0.95)',
-      titleColor: '#a3a3a3',
-      bodyColor: '#ffffff',
-      borderColor: 'rgba(255,255,255,0.1)',
-      borderWidth: 1,
-      cornerRadius: 8,
-      padding: 10,
-      bodyFont: { weight: 'bold' as const, size: 13 },
-      callbacks: {
-        label: (ctx: any) => ` ${ctx.dataset.label}: ${formatMoneyShort(ctx.raw)}`
+      enabled: false,
+      external: (context: any) => {
+        const tooltip = context.tooltip
+        if (tooltip.opacity === 0) {
+          hoverIncome.value = null
+          hoverExpense.value = null
+          hoverDay.value = null
+          return
+        }
+        const idx = tooltip.dataPoints?.[0]?.dataIndex
+        if (idx != null) {
+          const stats = finance.weeklyStats
+          hoverDay.value = `${dayLabel(stats[idx].date)} ${formatDateShort(stats[idx].date)}`
+          hoverIncome.value = formatMoneyShort(stats[idx].income)
+          hoverExpense.value = formatMoneyShort(stats[idx].expense)
+        }
       }
     }
   },
@@ -121,12 +188,17 @@ const weeklyChartOptions = computed(() => ({
     x: {
       grid: { display: false },
       border: { display: false },
-      ticks: { color: '#525252', font: { size: 11 } }
+      ticks: { color: '#525252', font: { size: 10, weight: 'bold' as const }, maxRotation: 0 }
     },
     y: {
-      display: false,
-      grid: { display: false },
-      border: { display: false }
+      grid: { color: 'rgba(255, 255, 255, 0.04)', drawTicks: false },
+      border: { display: false, dash: [4, 4] as number[] },
+      ticks: {
+        color: '#525252',
+        font: { size: 10 },
+        padding: 8,
+        callback: (v: any) => formatMoneyShort(v)
+      }
     }
   }
 }))
@@ -141,7 +213,8 @@ const doughnutData = computed(() => {
       backgroundColor: cats.map(c => c.color + 'cc'),
       hoverBackgroundColor: cats.map(c => c.color),
       borderWidth: 0,
-      spacing: 2
+      spacing: 2,
+      hoverOffset: 6
     }]
   }
 })
@@ -149,7 +222,7 @@ const doughnutData = computed(() => {
 const doughnutOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
-  cutout: '68%',
+  cutout: '70%',
   animation: { duration: 800, easing: 'easeOutQuart' as const },
   plugins: {
     legend: { display: false },
@@ -157,15 +230,19 @@ const doughnutOptions = computed(() => ({
       backgroundColor: 'rgba(10,10,10,0.95)',
       titleColor: '#a3a3a3',
       bodyColor: '#ffffff',
-      borderColor: 'rgba(255,255,255,0.1)',
+      borderColor: 'rgba(255,255,255,0.08)',
       borderWidth: 1,
       cornerRadius: 8,
-      padding: 10,
+      padding: { x: 12, y: 8 },
       bodyFont: { weight: 'bold' as const, size: 13 },
+      displayColors: true,
+      boxWidth: 8,
+      boxHeight: 8,
+      boxPadding: 4,
       callbacks: {
         label: (ctx: any) => {
           const pct = finance.expenseByCategoryThisMonth[ctx.dataIndex]?.percentage?.toFixed(1)
-          return ` ${ctx.label}: ${formatMoneyShort(ctx.raw)} (${pct}%)`
+          return ` ${formatMoneyShort(ctx.raw)} (${pct}%)`
         }
       }
     }
@@ -311,26 +388,35 @@ const doughnutOptions = computed(() => ({
 
     <!-- Chart + Category Breakdown -->
     <div class="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
-      <!-- Weekly Bar Chart (Chart.js) -->
+      <!-- Weekly Line Chart (TokenTerminal style) -->
       <div class="bg-bg-surface border-border-default rounded-xl border p-5">
-        <div class="mb-4 flex items-center justify-between">
+        <!-- Header with live hover values -->
+        <div class="mb-1 flex items-center justify-between">
           <div class="flex items-center gap-2">
             <BarChart3 :size="18" class="text-text-tertiary" />
             <h3 class="text-sm font-semibold">{{ t('dashboard.weeklyChart') }}</h3>
           </div>
-          <div class="flex items-center gap-3">
-            <span class="text-text-tertiary flex items-center gap-1.5 text-[0.6875rem]">
-              <span class="h-2 w-2 rounded-full bg-emerald-500/70"></span>
-              {{ t('dashboard.income') }}
+          <span v-if="hoverDay" class="text-text-disabled text-[0.6875rem] font-medium">{{ hoverDay }}</span>
+        </div>
+        <!-- Live values row -->
+        <div class="mb-3 flex items-center gap-4">
+          <div class="flex items-center gap-1.5">
+            <span class="h-[3px] w-3 rounded-full bg-emerald-500"></span>
+            <span class="text-text-tertiary text-[0.6875rem]">{{ t('dashboard.income') }}</span>
+            <span class="text-emerald-400 text-[0.8125rem] font-bold tabular-nums">
+              {{ hoverIncome ?? formatMoneyShort(finance.monthIncome) }}
             </span>
-            <span class="text-text-tertiary flex items-center gap-1.5 text-[0.6875rem]">
-              <span class="h-2 w-2 rounded-full bg-red-500/70"></span>
-              {{ t('dashboard.expense') }}
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="h-[3px] w-3 rounded-full bg-red-500"></span>
+            <span class="text-text-tertiary text-[0.6875rem]">{{ t('dashboard.expense') }}</span>
+            <span class="text-red-400 text-[0.8125rem] font-bold tabular-nums">
+              {{ hoverExpense ?? formatMoneyShort(finance.monthExpense) }}
             </span>
           </div>
         </div>
-        <div class="h-[10rem]">
-          <Bar :data="weeklyChartData" :options="weeklyChartOptions" />
+        <div class="h-[11rem]">
+          <Line :data="weeklyChartData" :options="weeklyChartOptions" :plugins="[crosshairPlugin]" />
         </div>
       </div>
 
@@ -338,31 +424,32 @@ const doughnutOptions = computed(() => ({
       <div class="bg-bg-surface border-border-default rounded-xl border p-5">
         <h3 class="mb-4 text-sm font-semibold">{{ t('dashboard.categoryBreakdown') }}</h3>
 
-        <div v-if="finance.expenseByCategoryThisMonth.length" class="flex items-center gap-5">
+        <div v-if="finance.expenseByCategoryThisMonth.length" class="flex items-start gap-5">
           <!-- Doughnut -->
-          <div class="relative h-[9rem] w-[9rem] shrink-0">
+          <div class="relative h-[9.5rem] w-[9.5rem] shrink-0">
             <Doughnut :data="doughnutData" :options="doughnutOptions" />
             <!-- Center label -->
             <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-              <span class="text-text-disabled text-[0.625rem]">{{ t('dashboard.expense') }}</span>
-              <span class="text-text-primary text-sm font-bold">{{ formatVNDShort(finance.monthExpense) }}</span>
+              <span class="text-text-disabled text-[0.5625rem] uppercase tracking-wider">{{ t('dashboard.expense') }}</span>
+              <span class="text-text-primary text-[0.9375rem] font-bold">{{ formatVNDShort(finance.monthExpense) }}</span>
             </div>
           </div>
           <!-- Legend -->
-          <div class="flex-1 space-y-2 min-w-0">
+          <div class="flex-1 space-y-2.5 min-w-0 pt-1">
             <div
               v-for="cat in finance.expenseByCategoryThisMonth.slice(0, 5)"
               :key="cat.category"
-              class="flex items-center gap-2"
+              class="flex items-center gap-2 group"
             >
-              <span class="h-2.5 w-2.5 shrink-0 rounded-[3px]" :style="{ backgroundColor: cat.color }"></span>
-              <span class="text-text-secondary truncate text-[0.75rem]">{{ t(`categories.${cat.category}`) }}</span>
-              <span class="text-text-primary ml-auto text-[0.75rem] font-semibold whitespace-nowrap">{{ formatVNDShort(cat.total) }}</span>
+              <span class="h-2.5 w-2.5 shrink-0 rounded-[3px] transition-transform group-hover:scale-125" :style="{ backgroundColor: cat.color }"></span>
+              <span class="text-text-secondary truncate text-[0.75rem] group-hover:text-text-primary transition-colors">{{ t(`categories.${cat.category}`) }}</span>
+              <span class="text-text-primary ml-auto text-[0.75rem] font-semibold whitespace-nowrap tabular-nums">{{ formatVNDShort(cat.total) }}</span>
+              <span class="text-text-disabled text-[0.625rem] w-[2.5rem] text-right tabular-nums">{{ cat.percentage.toFixed(0) }}%</span>
             </div>
           </div>
         </div>
 
-        <div v-else class="text-text-disabled flex h-[9rem] items-center justify-center text-sm">
+        <div v-else class="text-text-disabled flex h-[9.5rem] items-center justify-center text-sm">
           {{ t('dashboard.noDataThisMonth') }}
         </div>
       </div>
