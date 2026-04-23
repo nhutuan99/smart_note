@@ -219,13 +219,8 @@ async function submit() {
           inputmode="numeric"
           pattern="[0-9]*"
           placeholder="0"
-          class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-4 text-center text-3xl font-bold transition-all duration-150 focus:ring-2 focus:outline-none"
+          class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-4 text-center text-3xl font-bold transition-all duration-150 focus:ring-2 focus:outline-none tracking-wide"
         />
-        <span
-          class="text-text-tertiary absolute top-1/2 right-4 -translate-y-1/2 text-lg font-medium"
-        >
-          {{ currencySymbol }}
-        </span>
       </div>
     </div>
 

@@ -286,11 +286,24 @@ const monthlyBudget = ref(parseInt(localStorage.getItem(BUDGET_KEY) || '0'))
 const showBudgetInput = ref(false)
 const budgetInputValue = ref('')
 
+function handleBudgetInput(e: Event) {
+  const input = e.target as HTMLInputElement
+  const raw = input.value.replace(/\D/g, '')
+  if (raw) {
+    budgetInputValue.value = new Intl.NumberFormat('vi-VN').format(parseInt(raw))
+  } else {
+    budgetInputValue.value = ''
+  }
+}
+
 function saveBudget() {
-  const val = parseInt(budgetInputValue.value.replace(/[^0-9]/g, ''))
-  if (val > 0) {
+  const val = parseInt(budgetInputValue.value.replace(/\D/g, ''))
+  if (!isNaN(val) && val > 0) {
     monthlyBudget.value = val
     localStorage.setItem(BUDGET_KEY, String(val))
+  } else {
+    monthlyBudget.value = 0
+    localStorage.removeItem(BUDGET_KEY)
   }
   showBudgetInput.value = false
   budgetInputValue.value = ''
@@ -473,8 +486,8 @@ Quy tắc:
       </button>
     </div>
 
-    <div v-else class="mb-6 relative">
-      <div class="absolute right-0 -top-8 flex items-center justify-end z-10">
+    <div v-else class="mb-6">
+      <div class="mb-3 flex justify-end">
         <button 
           @click="isSmartSectionCollapsed = true"
           class="flex items-center gap-1 text-text-tertiary hover:text-text-primary text-xs font-medium px-2 py-1 rounded-lg hover:bg-bg-elevated transition-colors"
@@ -498,7 +511,7 @@ Quy tắc:
             <button
               v-if="monthlyBudget > 0 && !showBudgetInput"
               class="text-text-tertiary hover:text-accent text-[0.6875rem] transition-colors"
-              @click="showBudgetInput = true; budgetInputValue = String(monthlyBudget)"
+              @click="showBudgetInput = true; budgetInputValue = monthlyBudget > 0 ? new Intl.NumberFormat('vi-VN').format(monthlyBudget) : ''"
             >{{ t('common.edit') }}</button>
           </div>
 
@@ -514,13 +527,14 @@ Quy tắc:
           <!-- Budget input -->
           <div v-if="showBudgetInput" class="flex flex-col gap-2 pt-2 pb-4">
             <div class="relative flex items-center">
-              <span class="absolute left-3 text-text-tertiary font-medium">đ</span>
               <input
-                v-model="budgetInputValue"
-                type="text"
+                :value="budgetInputValue"
+                @input="handleBudgetInput"
+                type="tel"
                 inputmode="numeric"
-                placeholder="..."
-                class="w-full bg-bg-surface border border-border-subtle rounded-xl pl-8 pr-24 py-2.5 text-sm font-medium text-text-primary focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all"
+                pattern="[0-9]*"
+                placeholder="0"
+                class="w-full bg-bg-surface border border-border-subtle rounded-xl px-4 pr-24 py-2.5 text-sm font-bold text-text-primary focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all tracking-wide"
                 @keyup.enter="saveBudget"
               />
               <div class="absolute right-1.5 flex items-center gap-1">
