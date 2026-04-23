@@ -394,6 +394,7 @@ const insights = computed<Insight[]>(() => {
 
 // ── AI Generator ──
 const isInsightsCollapsed = ref(false)
+const isAiCollapsed = ref(false)
 const aiPrompt = ref('')
 const { streamText: aiResponse, loading: isAiLoading, askAbout } = useAi()
 
@@ -610,45 +611,55 @@ Quy tắc:
         </div>
 
         <!-- AI Chat Area -->
-        <div class="card-premium p-4 flex flex-col">
-          <div class="flex items-center gap-2 mb-3">
-            <div class="bg-blue-500/10 flex h-7 w-7 items-center justify-center rounded-lg">
-              <Bot :size="14" class="text-blue-400" />
-            </div>
-            <h3 class="text-sm font-semibold text-text-primary">Trợ lý AI</h3>
-          </div>
-
-          <div v-if="aiResponse" class="mb-4 bg-bg-surface rounded-xl p-3.5 text-[0.8125rem] text-text-secondary leading-relaxed border border-border-subtle relative shadow-sm">
-            <div class="absolute -top-2.5 left-3 bg-bg-elevated px-1.5 flex items-center gap-1 text-blue-400 rounded-full text-[0.625rem] font-semibold border border-border-subtle shadow-sm">
-              <Sparkles :size="10" /> AI
-            </div>
-            <div class="pt-1 whitespace-pre-wrap">{{ aiResponse }}</div>
-          </div>
-
-          <div class="relative flex items-center group">
-            <input
-              v-model="aiPrompt"
-              type="text"
-              placeholder="Hỏi AI cách tối ưu chi tiêu..."
-              class="w-full bg-bg-surface border border-border-subtle rounded-xl pl-3 pr-10 py-2.5 text-[0.8125rem] font-medium text-text-primary focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 outline-none transition-all placeholder:text-text-disabled shadow-sm"
-              @keyup.enter="generateAiInsight"
-              :disabled="isAiLoading"
-            />
-            <button
-              class="absolute right-1.5 p-1.5 rounded-lg transition-all"
-              :class="aiPrompt.trim() ? 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20' : 'text-text-disabled'"
-              :disabled="!aiPrompt.trim() || isAiLoading"
-              @click="generateAiInsight"
-            >
-              <div v-if="isAiLoading" class="h-4 w-4 rounded-full border-2 border-blue-400 border-t-transparent animate-spin"></div>
-              <Send v-else :size="14" />
+        <div class="card-premium p-4 flex flex-col flex-1">
+          <div class="flex items-center justify-between cursor-pointer" :class="isAiCollapsed ? '' : 'mb-3'" @click="isAiCollapsed = !isAiCollapsed">
+            <h3 class="text-sm font-semibold text-text-primary flex items-center gap-2">
+              <div class="bg-blue-500/10 flex h-7 w-7 items-center justify-center rounded-lg">
+                <Bot :size="14" class="text-blue-400" />
+              </div>
+              Trợ lý AI
+            </h3>
+            <button class="text-text-tertiary hover:text-text-primary p-1 rounded-md transition-colors">
+              <ChevronDown v-if="isAiCollapsed" :size="18" />
+              <ChevronUp v-else :size="18" />
             </button>
+          </div>
+
+          <div v-show="!isAiCollapsed" class="flex flex-col flex-1">
+            <div class="flex flex-col flex-1 justify-end">
+              <div v-if="aiResponse" class="mb-4 bg-bg-surface rounded-xl p-3.5 text-[0.8125rem] text-text-secondary leading-relaxed border border-border-subtle relative shadow-sm">
+                <div class="absolute -top-2.5 left-3 bg-bg-elevated px-1.5 flex items-center gap-1 text-blue-400 rounded-full text-[0.625rem] font-semibold border border-border-subtle shadow-sm">
+                  <Sparkles :size="10" /> AI
+                </div>
+                <div class="pt-1 whitespace-pre-wrap">{{ aiResponse }}</div>
+              </div>
+
+              <div class="relative flex items-center group mt-auto">
+                <input
+                  v-model="aiPrompt"
+                  type="text"
+                  placeholder="Hỏi AI cách tối ưu chi tiêu..."
+                  class="w-full bg-bg-surface border border-border-subtle rounded-xl pl-3 pr-10 py-2.5 text-[0.8125rem] font-medium text-text-primary focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 outline-none transition-all placeholder:text-text-disabled shadow-sm"
+                  @keyup.enter="generateAiInsight"
+                  :disabled="isAiLoading"
+                />
+                <button
+                  class="absolute right-1.5 p-1.5 rounded-lg transition-all"
+                  :class="aiPrompt.trim() ? 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20' : 'text-text-disabled'"
+                  :disabled="!aiPrompt.trim() || isAiLoading"
+                  @click="generateAiInsight"
+                >
+                  <div v-if="isAiLoading" class="h-4 w-4 rounded-full border-2 border-blue-400 border-t-transparent animate-spin"></div>
+                  <Send v-else :size="14" />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- RIGHT COLUMN: Smart Insights -->
-      <div class="card-premium p-5 flex flex-col h-fit">
+      <div class="card-premium p-5 flex flex-col h-full">
         <div class="flex items-center justify-between mb-1 cursor-pointer" @click="isInsightsCollapsed = !isInsightsCollapsed">
           <h3 class="text-sm font-semibold flex items-center gap-2">
             <div class="bg-yellow-500/10 flex h-7 w-7 items-center justify-center rounded-lg">
