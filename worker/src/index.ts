@@ -1394,11 +1394,18 @@ function parseSmsTransaction(text: string, senderHint = ''): SmsParsedResult | n
   else if (lowerText.includes('acb'))        bankName = 'ACB'
   else if (lowerText.includes('vpbank'))     bankName = 'VPBank'
   else if (lowerText.includes('sacombank'))  bankName = 'Sacombank'
+  else if (lowerText.includes('vib'))        bankName = 'VIB'
+  else if (lowerText.includes('ocb'))        bankName = 'OCB'
+  else if (lowerText.includes('scb'))        bankName = 'SCB'
+  else if (lowerText.includes('hdbank') || lowerText.includes('hd bank')) bankName = 'HDBank'
+  else if (lowerText.includes('shb'))        bankName = 'SHB'
+  else if (lowerText.includes('eximbank'))   bankName = 'Eximbank'
+  else if (lowerText.includes('lpbank') || lowerText.includes('lienviet')) bankName = 'LPBank'
+  else if (lowerText.includes('seabank'))    bankName = 'SeABank'
   else if (lowerText.includes('momo'))       bankName = 'MoMo'
   else if (lowerText.includes('zalopay'))    bankName = 'ZaloPay'
 
   // ── Fallback: use sender hint from iOS Shortcuts if body has no bank name ──
-  // (some TPBank SMS don't start with "(TPBank):" prefix)
   if (!bankName && senderHint) {
     const lowerHint = senderHint.toLowerCase()
     if (lowerHint.includes('tpbank'))     bankName = 'TPBank'
@@ -1411,10 +1418,28 @@ function parseSmsTransaction(text: string, senderHint = ''): SmsParsedResult | n
     else if (lowerHint.includes('acb'))        bankName = 'ACB'
     else if (lowerHint.includes('vpbank'))     bankName = 'VPBank'
     else if (lowerHint.includes('sacombank'))  bankName = 'Sacombank'
+    else if (lowerHint.includes('vib'))        bankName = 'VIB'
+    else if (lowerHint.includes('ocb'))        bankName = 'OCB'
+    else if (lowerHint.includes('scb'))        bankName = 'SCB'
+    else if (lowerHint.includes('hdbank') || lowerHint.includes('hd bank')) bankName = 'HDBank'
+    else if (lowerHint.includes('shb'))        bankName = 'SHB'
+    else if (lowerHint.includes('eximbank'))   bankName = 'Eximbank'
+    else if (lowerHint.includes('lpbank') || lowerHint.includes('lienviet')) bankName = 'LPBank'
+    else if (lowerHint.includes('seabank'))    bankName = 'SeABank'
     else if (lowerHint.includes('momo'))       bankName = 'MoMo'
     else if (lowerHint.includes('zalopay'))    bankName = 'ZaloPay'
     // If still not matched, store the raw sender hint as bankName for manual wallet matching
     if (!bankName) bankName = senderHint
+  }
+
+  // ── Auto-detect any name ending with 'bank' if still not found ──
+  if (!bankName) {
+    const bankRegex = /\b([a-zA-Z]+bank)\b/i
+    const match = text.match(bankRegex) || senderHint.match(bankRegex)
+    if (match) {
+      // Capitalize first letter e.g., Kienlongbank -> Kienlongbank
+      bankName = match[1].charAt(0).toUpperCase() + match[1].slice(1).toLowerCase()
+    }
   }
 
   // ── Extract structured fields (TPBank, Techcombank, etc.) ──
@@ -1454,15 +1479,39 @@ function parseSmsTransaction(text: string, senderHint = ''): SmsParsedResult | n
 
   // ── Strategy 3: "da bi tru" / "da duoc cong" format ──
   if (amount <= 0) {
-    const truMatch = text.match(/(?:bi tru|ghi no|ghi nợ|trừ)\s*([\d.,]+)\s*(?:VND|đ)/i)
+    const truMatch = text.match(/(?:bi tru|ghi no|ghi nợ|trừ|thanh toan|thanh toán|chi|chuyen|chuyển|giao dich|gd)\s*([\d.,]+)\s*(?:VND|đ|d)/i)
     if (truMatch) {
       type = 'expense'
       amount = parseInt(truMatch[1].replace(/[.,]/g, ''), 10) || 0
     }
-    const congMatch = text.match(/(?:duoc cong|ghi co|ghi có|cộng|nhận)\s*([\d.,]+)\s*(?:VND|đ)/i)
+    const congMatch = text.match(/(?:duoc cong|ghi co|ghi có|cộng|nhận|nhan|nap|nạp)\s*([\d.,]+)\s*(?:VND|đ|d)/i)
     if (congMatch) {
       type = 'income'
       amount = parseInt(congMatch[1].replace(/[.,]/g, ''), 10) || 0
+    }
+  }
+
+  // ── Strategy 4: Aggressive fallback for ANY amount with VND ──
+  // Will extract the first amount that doesn't look like a balance (SD)
+  if (amount <= 0) {
+    const allMatches = [...text.matchAll(/([\d.,]+)\s*(?:VND|đ|d)/gi)]
+    for (const match of allMatches) {
+      const index = match.index || 0
+      // Check previous 15 characters to ensure it's not SD or Kha dung
+      const precedingText = text.substring(Math.max(0, index - 20), index).toLowerCase()
+      if (!precedingText.includes('sd') && !precedingText.includes('so du') && !precedingText.includes('dư') && !precedingText.includes('kha dung')) {
+        amount = parseInt(match[1].replace(/[.,]/g, ''), 10) || 0
+        if (amount > 0) break // Found a valid amount
+      }
+    }
+    
+    if (amount > 0) {
+      // Guess type using comprehensive keyword search across whole text
+      const isIncome = /(?:nhan|nhận|cộng|cong|thu|vao|vào|hoan tien|\+)/i.test(text)
+      const isExpense = /(?:tru|trừ|chi|thanh toan|chuyen|rut|ra|mua|phi|phi gd|lixi|\-)/i.test(text)
+      if (isIncome && !isExpense) type = 'income'
+      else if (isExpense && !isIncome) type = 'expense'
+      else type = 'expense' // Default to expense if ambiguous
     }
   }
 
