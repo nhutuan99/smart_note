@@ -32,9 +32,9 @@ function syncOnVisible() {
   }
 }
 
-// ── Periodic polling: check for new data every 30s while tab is visible ──
+// ── Periodic polling: check for new data every 5s while tab is visible ──
 let _pollTimer: ReturnType<typeof setInterval> | null = null
-const POLL_INTERVAL = 30_000 // 30 seconds
+const POLL_INTERVAL = 5_000 // 5 seconds
 
 function startPolling() {
   if (_pollTimer) return

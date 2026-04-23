@@ -116,7 +116,8 @@ async function handleResponse<T>(response: Response): Promise<T> {
 async function get<T>(url: string): Promise<T> {
   const response = await fetch(`${API_BASE}${url}`, {
     method: 'GET',
-    headers: buildHeaders(false)
+    headers: buildHeaders(false),
+    cache: 'no-store'
   })
   return handleResponse<T>(response)
 }
