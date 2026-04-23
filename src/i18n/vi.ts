@@ -255,7 +255,9 @@ export default {
     noAccount: 'Chưa có tài khoản?',
     hasAccount: 'Đã có tài khoản?',
     forgotPassword: 'Quên mật khẩu?',
-    backToLogin: 'Quay lại đăng nhập'
+    backToLogin: 'Quay lại đăng nhập',
+    orContinueWith: 'hoặc tiếp tục với',
+    continueWithGoogle: 'Tiếp tục với Google'
   },
 
   // ── Forgot Password / PIN ──

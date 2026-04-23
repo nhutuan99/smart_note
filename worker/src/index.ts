@@ -476,6 +476,144 @@ async function handleResetPassword(request: Request, env: Env): Promise<Response
   return jsonResponse({ success: true, message: 'Đặt lại mật khẩu thành công' })
 }
 
+// ====== Google Sign-In / Sign-Up ======
+
+/**
+ * Sign in or sign up with Google.
+ * - If user with matching Google email exists → log in
+ * - If no user exists → auto-create account (no password needed)
+ * - Returns JWT token + user data, same as login/register
+ */
+async function handleGoogleSignIn(request: Request, env: Env): Promise<Response> {
+  const { code, redirectUri } = (await request.json()) as any
+  if (!code || !redirectUri) return errorResponse('Missing required fields')
+
+  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
+    return errorResponse('Google OAuth not configured', 503)
+  }
+
+  // Exchange authorization code for tokens
+  const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      code,
+      client_id: env.GOOGLE_CLIENT_ID,
+      client_secret: env.GOOGLE_CLIENT_SECRET,
+      redirect_uri: redirectUri,
+      grant_type: 'authorization_code'
+    }).toString()
+  })
+
+  if (!tokenResponse.ok) {
+    const errorBody = await tokenResponse.text()
+    console.error('[GOOGLE_SIGNIN] Token exchange failed:', errorBody)
+    return errorResponse('Đăng nhập Google thất bại. Vui lòng thử lại.', 400)
+  }
+
+  const tokenData = (await tokenResponse.json()) as any
+  const accessToken = tokenData.access_token
+  if (!accessToken) return errorResponse('No access token from Google', 400)
+
+  // Get user info from Google
+  const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+    headers: { Authorization: `Bearer ${accessToken}` }
+  })
+
+  if (!userInfoResponse.ok) {
+    return errorResponse('Không thể lấy thông tin từ Google', 400)
+  }
+
+  const googleUser = (await userInfoResponse.json()) as {
+    email?: string
+    verified_email?: boolean
+    name?: string
+    picture?: string
+  }
+
+  if (!googleUser.email || !googleUser.verified_email) {
+    return errorResponse('Email Google chưa được xác minh', 400)
+  }
+
+  const email = googleUser.email.toLowerCase()
+  const usersIndex = (await getJSON<Record<string, string>>(env.SMART_NOTE_KV, 'users/_index')) || {}
+
+  let userId = usersIndex[email]
+  let isNewUser = false
+
+  if (userId) {
+    // ── Existing user → log in ──
+    const user = await getJSON<UserData>(env.SMART_NOTE_KV, `users/${userId}/profile`)
+    if (!user) return errorResponse('User not found', 404)
+
+    // Update avatar from Google if user doesn't have one
+    if (!user.avatarUrl && googleUser.picture) {
+      user.avatarUrl = googleUser.picture
+      await putJSON(env.SMART_NOTE_KV, `users/${userId}/profile`, user)
+    }
+
+    const token = await createJWT({ userId: user.id }, env.JWT_SECRET)
+    return jsonResponse({
+      success: true,
+      data: {
+        token,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          avatarUrl: user.avatarUrl,
+          createdAt: user.createdAt
+        },
+        isNewUser: false
+      }
+    })
+  } else {
+    // ── New user → auto-register ──
+    isNewUser = true
+    userId = generateId()
+
+    // Generate a random password hash (user won't need it — they'll always sign in with Google)
+    const randomPass = generateId() + generateId() + generateId()
+    const user: UserData = {
+      id: userId,
+      email,
+      name: googleUser.name || email.split('@')[0],
+      avatarUrl: googleUser.picture,
+      passwordHash: await hashPassword(randomPass),
+      createdAt: new Date().toISOString()
+    }
+
+    await putJSON(env.SMART_NOTE_KV, `users/${userId}/profile`, user)
+    usersIndex[email] = userId
+    await putJSON(env.SMART_NOTE_KV, 'users/_index', usersIndex)
+    await putJSON(env.SMART_NOTE_KV, `users/${userId}/notes/_index`, { notes: [] })
+
+    // Create default wallets
+    const defaultWallets: WalletData[] = DEFAULT_WALLETS.map((w) => ({
+      ...w,
+      id: generateId()
+    }))
+    await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`, defaultWallets)
+    await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/transactions`, [])
+
+    const token = await createJWT({ userId }, env.JWT_SECRET)
+    return jsonResponse({
+      success: true,
+      data: {
+        token,
+        user: {
+          id: userId,
+          email,
+          name: user.name,
+          avatarUrl: user.avatarUrl,
+          createdAt: user.createdAt
+        },
+        isNewUser: true
+      }
+    })
+  }
+}
+
 // ====== Forgot PIN (Password Verification — requires JWT) ======
 
 /**
@@ -1814,6 +1952,10 @@ export default {
       }
       if (path === '/api/auth/reset-password' && request.method === 'POST') {
         return handleResetPassword(request, env)
+      }
+      // Google Sign-In / Sign-Up
+      if (path === '/api/auth/google-signin' && request.method === 'POST') {
+        return handleGoogleSignIn(request, env)
       }
 
       // Webhooks (use webhook secret, not JWT)

@@ -255,7 +255,9 @@ export default {
     noAccount: "Don't have an account?",
     hasAccount: 'Already have an account?',
     forgotPassword: 'Forgot password?',
-    backToLogin: 'Back to login'
+    backToLogin: 'Back to login',
+    orContinueWith: 'or continue with',
+    continueWithGoogle: 'Continue with Google'
   },
 
   // ── Forgot Password / PIN ──
