@@ -3,6 +3,7 @@ import { ref, watch, computed } from 'vue'
 import { Bug, X, Send, Loader2, ImagePlus, Trash2 } from 'lucide-vue-next'
 import { httpClient } from '@/shared/api/httpClient'
 import { useUiStore } from '@/stores/ui'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps<{
   show: boolean
@@ -12,6 +13,7 @@ const emit = defineEmits<{
   (e: 'close'): void
 }>()
 
+const { t } = useI18n()
 const ui = useUiStore()
 
 const title = ref('')
@@ -46,14 +48,14 @@ function handleDrop(e: DragEvent) {
 
 function processFile(file: File) {
   if (file.size > 2 * 1024 * 1024) {
-    ui.showToast('error', 'Ảnh quá lớn. Tối đa 2 MB.')
+    ui.showToast('error', t('bugReport.imageTooLarge'))
     return
   }
   const reader = new FileReader()
   reader.onload = () => {
     const result = reader.result as string
     imagePreview.value = result
-    imageBase64.value = result // data:image/...;base64,...
+    imageBase64.value = result
   }
   reader.readAsDataURL(file)
 }
@@ -68,12 +70,13 @@ const canSubmit = computed(() => title.value.trim() && description.value.trim() 
 
 async function submitReport() {
   if (!canSubmit.value) {
-    ui.showToast('error', 'Vui lòng nhập đầy đủ Tiêu đề và Mô tả lỗi')
+    ui.showToast('error', t('bugReport.requiredError'))
     return
   }
 
   loading.value = true
   try {
+    // 1. Save to backend KV (primary, always reliable)
     const payload: Record<string, any> = {
       title: title.value,
       description: description.value,
@@ -86,16 +89,39 @@ async function submitReport() {
 
     const res = await httpClient.post<{ message: string }>('/api/report-bug', payload)
 
-    ui.showToast('success', res?.message || 'Đã gửi báo cáo lỗi thành công!')
+    // 2. Send email notification to Admin via Web3Forms (client-side, fire-and-forget)
+    sendEmailNotification(title.value, description.value, currentUrl.value, userAgent.value)
+
+    ui.showToast('success', res?.message || t('bugReport.success'))
     title.value = ''
     description.value = ''
     removeImage()
     emit('close')
   } catch (err: any) {
-    ui.showToast('error', err.message || 'Lỗi khi gửi báo cáo')
+    ui.showToast('error', err.message || t('bugReport.error'))
   } finally {
     loading.value = false
   }
+}
+
+/**
+ * Client-side email via Web3Forms (free, no domain needed).
+ * Fire-and-forget: failure does NOT block the user flow.
+ * Access key is public (designed for client-side use).
+ */
+async function sendEmailNotification(bugTitle: string, bugDesc: string, bugUrl: string, bugUA: string) {
+  try {
+    await fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        access_key: 'YOUR_ACCESS_KEY', // TODO: replace after activating at https://web3forms.com
+        subject: `[Bug Report] ${bugTitle}`,
+        from_name: 'Smart Note Bug Reporter',
+        message: `Title: ${bugTitle}\n\nDescription:\n${bugDesc}\n\nURL: ${bugUrl}\nDevice: ${bugUA}`,
+      })
+    })
+  } catch { /* silent — email is best-effort */ }
 }
 </script>
 
@@ -118,7 +144,7 @@ async function submitReport() {
             <div class="flex h-10 w-10 items-center justify-center rounded-full bg-danger/10 text-danger">
               <Bug class="h-5 w-5" />
             </div>
-            <h3 class="text-lg font-semibold text-text-primary">Báo cáo lỗi / Góp ý</h3>
+            <h3 class="text-lg font-semibold text-text-primary">{{ t('bugReport.modalTitle') }}</h3>
           </div>
           <button 
             @click="emit('close')"
@@ -131,29 +157,29 @@ async function submitReport() {
         <!-- Body -->
         <div class="p-6 space-y-5">
           <p class="text-sm text-text-secondary">
-            Cảm ơn bạn đã báo cáo! Thông tin lỗi sẽ được gửi trực tiếp đến Admin để xử lý.
+            {{ t('bugReport.modalDesc') }}
           </p>
 
           <div class="space-y-4">
-            <!-- Tiêu đề -->
+            <!-- Title -->
             <div>
-              <label class="block text-sm font-medium text-text-primary mb-1.5">Tiêu đề lỗi <span class="text-danger">*</span></label>
+              <label class="block text-sm font-medium text-text-primary mb-1.5">{{ t('bugReport.titleLabel') }} <span class="text-danger">*</span></label>
               <input 
                 v-model="title"
                 type="text"
-                placeholder="VD: Không đồng bộ được SMS Casso"
+                :placeholder="t('bugReport.titlePlaceholder')"
                 class="w-full rounded-xl bg-bg-tertiary/50 border border-border-default/50 px-4 py-2.5 text-sm text-text-primary placeholder:text-text-tertiary focus:bg-bg-secondary focus:border-accent/50 focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all"
                 :disabled="loading"
               />
             </div>
 
-            <!-- Mô tả -->
+            <!-- Description -->
             <div>
-              <label class="block text-sm font-medium text-text-primary mb-1.5">Mô tả chi tiết <span class="text-danger">*</span></label>
+              <label class="block text-sm font-medium text-text-primary mb-1.5">{{ t('bugReport.descLabel') }} <span class="text-danger">*</span></label>
               <textarea 
                 v-model="description"
                 rows="4"
-                placeholder="Mô tả các bước để tái hiện lỗi..."
+                :placeholder="t('bugReport.descPlaceholder')"
                 class="w-full rounded-xl bg-bg-tertiary/50 border border-border-default/50 px-4 py-3 text-sm text-text-primary placeholder:text-text-tertiary focus:bg-bg-secondary focus:border-accent/50 focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all resize-none"
                 :disabled="loading"
               ></textarea>
@@ -161,7 +187,7 @@ async function submitReport() {
 
             <!-- Image Upload -->
             <div>
-              <label class="block text-sm font-medium text-text-primary mb-1.5">Ảnh đính kèm (tùy chọn)</label>
+              <label class="block text-sm font-medium text-text-primary mb-1.5">{{ t('bugReport.imageLabel') }}</label>
               
               <!-- Preview -->
               <div v-if="imagePreview" class="relative group rounded-xl overflow-hidden border border-border-default/50 mb-2">
@@ -169,13 +195,13 @@ async function submitReport() {
                 <button 
                   @click="removeImage"
                   class="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-danger/80 text-white opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm"
-                  title="Xóa ảnh"
+                  :title="t('bugReport.imageRemove')"
                 >
                   <Trash2 class="h-4 w-4" />
                 </button>
               </div>
 
-              <!-- Drop zone / Upload button -->
+              <!-- Drop zone -->
               <div
                 v-if="!imagePreview"
                 class="relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed px-4 py-6 transition-all cursor-pointer"
@@ -186,8 +212,8 @@ async function submitReport() {
                 @click="fileInputRef?.click()"
               >
                 <ImagePlus class="h-8 w-8 text-text-tertiary mb-2" />
-                <p class="text-sm text-text-secondary">Kéo thả ảnh vào đây hoặc <span class="text-accent font-medium">chọn file</span></p>
-                <p class="text-xs text-text-tertiary mt-1">PNG, JPG, GIF — tối đa 2 MB</p>
+                <p class="text-sm text-text-secondary">{{ t('bugReport.imageDrop') }} <span class="text-accent font-medium">{{ t('bugReport.imageSelect') }}</span></p>
+                <p class="text-xs text-text-tertiary mt-1">{{ t('bugReport.imageHint') }}</p>
                 <input 
                   ref="fileInputRef"
                   type="file"
@@ -200,7 +226,7 @@ async function submitReport() {
 
             <!-- Auto Detected Info -->
             <div class="rounded-lg bg-bg-secondary p-3 border border-border-default/50">
-              <p class="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-2">Thông tin tự động đính kèm</p>
+              <p class="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-2">{{ t('bugReport.autoInfo') }}</p>
               <div class="space-y-1.5 text-xs text-text-secondary font-mono truncate">
                 <p><span class="text-text-tertiary">URL:</span> {{ currentUrl }}</p>
                 <p class="truncate"><span class="text-text-tertiary">OS:</span> {{ userAgent }}</p>
@@ -216,7 +242,7 @@ async function submitReport() {
             class="btn-secondary"
             :disabled="loading"
           >
-            Hủy
+            {{ t('common.cancel') }}
           </button>
           <button 
             @click="submitReport"
@@ -225,7 +251,7 @@ async function submitReport() {
           >
             <Loader2 v-if="loading" class="h-4 w-4 animate-spin mr-2" />
             <Send v-else class="h-4 w-4 mr-2" />
-            Gửi báo cáo
+            {{ t('bugReport.submitBtn') }}
           </button>
         </div>
       </div>

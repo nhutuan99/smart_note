@@ -260,6 +260,7 @@ export default {
     hasAccount: 'Already have an account?',
     forgotPassword: 'Forgot password?',
     backToLogin: 'Back to login',
+    goBack: 'Go back',
     orContinueWith: 'or continue with',
     continueWithGoogle: 'Continue with Google'
   },
@@ -361,6 +362,46 @@ export default {
       'Danang': 'Da Nang',
       'Đà Nẵng': 'Da Nang'
     }
+  },
+
+  // ── Bug Report ──
+  bugReport: {
+    sectionTitle: 'Bug Report & Feedback',
+    sendReport: 'Submit a bug report',
+    sendReportDesc: 'Found an issue or have a feature request? Let Admin know.',
+    reportNow: 'Report Now',
+    adminReports: 'User Reports',
+    viewReports: 'View reports',
+    hide: 'Hide',
+    noReports: 'No reports yet.',
+    sender: 'Sender',
+    resolved: 'Resolved',
+    reopen: 'Reopen',
+    deleteReport: 'Delete',
+    deleteReportTitle: 'Delete Report',
+    deleteReportMsg: 'Are you sure you want to delete this report?',
+    statusUpdated: 'Status updated',
+    statusFailed: 'Update failed',
+    deleted: 'Report deleted',
+    deleteFailed: 'Delete failed',
+    // Modal
+    modalTitle: 'Bug Report / Feedback',
+    modalDesc: 'Thanks for reporting! The details will be sent directly to the Admin for review.',
+    titleLabel: 'Bug Title',
+    titlePlaceholder: 'e.g. Cannot sync Casso SMS',
+    descLabel: 'Detailed Description',
+    descPlaceholder: 'Describe the steps to reproduce the bug...',
+    imageLabel: 'Attach Image (optional)',
+    imageRemove: 'Remove image',
+    imageDrop: 'Drag and drop an image here or',
+    imageSelect: 'choose file',
+    imageHint: 'PNG, JPG, GIF — max 2 MB',
+    imageTooLarge: 'Image too large. Max 2 MB.',
+    autoInfo: 'Auto-detected info',
+    submitBtn: 'Submit Report',
+    requiredError: 'Please fill in both Title and Description',
+    success: 'Bug report submitted successfully!',
+    error: 'Failed to submit report'
   },
 
   // ── Categories ──

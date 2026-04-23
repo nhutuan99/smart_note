@@ -281,7 +281,7 @@ watch(
       class="absolute left-6 top-6 z-10 flex items-center gap-1.5 text-sm text-text-tertiary hover:text-text-primary transition-colors"
     >
       <ChevronLeft :size="18" />
-      <span class="hidden sm:inline">{{ t('login.backToLogin') }}</span>
+      <span class="hidden sm:inline">{{ t('login.goBack') }}</span>
     </button>
 
     <!-- Language Switcher -->

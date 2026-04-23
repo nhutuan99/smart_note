@@ -267,19 +267,19 @@ async function updateReportStatus(reportId: string, status: string) {
     await httpClient.put(`/api/bug-reports/${reportId}/status`, { status })
     const idx = bugReports.value.findIndex(r => r.id === reportId)
     if (idx !== -1) bugReports.value[idx].status = status as BugReport['status']
-    ui.showToast('success', 'Đã cập nhật trạng thái')
-  } catch { ui.showToast('error', 'Cập nhật thất bại') }
+    ui.showToast('success', t('bugReport.statusUpdated'))
+  } catch { ui.showToast('error', t('bugReport.statusFailed')) }
 }
 
 async function deleteBugReport(reportId: string) {
-  const ok = await ui.requestConfirm({ title: 'Xóa báo cáo', message: 'Bạn chắc chắn muốn xóa báo cáo này?', danger: true })
+  const ok = await ui.requestConfirm({ title: t('bugReport.deleteReportTitle'), message: t('bugReport.deleteReportMsg'), danger: true })
   if (!ok) return
   try {
     await httpClient.del(`/api/bug-reports/${reportId}`)
     bugReports.value = bugReports.value.filter(r => r.id !== reportId)
     delete reportImages.value[reportId]
-    ui.showToast('success', 'Đã xóa báo cáo')
-  } catch { ui.showToast('error', 'Xóa thất bại') }
+    ui.showToast('success', t('bugReport.deleted'))
+  } catch { ui.showToast('error', t('bugReport.deleteFailed')) }
 }
 
 function toggleReport(id: string) {
@@ -335,7 +335,7 @@ function cancelForgotPin() {
               :class="selectedLocale === 'en' ? 'bg-accent-subtle text-accent' : 'bg-bg-surface text-text-secondary hover:bg-bg-hover'"
               @click="changeLocale('en')"
             >
-              🇺🇸 English
+              English
             </button>
           </div>
         </div>
@@ -793,20 +793,20 @@ function cancelForgotPin() {
     <div class="mb-6">
       <div class="text-text-secondary mb-3 flex items-center gap-2">
         <Bug :size="18" />
-        <h3 class="text-sm font-semibold">Báo lỗi & Góp ý</h3>
+        <h3 class="text-sm font-semibold">{{ t('bugReport.sectionTitle') }}</h3>
       </div>
       <div class="bg-bg-surface border-border-default rounded-xl border p-5">
         <div class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
           <div>
-            <h4 class="mb-0.5 text-sm font-semibold">Gửi báo cáo lỗi</h4>
-            <p class="text-text-tertiary text-[0.8125rem]">Gặp sự cố hoặc có tính năng muốn đóng góp? Hãy cho Admin biết nhé.</p>
+            <h4 class="mb-0.5 text-sm font-semibold">{{ t('bugReport.sendReport') }}</h4>
+            <p class="text-text-tertiary text-[0.8125rem]">{{ t('bugReport.sendReportDesc') }}</p>
           </div>
           <button
             @click="ui.showBugReport = true"
             class="border-danger text-danger hover:bg-danger/10 flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-150"
           >
             <Bug :size="16" />
-            Báo lỗi ngay
+            {{ t('bugReport.reportNow') }}
           </button>
         </div>
 
@@ -814,14 +814,14 @@ function cancelForgotPin() {
         <div v-if="isAdmin" class="border-border-default mt-5 border-t pt-5">
           <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-2">
-              <h4 class="text-sm font-semibold">📋 Báo cáo từ người dùng</h4>
+              <h4 class="text-sm font-semibold">📋 {{ t('bugReport.adminReports') }}</h4>
               <span v-if="newReportsCount" class="bg-danger text-white rounded-full px-2 py-0.5 text-[0.625rem] font-bold">{{ newReportsCount }}</span>
             </div>
             <button
               @click="showBugReports = !showBugReports; if (showBugReports && !bugReports.length) fetchBugReports()"
               class="text-accent text-xs font-medium hover:underline"
             >
-              {{ showBugReports ? 'Ẩn' : 'Xem báo cáo' }}
+              {{ showBugReports ? t('bugReport.hide') : t('bugReport.viewReports') }}
             </button>
           </div>
 
@@ -831,7 +831,7 @@ function cancelForgotPin() {
             </div>
 
             <div v-else-if="bugReports.length === 0" class="text-text-tertiary text-center py-4 text-sm">
-              Chưa có báo cáo nào.
+              {{ t('bugReport.noReports') }}
             </div>
 
             <div v-else class="space-y-2 max-h-[28rem] overflow-y-auto pr-1">
@@ -860,7 +860,7 @@ function cancelForgotPin() {
                 <!-- Expanded detail -->
                 <div v-if="expandedReport === report.id" class="border-t border-border-default/50 px-4 py-3 space-y-3">
                   <div class="space-y-1 text-xs text-text-secondary">
-                    <p><strong>Người gửi:</strong> {{ report.userName }} ({{ report.userEmail }})</p>
+                    <p><strong>{{ t('bugReport.sender') }}:</strong> {{ report.userName }} ({{ report.userEmail }})</p>
                     <p><strong>URL:</strong> {{ report.url }}</p>
                     <p class="truncate"><strong>UA:</strong> {{ report.userAgent }}</p>
                   </div>
@@ -879,20 +879,20 @@ function cancelForgotPin() {
                       @click.stop="updateReportStatus(report.id, 'resolved')"
                       class="flex items-center gap-1.5 rounded-lg bg-success/10 text-success px-3 py-1.5 text-xs font-medium hover:bg-success/20 transition-colors"
                     >
-                      <Check :size="12" /> Đã xử lý
+                      <Check :size="12" /> {{ t('bugReport.resolved') }}
                     </button>
                     <button
                       v-else
                       @click.stop="updateReportStatus(report.id, 'new')"
                       class="flex items-center gap-1.5 rounded-lg bg-warning/10 text-warning px-3 py-1.5 text-xs font-medium hover:bg-warning/20 transition-colors"
                     >
-                      Mở lại
+                      {{ t('bugReport.reopen') }}
                     </button>
                     <button
                       @click.stop="deleteBugReport(report.id)"
                       class="flex items-center gap-1.5 rounded-lg bg-error/10 text-error px-3 py-1.5 text-xs font-medium hover:bg-error/20 transition-colors ml-auto"
                     >
-                      <Trash2 :size="12" /> Xóa
+                      <Trash2 :size="12" /> {{ t('bugReport.deleteReport') }}
                     </button>
                   </div>
                 </div>

@@ -260,6 +260,7 @@ export default {
     hasAccount: 'Đã có tài khoản?',
     forgotPassword: 'Quên mật khẩu?',
     backToLogin: 'Quay lại đăng nhập',
+    goBack: 'Quay lại',
     orContinueWith: 'hoặc tiếp tục với',
     continueWithGoogle: 'Tiếp tục với Google'
   },
@@ -361,6 +362,46 @@ export default {
       'Danang': 'Đà Nẵng',
       'Đà Nẵng': 'Đà Nẵng'
     }
+  },
+
+  // ── Bug Report ──
+  bugReport: {
+    sectionTitle: 'Báo lỗi & Góp ý',
+    sendReport: 'Gửi báo cáo lỗi',
+    sendReportDesc: 'Gặp sự cố hoặc có tính năng muốn đóng góp? Hãy cho Admin biết nhé.',
+    reportNow: 'Báo lỗi ngay',
+    adminReports: 'Báo cáo từ người dùng',
+    viewReports: 'Xem báo cáo',
+    hide: 'Ẩn',
+    noReports: 'Chưa có báo cáo nào.',
+    sender: 'Người gửi',
+    resolved: 'Đã xử lý',
+    reopen: 'Mở lại',
+    deleteReport: 'Xóa',
+    deleteReportTitle: 'Xóa báo cáo',
+    deleteReportMsg: 'Bạn chắc chắn muốn xóa báo cáo này?',
+    statusUpdated: 'Đã cập nhật trạng thái',
+    statusFailed: 'Cập nhật thất bại',
+    deleted: 'Đã xóa báo cáo',
+    deleteFailed: 'Xóa thất bại',
+    // Modal
+    modalTitle: 'Báo cáo lỗi / Góp ý',
+    modalDesc: 'Cảm ơn bạn đã báo cáo! Thông tin lỗi sẽ được gửi trực tiếp đến Admin để xử lý.',
+    titleLabel: 'Tiêu đề lỗi',
+    titlePlaceholder: 'VD: Không đồng bộ được SMS Casso',
+    descLabel: 'Mô tả chi tiết',
+    descPlaceholder: 'Mô tả các bước để tái hiện lỗi...',
+    imageLabel: 'Ảnh đính kèm (tùy chọn)',
+    imageRemove: 'Xóa ảnh',
+    imageDrop: 'Kéo thả ảnh vào đây hoặc',
+    imageSelect: 'chọn file',
+    imageHint: 'PNG, JPG, GIF — tối đa 2 MB',
+    imageTooLarge: 'Ảnh quá lớn. Tối đa 2 MB.',
+    autoInfo: 'Thông tin tự động đính kèm',
+    submitBtn: 'Gửi báo cáo',
+    requiredError: 'Vui lòng nhập đầy đủ Tiêu đề và Mô tả lỗi',
+    success: 'Đã gửi báo cáo lỗi thành công!',
+    error: 'Lỗi khi gửi báo cáo'
   },
 
   // ── Categories ──
