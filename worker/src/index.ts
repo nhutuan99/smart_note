@@ -1722,8 +1722,9 @@ async function processSmsTransaction(
     }
   }
   
-  // ── Duplicate detection ──
-  // Priority 1: Use SO GD (transaction reference) — most reliable
+  // ── Duplicate detection (DISABLED per user request) ──
+  // The system will now accept and sync all transactions, even if they have the same SO GD.
+  /*
   if (parsed.txRef) {
     const alreadyExists = txs.some(t => t.note?.includes(`[ref:${parsed.txRef}]`))
     if (alreadyExists) {
@@ -1749,6 +1750,7 @@ async function processSmsTransaction(
       })
     }
   }
+  */
   // Priority 2: Fallback hash using amount + type + date (not raw text — prevents false-positive dupes)
   const today = new Date().toISOString().substring(0, 10)
   const smsHash = parsed.txRef 
