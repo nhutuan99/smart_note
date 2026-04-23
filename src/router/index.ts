@@ -55,13 +55,20 @@ const router = createRouter({
 
 router.beforeEach((to) => {
   const auth = useAuthStore()
-  // Only guard: redirect authenticated users away from /login
+
+  // Guest-only pages (login): redirect authenticated users to dashboard
   if (to.meta.requiresGuest && auth.isAuthenticated) {
     // Allow Google OAuth callback to hit /login even if there is a stale token
     if (to.path === '/login' && to.query.code && to.query.state) {
       return
     }
     return '/'
+  }
+
+  // Protected pages: redirect unauthenticated users to login
+  // This prevents broken pages when user hits browser back after logout/401
+  if (!to.meta.requiresGuest && to.path !== '/login' && !auth.isAuthenticated) {
+    return '/login'
   }
 })
 
