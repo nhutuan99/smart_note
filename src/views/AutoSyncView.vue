@@ -3,7 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
 import { httpClient } from '@/shared/api/httpClient'
-import { Copy, ShieldCheck, Smartphone, CheckCircle, Activity, ArrowUpRight, ArrowDownRight, Server, RefreshCw } from 'lucide-vue-next'
+import { Copy, ShieldCheck, Smartphone, CheckCircle, Activity, ArrowUpRight, ArrowDownRight, Server, RefreshCw, ChevronDownIcon } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
 import { useFinanceStore } from '@/stores/finance'
 import { formatVND, getCategoryConfig } from '@/constants/finance'
@@ -335,23 +335,26 @@ onMounted(() => {
           <p class="text-text-tertiary text-sm">✅ Không có giao dịch nào bị pending</p>
         </div>
         <div v-else class="divide-border-default divide-y">
-          <div
+          <details
             v-for="p in pendingList" :key="p.id"
-            class="px-5 py-3"
+            class="px-5 py-3 group"
           >
-            <div class="flex items-center justify-between mb-1.5">
-              <span
-                class="rounded-full px-2 py-0.5 text-[0.625rem] font-bold"
-                :class="p.status === 'pending' ? 'bg-warning/15 text-warning' : 'bg-success/15 text-success'"
-              >
-                {{ p.status === 'pending' ? '⏳ Chưa parse' : '✅ Đã xử lý' }}
-              </span>
-              <span class="text-[0.625rem] text-text-disabled">{{ formatDebugTime(p.createdAt) }}</span>
-            </div>
-            <div class="bg-bg-elevated border-border-default rounded-lg border p-2.5 text-xs font-mono text-text-primary whitespace-pre-wrap break-all max-h-24 overflow-y-auto">
+            <summary class="flex items-center justify-between cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+              <div class="flex items-center gap-3">
+                <span
+                  class="rounded-full px-2 py-0.5 text-[0.625rem] font-bold"
+                  :class="p.status === 'pending' ? 'bg-warning/15 text-warning' : 'bg-success/15 text-success'"
+                >
+                  {{ p.status === 'pending' ? '⏳ Chưa parse' : '✅ Đã xử lý' }}
+                </span>
+                <span class="text-[0.625rem] text-text-disabled">{{ formatDebugTime(p.createdAt) }}</span>
+              </div>
+              <ChevronDownIcon class="w-4 h-4 text-text-disabled group-open:rotate-180 transition-transform" />
+            </summary>
+            <div class="mt-3 bg-bg-elevated border-border-default rounded-lg border p-2.5 text-xs font-mono text-text-primary whitespace-pre-wrap break-all max-h-24 overflow-y-auto">
               {{ p.rawText }}
             </div>
-          </div>
+          </details>
         </div>
       </div>
     </div>
@@ -369,39 +372,45 @@ onMounted(() => {
           <p class="text-text-tertiary text-sm">Chưa có webhook request nào</p>
         </div>
         <div v-else class="divide-border-default divide-y max-h-[32rem] overflow-y-auto">
-          <div
+          <details
             v-for="(h, idx) in webhookHistory" :key="idx"
-            class="px-5 py-3"
+            class="px-5 py-3 group"
           >
-            <div class="flex items-center justify-between mb-1.5">
-              <span class="text-xs font-medium text-text-secondary">#{{ idx + 1 }}</span>
-              <div class="flex items-center gap-2">
-                <span
-                  class="rounded-full px-2 py-0.5 text-[0.625rem] font-bold"
-                  :class="h.status === 'success'
-                    ? 'bg-success/15 text-success'
-                    : h.status === 'skipped'
-                      ? 'bg-info/15 text-info'
-                      : h.status === 'pending'
-                        ? 'bg-warning/15 text-warning'
-                        : 'bg-error/15 text-error'"
-                >
-                  {{ h.status === 'success' ? '✅' : h.status === 'skipped' ? '🔄' : h.status === 'pending' ? '⏳' : '❌' }} {{ h.status || 'received' }}
+            <summary class="flex items-center justify-between cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+              <div class="flex items-center gap-3">
+                <span class="text-xs font-medium text-text-secondary w-6">#{{ idx + 1 }}</span>
+                <div class="flex items-center gap-2">
+                  <span
+                    class="rounded-full px-2 py-0.5 text-[0.625rem] font-bold"
+                    :class="h.status === 'success'
+                      ? 'bg-success/15 text-success'
+                      : h.status === 'skipped'
+                        ? 'bg-info/15 text-info'
+                        : h.status === 'pending'
+                          ? 'bg-warning/15 text-warning'
+                          : 'bg-error/15 text-error'"
+                  >
+                    {{ h.status === 'success' ? '✅' : h.status === 'skipped' ? '🔄' : h.status === 'pending' ? '⏳' : '❌' }} {{ h.status || 'received' }}
+                  </span>
+                  <span class="text-[0.625rem] text-text-disabled">{{ formatDebugTime(h.time) }}</span>
+                </div>
+              </div>
+              <ChevronDownIcon class="w-4 h-4 text-text-disabled group-open:rotate-180 transition-transform" />
+            </summary>
+            
+            <div class="mt-3 pl-9">
+              <div class="bg-bg-elevated border-border-default rounded-lg border p-2 text-[0.6875rem] font-mono text-text-secondary whitespace-pre-wrap break-all max-h-16 overflow-y-auto">
+                {{ h.rawDump || '(trống)' }}
+              </div>
+              <div v-if="h.parsedData" class="mt-1.5 flex flex-wrap gap-2">
+                <span class="text-[0.625rem] bg-bg-elevated rounded px-1.5 py-0.5" :class="h.parsedData?.type === 'income' ? 'text-success' : 'text-error'">
+                  {{ h.parsedData?.type === 'income' ? '+' : '-' }}{{ h.parsedData?.amount?.toLocaleString('vi-VN') }}đ
                 </span>
-                <span class="text-[0.625rem] text-text-disabled">{{ formatDebugTime(h.time) }}</span>
+                <span v-if="h.parsedData?.bankName" class="text-[0.625rem] text-text-disabled bg-bg-elevated rounded px-1.5 py-0.5">{{ h.parsedData.bankName }}</span>
+                <span v-if="h.transactionId" class="text-[0.625rem] text-accent bg-bg-elevated rounded px-1.5 py-0.5 font-mono">{{ h.transactionId }}</span>
               </div>
             </div>
-            <div class="bg-bg-elevated border-border-default rounded-lg border p-2 text-[0.6875rem] font-mono text-text-secondary whitespace-pre-wrap break-all max-h-16 overflow-y-auto">
-              {{ h.rawDump || '(trống)' }}
-            </div>
-            <div v-if="h.parsedData" class="mt-1.5 flex flex-wrap gap-2">
-              <span class="text-[0.625rem] bg-bg-elevated rounded px-1.5 py-0.5" :class="h.parsedData?.type === 'income' ? 'text-success' : 'text-error'">
-                {{ h.parsedData?.type === 'income' ? '+' : '-' }}{{ h.parsedData?.amount?.toLocaleString('vi-VN') }}đ
-              </span>
-              <span v-if="h.parsedData?.bankName" class="text-[0.625rem] text-text-disabled bg-bg-elevated rounded px-1.5 py-0.5">{{ h.parsedData.bankName }}</span>
-              <span v-if="h.transactionId" class="text-[0.625rem] text-accent bg-bg-elevated rounded px-1.5 py-0.5 font-mono">{{ h.transactionId }}</span>
-            </div>
-          </div>
+          </details>
         </div>
       </div>
     </div>
