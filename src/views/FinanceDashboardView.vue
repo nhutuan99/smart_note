@@ -24,7 +24,8 @@ import {
   ChevronUp,
   ChevronDown,
   Send,
-  Bot
+  Bot,
+  X
 } from 'lucide-vue-next'
 import { httpClient } from '@/shared/api/httpClient'
 import { useAi } from '@/composables/useGemini'
@@ -395,6 +396,7 @@ const insights = computed<Insight[]>(() => {
 // ── AI Generator ──
 const isInsightsCollapsed = ref(false)
 const isAiCollapsed = ref(false)
+const isSmartSectionCollapsed = ref(false)
 const aiPrompt = ref('')
 const { streamText: aiResponse, loading: isAiLoading, askAbout } = useAi()
 
@@ -518,7 +520,57 @@ Quy tắc:
     </div>
 
     <!-- Budget Gauge + Smart Insights -->
-    <div class="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+    <div v-if="isSmartSectionCollapsed" class="mb-6 card-premium p-4 flex items-center justify-between cursor-pointer group hover:bg-bg-elevated transition-colors" @click="isSmartSectionCollapsed = false">
+      <div class="flex items-center gap-6 divide-x divide-border-subtle flex-1 overflow-x-auto no-scrollbar">
+        <!-- Budget summary -->
+        <div class="flex items-center gap-3 shrink-0">
+          <div class="bg-accent/10 flex h-8 w-8 items-center justify-center rounded-lg">
+            <Sparkles :size="16" class="text-accent" />
+          </div>
+          <div>
+            <div class="text-[0.6875rem] text-text-tertiary font-medium">{{ t('dashboard.monthlyBudget') }}</div>
+            <div class="text-sm font-bold" :class="monthlyBudget > 0 && budgetUsedPercent >= 90 ? 'text-error' : monthlyBudget > 0 && budgetUsedPercent >= 70 ? 'text-yellow-400' : 'text-success'">
+              {{ monthlyBudget > 0 ? formatVNDShort(budgetRemaining) + ' ' + t('dashboard.remaining').toLowerCase() : t('dashboard.notSet') }}
+            </div>
+          </div>
+        </div>
+        <!-- AI summary -->
+        <div class="flex items-center gap-3 pl-6 shrink-0 hidden sm:flex">
+          <div class="bg-blue-500/10 flex h-8 w-8 items-center justify-center rounded-lg">
+            <Bot :size="16" class="text-blue-400" />
+          </div>
+          <div>
+            <div class="text-[0.6875rem] text-text-tertiary font-medium">{{ t('dashboard.aiAssistant') }}</div>
+            <div class="text-sm font-bold text-text-primary">{{ t('dashboard.aiReady') }}</div>
+          </div>
+        </div>
+        <!-- Insights summary -->
+        <div class="flex items-center gap-3 pl-6 shrink-0">
+          <div class="bg-yellow-500/10 flex h-8 w-8 items-center justify-center rounded-lg">
+            <Zap :size="16" class="text-yellow-400" />
+          </div>
+          <div>
+            <div class="text-[0.6875rem] text-text-tertiary font-medium">{{ t('dashboard.smartInsights') }}</div>
+            <div class="text-sm font-bold text-text-primary">{{ insights.length }} {{ t('dashboard.insightsCount') }}</div>
+          </div>
+        </div>
+      </div>
+      <button class="text-text-tertiary group-hover:text-text-primary transition-colors p-2 rounded-lg bg-bg-surface group-hover:bg-bg-elevated ml-4 shrink-0">
+        <ChevronDown :size="18" />
+      </button>
+    </div>
+
+    <div v-else class="mb-6 relative">
+      <div class="absolute right-0 -top-8 flex items-center justify-end z-10">
+        <button 
+          @click="isSmartSectionCollapsed = true"
+          class="flex items-center gap-1 text-text-tertiary hover:text-text-primary text-xs font-medium px-2 py-1 rounded-lg hover:bg-bg-elevated transition-colors"
+        >
+          <span>{{ t('dashboard.collapse') }}</span>
+          <ChevronUp :size="14" />
+        </button>
+      </div>
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <!-- LEFT COLUMN -->
       <div class="flex flex-col gap-4">
         <!-- Monthly Budget Gauge -->
@@ -528,22 +580,22 @@ Quy tắc:
               <div class="bg-accent/10 flex h-7 w-7 items-center justify-center rounded-lg">
                 <Sparkles :size="14" class="text-accent" />
               </div>
-              Ngân sách tháng
+              {{ t('dashboard.monthlyBudget') }}
             </h3>
             <button
               v-if="monthlyBudget > 0 && !showBudgetInput"
               class="text-text-tertiary hover:text-accent text-[0.6875rem] transition-colors"
               @click="showBudgetInput = true; budgetInputValue = String(monthlyBudget)"
-            >Chỉnh sửa</button>
+            >{{ t('common.edit') }}</button>
           </div>
 
           <!-- No budget set -->
           <div v-if="!monthlyBudget && !showBudgetInput" class="flex flex-col items-center gap-3 py-4">
-            <span class="text-text-disabled text-sm">Chưa đặt ngân sách</span>
+            <span class="text-text-disabled text-sm">{{ t('dashboard.notSetFull') }}</span>
             <button
               class="btn-primary text-sm px-4 py-1.5"
               @click="showBudgetInput = true"
-            >Đặt ngân sách</button>
+            >{{ t('dashboard.setBudget') }}</button>
           </div>
 
           <!-- Budget input -->
@@ -554,13 +606,13 @@ Quy tắc:
                 v-model="budgetInputValue"
                 type="text"
                 inputmode="numeric"
-                placeholder="Nhập số tiền..."
+                placeholder="..."
                 class="w-full bg-bg-surface border border-border-subtle rounded-xl pl-8 pr-24 py-2.5 text-sm font-medium text-text-primary focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all"
                 @keyup.enter="saveBudget"
               />
               <div class="absolute right-1.5 flex items-center gap-1">
-                <button class="bg-accent/10 hover:bg-accent/20 text-accent rounded-lg px-3 py-1.5 text-[0.6875rem] font-semibold transition-colors" @click="saveBudget">Lưu</button>
-                <button class="hover:bg-bg-elevated text-text-tertiary hover:text-text-secondary rounded-lg p-1.5 transition-colors" @click="showBudgetInput = false">Hủy</button>
+                <button class="bg-accent/10 hover:bg-accent/20 text-accent rounded-lg px-3 py-1.5 text-[0.6875rem] font-semibold transition-colors" @click="saveBudget">{{ t('common.save') }}</button>
+                <button class="hover:bg-bg-elevated text-text-tertiary hover:text-text-secondary rounded-lg p-1.5 transition-colors text-[0.6875rem]" @click="showBudgetInput = false">{{ t('common.cancel') }}</button>
               </div>
             </div>
           </div>
@@ -591,20 +643,20 @@ Quy tắc:
             <!-- Stats -->
             <div class="flex-1 space-y-2 min-w-0">
               <div class="flex justify-between text-[0.75rem]">
-                <span class="text-text-tertiary">Ngân sách</span>
+                <span class="text-text-tertiary">{{ t('dashboard.monthlyBudget') }}</span>
                 <span class="text-text-primary font-semibold tabular-nums">{{ formatVNDShort(monthlyBudget) }}</span>
               </div>
               <div class="flex justify-between text-[0.75rem]">
-                <span class="text-text-tertiary">Đã chi</span>
+                <span class="text-text-tertiary">{{ t('dashboard.spent') }}</span>
                 <span class="text-error font-semibold tabular-nums">{{ formatVNDShort(finance.monthExpense) }}</span>
               </div>
               <div class="flex justify-between text-[0.75rem]">
-                <span class="text-text-tertiary">Còn lại</span>
+                <span class="text-text-tertiary">{{ t('dashboard.remaining') }}</span>
                 <span class="text-success font-semibold tabular-nums">{{ formatVNDShort(budgetRemaining) }}</span>
               </div>
               <div class="border-border-subtle border-t pt-2 flex justify-between text-[0.6875rem]">
-                <span class="text-text-disabled">Mỗi ngày còn</span>
-                <span class="text-accent font-semibold tabular-nums">~{{ formatVNDShort(dailyBudgetRemaining) }}/ngày</span>
+                <span class="text-text-disabled">{{ t('dashboard.dailyRemaining') }}</span>
+                <span class="text-accent font-semibold tabular-nums">{{ t('dashboard.dailyRemainingValue', { val: formatVNDShort(dailyBudgetRemaining) }) }}</span>
               </div>
             </div>
           </div>
@@ -617,7 +669,7 @@ Quy tắc:
               <div class="bg-blue-500/10 flex h-7 w-7 items-center justify-center rounded-lg">
                 <Bot :size="14" class="text-blue-400" />
               </div>
-              Trợ lý AI
+              {{ t('dashboard.aiAssistant') }}
             </h3>
             <button class="text-text-tertiary hover:text-text-primary p-1 rounded-md transition-colors">
               <ChevronDown v-if="isAiCollapsed" :size="18" />
@@ -629,16 +681,23 @@ Quy tắc:
             <div class="flex flex-col flex-1 justify-end">
               <div v-if="aiResponse" class="mb-4 bg-bg-surface rounded-xl p-3.5 text-[0.8125rem] text-text-secondary leading-relaxed border border-border-subtle relative shadow-sm">
                 <div class="absolute -top-2.5 left-3 bg-bg-elevated px-1.5 flex items-center gap-1 text-blue-400 rounded-full text-[0.625rem] font-semibold border border-border-subtle shadow-sm">
-                  <Sparkles :size="10" /> AI
+                  <Sparkles :size="10" /> AI Insight
                 </div>
-                <div class="pt-1 whitespace-pre-wrap">{{ aiResponse }}</div>
+                <button 
+                  @click="aiResponse = ''" 
+                  class="absolute top-2 right-2 text-text-tertiary hover:text-error transition-colors p-1 rounded-md hover:bg-error/10"
+                  title="Clear"
+                >
+                  <X :size="14" />
+                </button>
+                <div class="pt-2 pr-6 whitespace-pre-wrap">{{ aiResponse }}</div>
               </div>
 
               <div class="relative flex items-center group mt-auto">
                 <input
                   v-model="aiPrompt"
                   type="text"
-                  placeholder="Hỏi AI cách tối ưu chi tiêu..."
+                  :placeholder="t('dashboard.askAiPlaceholder')"
                   class="w-full bg-bg-surface border border-border-subtle rounded-xl pl-3 pr-10 py-2.5 text-[0.8125rem] font-medium text-text-primary focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 outline-none transition-all placeholder:text-text-disabled shadow-sm"
                   @keyup.enter="generateAiInsight"
                   :disabled="isAiLoading"
@@ -665,7 +724,7 @@ Quy tắc:
             <div class="bg-yellow-500/10 flex h-7 w-7 items-center justify-center rounded-lg">
               <Zap :size="14" class="text-yellow-400" />
             </div>
-            Tổng quan tự động
+            {{ t('dashboard.smartInsights') }}
           </h3>
           <button class="text-text-tertiary hover:text-text-primary p-1 rounded-md transition-colors">
             <ChevronDown v-if="isInsightsCollapsed" :size="18" />
@@ -690,9 +749,10 @@ Quy tắc:
             </div>
           </div>
           <div v-else class="text-text-disabled flex h-20 items-center justify-center text-sm">
-            Chưa đủ dữ liệu để phân tích
+            {{ t('dashboard.notEnoughData') }}
           </div>
         </div>
+      </div>
       </div>
     </div>
 

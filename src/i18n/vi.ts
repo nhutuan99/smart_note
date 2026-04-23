@@ -90,7 +90,24 @@ export default {
     viewAll: 'Xem tất cả',
     noTransactions: 'Chưa có giao dịch',
     noTransactionsHint: 'Thêm giao dịch đầu tiên hoặc chat trên Telegram',
-    addTransaction: 'Thêm giao dịch'
+    addTransaction: 'Thêm giao dịch',
+    monthlyBudget: 'Ngân sách tháng',
+    aiAssistant: 'Trợ lý AI',
+    smartInsights: 'Tổng quan tự động',
+    notSet: 'Chưa đặt',
+    notSetFull: 'Chưa đặt ngân sách',
+    setBudget: 'Đặt ngân sách',
+    spent: 'Đã chi',
+    remaining: 'Còn lại',
+    dailyRemaining: 'Mỗi ngày còn',
+    dailyRemainingValue: '~{val}/ngày',
+    aiReady: 'Sẵn sàng',
+    insightsCount: 'thông báo',
+    notEnoughData: 'Chưa đủ dữ liệu để phân tích',
+    askAiPlaceholder: 'Hỏi AI cách tối ưu chi tiêu...',
+    collapse: 'Thu gọn',
+    expand: 'Mở rộng',
+    smartFinance: 'Tài chính thông minh'
   },
 
   // ── Transactions ──

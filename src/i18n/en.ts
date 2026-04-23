@@ -90,7 +90,24 @@ export default {
     viewAll: 'View all',
     noTransactions: 'No transactions yet',
     noTransactionsHint: 'Add your first transaction or chat on Telegram',
-    addTransaction: 'Add Transaction'
+    addTransaction: 'Add Transaction',
+    monthlyBudget: 'Monthly Budget',
+    aiAssistant: 'AI Assistant',
+    smartInsights: 'Smart Insights',
+    notSet: 'Not set',
+    notSetFull: 'No budget set',
+    setBudget: 'Set budget',
+    spent: 'Spent',
+    remaining: 'Remaining',
+    dailyRemaining: 'Daily remaining',
+    dailyRemainingValue: '~{val}/day',
+    aiReady: 'Ready',
+    insightsCount: 'insights',
+    notEnoughData: 'Not enough data for analysis',
+    askAiPlaceholder: 'Ask AI how to optimize spending...',
+    collapse: 'Collapse',
+    expand: 'Expand',
+    smartFinance: 'Smart Finance'
   },
 
   // ── Transactions ──
