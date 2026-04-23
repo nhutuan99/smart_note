@@ -5,6 +5,7 @@ import { useFinancePolling } from '@/composables/useFinancePolling'
 import { useAuthStore } from '@/stores/auth'
 import { formatVND, formatVNDShort, getCategoryConfig } from '@/constants/finance'
 import { getWalletBrand } from '@/constants/walletBrands'
+import { formatMoneyShort } from '@/composables/useCurrency'
 import { useUiStore } from '@/stores/ui'
 import { useI18n } from 'vue-i18n'
 import {
@@ -21,6 +22,20 @@ import {
   EyeOff
 } from 'lucide-vue-next'
 import WeatherWidget from '@/components/WeatherWidget.vue'
+
+// Chart.js
+import { Bar, Doughnut } from 'vue-chartjs'
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  ArcElement,
+  Tooltip,
+  Legend
+} from 'chart.js'
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend)
 
 const { t, tm } = useI18n()
 const router = useRouter()
@@ -39,23 +54,10 @@ const monthLabel = computed(() => {
   return `${months[parseInt(m) - 1]}, ${y}`
 })
 
-const maxDailyAmount = computed(() => {
-  let max = 0
-  finance.weeklyStats.forEach((s) => {
-    max = Math.max(max, s.income, s.expense)
-  })
-  return max || 1
-})
-
 function dayLabel(dateStr: string) {
   const d = new Date(dateStr)
   const days = tm('days.short') as string[]
   return days[d.getDay()]
-}
-
-function formatDateShort(dateStr: string) {
-  const d = new Date(dateStr)
-  return `${d.getDate()}/${d.getMonth() + 1}`
 }
 
 function timeSince(dateStr: string) {
@@ -66,6 +68,109 @@ function timeSince(dateStr: string) {
   if (h < 24) return t('time.hoursAgo', { n: h })
   return t('time.daysAgo', { n: Math.floor(h / 24) })
 }
+
+// ── Weekly Bar Chart ──
+const weeklyChartData = computed(() => ({
+  labels: finance.weeklyStats.map(d => dayLabel(d.date)),
+  datasets: [
+    {
+      label: t('dashboard.income'),
+      data: finance.weeklyStats.map(d => d.income),
+      backgroundColor: 'rgba(16, 185, 129, 0.7)',
+      hoverBackgroundColor: 'rgba(16, 185, 129, 0.9)',
+      borderRadius: 6,
+      borderSkipped: false as const,
+      barPercentage: 0.6,
+      categoryPercentage: 0.7
+    },
+    {
+      label: t('dashboard.expense'),
+      data: finance.weeklyStats.map(d => d.expense),
+      backgroundColor: 'rgba(239, 68, 68, 0.7)',
+      hoverBackgroundColor: 'rgba(239, 68, 68, 0.9)',
+      borderRadius: 6,
+      borderSkipped: false as const,
+      barPercentage: 0.6,
+      categoryPercentage: 0.7
+    }
+  ]
+}))
+
+const weeklyChartOptions = computed(() => ({
+  responsive: true,
+  maintainAspectRatio: false,
+  animation: { duration: 600, easing: 'easeOutQuart' as const },
+  interaction: { mode: 'index' as const, intersect: false },
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      backgroundColor: 'rgba(10,10,10,0.95)',
+      titleColor: '#a3a3a3',
+      bodyColor: '#ffffff',
+      borderColor: 'rgba(255,255,255,0.1)',
+      borderWidth: 1,
+      cornerRadius: 8,
+      padding: 10,
+      bodyFont: { weight: 'bold' as const, size: 13 },
+      callbacks: {
+        label: (ctx: any) => ` ${ctx.dataset.label}: ${formatMoneyShort(ctx.raw)}`
+      }
+    }
+  },
+  scales: {
+    x: {
+      grid: { display: false },
+      border: { display: false },
+      ticks: { color: '#525252', font: { size: 11 } }
+    },
+    y: {
+      display: false,
+      grid: { display: false },
+      border: { display: false }
+    }
+  }
+}))
+
+// ── Doughnut Chart ──
+const doughnutData = computed(() => {
+  const cats = finance.expenseByCategoryThisMonth
+  return {
+    labels: cats.map(c => t(`categories.${c.category}`)),
+    datasets: [{
+      data: cats.map(c => c.total),
+      backgroundColor: cats.map(c => c.color + 'cc'),
+      hoverBackgroundColor: cats.map(c => c.color),
+      borderWidth: 0,
+      spacing: 2
+    }]
+  }
+})
+
+const doughnutOptions = computed(() => ({
+  responsive: true,
+  maintainAspectRatio: false,
+  cutout: '68%',
+  animation: { duration: 800, easing: 'easeOutQuart' as const },
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      backgroundColor: 'rgba(10,10,10,0.95)',
+      titleColor: '#a3a3a3',
+      bodyColor: '#ffffff',
+      borderColor: 'rgba(255,255,255,0.1)',
+      borderWidth: 1,
+      cornerRadius: 8,
+      padding: 10,
+      bodyFont: { weight: 'bold' as const, size: 13 },
+      callbacks: {
+        label: (ctx: any) => {
+          const pct = finance.expenseByCategoryThisMonth[ctx.dataIndex]?.percentage?.toFixed(1)
+          return ` ${ctx.label}: ${formatMoneyShort(ctx.raw)} (${pct}%)`
+        }
+      }
+    }
+  }
+}))
 </script>
 
 <template>
@@ -206,98 +311,58 @@ function timeSince(dateStr: string) {
 
     <!-- Chart + Category Breakdown -->
     <div class="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
-      <!-- Weekly Chart -->
+      <!-- Weekly Bar Chart (Chart.js) -->
       <div class="bg-bg-surface border-border-default rounded-xl border p-5">
-        <div class="mb-4 flex items-center gap-2">
-          <BarChart3
-            :size="18"
-            class="text-text-tertiary"
-          />
-          <h3 class="text-sm font-semibold">{{ t('dashboard.weeklyChart') }}</h3>
-        </div>
-        <div class="flex h-[9.375rem] items-end gap-2">
-          <div
-            v-for="day in finance.weeklyStats"
-            :key="day.date"
-            class="flex flex-1 flex-col items-center gap-1"
-          >
-            <div
-              class="flex w-full items-end justify-center gap-0.5"
-              style="height: 7.5rem"
-            >
-              <!-- Income bar -->
-              <div
-                class="bg-success/60 w-2.5 rounded-t transition-all duration-300"
-                :style="{
-                  height: (day.income / maxDailyAmount) * 100 + '%',
-                  minHeight: day.income ? '0.25rem' : '0'
-                }"
-              ></div>
-              <!-- Expense bar -->
-              <div
-                class="bg-error/60 w-2.5 rounded-t transition-all duration-300"
-                :style="{
-                  height: (day.expense / maxDailyAmount) * 100 + '%',
-                  minHeight: day.expense ? '0.25rem' : '0'
-                }"
-              ></div>
-            </div>
-            <span class="text-text-disabled text-[0.625rem]">
-              {{ dayLabel(day.date) }}
+        <div class="mb-4 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <BarChart3 :size="18" class="text-text-tertiary" />
+            <h3 class="text-sm font-semibold">{{ t('dashboard.weeklyChart') }}</h3>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-text-tertiary flex items-center gap-1.5 text-[0.6875rem]">
+              <span class="h-2 w-2 rounded-full bg-emerald-500/70"></span>
+              {{ t('dashboard.income') }}
+            </span>
+            <span class="text-text-tertiary flex items-center gap-1.5 text-[0.6875rem]">
+              <span class="h-2 w-2 rounded-full bg-red-500/70"></span>
+              {{ t('dashboard.expense') }}
             </span>
           </div>
         </div>
-        <div class="border-border-subtle mt-3 flex items-center justify-center gap-4 border-t pt-3">
-          <span class="text-text-tertiary flex items-center gap-1 text-[0.6875rem]">
-            <span class="bg-success/60 h-2 w-2 rounded-full"></span>
-            {{ t('dashboard.income') }}
-          </span>
-          <span class="text-text-tertiary flex items-center gap-1 text-[0.6875rem]">
-            <span class="bg-error/60 h-2 w-2 rounded-full"></span>
-            {{ t('dashboard.expense') }}
-          </span>
+        <div class="h-[10rem]">
+          <Bar :data="weeklyChartData" :options="weeklyChartOptions" />
         </div>
       </div>
 
-      <!-- Category Breakdown -->
+      <!-- Category Breakdown (Doughnut + Legend) -->
       <div class="bg-bg-surface border-border-default rounded-xl border p-5">
         <h3 class="mb-4 text-sm font-semibold">{{ t('dashboard.categoryBreakdown') }}</h3>
 
-        <div
-          v-if="finance.expenseByCategoryThisMonth.length"
-          class="space-y-3"
-        >
-          <div
-            v-for="cat in finance.expenseByCategoryThisMonth.slice(0, 6)"
-            :key="cat.category"
-          >
-            <div class="mb-1 flex items-center justify-between">
-              <span class="flex items-center gap-2 text-sm">
-                <span>{{ cat.icon }}</span>
-                <span class="text-text-secondary">
-                  {{ t(`categories.${cat.category}`) }}
-                </span>
-              </span>
-              <span class="text-sm font-medium">
-                {{ formatVNDShort(cat.total) }}
-              </span>
+        <div v-if="finance.expenseByCategoryThisMonth.length" class="flex items-center gap-5">
+          <!-- Doughnut -->
+          <div class="relative h-[9rem] w-[9rem] shrink-0">
+            <Doughnut :data="doughnutData" :options="doughnutOptions" />
+            <!-- Center label -->
+            <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+              <span class="text-text-disabled text-[0.625rem]">{{ t('dashboard.expense') }}</span>
+              <span class="text-text-primary text-sm font-bold">{{ formatVNDShort(finance.monthExpense) }}</span>
             </div>
-            <div class="bg-bg-elevated h-1.5 overflow-hidden rounded-full">
-              <div
-                class="h-full rounded-full transition-all duration-500"
-                :style="{
-                  width: cat.percentage + '%',
-                  backgroundColor: cat.color
-                }"
-              ></div>
+          </div>
+          <!-- Legend -->
+          <div class="flex-1 space-y-2 min-w-0">
+            <div
+              v-for="cat in finance.expenseByCategoryThisMonth.slice(0, 5)"
+              :key="cat.category"
+              class="flex items-center gap-2"
+            >
+              <span class="h-2.5 w-2.5 shrink-0 rounded-[3px]" :style="{ backgroundColor: cat.color }"></span>
+              <span class="text-text-secondary truncate text-[0.75rem]">{{ t(`categories.${cat.category}`) }}</span>
+              <span class="text-text-primary ml-auto text-[0.75rem] font-semibold whitespace-nowrap">{{ formatVNDShort(cat.total) }}</span>
             </div>
           </div>
         </div>
 
-        <div
-          v-else
-          class="text-text-disabled flex h-[9.375rem] items-center justify-center text-sm"
-        >
+        <div v-else class="text-text-disabled flex h-[9rem] items-center justify-center text-sm">
           {{ t('dashboard.noDataThisMonth') }}
         </div>
       </div>
