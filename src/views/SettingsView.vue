@@ -9,7 +9,7 @@ import { httpClient } from '@/shared/api/httpClient'
 import { useI18n } from 'vue-i18n'
 import { setLocale, currentLocale } from '@/i18n'
 import type { User } from '@/types'
-import { User as UserIcon, Database, Download, LogOut, HardDrive, FileText, Shield, Lock, Eye, EyeOff, AlertTriangle, Trash2, Camera, Save, Link, Globe, KeyRound, DollarSign } from 'lucide-vue-next'
+import { User as UserIcon, Database, Download, LogOut, HardDrive, FileText, Shield, Lock, Eye, EyeOff, AlertTriangle, Trash2, Camera, Save, Link, Globe, KeyRound, DollarSign, Bug, ChevronDown, Check, ImageIcon } from 'lucide-vue-next'
 import { useCurrency, type CurrencyCode } from '@/composables/useCurrency'
 
 const { t } = useI18n()
@@ -220,6 +220,81 @@ async function resetPinWithPassword() {
     forgotPinLoading.value = false
   }
 }
+
+// ── Admin Bug Reports ──
+const ADMIN_EMAIL = 'tintphcm@gmail.com'
+const isAdmin = computed(() => auth.user?.email === ADMIN_EMAIL)
+
+interface BugReport {
+  id: string
+  userId: string
+  userName: string
+  userEmail: string
+  title: string
+  description: string
+  url: string
+  userAgent: string
+  image?: string
+  status: 'new' | 'read' | 'resolved'
+  createdAt: string
+}
+
+const bugReports = ref<BugReport[]>([])
+const bugReportsLoading = ref(false)
+const showBugReports = ref(false)
+const expandedReport = ref<string | null>(null)
+const reportImages = ref<Record<string, string>>({})
+
+async function fetchBugReports() {
+  bugReportsLoading.value = true
+  try {
+    const res = await httpClient.get<{ data: BugReport[] }>('/api/bug-reports')
+    bugReports.value = res?.data || []
+  } catch { /* ignore */ }
+  finally { bugReportsLoading.value = false }
+}
+
+async function loadReportImage(reportId: string) {
+  if (reportImages.value[reportId]) return
+  try {
+    const res = await httpClient.get<{ data: string }>(`/api/bug-reports/${reportId}/image`)
+    if (res?.data) reportImages.value[reportId] = res.data
+  } catch { /* ignore */ }
+}
+
+async function updateReportStatus(reportId: string, status: string) {
+  try {
+    await httpClient.put(`/api/bug-reports/${reportId}/status`, { status })
+    const idx = bugReports.value.findIndex(r => r.id === reportId)
+    if (idx !== -1) bugReports.value[idx].status = status as BugReport['status']
+    ui.showToast('success', 'Đã cập nhật trạng thái')
+  } catch { ui.showToast('error', 'Cập nhật thất bại') }
+}
+
+async function deleteBugReport(reportId: string) {
+  const ok = await ui.requestConfirm({ title: 'Xóa báo cáo', message: 'Bạn chắc chắn muốn xóa báo cáo này?', danger: true })
+  if (!ok) return
+  try {
+    await httpClient.del(`/api/bug-reports/${reportId}`)
+    bugReports.value = bugReports.value.filter(r => r.id !== reportId)
+    delete reportImages.value[reportId]
+    ui.showToast('success', 'Đã xóa báo cáo')
+  } catch { ui.showToast('error', 'Xóa thất bại') }
+}
+
+function toggleReport(id: string) {
+  if (expandedReport.value === id) {
+    expandedReport.value = null
+  } else {
+    expandedReport.value = id
+    // Auto-load image & mark as read
+    const r = bugReports.value.find(x => x.id === id)
+    if (r?.image === '__has_image__') loadReportImage(id)
+    if (r?.status === 'new') updateReportStatus(id, 'read')
+  }
+}
+
+const newReportsCount = computed(() => bugReports.value.filter(r => r.status === 'new').length)
 
 function cancelForgotPin() {
   forgotPinStep.value = null
@@ -717,7 +792,7 @@ function cancelForgotPin() {
     <!-- Bug Report / Feedback -->
     <div class="mb-6">
       <div class="text-text-secondary mb-3 flex items-center gap-2">
-        <AlertTriangle :size="18" />
+        <Bug :size="18" />
         <h3 class="text-sm font-semibold">Báo lỗi & Góp ý</h3>
       </div>
       <div class="bg-bg-surface border-border-default rounded-xl border p-5">
@@ -730,9 +805,100 @@ function cancelForgotPin() {
             @click="ui.showBugReport = true"
             class="border-danger text-danger hover:bg-danger/10 flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-150"
           >
-            <AlertTriangle :size="16" />
+            <Bug :size="16" />
             Báo lỗi ngay
           </button>
+        </div>
+
+        <!-- Admin: Bug Reports List -->
+        <div v-if="isAdmin" class="border-border-default mt-5 border-t pt-5">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <h4 class="text-sm font-semibold">📋 Báo cáo từ người dùng</h4>
+              <span v-if="newReportsCount" class="bg-danger text-white rounded-full px-2 py-0.5 text-[0.625rem] font-bold">{{ newReportsCount }}</span>
+            </div>
+            <button
+              @click="showBugReports = !showBugReports; if (showBugReports && !bugReports.length) fetchBugReports()"
+              class="text-accent text-xs font-medium hover:underline"
+            >
+              {{ showBugReports ? 'Ẩn' : 'Xem báo cáo' }}
+            </button>
+          </div>
+
+          <div v-if="showBugReports">
+            <div v-if="bugReportsLoading" class="flex justify-center py-6">
+              <div class="h-5 w-5 animate-spin rounded-full border-2 border-accent/20 border-l-accent"></div>
+            </div>
+
+            <div v-else-if="bugReports.length === 0" class="text-text-tertiary text-center py-4 text-sm">
+              Chưa có báo cáo nào.
+            </div>
+
+            <div v-else class="space-y-2 max-h-[28rem] overflow-y-auto pr-1">
+              <div
+                v-for="report in bugReports"
+                :key="report.id"
+                class="rounded-xl border transition-all"
+                :class="report.status === 'new' ? 'border-danger/30 bg-danger/5' : report.status === 'resolved' ? 'border-success/30 bg-success/5' : 'border-border-default bg-bg-secondary/50'"
+              >
+                <!-- Header row -->
+                <div class="flex items-center justify-between px-4 py-3 cursor-pointer" @click="toggleReport(report.id)">
+                  <div class="flex items-center gap-2 min-w-0 flex-1">
+                    <span
+                      class="h-2 w-2 rounded-full shrink-0"
+                      :class="report.status === 'new' ? 'bg-danger' : report.status === 'resolved' ? 'bg-success' : 'bg-text-tertiary'"
+                    ></span>
+                    <span class="text-sm font-medium truncate">{{ report.title }}</span>
+                    <ImageIcon v-if="report.image === '__has_image__'" :size="14" class="text-text-tertiary shrink-0" />
+                  </div>
+                  <div class="flex items-center gap-2 shrink-0 ml-2">
+                    <span class="text-[0.625rem] text-text-tertiary">{{ new Date(report.createdAt).toLocaleDateString('vi-VN') }}</span>
+                    <ChevronDown :size="14" class="text-text-tertiary transition-transform" :class="expandedReport === report.id ? 'rotate-180' : ''" />
+                  </div>
+                </div>
+
+                <!-- Expanded detail -->
+                <div v-if="expandedReport === report.id" class="border-t border-border-default/50 px-4 py-3 space-y-3">
+                  <div class="space-y-1 text-xs text-text-secondary">
+                    <p><strong>Người gửi:</strong> {{ report.userName }} ({{ report.userEmail }})</p>
+                    <p><strong>URL:</strong> {{ report.url }}</p>
+                    <p class="truncate"><strong>UA:</strong> {{ report.userAgent }}</p>
+                  </div>
+
+                  <div class="bg-bg-tertiary/50 rounded-lg p-3 text-sm text-text-primary whitespace-pre-wrap">{{ report.description }}</div>
+
+                  <!-- Image preview -->
+                  <div v-if="reportImages[report.id]" class="rounded-lg overflow-hidden border border-border-default/50">
+                    <img :src="reportImages[report.id]" alt="Bug screenshot" class="w-full max-h-64 object-contain bg-bg-tertiary/30" />
+                  </div>
+
+                  <!-- Actions -->
+                  <div class="flex items-center gap-2 pt-1">
+                    <button
+                      v-if="report.status !== 'resolved'"
+                      @click.stop="updateReportStatus(report.id, 'resolved')"
+                      class="flex items-center gap-1.5 rounded-lg bg-success/10 text-success px-3 py-1.5 text-xs font-medium hover:bg-success/20 transition-colors"
+                    >
+                      <Check :size="12" /> Đã xử lý
+                    </button>
+                    <button
+                      v-else
+                      @click.stop="updateReportStatus(report.id, 'new')"
+                      class="flex items-center gap-1.5 rounded-lg bg-warning/10 text-warning px-3 py-1.5 text-xs font-medium hover:bg-warning/20 transition-colors"
+                    >
+                      Mở lại
+                    </button>
+                    <button
+                      @click.stop="deleteBugReport(report.id)"
+                      class="flex items-center gap-1.5 rounded-lg bg-error/10 text-error px-3 py-1.5 text-xs font-medium hover:bg-error/20 transition-colors ml-auto"
+                    >
+                      <Trash2 :size="12" /> Xóa
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

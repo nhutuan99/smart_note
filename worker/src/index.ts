@@ -2062,45 +2062,93 @@ async function handleAiStream(request: Request, env: Env): Promise<Response> {
 
 // ====== Bug Report ======
 
+interface BugReport {
+  id: string
+  userId: string
+  userName: string
+  userEmail: string
+  title: string
+  description: string
+  url: string
+  userAgent: string
+  image?: string       // data:image/...;base64,... (optional screenshot)
+  status: 'new' | 'read' | 'resolved'
+  createdAt: string
+}
+
 async function handleReportBug(userId: string, request: Request, env: Env): Promise<Response> {
   const user = await getJSON<UserData>(env.SMART_NOTE_KV, `users/${userId}/profile`)
   if (!user) return errorResponse('User not found', 404)
 
   const body = (await request.json()) as any
-  const { title, description, url, userAgent } = body
+  const { title, description, url, userAgent, image } = body
 
   if (!title || !description) {
     return errorResponse('Vui lòng nhập đầy đủ tiêu đề và mô tả')
   }
 
-  // Use FormSubmit.co to send email (Free API, works without Domain setup, bypasses MailChannels 401)
-  const emailPayload = {
-    _subject: `[Bug Report] ${title}`,
-    _replyto: user.email,
-    name: user.name,
-    email: user.email,
-    message: `Người gửi: ${user.name} (${user.email})\nURL: ${url}\nThiết bị: ${userAgent}\n\n=== Mô tả chi tiết ===\n${description}`
+  const report: BugReport = {
+    id: generateId(),
+    userId,
+    userName: user.name,
+    userEmail: user.email,
+    title,
+    description,
+    url: url || '',
+    userAgent: userAgent || '',
+    status: 'new',
+    createdAt: new Date().toISOString()
   }
 
-  try {
-    const res = await fetch("https://formsubmit.co/ajax/tintphcm@gmail.com", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      },
-      body: JSON.stringify(emailPayload),
-    })
-
-    if (!res.ok) {
-      const text = await res.text()
-      return errorResponse(`Lỗi khi gửi email: ${res.status} ${text}`, 500)
-    }
-
-    return jsonResponse({ success: true, message: 'Đã gửi báo cáo lỗi thành công!' })
-  } catch (err: any) {
-    return errorResponse(`Lỗi hệ thống: ${err.message}`, 500)
+  // Store image separately if provided (to keep the list payload small)
+  if (image && typeof image === 'string' && image.startsWith('data:image/')) {
+    // Save image to its own KV key (max 25MB per value)
+    await env.SMART_NOTE_KV.put(`bug_reports/${report.id}/image`, image)
+    report.image = `__has_image__` // marker — image fetched separately
   }
+
+  // Append to global bug reports list
+  const reports = (await getJSON<BugReport[]>(env.SMART_NOTE_KV, 'bug_reports/list')) || []
+  reports.unshift(report)  // newest first
+  // Keep max 100 reports
+  if (reports.length > 100) reports.length = 100
+  await putJSON(env.SMART_NOTE_KV, 'bug_reports/list', reports)
+
+  return jsonResponse({ success: true, message: 'Đã gửi báo cáo lỗi thành công! Admin sẽ xem và xử lý.' })
+}
+
+async function handleListBugReports(env: Env): Promise<Response> {
+  const reports = (await getJSON<BugReport[]>(env.SMART_NOTE_KV, 'bug_reports/list')) || []
+  return jsonResponse({ success: true, data: reports })
+}
+
+async function handleGetBugReportImage(reportId: string, env: Env): Promise<Response> {
+  const image = await env.SMART_NOTE_KV.get(`bug_reports/${reportId}/image`)
+  if (!image) return errorResponse('Image not found', 404)
+  return jsonResponse({ success: true, data: image })
+}
+
+async function handleUpdateBugReportStatus(reportId: string, request: Request, env: Env): Promise<Response> {
+  const body = (await request.json()) as any
+  const { status } = body
+  if (!['new', 'read', 'resolved'].includes(status)) return errorResponse('Invalid status')
+
+  const reports = (await getJSON<BugReport[]>(env.SMART_NOTE_KV, 'bug_reports/list')) || []
+  const idx = reports.findIndex(r => r.id === reportId)
+  if (idx === -1) return errorResponse('Report not found', 404)
+
+  reports[idx].status = status
+  await putJSON(env.SMART_NOTE_KV, 'bug_reports/list', reports)
+  return jsonResponse({ success: true, data: reports[idx] })
+}
+
+async function handleDeleteBugReport(reportId: string, env: Env): Promise<Response> {
+  const reports = (await getJSON<BugReport[]>(env.SMART_NOTE_KV, 'bug_reports/list')) || []
+  const filtered = reports.filter(r => r.id !== reportId)
+  await putJSON(env.SMART_NOTE_KV, 'bug_reports/list', filtered)
+  // Clean up image if exists
+  await env.SMART_NOTE_KV.delete(`bug_reports/${reportId}/image`)
+  return jsonResponse({ success: true })
 }
 
 // ====== Main Router ======
@@ -2176,6 +2224,21 @@ export default {
       // Bug Report
       if (path === '/api/report-bug' && request.method === 'POST') {
         return handleReportBug(userId, request, env)
+      }
+      if (path === '/api/bug-reports' && request.method === 'GET') {
+        return handleListBugReports(env)
+      }
+      const bugImageMatch = path.match(/^\/api\/bug-reports\/(.+)\/image$/)
+      if (bugImageMatch && request.method === 'GET') {
+        return handleGetBugReportImage(bugImageMatch[1], env)
+      }
+      const bugStatusMatch = path.match(/^\/api\/bug-reports\/(.+)\/status$/)
+      if (bugStatusMatch && request.method === 'PUT') {
+        return handleUpdateBugReportStatus(bugStatusMatch[1], request, env)
+      }
+      const bugDeleteMatch = path.match(/^\/api\/bug-reports\/(.+)$/)
+      if (bugDeleteMatch && request.method === 'DELETE') {
+        return handleDeleteBugReport(bugDeleteMatch[1], env)
       }
 
       // Notes CRUD
