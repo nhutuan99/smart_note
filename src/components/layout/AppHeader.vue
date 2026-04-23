@@ -239,7 +239,7 @@ function handleLogout() {
                     <div class="flex items-center gap-2 mt-1">
                       <span
                         v-if="n.meta?.walletName"
-                        class="bg-accent/10 text-accent inline-flex items-center rounded-md px-1.5 py-0.5 text-[0.625rem] font-semibold"
+                        class="bg-bg-elevated text-text-primary border border-border-strong inline-flex items-center rounded-[4px] px-1.5 py-0.5 text-[0.625rem] font-medium shadow-sm"
                       >
                         {{ n.meta.walletName }}
                       </span>

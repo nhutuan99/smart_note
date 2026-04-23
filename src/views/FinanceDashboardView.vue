@@ -20,8 +20,13 @@ import {
   BarChart3,
   Eye,
   EyeOff,
-  Zap
+  Zap,
+  ChevronUp,
+  ChevronDown,
+  Send,
+  Bot
 } from 'lucide-vue-next'
+import { httpClient } from '@/shared/api/httpClient'
 import WeatherWidget from '@/components/WeatherWidget.vue'
 
 // Chart.js
@@ -270,7 +275,7 @@ const incomeByWallet = computed<WalletStat[]>(() => {
     .sort((a, b) => b.total - a.total)
 })
 
-const walletBreakdownTab = ref<'expense' | 'income'>('expense')
+const walletBreakdownTab = ref<'expense' | 'income'>('income')
 const activeWalletStats = computed(() => walletBreakdownTab.value === 'expense' ? expenseByWallet.value : incomeByWallet.value)
 
 // ── Monthly Budget ──
@@ -385,6 +390,41 @@ const insights = computed<Insight[]>(() => {
 
   return result
 })
+
+// ── AI Generator ──
+const isInsightsCollapsed = ref(false)
+const aiPrompt = ref('')
+const isAiLoading = ref(false)
+const aiResponse = ref('')
+
+async function generateAiInsight() {
+  if (isAiLoading.value || !aiPrompt.value.trim()) return
+
+  isAiLoading.value = true
+  aiResponse.value = ''
+
+  const context = `Thống kê tháng này của tôi:
+- Tổng thu: ${formatMoneyShort(finance.monthIncome)}
+- Tổng chi: ${formatMoneyShort(finance.monthExpense)}
+- Ngân sách: ${monthlyBudget.value > 0 ? formatMoneyShort(monthlyBudget.value) : 'Không đặt'}
+- Dư dả (nếu có ngân sách): ${monthlyBudget.value > 0 ? formatMoneyShort(budgetRemaining.value) : 'N/A'}
+- Ví chi nhiều nhất: ${expenseByWallet.value[0]?.name || 'Không có'} (${formatMoneyShort(expenseByWallet.value[0]?.total || 0)})
+`
+
+  try {
+    const res = await httpClient.post<{data: string}>('/api/ai', {
+      action: 'ask',
+      content: context,
+      question: aiPrompt.value
+    })
+    aiResponse.value = res as unknown as string // The response is just the string data, depending on how httpClient.post is typed, it might unwrap directly
+  } catch (err: any) {
+    ui.showToast('error', 'Không thể tạo phân tích AI: ' + err.message)
+  } finally {
+    isAiLoading.value = false
+    aiPrompt.value = ''
+  }
+}
 
 </script>
 
@@ -554,30 +594,71 @@ const insights = computed<Insight[]>(() => {
       </div>
 
       <!-- Smart Insights -->
-      <div class="card-premium p-5">
-        <h3 class="mb-3 text-sm font-semibold flex items-center gap-2">
-          <div class="bg-blue-500/10 flex h-7 w-7 items-center justify-center rounded-lg">
-            <Zap :size="14" class="text-blue-400" />
-          </div>
-          Phân tích thông minh
-        </h3>
-        <div v-if="insights.length" class="space-y-2.5">
-          <div
-            v-for="(insight, idx) in insights"
-            :key="idx"
-            class="flex items-start gap-2.5 rounded-lg px-3 py-2 transition-colors"
-            :class="{
-              'bg-success/5': insight.type === 'success',
-              'bg-yellow-500/5': insight.type === 'warning',
-              'bg-blue-500/5': insight.type === 'info'
-            }"
-          >
-            <span class="text-base shrink-0 mt-0.5">{{ insight.icon }}</span>
-            <span class="text-text-secondary text-[0.8125rem] leading-relaxed">{{ insight.text }}</span>
-          </div>
+      <div class="card-premium p-5 flex flex-col">
+        <div class="flex items-center justify-between mb-1 cursor-pointer" @click="isInsightsCollapsed = !isInsightsCollapsed">
+          <h3 class="text-sm font-semibold flex items-center gap-2">
+            <div class="bg-blue-500/10 flex h-7 w-7 items-center justify-center rounded-lg">
+              <Zap :size="14" class="text-blue-400" />
+            </div>
+            Phân tích thông minh
+          </h3>
+          <button class="text-text-tertiary hover:text-text-primary p-1 rounded-md transition-colors">
+            <ChevronDown v-if="isInsightsCollapsed" :size="18" />
+            <ChevronUp v-else :size="18" />
+          </button>
         </div>
-        <div v-else class="text-text-disabled flex h-20 items-center justify-center text-sm">
-          Chưa đủ dữ liệu để phân tích
+
+        <div v-show="!isInsightsCollapsed" class="flex-1 flex flex-col mt-3">
+          <!-- Static Insights -->
+          <div v-if="insights.length" class="space-y-2.5 mb-4">
+            <div
+              v-for="(insight, idx) in insights"
+              :key="idx"
+              class="flex items-start gap-2.5 rounded-lg px-3 py-2 transition-colors"
+              :class="{
+                'bg-success/5': insight.type === 'success',
+                'bg-yellow-500/5': insight.type === 'warning',
+                'bg-blue-500/5': insight.type === 'info'
+              }"
+            >
+              <span class="text-base shrink-0 mt-0.5">{{ insight.icon }}</span>
+              <span class="text-text-secondary text-[0.8125rem] leading-relaxed">{{ insight.text }}</span>
+            </div>
+          </div>
+          <div v-else class="text-text-disabled flex h-20 items-center justify-center text-sm mb-4">
+            Chưa đủ dữ liệu để phân tích
+          </div>
+
+          <!-- AI Chat Area -->
+          <div class="mt-auto border-t border-border-subtle pt-3">
+            <div v-if="aiResponse" class="mb-3 bg-bg-elevated rounded-lg p-3 text-[0.8125rem] text-text-secondary leading-relaxed border border-border-subtle relative">
+              <div class="absolute -top-3 left-3 bg-bg-surface px-1.5 flex items-center gap-1 text-blue-400">
+                <Bot :size="12" />
+                <span class="text-[0.625rem] font-semibold uppercase tracking-wider">AI Insight</span>
+              </div>
+              <div class="pt-1 whitespace-pre-wrap">{{ aiResponse }}</div>
+            </div>
+
+            <div class="relative flex items-center">
+              <input
+                v-model="aiPrompt"
+                type="text"
+                placeholder="Hỏi AI thêm về chi tiêu..."
+                class="input w-full pr-10 text-[0.8125rem] py-2 bg-bg-elevated border-border-subtle focus:border-blue-500/50"
+                @keyup.enter="generateAiInsight"
+                :disabled="isAiLoading"
+              />
+              <button
+                class="absolute right-1.5 p-1.5 rounded-md transition-colors"
+                :class="aiPrompt.trim() ? 'text-blue-400 hover:bg-blue-500/10' : 'text-text-disabled'"
+                :disabled="!aiPrompt.trim() || isAiLoading"
+                @click="generateAiInsight"
+              >
+                <div v-if="isAiLoading" class="h-4 w-4 rounded-full border-2 border-blue-400 border-t-transparent animate-spin"></div>
+                <Send v-else :size="14" />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
