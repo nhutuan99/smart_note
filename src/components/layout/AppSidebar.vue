@@ -109,15 +109,6 @@ function navigateWallet(walletId: string) {
           <span v-if="ui.sidebarOpen">{{ t(item.key) }}</span>
         </router-link>
 
-        <!-- Bug Report Menu Item -->
-        <button
-          @click="() => { ui.showBugReport = true; closeSidebarOnMobile() }"
-          class="text-danger hover:bg-danger/10 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm whitespace-nowrap transition-all duration-150 mt-1"
-          :class="[!ui.sidebarOpen ? 'justify-center px-2' : '']"
-        >
-          <Bug :size="ui.sidebarOpen ? 18 : 22" />
-          <span v-if="ui.sidebarOpen">Báo lỗi / Góp ý</span>
-        </button>
       </nav>
 
       <!-- Wallet Balances -->

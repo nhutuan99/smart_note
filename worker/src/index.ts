@@ -2073,52 +2073,28 @@ async function handleReportBug(userId: string, request: Request, env: Env): Prom
     return errorResponse('Vui lòng nhập đầy đủ tiêu đề và mô tả')
   }
 
-  // Use MailChannels to send email (Free API, no auth required for Cloudflare Workers)
+  // Use FormSubmit.co to send email (Free API, works without Domain setup, bypasses MailChannels 401)
   const emailPayload = {
-    personalizations: [
-      {
-        to: [{ email: "tintphcm@gmail.com", name: "Admin" }],
-      },
-    ],
-    from: {
-      email: "bug-reporter@smart-note.workers.dev",
-      name: "Smart Note Bug Reporter",
-    },
-    subject: `[Bug Report] ${title}`,
-    content: [
-      {
-        type: "text/plain",
-        value: `Người gửi: ${user.name} (${user.email})\nURL: ${url}\nThiết bị: ${userAgent}\n\n=== Mô tả chi tiết ===\n${description}`,
-      },
-      {
-        type: "text/html",
-        value: `
-          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
-            <h2 style="color: #ef4444; margin-top: 0;">🐞 Bug Report Mới</h2>
-            <p><strong>Người gửi:</strong> ${user.name} (<a href="mailto:${user.email}">${user.email}</a>)</p>
-            <p><strong>URL phát sinh:</strong> <a href="${url}">${url}</a></p>
-            <p><strong>Thiết bị (User Agent):</strong> <code style="background: #f4f4f5; padding: 2px 4px; border-radius: 4px; font-size: 12px;">${userAgent}</code></p>
-            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
-            <h3 style="margin-bottom: 10px;">Chi tiết lỗi:</h3>
-            <div style="background: #fef2f2; padding: 15px; border-radius: 6px; white-space: pre-wrap;">${description.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
-          </div>
-        `
-      }
-    ],
+    _subject: `[Bug Report] ${title}`,
+    _replyto: user.email,
+    name: user.name,
+    email: user.email,
+    message: `Người gửi: ${user.name} (${user.email})\nURL: ${url}\nThiết bị: ${userAgent}\n\n=== Mô tả chi tiết ===\n${description}`
   }
 
   try {
-    const res = await fetch("https://api.mailchannels.net/tx/v1/send", {
+    const res = await fetch("https://formsubmit.co/ajax/tintphcm@gmail.com", {
       method: "POST",
       headers: {
-        "content-type": "application/json",
+        "Content-Type": "application/json",
+        "Accept": "application/json"
       },
       body: JSON.stringify(emailPayload),
     })
 
     if (!res.ok) {
       const text = await res.text()
-      return errorResponse(`Lỗi khi gửi email (MailChannels): ${res.status} ${text}`, 500)
+      return errorResponse(`Lỗi khi gửi email: ${res.status} ${text}`, 500)
     }
 
     return jsonResponse({ success: true, message: 'Đã gửi báo cáo lỗi thành công!' })

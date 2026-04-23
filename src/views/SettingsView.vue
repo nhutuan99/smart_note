@@ -714,6 +714,29 @@ function cancelForgotPin() {
       </div>
     </div>
 
+    <!-- Bug Report / Feedback -->
+    <div class="mb-6">
+      <div class="text-text-secondary mb-3 flex items-center gap-2">
+        <AlertTriangle :size="18" />
+        <h3 class="text-sm font-semibold">Báo lỗi & Góp ý</h3>
+      </div>
+      <div class="bg-bg-surface border-border-default rounded-xl border p-5">
+        <div class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+          <div>
+            <h4 class="mb-0.5 text-sm font-semibold">Gửi báo cáo lỗi</h4>
+            <p class="text-text-tertiary text-[0.8125rem]">Gặp sự cố hoặc có tính năng muốn đóng góp? Hãy cho Admin biết nhé.</p>
+          </div>
+          <button
+            @click="ui.showBugReport = true"
+            class="border-danger text-danger hover:bg-danger/10 flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-150"
+          >
+            <AlertTriangle :size="16" />
+            Báo lỗi ngay
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Account -->
     <div class="mb-6">
       <div class="text-text-secondary mb-3 flex items-center gap-2">
