@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
-import { Bug, X, Send, Loader2, ImagePlus, Trash2, ArrowLeft, Sparkles } from 'lucide-vue-next'
+import { Bug, X, Send, Loader2, ImagePlus, Trash2, ArrowLeft, Sparkles, AlertCircle, Lightbulb } from 'lucide-vue-next'
 import { httpClient } from '@/shared/api/httpClient'
 import { useUiStore } from '@/stores/ui'
 import { useI18n } from 'vue-i18n'
@@ -30,13 +30,11 @@ const fileInputRef = ref<HTMLInputElement | null>(null)
 watch(() => props.show, (v) => {
   if (v) {
     step.value = 1
-    currentUrl.value = window.location.href
     userAgent.value = navigator.userAgent
   }
 })
 
 const userAgent = ref(navigator.userAgent)
-const currentUrl = ref(window.location.href)
 
 function handleFileSelect(e: Event) {
   const input = e.target as HTMLInputElement
@@ -83,7 +81,6 @@ async function submitReport() {
       type: reportType.value,
       title: title.value,
       description: description.value,
-      url: currentUrl.value,
       userAgent: userAgent.value,
     }
     if (imageBase64.value) {
@@ -152,7 +149,7 @@ async function submitReport() {
                 class="group flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-border-default/50 bg-bg-tertiary/20 p-6 transition-all hover:border-danger/50 hover:bg-danger/5"
               >
                 <div class="flex h-12 w-12 items-center justify-center rounded-full bg-danger/10 text-danger transition-transform group-hover:scale-110">
-                  <Bug class="h-6 w-6" />
+                  <AlertCircle class="h-6 w-6" />
                 </div>
                 <div class="text-center">
                   <h4 class="font-semibold text-text-primary group-hover:text-danger transition-colors">{{ t('bugReport.typeBug') }}</h4>
@@ -165,7 +162,7 @@ async function submitReport() {
                 class="group flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-border-default/50 bg-bg-tertiary/20 p-6 transition-all hover:border-accent/50 hover:bg-accent/5"
               >
                 <div class="flex h-12 w-12 items-center justify-center rounded-full bg-accent/10 text-accent transition-transform group-hover:scale-110">
-                  <Sparkles class="h-6 w-6" />
+                  <Lightbulb class="h-6 w-6" />
                 </div>
                 <div class="text-center">
                   <h4 class="font-semibold text-text-primary group-hover:text-accent transition-colors">{{ t('bugReport.typeFeature') }}</h4>
@@ -179,7 +176,7 @@ async function submitReport() {
           <div class="flex items-center mb-2">
             <button @click="step = 1" class="flex items-center text-sm font-medium text-text-secondary hover:text-text-primary transition-colors">
               <ArrowLeft class="h-4 w-4 mr-1.5" />
-              {{ t('common.back') || 'Quay lại' }}
+              {{ t('common.back') }}
             </button>
             <div class="ml-auto flex items-center px-2.5 py-1 rounded-full text-[0.625rem] font-bold" :class="reportType === 'feature' ? 'bg-accent/15 text-accent' : 'bg-danger/15 text-danger'">
               <Sparkles v-if="reportType === 'feature'" class="h-3 w-3 mr-1" />
@@ -252,14 +249,7 @@ async function submitReport() {
               </div>
             </div>
 
-            <!-- Auto Detected Info -->
-            <div class="rounded-lg bg-bg-secondary p-3 border border-border-default/50">
-              <p class="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-2">{{ t('bugReport.autoInfo') }}</p>
-              <div class="space-y-1.5 text-xs text-text-secondary font-mono truncate">
-                <p><span class="text-text-tertiary">URL:</span> {{ currentUrl }}</p>
-                <p class="truncate"><span class="text-text-tertiary">OS:</span> {{ userAgent }}</p>
-              </div>
-            </div>
+
           </div>
         </div>
 

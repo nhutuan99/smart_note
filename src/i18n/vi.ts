@@ -20,7 +20,8 @@ export default {
     version: 'Smart Note v1.0.0',
     copy: 'Copy',
     copied: 'Đã copy!',
-    login: 'Đăng nhập'
+    login: 'Đăng nhập',
+    back: 'Quay lại'
   },
 
   // ── Time ──
@@ -367,9 +368,9 @@ export default {
   // ── Bug Report ──
   bugReport: {
     sectionTitle: 'Báo lỗi & Góp ý',
-    sendReport: 'Gửi báo cáo lỗi',
+    sendReport: 'Gửi phản hồi',
     sendReportDesc: 'Gặp sự cố hoặc có tính năng muốn đóng góp? Hãy cho Admin biết nhé.',
-    reportNow: 'Báo lỗi ngay',
+    reportNow: 'Gửi phản hồi',
     adminReports: 'Báo cáo từ người dùng',
     viewReports: 'Xem báo cáo',
     hide: 'Ẩn',
