@@ -389,6 +389,43 @@ ${aiInsightText.value}
 // ── Collapse state ──
 const isSmartSectionCollapsed = ref(false)
 
+// ── Rich AI markdown renderer ──
+function renderAiMarkdown(text: string): string {
+  let html = text
+
+  // Escape HTML first
+  html = html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+  // Status badges: lines containing verdict keywords
+  html = html.replace(/\u2705\s*(.+)/g, '<span class="ai-badge ai-badge-ok">✅ $1</span>')
+  html = html.replace(/\u26a0\ufe0f\s*(.+)/g, '<span class="ai-badge ai-badge-warn">⚠️ $1</span>')
+  html = html.replace(/\u274c\s*(.+)/g, '<span class="ai-badge ai-badge-err">❌ $1</span>')
+
+  // Section headings: **text** at line start or standalone
+  html = html.replace(/^\*\*(.+?)\*\*\s*$/gm, '<div class="ai-section-title">$1</div>')
+
+  // Inline bold
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong class="ai-bold">$1</strong>')
+
+  // Highlight money amounts (e.g. 12tr, 12,000,000đ, 12.000đ)
+  html = html.replace(/(\d+[,.]?\d*\s*(?:tr|triệu|k|đồng|d|đ)\b)/gi, '<span class="ai-amount">$1</span>')
+
+  // Bullet points
+  html = html.replace(/^[\-\*•]\s+(.+)/gm, '<div class="ai-bullet"><span class="ai-bullet-dot">‣</span><span>$1</span></div>')
+
+  // Numbered lists
+  html = html.replace(/^(\d+)\.\ (.+)/gm, '<div class="ai-numbered"><span class="ai-num">$1</span><span>$2</span></div>')
+
+  // Emoji-prefixed lines as info cards
+  html = html.replace(/^([\u{1F300}-\u{1FFFF}\u2600-\u27FF]\ufe0f?\s+.+)/gmu, '<div class="ai-info-line">$1</div>')
+
+  // Line breaks
+  html = html.replace(/\n\n+/g, '<div class="ai-spacer"></div>')
+  html = html.replace(/\n/g, '<br>')
+
+  return html
+}
+
 </script>
 
 <template>
@@ -527,45 +564,8 @@ const isSmartSectionCollapsed = ref(false)
           <span class="text-[0.625rem] text-text-disabled bg-bg-elevated px-2 py-0.5 rounded-full">{{ new Date().toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' }) }}</span>
         </div>
 
-        <!-- Financial Summary Strip (always visible) -->
-        <div class="mb-4 grid grid-cols-3 gap-2 text-center">
-          <div class="bg-bg-surface rounded-lg p-2">
-            <div class="text-[0.625rem] text-text-disabled mb-0.5">{{ t('dashboard.totalBalance') }}</div>
-            <div class="text-[0.75rem] font-bold text-text-primary tabular-nums">{{ formatMoneyShort(finance.totalBalance) }}</div>
-          </div>
-          <div class="bg-success/5 rounded-lg p-2">
-            <div class="text-[0.625rem] text-text-disabled mb-0.5">{{ t('dashboard.income') }}</div>
-            <div class="text-[0.75rem] font-bold text-success tabular-nums">+{{ formatMoneyShort(finance.monthIncome) }}</div>
-          </div>
-          <div class="bg-error/5 rounded-lg p-2">
-            <div class="text-[0.625rem] text-text-disabled mb-0.5">{{ t('dashboard.expense') }}</div>
-            <div class="text-[0.75rem] font-bold text-error tabular-nums">-{{ formatMoneyShort(finance.monthExpense) }}</div>
-          </div>
-        </div>
 
-        <!-- Financial Summary (always visible) -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-          <div class="bg-bg-elevated rounded-xl p-3">
-            <div class="text-[0.625rem] text-text-disabled mb-1">Tổng số dư</div>
-            <div class="text-sm font-bold text-text-primary tabular-nums">{{ formatMoneyShort(finance.totalBalance) }}</div>
-            <div class="text-[0.625rem] text-text-disabled mt-0.5">{{ finance.wallets.length }} tài khoản</div>
-          </div>
-          <div class="bg-success/5 rounded-xl p-3">
-            <div class="text-[0.625rem] text-text-disabled mb-1">Thu tháng này</div>
-            <div class="text-sm font-bold text-success tabular-nums">+{{ formatMoneyShort(finance.monthIncome) }}</div>
-          </div>
-          <div class="bg-error/5 rounded-xl p-3">
-            <div class="text-[0.625rem] text-text-disabled mb-1">Chi tháng này</div>
-            <div class="text-sm font-bold text-error tabular-nums">-{{ formatMoneyShort(finance.monthExpense) }}</div>
-          </div>
-          <div class="rounded-xl p-3" :class="finance.monthIncome >= finance.monthExpense ? 'bg-success/5' : 'bg-error/5'">
-            <div class="text-[0.625rem] text-text-disabled mb-1">Dòng tiền ròng</div>
-            <div class="text-sm font-bold tabular-nums" :class="finance.monthIncome >= finance.monthExpense ? 'text-success' : 'text-error'">
-              {{ finance.monthIncome >= finance.monthExpense ? '+' : '' }}{{ formatMoneyShort(finance.monthIncome - finance.monthExpense) }}
-            </div>
-            <div class="text-[0.625rem] text-text-disabled mt-0.5">còn {{ daysLeftInMonth }} ngày</div>
-          </div>
-        </div>
+
 
         <!-- Ask AI question input -->
         <div class="relative mb-4">
@@ -612,11 +612,12 @@ const isSmartSectionCollapsed = ref(false)
             <div class="skeleton h-3 w-4/5 rounded-lg" />
           </div>
 
-          <!-- AI response text -->
+          <!-- AI response rich render -->
           <div
             v-if="aiInsightText"
-            class="bg-blue-500/5 border border-blue-500/15 rounded-xl p-4 text-[0.8125rem] text-text-secondary leading-relaxed whitespace-pre-wrap max-h-64 overflow-y-auto mb-3"
-          >{{ aiInsightText }}</div>
+            class="ai-rich-response bg-blue-500/5 border border-blue-500/15 rounded-xl p-4 mb-3 max-h-72 overflow-y-auto"
+            v-html="renderAiMarkdown(aiInsightText)"
+          />
 
           <!-- Save to Notes button -->
           <div v-if="aiInsightText && !isAiLoading" class="flex items-center gap-2">
@@ -901,3 +902,62 @@ const isSmartSectionCollapsed = ref(false)
     </div>
   </div>
 </template>
+
+<style scoped>
+.ai-rich-response {
+  font-size: 0.8125rem;
+  line-height: 1.65;
+  color: var(--color-text-secondary, #a3a3a3);
+}
+.ai-rich-response :deep(.ai-section-title) {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--color-text-primary, #f5f5f5);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0.75rem 0 0.3rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid rgba(99,102,241,0.15);
+}
+.ai-rich-response :deep(.ai-badge) {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.65rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin: 0.25rem 0;
+}
+.ai-rich-response :deep(.ai-badge-ok)   { background: rgba(16,185,129,0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.25); }
+.ai-rich-response :deep(.ai-badge-warn) { background: rgba(245,158,11,0.12); color: #f59e0b; border: 1px solid rgba(245,158,11,0.25); }
+.ai-rich-response :deep(.ai-badge-err)  { background: rgba(239,68,68,0.12);  color: #ef4444; border: 1px solid rgba(239,68,68,0.25);  }
+.ai-rich-response :deep(.ai-amount) {
+  color: var(--color-accent, #6366f1);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.ai-rich-response :deep(.ai-bold) { color: var(--color-text-primary, #f5f5f5); font-weight: 600; }
+.ai-rich-response :deep(.ai-bullet) {
+  display: flex; align-items: flex-start; gap: 0.5rem; margin: 0.2rem 0;
+}
+.ai-rich-response :deep(.ai-bullet-dot) {
+  color: var(--color-accent, #6366f1); font-size: 1rem; line-height: 1.4; flex-shrink: 0;
+}
+.ai-rich-response :deep(.ai-numbered) {
+  display: flex; align-items: flex-start; gap: 0.6rem; margin: 0.25rem 0;
+}
+.ai-rich-response :deep(.ai-num) {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 1.25rem; height: 1.25rem; border-radius: 50%;
+  background: rgba(99,102,241,0.15); color: var(--color-accent, #6366f1);
+  font-size: 0.625rem; font-weight: 700; flex-shrink: 0; margin-top: 0.1rem;
+}
+.ai-rich-response :deep(.ai-info-line) {
+  background: rgba(99,102,241,0.06);
+  border-left: 2px solid rgba(99,102,241,0.3);
+  border-radius: 0 0.5rem 0.5rem 0;
+  padding: 0.35rem 0.65rem; margin: 0.3rem 0;
+}
+.ai-rich-response :deep(.ai-spacer) { height: 0.5rem; }
+</style>
+
