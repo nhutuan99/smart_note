@@ -383,104 +383,91 @@ const dailyBudgetRemaining = computed(() => {
   return Math.round(budgetRemaining.value / daysLeftInMonth.value)
 })
 
-// ── Smart Budget Planner: expense breakdown by category ──
-const topExpenseCategories = computed(() => {
-  return finance.expenseByCategoryThisMonth.slice(0, 3).map(c => {
-    const label = t(`categories.${c.category}`)
-    return `${label}: ${formatMoneyShort(c.total)} (${c.percentage.toFixed(0)}%)`
-  }).join(', ')
+// ── Smart Budget Planner ──
+const topExpenseCategories = computed(() =>
+  finance.expenseByCategoryThisMonth
+    .map(c => `${t(`categories.${c.category}`)}: ${formatMoneyShort(c.total)} (${c.percentage.toFixed(0)}%)`)
+    .join(', ')
+)
+
+// Tiền thực tế có thể dùng = min(số dư thực tế, ngân sách còn lại)
+const spendableBalance = computed(() =>
+  monthlyBudget.value > 0
+    ? Math.min(finance.totalBalance, budgetRemaining.value)
+    : finance.totalBalance
+)
+
+// Mỗi ngày có thể chi dựa trên tiền thực tế còn lại
+const dailySpendable = computed(() => {
+  if (!daysLeftInMonth.value) return 0
+  return Math.round(spendableBalance.value / daysLeftInMonth.value)
 })
 
-// ── Budget AI (dedicated instance, separate from general AI chat) ──
+// ── Budget AI ──
 const { streamText: budgetAiText, loading: isBudgetAiLoading, askAbout: askBudgetAi } = useAi()
 const showBudgetAiPanel = ref(false)
+const aiFollowUp = ref('')
 
-async function analyzeBudgetWithAi() {
-  if (isBudgetAiLoading.value || !monthlyBudget.value) return
-
-  showBudgetAiPanel.value = true
-
+function buildFinanceContext() {
   const now = new Date()
   const totalDays = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
-  const dayOfMonth = now.getDate()
+  const daysElapsed = now.getDate() - 1
   const daysLeft = daysLeftInMonth.value
-  const daysElapsed = dayOfMonth - 1
+  const actualDaily = daysElapsed > 0 ? Math.round(finance.monthExpense / daysElapsed) : 0
+  const wallets = finance.wallets.map(w => `  - ${w.name}: ${formatMoneyShort(w.balance)}`).join('\n')
+  const cats = finance.expenseByCategoryThisMonth
+    .map(c => `  - ${t(`categories.${c.category}`)}: ${formatMoneyShort(c.total)}`).join('\n')
 
-  // Ideal daily spend if spread evenly
-  const idealDailySpend = Math.round(monthlyBudget.value / totalDays)
-  // Actual daily spend so far
-  const actualDailySpend = daysElapsed > 0 ? Math.round(finance.monthExpense / daysElapsed) : 0
-  // Recommended daily from now
-  const recommendedDaily = dailyBudgetRemaining.value
+  return `📊 TÀI CHÍNH THÁNG ${now.getMonth()+1}/${now.getFullYear()} (ngày ${now.getDate()}/${totalDays}, còn ${daysLeft} ngày)
 
-  const walletSummary = finance.wallets.map(w => `  - ${w.name}: ${formatMoneyShort(w.balance)}`).join('\n')
+💰 SỐ DƯ THỰC TẾ CÁC TÀI KHOẢN:
+${wallets || '  Chưa có tài khoản'}
+→ Tổng: ${formatMoneyShort(finance.totalBalance)}
 
-  const context = `Bạn là chuyên gia tài chính cá nhân thông minh. Phân tích và lập kế hoạch chi tiêu cho người dùng ${auth.user?.name || ''} dựa trên dữ liệu thực tế sau:
+📈 THU CHI THÁNG NÀY:
+  Thu vào: ${formatMoneyShort(finance.monthIncome)}
+  Chi ra: ${formatMoneyShort(finance.monthExpense)} (trung bình ${formatMoneyShort(actualDaily)}/ngày)
 
-📊 TỔNG QUAN TÀI CHÍNH THÁNG ${now.getMonth() + 1}/${now.getFullYear()}
-- Hôm nay: ngày ${dayOfMonth}/${totalDays} (còn ${daysLeft} ngày)
-- Tổng số dư tất cả ví: ${formatMoneyShort(finance.totalBalance)}
-  Chi tiết:
-${walletSummary}
-- Tổng thu nhập tháng: ${formatMoneyShort(finance.monthIncome)}
-- Tổng chi tiêu tháng: ${formatMoneyShort(finance.monthExpense)}
-- Danh mục chi nhiều nhất: ${topExpenseCategories.value || 'Chưa có dữ liệu'}
+🏷️ DANH MỤC CHI TIÊU:
+${cats || '  Chưa có giao dịch'}
 
-🎯 MỤC TIÊU NGÂN SÁCH
-- Ngân sách đặt ra: ${formatMoneyShort(monthlyBudget.value)}
-- Đã chi: ${formatMoneyShort(finance.monthExpense)} (${budgetUsedPercent.value.toFixed(0)}%)
-- Còn lại: ${formatMoneyShort(budgetRemaining.value)}
-- Chi tiêu lý tưởng mỗi ngày (nếu chia đều): ${formatMoneyShort(idealDailySpend)}/ngày
-- Chi tiêu thực tế mỗi ngày (${daysElapsed} ngày qua): ${actualDailySpend > 0 ? formatMoneyShort(actualDailySpend) + '/ngày' : 'Chưa có'}
-- Chi tiêu tối đa từ hôm nay đến hết tháng: ${formatMoneyShort(recommendedDaily)}/ngày
+🎯 MỤC TIÊU CHI:
+  Ngân sách tháng: ${monthlyBudget.value > 0 ? formatMoneyShort(monthlyBudget.value) : 'Chưa đặt'}
+  Đã chi: ${formatMoneyShort(finance.monthExpense)} (${budgetUsedPercent.value.toFixed(0)}%)
+  Còn lại theo ngân sách: ${formatMoneyShort(budgetRemaining.value)}
+  Tiền thực có thể dùng: ${formatMoneyShort(spendableBalance.value)}
+  → Mỗi ngày còn lại tối đa: ${formatMoneyShort(dailySpendable.value)}/ngày`
+}
+
+async function analyzeBudgetWithAi() {
+  if (isBudgetAiLoading.value) return
+  showBudgetAiPanel.value = true
+
+  const context = buildFinanceContext()
+  const prompt = `${context}
 
 YÊU CẦU:
-1. Đánh giá nhanh tình hình tài chính (1-2 câu): tốt/cần chú ý/nguy hiểm
-2. So sánh tốc độ chi tiêu thực tế vs kế hoạch
-3. Đề xuất mức chi tiêu cụ thể mỗi ngày còn lại để đạt mục tiêu
-4. 2-3 lời khuyên thực tế ngắn gọn dựa trên danh mục chi nhiều nhất
+1. Đánh giá tình hình (tốt/cần chú ý/nguy hiểm) - 1 câu
+2. So sánh tốc độ chi thực tế vs kế hoạch
+3. Số tiền tối đa nên chi mỗi ngày từ hôm nay để đạt mục tiêu
+4. Gợi ý cắt giảm theo danh mục chi nhiều nhất
 
-Format: Markdown ngắn gọn, dùng emoji. Tối đa 200 từ.`
+Viết ngắn, dùng emoji, tối đa 180 từ, format Markdown.`
 
-  await askBudgetAi(context, 'Phân tích và lập kế hoạch chi tiêu cho tôi')
+  await askBudgetAi(prompt, 'Phân tích và lập kế hoạch')
 }
 
-// ── General AI Chat ──
+async function askFollowUp() {
+  const q = aiFollowUp.value.trim()
+  if (!q || isBudgetAiLoading.value) return
+  aiFollowUp.value = ''
+  showBudgetAiPanel.value = true
+  const context = buildFinanceContext()
+  await askBudgetAi(`${context}\n\nTrả lời ngắn gọn, Markdown, dùng số liệu thực tế.`, q)
+}
+
+// ── Collapse state ──
 const isSmartSectionCollapsed = ref(false)
-const aiPrompt = ref('')
-const { streamText: aiResponse, loading: isAiLoading, askAbout } = useAi()
-
-async function generateAiInsight() {
-  if (isAiLoading.value || !aiPrompt.value.trim()) return
-
-  const promptStr = aiPrompt.value.trim()
-  aiPrompt.value = ''
-
-  const walletSummary = finance.wallets.map(w => `- ${w.name}: ${formatMoneyShort(w.balance)}`).join('\n')
-  const recentTxs = finance.monthTransactions.slice(0, 5).map(t => {
-    const wName = finance.wallets.find(w => w.id === t.walletId)?.name || 'Ví'
-    return `- ${t.date.split('T')[0]}: ${t.type === 'expense' ? 'Chi' : 'Thu'} ${formatMoneyShort(t.amount)} cho "${t.note || 'Không rõ'}" (tại ${wName})`
-  }).join('\n')
-
-  const context = `Bạn là chuyên gia tài chính cá nhân. Dựa vào dữ liệu của người dùng ${auth.user?.name || 'tôi'}:
-
-[Số dư hiện tại]
-${walletSummary}
-
-[Thống kê tháng này]
-- Tổng thu: ${formatMoneyShort(finance.monthIncome)}
-- Tổng chi: ${formatMoneyShort(finance.monthExpense)}
-- Ngân sách tháng: ${monthlyBudget.value > 0 ? formatMoneyShort(monthlyBudget.value) : 'Chưa đặt'}
-- Còn lại: ${monthlyBudget.value > 0 ? formatMoneyShort(budgetRemaining.value) : 'N/A'}
-- Top chi tiêu: ${topExpenseCategories.value || 'Chưa có'}
-
-[5 giao dịch gần nhất]
-${recentTxs || 'Không có'}
-
-Quy tắc: Trả lời ngắn gọn, format Markdown, dựa trên số liệu thực tế.
-`
-  await askAbout(context, promptStr)
-}
 
 </script>
 
@@ -605,251 +592,189 @@ Quy tắc: Trả lời ngắn gọn, format Markdown, dựa trên số liệu th
           <ChevronUp :size="14" />
         </button>
       </div>
-      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-      <!-- LEFT COLUMN -->
-      <div class="flex flex-col gap-4 h-full">
-        <!-- Monthly Budget Gauge -->
-        <div class="card-premium p-5 h-full flex flex-col">
+      <div class="grid grid-cols-1 gap-4">
+      <!-- FULL WIDTH: Smart Budget Card -->
+      <div class="card-premium p-5 flex flex-col">
 
-          <!-- Header -->
-          <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-sm font-semibold flex items-center gap-2">
-              <div class="bg-accent/10 flex h-7 w-7 items-center justify-center rounded-lg">
-                <Sparkles :size="14" class="text-accent" />
-              </div>
-              {{ t('dashboard.monthlyBudget') }}
-            </h3>
-            <div class="flex items-center gap-2">
-              <button
-                v-if="monthlyBudget > 0 && !showBudgetInput && !budgetDismissed"
-                class="text-text-tertiary hover:text-accent text-[0.6875rem] transition-colors px-1.5 py-0.5 rounded hover:bg-accent/10"
-                @click="showBudgetInput = true; budgetInputValue = new Intl.NumberFormat('vi-VN').format(monthlyBudget)"
-              >{{ t('common.edit') }}</button>
+        <!-- Header -->
+        <div class="mb-4 flex items-center justify-between">
+          <h3 class="text-sm font-semibold flex items-center gap-2">
+            <div class="bg-accent/10 flex h-7 w-7 items-center justify-center rounded-lg">
+              <Sparkles :size="14" class="text-accent" />
             </div>
+            {{ t('dashboard.monthlyBudget') }}
+          </h3>
+          <button
+            v-if="monthlyBudget > 0 && !showBudgetInput && !budgetDismissed"
+            class="text-text-tertiary hover:text-accent text-[0.6875rem] transition-colors px-1.5 py-0.5 rounded hover:bg-accent/10"
+            @click="showBudgetInput = true; budgetInputValue = new Intl.NumberFormat('vi-VN').format(monthlyBudget)"
+          >{{ t('common.edit') }}</button>
+        </div>
+
+        <!-- Financial Summary Strip (always visible) -->
+        <div class="mb-4 grid grid-cols-3 gap-2 text-center">
+          <div class="bg-bg-surface rounded-lg p-2">
+            <div class="text-[0.625rem] text-text-disabled mb-0.5">{{ t('dashboard.totalBalance') }}</div>
+            <div class="text-[0.75rem] font-bold text-text-primary tabular-nums">{{ formatMoneyShort(finance.totalBalance) }}</div>
           </div>
-
-          <!-- Auto-detected Financial Summary Strip -->
-          <div class="mb-4 grid grid-cols-3 gap-2 text-center">
-            <div class="bg-bg-surface rounded-lg p-2">
-              <div class="text-[0.625rem] text-text-disabled mb-0.5">{{ t('dashboard.totalBalance') }}</div>
-              <div class="text-[0.75rem] font-bold text-text-primary tabular-nums">{{ formatMoneyShort(finance.totalBalance) }}</div>
-            </div>
-            <div class="bg-success/5 rounded-lg p-2">
-              <div class="text-[0.625rem] text-text-disabled mb-0.5">{{ t('dashboard.income') }}</div>
-              <div class="text-[0.75rem] font-bold text-success tabular-nums">+{{ formatMoneyShort(finance.monthIncome) }}</div>
-            </div>
-            <div class="bg-error/5 rounded-lg p-2">
-              <div class="text-[0.625rem] text-text-disabled mb-0.5">{{ t('dashboard.expense') }}</div>
-              <div class="text-[0.75rem] font-bold text-error tabular-nums">-{{ formatMoneyShort(finance.monthExpense) }}</div>
-            </div>
+          <div class="bg-success/5 rounded-lg p-2">
+            <div class="text-[0.625rem] text-text-disabled mb-0.5">{{ t('dashboard.income') }}</div>
+            <div class="text-[0.75rem] font-bold text-success tabular-nums">+{{ formatMoneyShort(finance.monthIncome) }}</div>
           </div>
-
-          <!-- No budget set -->
-          <div v-if="!monthlyBudget && !showBudgetInput && !budgetDismissed" class="flex flex-col items-center gap-3 py-4 flex-1 justify-center">
-            <Sparkles :size="28" class="text-text-disabled" />
-            <div class="text-center">
-              <p class="text-text-secondary text-sm font-medium">{{ t('dashboard.setBudgetTitle') }}</p>
-              <p class="text-text-disabled text-[0.75rem] mt-0.5">{{ t('dashboard.setBudgetHint') }}</p>
-            </div>
-            <div class="flex items-center gap-2">
-              <button
-                class="btn-primary text-sm px-4 py-1.5"
-                @click="showBudgetInput = true"
-              >{{ t('dashboard.setBudget') }}</button>
-              <button
-                class="text-text-tertiary hover:text-text-secondary text-[0.75rem] px-3 py-1.5 rounded-lg hover:bg-bg-elevated transition-colors"
-                @click="dismissBudget"
-              >{{ t('dashboard.skipBudget') }}</button>
-            </div>
-          </div>
-
-          <!-- Budget dismissed -->
-          <div v-if="budgetDismissed && !showBudgetInput" class="flex flex-col items-center gap-2 py-4 flex-1 justify-center">
-            <span class="text-text-disabled text-[0.8125rem]">{{ t('dashboard.budgetDismissed') }}</span>
-            <button
-              class="text-accent hover:text-accent-text text-[0.75rem] font-medium px-3 py-1 rounded-lg hover:bg-accent/10 transition-colors"
-              @click="reEnableBudget"
-            >{{ t('dashboard.reEnableBudget') }}</button>
-          </div>
-
-          <!-- Budget input -->
-          <div v-if="showBudgetInput" class="flex flex-col gap-3 py-2">
-            <div>
-              <p class="text-[0.75rem] text-text-tertiary mb-1.5">{{ t('dashboard.setBudgetLabel') }}</p>
-              <div class="relative flex items-center">
-                <input
-                  :value="budgetInputValue"
-                  @input="handleBudgetInput"
-                  type="tel"
-                  inputmode="numeric"
-                  pattern="[0-9]*"
-                  placeholder="VD: 10.000.000"
-                  class="w-full bg-bg-surface border border-border-subtle rounded-xl px-4 pr-28 py-2.5 text-sm font-bold text-text-primary focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all tracking-wide"
-                  @keyup.enter="saveBudget"
-                />
-                <div class="absolute right-1.5 flex items-center gap-1">
-                  <button
-                    class="bg-accent hover:bg-accent/80 text-white rounded-lg px-3 py-1.5 text-[0.6875rem] font-semibold transition-colors flex items-center gap-1"
-                    :disabled="budgetSaving"
-                    @click="saveBudget"
-                  >
-                    <div v-if="budgetSaving" class="h-3 w-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <Sparkles v-else :size="11" />
-                    {{ budgetSaving ? t('common.saving') : t('dashboard.analyzeAndSave') }}
-                  </button>
-                  <button class="hover:bg-bg-elevated text-text-tertiary rounded-lg p-1.5 transition-colors" @click="showBudgetInput = false">
-                    <X :size="14" />
-                  </button>
-                </div>
-              </div>
-              <p class="text-[0.6875rem] text-text-disabled mt-1">{{ t('dashboard.setBudgetSubhint') }}</p>
-            </div>
-          </div>
-
-          <!-- Gauge display -->
-          <div v-if="monthlyBudget > 0 && !showBudgetInput && !budgetDismissed" class="flex flex-col gap-4">
-            <!-- Ring + Stats row -->
-            <div class="flex items-center gap-5">
-              <!-- SVG Ring -->
-              <div class="relative h-24 w-24 shrink-0">
-                <svg viewBox="0 0 100 100" class="w-full h-full -rotate-90">
-                  <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" stroke-width="7" class="text-bg-elevated" />
-                  <circle
-                    cx="50" cy="50" r="42" fill="none"
-                    :stroke="budgetUsedPercent >= 90 ? '#ef4444' : budgetUsedPercent >= 70 ? '#f59e0b' : '#10b981'"
-                    stroke-width="7"
-                    stroke-linecap="round"
-                    :stroke-dasharray="`${budgetUsedPercent * 2.64} 264`"
-                    class="transition-all duration-700"
-                  />
-                </svg>
-                <div class="absolute inset-0 flex flex-col items-center justify-center">
-                  <span class="text-lg font-bold" :class="budgetUsedPercent >= 90 ? 'text-error' : budgetUsedPercent >= 70 ? 'text-yellow-400' : 'text-success'">
-                    {{ budgetUsedPercent.toFixed(0) }}%
-                  </span>
-                  <span class="text-[0.5625rem] text-text-disabled leading-none">{{ t('dashboard.spent') }}</span>
-                </div>
-              </div>
-              <!-- Stats -->
-              <div class="flex-1 space-y-2 min-w-0">
-                <div class="flex justify-between text-[0.75rem]">
-                  <span class="text-text-tertiary">{{ t('dashboard.monthlyBudget') }}</span>
-                  <span class="text-text-primary font-semibold tabular-nums">{{ formatVNDShort(monthlyBudget) }}</span>
-                </div>
-                <div class="flex justify-between text-[0.75rem]">
-                  <span class="text-text-tertiary">{{ t('dashboard.spent') }}</span>
-                  <span class="text-error font-semibold tabular-nums">{{ formatVNDShort(finance.monthExpense) }}</span>
-                </div>
-                <div class="flex justify-between text-[0.75rem]">
-                  <span class="text-text-tertiary">{{ t('dashboard.remaining') }}</span>
-                  <span class="text-success font-semibold tabular-nums">{{ formatVNDShort(budgetRemaining) }}</span>
-                </div>
-                <div class="border-border-subtle border-t pt-2 flex justify-between text-[0.6875rem]">
-                  <span class="text-text-disabled">{{ t('dashboard.dailyRemaining') }}</span>
-                  <span class="text-accent font-bold tabular-nums">{{ t('dashboard.dailyRemainingValue', { val: formatVNDShort(dailyBudgetRemaining) }) }}</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- AI Budget Analysis Button + Panel -->
-            <div class="border-t border-border-subtle pt-3">
-              <button
-                v-if="!showBudgetAiPanel"
-                class="w-full flex items-center justify-center gap-2 text-[0.75rem] font-medium text-blue-400 hover:text-blue-300 bg-blue-500/5 hover:bg-blue-500/10 border border-blue-500/20 rounded-xl py-2 transition-all"
-                @click="analyzeBudgetWithAi"
-              >
-                <Bot :size="14" />
-                {{ t('dashboard.analyzeWithAi') }}
-              </button>
-
-              <!-- AI Panel -->
-              <div v-if="showBudgetAiPanel" class="relative">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-[0.625rem] font-semibold text-blue-400 flex items-center gap-1">
-                    <Bot :size="11" /> AI Phân tích
-                  </span>
-                  <div class="flex items-center gap-1">
-                    <button
-                      v-if="!isBudgetAiLoading"
-                      class="text-[0.625rem] text-text-disabled hover:text-accent transition-colors flex items-center gap-0.5 px-1.5 py-0.5 rounded hover:bg-accent/10"
-                      @click="analyzeBudgetWithAi"
-                    >
-                      <Zap :size="10" /> {{ t('dashboard.refresh') }}
-                    </button>
-                    <button
-                      class="text-text-disabled hover:text-error transition-colors p-1 rounded hover:bg-error/10"
-                      @click="showBudgetAiPanel = false"
-                    >
-                      <X :size="12" />
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Loading skeleton -->
-                <div v-if="isBudgetAiLoading && !budgetAiText" class="space-y-1.5">
-                  <div class="skeleton h-3 w-full rounded" />
-                  <div class="skeleton h-3 w-4/5 rounded" />
-                  <div class="skeleton h-3 w-full rounded" />
-                  <div class="skeleton h-3 w-3/5 rounded" />
-                </div>
-
-                <!-- AI Response -->
-                <div
-                  v-if="budgetAiText"
-                  class="bg-blue-500/5 border border-blue-500/15 rounded-xl p-3 text-[0.75rem] text-text-secondary leading-relaxed whitespace-pre-wrap max-h-48 overflow-y-auto"
-                >
-                  {{ budgetAiText }}
-                </div>
-              </div>
-            </div>
+          <div class="bg-error/5 rounded-lg p-2">
+            <div class="text-[0.625rem] text-text-disabled mb-0.5">{{ t('dashboard.expense') }}</div>
+            <div class="text-[0.75rem] font-bold text-error tabular-nums">-{{ formatMoneyShort(finance.monthExpense) }}</div>
           </div>
         </div>
-      </div>
 
-      <!-- RIGHT COLUMN: AI Chat Area -->
-      <div class="flex flex-col gap-4 h-full">
-        <div class="card-premium p-4 flex flex-col h-full">
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="text-sm font-semibold text-text-primary flex items-center gap-2">
-              <div class="bg-blue-500/10 flex h-7 w-7 items-center justify-center rounded-lg">
-                <Bot :size="14" class="text-blue-400" />
+        <!-- No budget set -->
+        <div v-if="!monthlyBudget && !showBudgetInput && !budgetDismissed" class="flex flex-col items-center gap-3 py-6">
+          <Sparkles :size="28" class="text-text-disabled" />
+          <div class="text-center">
+            <p class="text-text-secondary text-sm font-medium">{{ t('dashboard.setBudgetTitle') }}</p>
+            <p class="text-text-disabled text-[0.75rem] mt-0.5">{{ t('dashboard.setBudgetHint') }}</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button class="btn-primary text-sm px-4 py-1.5" @click="showBudgetInput = true">{{ t('dashboard.setBudget') }}</button>
+            <button class="text-text-tertiary hover:text-text-secondary text-[0.75rem] px-3 py-1.5 rounded-lg hover:bg-bg-elevated transition-colors" @click="dismissBudget">{{ t('dashboard.skipBudget') }}</button>
+          </div>
+        </div>
+
+        <!-- Budget dismissed -->
+        <div v-if="budgetDismissed && !showBudgetInput" class="flex flex-col items-center gap-2 py-6">
+          <span class="text-text-disabled text-[0.8125rem]">{{ t('dashboard.budgetDismissed') }}</span>
+          <button class="text-accent text-[0.75rem] font-medium px-3 py-1 rounded-lg hover:bg-accent/10 transition-colors" @click="reEnableBudget">{{ t('dashboard.reEnableBudget') }}</button>
+        </div>
+
+        <!-- Budget input -->
+        <div v-if="showBudgetInput" class="flex flex-col gap-2 py-2">
+          <p class="text-[0.75rem] text-text-tertiary">{{ t('dashboard.setBudgetLabel') }}</p>
+          <div class="relative flex items-center">
+            <input
+              :value="budgetInputValue"
+              @input="handleBudgetInput"
+              type="tel" inputmode="numeric" pattern="[0-9]*"
+              placeholder="VD: 10.000.000"
+              class="w-full bg-bg-surface border border-border-subtle rounded-xl px-4 pr-28 py-2.5 text-sm font-bold text-text-primary focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all tracking-wide"
+              @keyup.enter="saveBudget"
+            />
+            <div class="absolute right-1.5 flex items-center gap-1">
+              <button
+                class="bg-accent hover:bg-accent/80 text-white rounded-lg px-3 py-1.5 text-[0.6875rem] font-semibold transition-colors flex items-center gap-1"
+                :disabled="budgetSaving"
+                @click="saveBudget"
+              >
+                <div v-if="budgetSaving" class="h-3 w-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <Sparkles v-else :size="11" />
+                {{ budgetSaving ? t('common.saving') : t('dashboard.analyzeAndSave') }}
+              </button>
+              <button class="hover:bg-bg-elevated text-text-tertiary rounded-lg p-1.5 transition-colors" @click="showBudgetInput = false"><X :size="14" /></button>
+            </div>
+          </div>
+          <p class="text-[0.6875rem] text-text-disabled">{{ t('dashboard.setBudgetSubhint') }}</p>
+        </div>
+
+        <!-- Gauge + Stats + AI (when budget set) -->
+        <div v-if="monthlyBudget > 0 && !showBudgetInput && !budgetDismissed" class="flex flex-col gap-4">
+
+          <!-- Ring + Stats row -->
+          <div class="flex items-start gap-6">
+            <!-- SVG Ring -->
+            <div class="relative h-28 w-28 shrink-0">
+              <svg viewBox="0 0 100 100" class="w-full h-full -rotate-90">
+                <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" stroke-width="7" class="text-bg-elevated" />
+                <circle
+                  cx="50" cy="50" r="42" fill="none"
+                  :stroke="budgetUsedPercent >= 90 ? '#ef4444' : budgetUsedPercent >= 70 ? '#f59e0b' : '#10b981'"
+                  stroke-width="7" stroke-linecap="round"
+                  :stroke-dasharray="`${budgetUsedPercent * 2.64} 264`"
+                  class="transition-all duration-700"
+                />
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center">
+                <span class="text-xl font-bold" :class="budgetUsedPercent >= 90 ? 'text-error' : budgetUsedPercent >= 70 ? 'text-yellow-400' : 'text-success'">{{ budgetUsedPercent.toFixed(0) }}%</span>
+                <span class="text-[0.5rem] text-text-disabled">{{ t('dashboard.spent') }}</span>
               </div>
-              {{ t('dashboard.aiAssistant') }}
-            </h3>
+            </div>
+
+            <!-- Stats grid -->
+            <div class="flex-1 grid grid-cols-2 gap-x-6 gap-y-2 text-[0.75rem]">
+              <div class="flex justify-between col-span-2 pb-2 border-b border-border-subtle">
+                <span class="text-text-tertiary">{{ t('dashboard.monthlyBudget') }}</span>
+                <span class="text-text-primary font-bold tabular-nums">{{ formatVNDShort(monthlyBudget) }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-text-tertiary">{{ t('dashboard.spent') }}</span>
+                <span class="text-error font-semibold tabular-nums">{{ formatVNDShort(finance.monthExpense) }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-text-tertiary">{{ t('dashboard.remaining') }}</span>
+                <span class="text-success font-semibold tabular-nums">{{ formatVNDShort(budgetRemaining) }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-text-disabled">Tiền thực có</span>
+                <span class="text-text-primary font-semibold tabular-nums">{{ formatVNDShort(spendableBalance) }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-text-disabled">{{ t('dashboard.dailyRemaining') }}</span>
+                <span class="text-accent font-bold tabular-nums">{{ formatVNDShort(dailySpendable) }}/ngày</span>
+              </div>
+            </div>
           </div>
 
-          <div class="flex flex-col flex-1">
-            <div class="flex flex-col flex-1 justify-end">
-              <div v-if="aiResponse" class="mb-4 bg-bg-surface rounded-xl p-3.5 text-[0.8125rem] text-text-secondary leading-relaxed border border-border-subtle relative shadow-sm">
-                <div class="absolute -top-2.5 left-3 bg-bg-elevated px-1.5 flex items-center gap-1 text-blue-400 rounded-full text-[0.625rem] font-semibold border border-border-subtle shadow-sm">
-                  <Sparkles :size="10" /> AI Insight
+          <!-- AI Panel -->
+          <div class="border-t border-border-subtle pt-3">
+            <!-- Trigger button -->
+            <button
+              v-if="!showBudgetAiPanel"
+              class="w-full flex items-center justify-center gap-2 text-[0.75rem] font-medium text-blue-400 hover:text-blue-300 bg-blue-500/5 hover:bg-blue-500/10 border border-blue-500/20 rounded-xl py-2 transition-all"
+              @click="analyzeBudgetWithAi"
+            >
+              <Bot :size="14" /> {{ t('dashboard.analyzeWithAi') }}
+            </button>
+
+            <!-- AI result area -->
+            <div v-if="showBudgetAiPanel">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-[0.625rem] font-semibold text-blue-400 flex items-center gap-1"><Bot :size="11" /> AI Phân tích</span>
+                <div class="flex items-center gap-1">
+                  <button v-if="!isBudgetAiLoading" class="text-[0.625rem] text-text-disabled hover:text-accent flex items-center gap-0.5 px-1.5 py-0.5 rounded hover:bg-accent/10 transition-colors" @click="analyzeBudgetWithAi">
+                    <Zap :size="10" /> {{ t('dashboard.refresh') }}
+                  </button>
+                  <button class="text-text-disabled hover:text-error p-1 rounded hover:bg-error/10 transition-colors" @click="showBudgetAiPanel = false"><X :size="12" /></button>
                 </div>
-                <button 
-                  @click="aiResponse = ''" 
-                  class="absolute top-2 right-2 text-text-tertiary hover:text-error transition-colors p-1 rounded-md hover:bg-error/10"
-                  title="Clear"
-                >
-                  <X :size="14" />
-                </button>
-                <div class="pt-2 pr-6 whitespace-pre-wrap">{{ aiResponse }}</div>
               </div>
 
-              <div class="relative flex items-center group mt-auto">
+              <!-- Skeleton -->
+              <div v-if="isBudgetAiLoading && !budgetAiText" class="space-y-1.5 mb-3">
+                <div class="skeleton h-3 w-full rounded" />
+                <div class="skeleton h-3 w-4/5 rounded" />
+                <div class="skeleton h-3 w-full rounded" />
+                <div class="skeleton h-3 w-3/5 rounded" />
+              </div>
+
+              <!-- AI response -->
+              <div v-if="budgetAiText" class="bg-blue-500/5 border border-blue-500/15 rounded-xl p-3 text-[0.75rem] text-text-secondary leading-relaxed whitespace-pre-wrap max-h-56 overflow-y-auto mb-3">
+                {{ budgetAiText }}
+              </div>
+
+              <!-- Follow-up question input -->
+              <div class="relative flex items-center">
                 <input
-                  v-model="aiPrompt"
+                  v-model="aiFollowUp"
                   type="text"
-                  :placeholder="t('dashboard.askAiPlaceholder')"
-                  class="w-full bg-bg-surface border border-border-subtle rounded-xl pl-3 pr-10 py-2.5 text-[0.8125rem] font-medium text-text-primary focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 outline-none transition-all placeholder:text-text-disabled shadow-sm"
-                  @keyup.enter="generateAiInsight"
-                  :disabled="isAiLoading"
+                  placeholder="VD: Tôi muốn mua điện thoại 12tr, có nên chi không?"
+                  class="w-full bg-bg-surface border border-border-subtle rounded-xl pl-3 pr-10 py-2 text-[0.8125rem] text-text-primary focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 outline-none transition-all placeholder:text-text-disabled"
+                  @keyup.enter="askFollowUp"
+                  :disabled="isBudgetAiLoading"
                 />
                 <button
                   class="absolute right-1.5 p-1.5 rounded-lg transition-all"
-                  :class="aiPrompt.trim() ? 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20' : 'text-text-disabled'"
-                  :disabled="!aiPrompt.trim() || isAiLoading"
-                  @click="generateAiInsight"
+                  :class="aiFollowUp.trim() ? 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20' : 'text-text-disabled'"
+                  :disabled="!aiFollowUp.trim() || isBudgetAiLoading"
+                  @click="askFollowUp"
                 >
-                  <div v-if="isAiLoading" class="h-4 w-4 rounded-full border-2 border-blue-400 border-t-transparent animate-spin"></div>
+                  <div v-if="isBudgetAiLoading" class="h-4 w-4 rounded-full border-2 border-blue-400 border-t-transparent animate-spin" />
                   <Send v-else :size="14" />
                 </button>
               </div>
@@ -859,6 +784,8 @@ Quy tắc: Trả lời ngắn gọn, format Markdown, dựa trên số liệu th
       </div>
       </div>
     </div>
+
+
 
     <!-- Wallets -->
     <div class="mb-6">
