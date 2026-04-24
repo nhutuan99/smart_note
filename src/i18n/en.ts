@@ -107,7 +107,10 @@ export default {
     askAiPlaceholder: 'Ask AI how to optimize spending...',
     collapse: 'Collapse',
     expand: 'Expand',
-    smartFinance: 'Smart Finance'
+    smartFinance: 'Smart Finance',
+    skipBudget: 'Skip',
+    budgetDismissed: 'Budget setup was skipped',
+    reEnableBudget: 'Set up now'
   },
 
   // ── Transactions ──

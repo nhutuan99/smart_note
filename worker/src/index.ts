@@ -904,6 +904,30 @@ async function handleDeleteTransaction(
   return jsonResponse({ success: true })
 }
 
+// ====== Budget Handlers ======
+
+interface BudgetData {
+  amount: number
+  dismissed: boolean
+  updatedAt: string
+}
+
+async function handleGetBudget(userId: string, env: Env): Promise<Response> {
+  const budget = await getJSON<BudgetData>(env.SMART_NOTE_KV, `users/${userId}/finance/budget`)
+  return jsonResponse({ success: true, data: budget || { amount: 0, dismissed: false, updatedAt: '' } })
+}
+
+async function handleUpdateBudget(userId: string, request: Request, env: Env): Promise<Response> {
+  const body = (await request.json()) as any
+  const budget: BudgetData = {
+    amount: typeof body.amount === 'number' ? body.amount : 0,
+    dismissed: !!body.dismissed,
+    updatedAt: new Date().toISOString()
+  }
+  await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/budget`, budget)
+  return jsonResponse({ success: true, data: budget })
+}
+
 // ====== Telegram Webhook (OpenClaw) ======
 
 async function handleTelegramWebhook(request: Request, env: Env): Promise<Response> {
@@ -2290,6 +2314,14 @@ export default {
       const txMatch = path.match(/^\/api\/transactions\/(.+)$/)
       if (txMatch && request.method === 'DELETE') {
         return handleDeleteTransaction(userId, txMatch[1], env)
+      }
+
+      // Finance: Budget
+      if (path === '/api/finance/budget' && request.method === 'GET') {
+        return handleGetBudget(userId, env)
+      }
+      if (path === '/api/finance/budget' && request.method === 'PUT') {
+        return handleUpdateBudget(userId, request, env)
       }
 
       // PIN

@@ -107,7 +107,10 @@ export default {
     askAiPlaceholder: 'Hỏi AI cách tối ưu chi tiêu...',
     collapse: 'Thu gọn',
     expand: 'Mở rộng',
-    smartFinance: 'Tài chính thông minh'
+    smartFinance: 'Tài chính thông minh',
+    skipBudget: 'Bỏ qua',
+    budgetDismissed: 'Bạn đã bỏ qua thiết lập ngân sách',
+    reEnableBudget: 'Thiết lập lại'
   },
 
   // ── Transactions ──

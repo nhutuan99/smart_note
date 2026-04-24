@@ -280,11 +280,29 @@ const incomeByWallet = computed<WalletStat[]>(() => {
 const walletBreakdownTab = ref<'expense' | 'income'>('income')
 const activeWalletStats = computed(() => walletBreakdownTab.value === 'expense' ? expenseByWallet.value : incomeByWallet.value)
 
-// ── Monthly Budget ──
+// ── Monthly Budget (API-backed) ──
 const BUDGET_KEY = 'smart_note_monthly_budget'
+const BUDGET_DISMISSED_KEY = 'smart_note_budget_dismissed'
 const monthlyBudget = ref(parseInt(localStorage.getItem(BUDGET_KEY) || '0'))
+const budgetDismissed = ref(localStorage.getItem(BUDGET_DISMISSED_KEY) === 'true')
 const showBudgetInput = ref(false)
 const budgetInputValue = ref('')
+const budgetSaving = ref(false)
+
+// Load budget from API on mount
+;(async () => {
+  try {
+    const data = await httpClient.get<{ amount: number; dismissed: boolean }>('/api/finance/budget')
+    if (data) {
+      monthlyBudget.value = data.amount || 0
+      budgetDismissed.value = !!data.dismissed
+      localStorage.setItem(BUDGET_KEY, String(data.amount || 0))
+      localStorage.setItem(BUDGET_DISMISSED_KEY, String(!!data.dismissed))
+    }
+  } catch {
+    // Fallback to localStorage values
+  }
+})()
 
 function handleBudgetInput(e: Event) {
   const input = e.target as HTMLInputElement
@@ -296,17 +314,50 @@ function handleBudgetInput(e: Event) {
   }
 }
 
-function saveBudget() {
+async function saveBudget() {
   const val = parseInt(budgetInputValue.value.replace(/\D/g, ''))
-  if (!isNaN(val) && val > 0) {
-    monthlyBudget.value = val
-    localStorage.setItem(BUDGET_KEY, String(val))
-  } else {
-    monthlyBudget.value = 0
-    localStorage.removeItem(BUDGET_KEY)
+  budgetSaving.value = true
+  try {
+    if (!isNaN(val) && val > 0) {
+      monthlyBudget.value = val
+      budgetDismissed.value = false
+      localStorage.setItem(BUDGET_KEY, String(val))
+      localStorage.setItem(BUDGET_DISMISSED_KEY, 'false')
+      await httpClient.put('/api/finance/budget', { amount: val, dismissed: false })
+    } else {
+      monthlyBudget.value = 0
+      localStorage.setItem(BUDGET_KEY, '0')
+      await httpClient.put('/api/finance/budget', { amount: 0, dismissed: false })
+    }
+  } catch {
+    // localStorage already updated as fallback
+  } finally {
+    budgetSaving.value = false
   }
   showBudgetInput.value = false
   budgetInputValue.value = ''
+}
+
+async function dismissBudget() {
+  budgetDismissed.value = true
+  localStorage.setItem(BUDGET_DISMISSED_KEY, 'true')
+  try {
+    await httpClient.put('/api/finance/budget', { amount: monthlyBudget.value, dismissed: true })
+  } catch {
+    // localStorage already updated
+  }
+}
+
+async function reEnableBudget() {
+  budgetDismissed.value = false
+  showBudgetInput.value = true
+  budgetInputValue.value = monthlyBudget.value > 0 ? new Intl.NumberFormat('vi-VN').format(monthlyBudget.value) : ''
+  localStorage.setItem(BUDGET_DISMISSED_KEY, 'false')
+  try {
+    await httpClient.put('/api/finance/budget', { amount: monthlyBudget.value, dismissed: false })
+  } catch {
+    // localStorage already updated
+  }
 }
 
 const budgetUsedPercent = computed(() => {
@@ -464,8 +515,8 @@ Quy tắc:
           </div>
           <div>
             <div class="text-[0.6875rem] text-text-tertiary font-medium">{{ t('dashboard.monthlyBudget') }}</div>
-            <div class="text-sm font-bold" :class="monthlyBudget > 0 && budgetUsedPercent >= 90 ? 'text-error' : monthlyBudget > 0 && budgetUsedPercent >= 70 ? 'text-yellow-400' : 'text-success'">
-              {{ monthlyBudget > 0 ? formatVNDShort(budgetRemaining) + ' ' + t('dashboard.remaining').toLowerCase() : t('dashboard.notSet') }}
+            <div class="text-sm font-bold" :class="budgetDismissed ? 'text-text-disabled' : monthlyBudget > 0 && budgetUsedPercent >= 90 ? 'text-error' : monthlyBudget > 0 && budgetUsedPercent >= 70 ? 'text-yellow-400' : 'text-success'">
+              {{ budgetDismissed ? t('dashboard.skipBudget') : monthlyBudget > 0 ? formatVNDShort(budgetRemaining) + ' ' + t('dashboard.remaining').toLowerCase() : t('dashboard.notSet') }}
             </div>
           </div>
         </div>
@@ -509,19 +560,34 @@ Quy tắc:
               {{ t('dashboard.monthlyBudget') }}
             </h3>
             <button
-              v-if="monthlyBudget > 0 && !showBudgetInput"
+              v-if="monthlyBudget > 0 && !showBudgetInput && !budgetDismissed"
               class="text-text-tertiary hover:text-accent text-[0.6875rem] transition-colors"
               @click="showBudgetInput = true; budgetInputValue = monthlyBudget > 0 ? new Intl.NumberFormat('vi-VN').format(monthlyBudget) : ''"
             >{{ t('common.edit') }}</button>
           </div>
 
           <!-- No budget set -->
-          <div v-if="!monthlyBudget && !showBudgetInput" class="flex flex-col items-center gap-3 py-4">
+          <div v-if="!monthlyBudget && !showBudgetInput && !budgetDismissed" class="flex flex-col items-center gap-3 py-4">
             <span class="text-text-disabled text-sm">{{ t('dashboard.notSetFull') }}</span>
+            <div class="flex items-center gap-2">
+              <button
+                class="btn-primary text-sm px-4 py-1.5"
+                @click="showBudgetInput = true"
+              >{{ t('dashboard.setBudget') }}</button>
+              <button
+                class="text-text-tertiary hover:text-text-secondary text-[0.75rem] px-3 py-1.5 rounded-lg hover:bg-bg-elevated transition-colors"
+                @click="dismissBudget"
+              >{{ t('dashboard.skipBudget') }}</button>
+            </div>
+          </div>
+
+          <!-- Budget dismissed -->
+          <div v-if="budgetDismissed && !showBudgetInput" class="flex flex-col items-center gap-2 py-4">
+            <span class="text-text-disabled text-[0.8125rem]">{{ t('dashboard.budgetDismissed') }}</span>
             <button
-              class="btn-primary text-sm px-4 py-1.5"
-              @click="showBudgetInput = true"
-            >{{ t('dashboard.setBudget') }}</button>
+              class="text-accent hover:text-accent-text text-[0.75rem] font-medium px-3 py-1 rounded-lg hover:bg-accent/10 transition-colors"
+              @click="reEnableBudget"
+            >{{ t('dashboard.reEnableBudget') }}</button>
           </div>
 
           <!-- Budget input -->
@@ -545,7 +611,7 @@ Quy tắc:
           </div>
 
           <!-- Gauge display -->
-          <div v-if="monthlyBudget > 0 && !showBudgetInput" class="flex items-center gap-5">
+          <div v-if="monthlyBudget > 0 && !showBudgetInput && !budgetDismissed" class="flex items-center gap-5">
             <!-- SVG Ring -->
             <div class="relative h-24 w-24 shrink-0">
               <svg viewBox="0 0 100 100" class="w-full h-full -rotate-90">
