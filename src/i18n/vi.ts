@@ -110,7 +110,14 @@ export default {
     smartFinance: 'Tài chính thông minh',
     skipBudget: 'Bỏ qua',
     budgetDismissed: 'Bạn đã bỏ qua thiết lập ngân sách',
-    reEnableBudget: 'Thiết lập lại'
+    reEnableBudget: 'Thiết lập lại',
+    setBudgetTitle: 'Đặt mục tiêu chi tiêu',
+    setBudgetHint: 'NHập số tiền bạn muốn chi trong tháng → AI sẽ lập kế hoạch tự động',
+    setBudgetLabel: 'Mục tiêu chi tiêu cả tháng (VNĐ)',
+    setBudgetSubhint: '⚡ Sau khi lưu, AI sẽ tự động phân tích và gợi ý kế hoạch cho bạn',
+    analyzeAndSave: 'Lưu & Phân tích',
+    analyzeWithAi: 'Phân tích và lập kế hoạch chi tiêu',
+    refresh: 'Làm mới'
   },
 
   // ── Transactions ──

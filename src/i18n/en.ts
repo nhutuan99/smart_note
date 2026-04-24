@@ -110,7 +110,14 @@ export default {
     smartFinance: 'Smart Finance',
     skipBudget: 'Skip',
     budgetDismissed: 'Budget setup was skipped',
-    reEnableBudget: 'Set up now'
+    reEnableBudget: 'Set up now',
+    setBudgetTitle: 'Set a spending goal',
+    setBudgetHint: 'Enter your monthly spending target → AI will plan automatically',
+    setBudgetLabel: 'Monthly spending goal (VND)',
+    setBudgetSubhint: '⚡ After saving, AI will automatically analyze and suggest a plan',
+    analyzeAndSave: 'Save & Analyze',
+    analyzeWithAi: 'Analyze & create spending plan',
+    refresh: 'Refresh'
   },
 
   // ── Transactions ──
