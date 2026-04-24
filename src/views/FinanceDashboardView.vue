@@ -470,37 +470,37 @@ const isSmartSectionCollapsed = ref(false)
       </div>
     </div>
 
-    <!-- Budget Gauge + Smart Insights -->
+    <!-- AI Finance Advisor (collapsed bar) -->
     <div v-if="isSmartSectionCollapsed" class="mb-6 card-premium p-4 flex items-center justify-between cursor-pointer group hover:bg-bg-elevated transition-colors" @click="isSmartSectionCollapsed = false">
       <div class="flex items-center gap-6 divide-x divide-border-subtle flex-1 overflow-x-auto no-scrollbar">
-        <!-- Budget summary -->
+        <!-- Balance summary -->
         <div class="flex items-center gap-3 shrink-0">
-          <div class="bg-accent/10 flex h-8 w-8 items-center justify-center rounded-lg">
-            <Sparkles :size="16" class="text-accent" />
-          </div>
-          <div>
-            <div class="text-[0.6875rem] text-text-tertiary font-medium">{{ t('dashboard.monthlyBudget') }}</div>
-            <div class="text-sm font-bold" :class="budgetDismissed ? 'text-text-disabled' : monthlyBudget > 0 && budgetUsedPercent >= 90 ? 'text-error' : monthlyBudget > 0 && budgetUsedPercent >= 70 ? 'text-yellow-400' : 'text-success'">
-              {{ budgetDismissed ? t('dashboard.skipBudget') : monthlyBudget > 0 ? formatVNDShort(budgetRemaining) + ' ' + t('dashboard.remaining').toLowerCase() : t('dashboard.notSet') }}
-            </div>
-          </div>
-        </div>
-        <!-- AI summary -->
-        <div class="flex items-center gap-3 pl-6 shrink-0 hidden sm:flex">
           <div class="bg-blue-500/10 flex h-8 w-8 items-center justify-center rounded-lg">
             <Bot :size="16" class="text-blue-400" />
           </div>
           <div>
-            <div class="text-[0.6875rem] text-text-tertiary font-medium">{{ t('dashboard.aiAssistant') }}</div>
-            <div class="text-sm font-bold text-text-primary">{{ t('dashboard.aiReady') }}</div>
+            <div class="text-[0.6875rem] text-text-tertiary font-medium">AI Finance Advisor</div>
+            <div class="text-sm font-bold text-text-primary">{{ formatMoneyShort(finance.totalBalance) }} · {{ finance.wallets.length }} tài khoản</div>
           </div>
         </div>
-
+        <!-- Net flow summary -->
+        <div class="flex items-center gap-3 pl-6 shrink-0 hidden sm:flex">
+          <div class="flex h-8 w-8 items-center justify-center rounded-lg" :class="finance.monthIncome >= finance.monthExpense ? 'bg-success/10' : 'bg-error/10'">
+            <Sparkles :size="16" :class="finance.monthIncome >= finance.monthExpense ? 'text-success' : 'text-error'" />
+          </div>
+          <div>
+            <div class="text-[0.6875rem] text-text-tertiary font-medium">Dòng tiền tháng này</div>
+            <div class="text-sm font-bold" :class="finance.monthIncome >= finance.monthExpense ? 'text-success' : 'text-error'">
+              {{ finance.monthIncome >= finance.monthExpense ? '+' : '' }}{{ formatMoneyShort(finance.monthIncome - finance.monthExpense) }}
+            </div>
+          </div>
+        </div>
       </div>
       <button class="text-text-tertiary group-hover:text-text-primary transition-colors p-2 rounded-lg bg-bg-surface group-hover:bg-bg-elevated ml-4 shrink-0">
         <ChevronDown :size="18" />
       </button>
     </div>
+
 
     <div v-else class="mb-6">
       <div class="mb-3 flex justify-end">
