@@ -6,13 +6,28 @@ import { httpClient } from '@/shared/api/httpClient'
 import { useRouter, useRoute } from 'vue-router'
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, KeyRound, RotateCcw, CheckCircle2, ChevronLeft, ShieldCheck } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
+import { setLocale, currentLocale } from '@/i18n'
+import { useEventListener } from '@/composables/useEventListener'
+
+// ── Interactive Mouse Glow ────────────────────────────────────────────────────
+const mouseX = ref(0)
+const mouseY = ref(0)
+const isMouseActive = ref(false)
+
+function handleMouseMove(e: MouseEvent) {
+  mouseX.value = e.clientX
+  mouseY.value = e.clientY
+  isMouseActive.value = true
+}
+
+useEventListener(window, 'mousemove', handleMouseMove as EventListener)
+useEventListener(document, 'mouseleave', () => { isMouseActive.value = false })
 
 const auth = useAuthStore()
 const ui = useUiStore()
 const router = useRouter()
 const route = useRoute()
 const { t, locale } = useI18n()
-import { setLocale, currentLocale } from '@/i18n'
 
 // ── Login / Register ──────────────────────────────────────────────────────────
 const isLogin = ref(true)
@@ -299,6 +314,20 @@ watch(
             linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
           background-size: 3.75rem 3.75rem;
         "
+      ></div>
+    </div>
+
+    <!-- Interactive Mouse Glow -->
+    <div
+      class="pointer-events-none fixed inset-0 z-0 transition-opacity duration-500"
+      :style="{ opacity: isMouseActive ? 1 : 0 }"
+      aria-hidden="true"
+    >
+      <div
+        class="absolute inset-0"
+        :style="{
+          background: `radial-gradient(800px circle at ${mouseX}px ${mouseY}px, rgba(124, 111, 247, 0.12), transparent 40%)`
+        }"
       ></div>
     </div>
 
