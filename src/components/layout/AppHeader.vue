@@ -90,7 +90,7 @@ function handleLogout() {
             <circle cx="47" cy="49" r="1.8" fill="#a78bfa"/>
           </svg>
         </div>
-        <span class="hidden md:inline group-hover:text-accent transition-colors duration-150">Smart Note</span>
+        <span class="hidden md:inline group-hover:text-accent transition-colors duration-150">Sổ Thu Chi AI</span>
       </router-link>
     </div>
 

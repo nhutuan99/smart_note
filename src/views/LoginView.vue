@@ -368,7 +368,7 @@ watch(
             <circle cx="47" cy="49" r="1.8" fill="#a78bfa"/>
           </svg>
         </div>
-        <h1 class="text-2xl font-bold tracking-tight">Smart Note</h1>
+        <h1 class="text-2xl font-bold tracking-tight">Sổ Thu Chi AI</h1>
       </div>
 
       <!-- ══ STEP: LOGIN / REGISTER ══ -->
