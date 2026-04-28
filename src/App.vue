@@ -106,6 +106,7 @@ if (isMobileOrTablet.value) {
     overflow: hidden; /* body doesn't scroll — only <main> scrolls */
     height: 100%;
     height: 100dvh;
+    background: var(--bg-primary); /* Prevent black flash at edges */
   }
 
   #finnote-app {

@@ -146,7 +146,7 @@ useEventListener(document, 'visibilitychange', syncOnVisible)
     <main
       ref="mainRef"
       @scroll="handleScroll"
-      class="pwa-main-safe fixed top-[3.5rem] right-0 bottom-0 w-full overflow-y-auto transition-all duration-300 scroll-smooth"
+      class="pwa-main-safe bg-bg-primary fixed top-[3.5rem] right-0 bottom-0 w-full overflow-y-auto transition-all duration-300 scroll-smooth"
       style="-webkit-overflow-scrolling: touch; overscroll-behavior-y: contain;"
       :class="ui.sidebarOpen ? 'md:w-[calc(100%-16.25rem)]' : 'md:w-[calc(100%-3.75rem)]'"
     >
