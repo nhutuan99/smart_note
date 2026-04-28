@@ -43,12 +43,23 @@ function scrollToTop() {
 }
 
 let _lastSyncTime = 0
+let _lastToastedNotifId: string | null = null
 
-function syncOnVisible() {
-  if (document.visibilityState === 'visible' && Date.now() - _lastSyncTime > 5_000) {
-    notificationStore.fetch(true)
-    financeStore.silentRefresh()
-    _lastSyncTime = Date.now()
+async function syncOnVisible() {
+  if (document.visibilityState === 'visible') {
+    // 1. Sync new data from server
+    if (Date.now() - _lastSyncTime > 5_000) {
+      await notificationStore.fetch(true)
+      financeStore.silentRefresh()
+      _lastSyncTime = Date.now()
+    }
+
+    // 2. Push toast for the latest unread notification when user returns to tab
+    const latestUnread = notificationStore.notifications.find(n => !n.read)
+    if (latestUnread && latestUnread.id !== _lastToastedNotifId) {
+      _lastToastedNotifId = latestUnread.id
+      ui.showToast('info', `🔔 ${latestUnread.title}`)
+    }
   }
 }
 
@@ -96,9 +107,16 @@ function scheduleGuide() {
   }, GUIDE_DELAY_MS)
 }
 
-onMounted(() => {
+onMounted(async () => {
   // Initial data fetches (guarded by auth inside each store)
-  notificationStore.fetch(true)   // force fetch — always get latest on mount
+  await notificationStore.fetch(true)   // force fetch — always get latest on mount
+  
+  // Set initial latest unread so we don't toast it on first load
+  const initialLatest = notificationStore.notifications.find(n => !n.read)
+  if (initialLatest) {
+    _lastToastedNotifId = initialLatest.id
+  }
+
   financeStore.silentRefresh()    // also refresh finance data immediately
   if (notesStore.notes.length === 0) {
     notesStore.fetchNotes()
