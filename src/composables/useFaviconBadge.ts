@@ -22,12 +22,12 @@ import type { Ref } from 'vue'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const FAVICON_SVG_PATH  = '/favicon.svg'
+const FAVICON_SRC       = '/images/logo-512.png'
 const CANVAS_SIZE       = 64          // Higher res → crisper text on retina
 const BADGE_COLOR       = '#ef4444'   // red-500
 const BADGE_TEXT_COLOR  = '#ffffff'
 const BADGE_RADIUS      = 13          // px radius of badge circle
-const BASE_TITLE        = 'Smart Note'
+const BASE_TITLE        = 'FinNote'
 
 // ─── Module-level read-only cache ─────────────────────────────────────────────
 
@@ -122,8 +122,8 @@ async function renderFavicon(count: number): Promise<void> {
   try {
     // Load and cache base icon on first call
     if (!_cachedBasePng) {
-      const svg   = await loadImage(FAVICON_SVG_PATH)
-      const plain = drawFaviconCanvas(svg, 0)
+      const img   = await loadImage(FAVICON_SRC)
+      const plain = drawFaviconCanvas(img, 0)
       if (!plain) return
       _cachedBasePng = plain
     }
@@ -139,9 +139,9 @@ async function renderFavicon(count: number): Promise<void> {
   }
 }
 
-/** Restore original SVG favicon and plain title. */
+/** Restore original favicon and plain title. */
 function resetAll(): void {
-  getFaviconLinkEl().href = FAVICON_SVG_PATH
+  getFaviconLinkEl().href = FAVICON_SRC
   document.title = BASE_TITLE
 }
 
