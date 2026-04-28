@@ -22,6 +22,14 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAuthenticated = computed(() => !!token.value && !!user.value)
 
+  /**
+   * True once the auth state has been read from storage.
+   * Since localStorage is synchronous, this is always true on creation —
+   * but it gives App.vue a stable boolean to gate rendering and prevents
+   * flash of authenticated layout when not logged in.
+   */
+  const authReady = ref(true)
+
   function setAuth(newToken: string, newUser: User) {
     token.value = newToken
     user.value = newUser
@@ -62,6 +70,7 @@ export const useAuthStore = defineStore('auth', () => {
     token,
     user,
     isAuthenticated,
+    authReady,
     setAuth,
     logout,
     getToken,

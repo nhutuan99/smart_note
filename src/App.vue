@@ -1,14 +1,43 @@
 <script setup lang="ts">
+// 1. Vue core
+import { computed } from 'vue'
+
+// 2. Vue ecosystem
 import { useRoute } from 'vue-router'
-import { computed, onMounted, onUnmounted } from 'vue'
-import AppLayout from '@/components/layout/AppLayout.vue'
+
+// 3. Stores
+import { useAuthStore } from '@/stores/auth'
+
+// 4. Composables
 import { useDevice } from '@/composables/useDevice'
 import { useEventListener } from '@/composables/useEventListener'
 
-const route = useRoute()
+// 5. Components
+import AppLayout from '@/components/layout/AppLayout.vue'
+
+const route  = useRoute()
+const auth   = useAuthStore()
 const { deviceType, isMobileOrTablet } = useDevice()
 
+/**
+ * True when the current route is the login page.
+ * Used to conditionally render AppLayout vs router-view.
+ */
 const isAuthPage = computed(() => route.name === 'login')
+
+/**
+ * Gate: only render AppLayout when:
+ * 1. Auth state has been resolved (authReady)
+ * 2. User is authenticated
+ * 3. Current route is NOT the login page
+ *
+ * This eliminates the 1-frame flash of the dashboard that occurred
+ * because `v-else` previously rendered AppLayout before the router
+ * guard could fire and redirect to /login.
+ */
+const showLayout = computed(
+  () => auth.authReady && auth.isAuthenticated && !isAuthPage.value
+)
 
 // ─── Block double-tap zoom (mobile/tablet) ────────────────────────────────────
 let lastTouchEnd = 0
@@ -31,10 +60,26 @@ if (isMobileOrTablet.value) {
     id="smart-note-app"
     :class="[`device--${deviceType}`]"
   >
-    <!-- Auth pages: no layout -->
+    <!--
+      Auth pages (login, forgot-password, etc.)
+      Rendered via router-view directly — no AppLayout wrapper.
+    -->
     <router-view v-if="isAuthPage" />
-    <!-- App pages: with layout -->
-    <AppLayout v-else />
+
+    <!--
+      Authenticated app shell.
+      Only rendered when authReady=true AND isAuthenticated=true.
+      This prevents the flash of the dashboard layout before the
+      router guard has a chance to redirect to /login.
+    -->
+    <AppLayout v-else-if="showLayout" />
+
+    <!--
+      While auth resolves or redirecting — render nothing (black screen).
+      In practice this is near-instant since localStorage is synchronous,
+      but the guard still fires on the next microtask tick.
+    -->
+    <!-- intentional empty: router guard will redirect before next paint -->
   </div>
 </template>
 
