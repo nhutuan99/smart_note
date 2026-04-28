@@ -13,6 +13,9 @@
  */
 import { ref, onMounted } from 'vue'
 import { X, Share, PlusSquare } from 'lucide-vue-next'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const show = ref(false)
 const DISMISS_KEY = 'finnote_pwa_guide_dismissed'
@@ -79,10 +82,10 @@ onMounted(() => {
 
           <div class="flex-1 min-w-0">
             <h3 class="text-sm font-semibold text-white leading-tight">
-              Cài FinNote lên iPhone
+              {{ t('pwa.installTitle') }}
             </h3>
             <p class="mt-1 text-xs text-white/55 leading-relaxed">
-              Chạy như app native — toàn màn hình, không cần App Store
+              {{ t('pwa.installDesc') }}
             </p>
 
             <!-- Steps -->
@@ -91,13 +94,13 @@ onMounted(() => {
                 <div class="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-[#007AFF]/20">
                   <Share :size="11" class="text-[#007AFF]" />
                 </div>
-                <span>Nhấn <strong class="text-white">Share</strong> (🔲↑) ở thanh dưới Safari</span>
+                <span v-html="t('pwa.step1')"></span>
               </div>
               <div class="flex items-center gap-2 text-xs text-white/75">
                 <div class="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-[#007AFF]/20">
                   <PlusSquare :size="11" class="text-[#007AFF]" />
                 </div>
-                <span>Chọn <strong class="text-white">"Thêm vào Màn hình chính"</strong></span>
+                <span v-html="t('pwa.step2')"></span>
               </div>
             </div>
           </div>

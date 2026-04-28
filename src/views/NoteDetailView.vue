@@ -7,11 +7,13 @@ import { useUiStore } from '@/stores/ui'
 import RichEditor from '@/components/editor/RichEditor.vue'
 import AiPanel from '@/components/editor/AiPanel.vue'
 import { ArrowLeft, Save, Pin, Trash2, Tag, X, Plus, Check, Sparkles } from 'lucide-vue-next'
+import { useI18n } from 'vue-i18n'
 
 const route = useRoute()
 const router = useRouter()
 const notesStore = useNotesStore()
 const ui = useUiStore()
+const { t } = useI18n()
 
 const title = ref('')
 const content = ref('')
@@ -39,7 +41,7 @@ onMounted(async () => {
     pinned.value = note.pinned
     lastSaved.value = new Date(note.updatedAt).toLocaleTimeString()
   } else {
-    ui.showToast('error', 'Note not found')
+    ui.showToast('error', t('common.somethingWentWrong'))
     router.push('/notes')
   }
   loadingNote.value = false
@@ -75,7 +77,7 @@ async function saveNote() {
     hasChanges.value = false
     lastSaved.value = new Date().toLocaleTimeString()
   } catch {
-    ui.showToast('error', 'Failed to save')
+    ui.showToast('error', t('common.somethingWentWrong'))
   } finally {
     saving.value = false
   }
@@ -83,15 +85,15 @@ async function saveNote() {
 
 async function handleDelete() {
   const confirmed = await ui.requestConfirm({
-    title: 'Xóa ghi chú',
-    message: 'Ghi chú này sẽ bị xóa khỏi hệ thống.\nHành động này không thể hoàn tác.',
+    title: t('notes.deleteTitle'),
+    message: t('notes.deleteMessage'),
     danger: true,
-    confirmText: 'Chắc chắn xóa'
+    confirmText: t('notes.deleteConfirm')
   })
 
   if (confirmed) {
     if (await notesStore.deleteNote(noteId.value)) {
-      ui.showToast('success', 'Note deleted')
+      ui.showToast('success', t('notes.noteDeleted'))
       router.push('/notes')
     }
   }
@@ -128,13 +130,13 @@ function toggleAiPanel() {
 function handleAiInsert(text: string) {
   // Append the AI text to the existing HTML content
   content.value += `\n<p>${text.replace(/\n/g, '</p><p>')}</p>`
-  ui.showToast('success', 'Đã chèn nội dung AI')
+  ui.showToast('success', t('notes.ai.insert'))
 }
 
 function handleApplyTags(aiTags: string[]) {
   const newTags = aiTags.filter(t => !tags.value.includes(t))
   tags.value.push(...newTags)
-  ui.showToast('success', `Đã thêm ${newTags.length} tag${newTags.length !== 1 ? 's' : ''}`)
+  ui.showToast('success', t('common.tagsAdded', { n: newTags.length }))
 }
 </script>
 
@@ -153,13 +155,13 @@ function handleApplyTags(aiTags: string[]) {
           <ArrowLeft :size="18" />
         </button>
         <div class="flex items-center gap-1 text-sm">
-          <template v-if="saving"><span class="text-warning">Saving...</span></template>
+          <template v-if="saving"><span class="text-warning">{{ t('common.saving') }}</span></template>
           <template v-else-if="hasChanges">
-            <span class="text-text-tertiary">Unsaved changes</span>
+            <span class="text-text-tertiary">{{ t('common.unsavedChanges') }}</span>
           </template>
           <template v-else-if="lastSaved">
             <Check :size="14" class="text-success" />
-            <span class="text-text-disabled">Saved {{ lastSaved }}</span>
+            <span class="text-text-disabled">{{ t('common.saved', { time: lastSaved }) }}</span>
           </template>
         </div>
       </div>
@@ -167,7 +169,7 @@ function handleApplyTags(aiTags: string[]) {
         <!-- AI Button -->
         <button
           id="ai-panel-btn"
-          title="AI Assistant"
+          :title="t('notes.ai.assistant')"
           class="flex h-[2.125rem] items-center gap-1.5 rounded-lg px-2.5 text-sm font-medium transition-all duration-150"
           :class="showAiPanel
             ? 'bg-accent-subtle text-accent'
@@ -189,7 +191,7 @@ function handleApplyTags(aiTags: string[]) {
         </button>
         <button
           id="save-note-btn"
-          title="Save (Ctrl+S)"
+          :title="t('common.save')"
           @click="saveNote"
           class="text-text-secondary hover:bg-bg-hover hover:text-text-primary flex h-[2.125rem] w-[2.125rem] items-center justify-center rounded-lg transition-all duration-150"
         >
@@ -197,7 +199,7 @@ function handleApplyTags(aiTags: string[]) {
         </button>
         <button
           id="delete-note-btn"
-          title="Delete"
+          :title="t('common.delete')"
           @click="handleDelete"
           class="text-text-secondary hover:bg-bg-hover hover:text-error flex h-[2.125rem] w-[2.125rem] items-center justify-center rounded-lg transition-all duration-150"
         >
@@ -229,7 +231,7 @@ function handleApplyTags(aiTags: string[]) {
           @click="showTagInput = true"
         >
           <Plus :size="12" />
-          Add tag
+          {{ t('common.add') }} tag
         </button>
         <input
           v-else

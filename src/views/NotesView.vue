@@ -22,7 +22,7 @@ function formatDate(d: string) {
   const days = Math.floor(h / 24)
   return days < 7
     ? t('time.dAgo', { n: days })
-    : new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    : new Date(d).toLocaleDateString()
 }
 
 const isCreating = ref(false)
@@ -32,7 +32,7 @@ async function createNote() {
   isCreating.value = true
   try {
     const note = await notesStore.createNote({
-      title: 'Untitled Note',
+      title: t('notes.untitledNote'),
       content: '',
       tags: [],
       pinned: false
@@ -45,10 +45,10 @@ async function createNote() {
 
 async function handleDelete(id: string) {
   const confirmed = await ui.requestConfirm({
-    title: 'Xóa ghi chú',
-    message: 'Ghi chú này sẽ bị xóa khỏi hệ thống.\nHành động này không thể hoàn tác.',
+    title: t('notes.deleteTitle'),
+    message: t('notes.deleteMessage'),
     danger: true,
-    confirmText: 'Chắc chắn xóa'
+    confirmText: t('notes.deleteConfirm')
   })
 
   if (confirmed) {

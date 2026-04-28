@@ -215,7 +215,7 @@ async function resetPinWithPassword() {
     forgotPinResetToken.value = ''
     ui.showToast('success', t('forgot.pinResetSuccess'))
   } catch (err: any) {
-    forgotPinError.value = err.message || 'Đặt lại PIN thất bại'
+    forgotPinError.value = err.message || t('settings.pinResetFailed')
   } finally {
     forgotPinLoading.value = false
   }
@@ -284,7 +284,7 @@ function cancelForgotPin() {
               📊 {{ rateDisplay }}
             </p>
             <p v-if="rateError && currency === 'USD'" class="text-warning mt-1 text-xs">
-              ⚠️ {{ rateError }} (using fallback rate)
+              ⚠️ {{ rateError }} ({{ t('settings.fallbackRate') }})
             </p>
           </div>
           <div class="border-border-default flex overflow-hidden rounded-lg border">

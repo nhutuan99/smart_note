@@ -116,7 +116,7 @@ async function submitReport() {
 
       <!-- Modal Content -->
       <div 
-        class="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-bg-primary shadow-2xl ring-1 ring-white/10 transition-all transform"
+        class="liquid-glass-modal relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-bg-primary shadow-2xl ring-1 ring-white/10 transition-all transform"
       >
         <!-- Header -->
         <div class="flex items-center justify-between border-b border-border-default px-6 py-4 bg-bg-secondary/50 sticky top-0 z-10">

@@ -80,7 +80,7 @@ function handleLogout() {
       <!-- Theme Toggle -->
       <button
         class="text-text-secondary hover:bg-bg-hover hover:text-accent relative flex h-[2.125rem] w-[2.125rem] items-center justify-center rounded-lg transition-all duration-150"
-        title="Toggle Theme"
+        :title="t('common.toggleTheme')"
         @click="ui.toggleTheme()"
       >
         <Sun v-if="ui.theme === 'dark'" :size="18" />
@@ -119,6 +119,7 @@ function handleLogout() {
           <div
             v-if="bellOpen"
             class="
+              liquid-glass-dropdown
               fixed left-1/2 top-[4.25rem] z-50 w-[calc(100vw-2rem)] -translate-x-1/2
               sm:absolute sm:left-auto sm:top-full sm:translate-x-0 sm:-right-2 sm:w-[22rem] sm:mt-3
               bg-bg-surface border-border-default overflow-hidden rounded-xl border shadow-xl

@@ -147,6 +147,7 @@ useEventListener(document, 'visibilitychange', syncOnVisible)
       ref="mainRef"
       @scroll="handleScroll"
       class="pwa-main-safe fixed top-[3.5rem] right-0 bottom-0 w-full overflow-y-auto transition-all duration-300 scroll-smooth"
+      style="-webkit-overflow-scrolling: touch; overscroll-behavior-y: contain;"
       :class="ui.sidebarOpen ? 'md:w-[calc(100%-16.25rem)]' : 'md:w-[calc(100%-3.75rem)]'"
     >
       <div class="mx-auto w-full max-w-5xl px-4 py-5 sm:px-6 sm:py-6 lg:px-10 lg:py-8">
@@ -166,8 +167,8 @@ useEventListener(document, 'visibilitychange', syncOnVisible)
       <button 
         v-if="showScrollTop"
         @click="scrollToTop"
-        class="fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-bg-secondary text-text-primary shadow-lg ring-1 ring-border-default hover:bg-bg-tertiary transition-all active:scale-95"
-        title="Lên đầu trang"
+        class="pwa-fab-safe fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-bg-secondary text-text-primary shadow-lg ring-1 ring-border-default hover:bg-bg-tertiary transition-all active:scale-95"
+        :title="t('common.scrollToTop')"
       >
         <ArrowUp class="h-5 w-5" />
       </button>

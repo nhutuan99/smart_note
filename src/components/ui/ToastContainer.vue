@@ -22,7 +22,7 @@ const colorMap = {
       <div
         v-for="toast in ui.toasts"
         :key="toast.id"
-        class="bg-bg-elevated border-border-default flex max-w-[26.25rem] min-w-[18.75rem] items-center gap-3 rounded-lg border px-4 py-3 shadow-lg backdrop-blur-sm"
+        class="liquid-glass-toast bg-bg-elevated border-border-default flex max-w-[26.25rem] min-w-[18.75rem] items-center gap-3 rounded-lg border px-4 py-3 shadow-lg backdrop-blur-sm"
       >
         <component
           :is="iconMap[toast.type]"

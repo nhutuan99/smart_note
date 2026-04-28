@@ -66,7 +66,7 @@ function navigateWallet(walletId: string) {
   ></div>
 
   <aside
-    class="bg-bg-surface border-border-default fixed top-[3.5rem] bottom-0 z-40 flex -translate-x-full flex-col overflow-hidden border-r transition-all duration-300 md:translate-x-0"
+    class="liquid-glass-sidebar pwa-sidebar-safe bg-bg-surface border-border-default fixed top-[3.5rem] bottom-0 z-40 flex -translate-x-full flex-col overflow-hidden border-r transition-all duration-300 md:translate-x-0"
     :class="[
       ui.sidebarOpen ? 'w-[16.25rem] translate-x-0' : 'w-[3.75rem] md:w-[3.75rem]',
       ui.sidebarOpen ? '' : '-translate-x-full md:translate-x-0'
@@ -167,7 +167,7 @@ function navigateWallet(walletId: string) {
         >
           <span class="text-text-secondary flex items-center gap-2 min-w-0">
             <FileText :size="14" class="shrink-0 text-text-tertiary" />
-            <span class="truncate text-[0.75rem]">{{ note.title || 'Không có tiêu đề' }}</span>
+            <span class="truncate text-[0.75rem]">{{ note.title || t('notes.untitledNote') }}</span>
           </span>
         </div>
       </div>

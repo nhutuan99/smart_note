@@ -56,7 +56,7 @@ async function handleSubmit() {
       router.push('/')
     }
   } catch (err: any) {
-    error.value = err.message || 'Something went wrong'
+    error.value = err.message || t('common.somethingWentWrong')
     ui.showToast('error', error.value)
   } finally {
     loading.value = false
@@ -109,7 +109,7 @@ async function startGoogleSignInViaBackend() {
     })
     window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
   } catch (err: any) {
-    googleError.value = err.message || 'Google sign-in failed'
+    googleError.value = err.message || t('common.somethingWentWrong')
   } finally {
     googleLoading.value = false
   }
@@ -133,7 +133,7 @@ async function handleGoogleSignInCallback(code: string) {
       router.push('/')
     }
   } catch (err: any) {
-    googleError.value = err.message || 'Google sign-in failed'
+    googleError.value = err.message || t('common.somethingWentWrong')
     error.value = googleError.value
   } finally {
     googleLoading.value = false
@@ -249,7 +249,7 @@ async function resetPassword() {
     fpStep.value = 'done'
     ui.showToast('success', t('forgot.resetSuccess'))
   } catch (err: any) {
-    fpError.value = err.message || 'Đặt lại mật khẩu thất bại'
+    fpError.value = err.message || t('forgot.resetFailed')
   } finally {
     fpLoading.value = false
   }

@@ -61,8 +61,8 @@ async function deleteTx(tx: Transaction) {
   // Auto-sourced transactions require PIN to prevent accidental/unauthorized deletion
   if (AUTO_SOURCES.includes(tx.source)) {
     const pinOk = await ui.requestPinValidation(
-      'Xác nhận xóa giao dịch',
-      `Giao dịch từ ${tx.source.toUpperCase()} được bảo vệ. Nhập mã PIN để xóa.`
+      t('transactions.pinDeleteTitle'),
+      t('transactions.pinDeleteMessage', { source: tx.source.toUpperCase() })
     )
     if (!pinOk) return
   } else {

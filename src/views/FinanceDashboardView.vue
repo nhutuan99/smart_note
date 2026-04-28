@@ -59,7 +59,7 @@ const finance = useFinancePolling()
 
 const greeting = computed(() => {
   const h = new Date().getHours()
-  return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'
+  return h < 12 ? t('dashboard.greetingMorning') : h < 18 ? t('dashboard.greetingAfternoon') : t('dashboard.greetingEvening')
 })
 
 const monthLabel = computed(() => {
@@ -364,14 +364,15 @@ async function saveAiInsightAsNote() {
   isSavingNote.value = true
   try {
     const now = new Date()
-    const title = `📊 Kế hoạch tài chính - ${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}`
+    const dateStr = `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}`
+    const title = t('dashboard.aiPlanTitle', { date: dateStr })
     const content = `# ${title}
 
 ${aiInsightText.value}
 
 ---
-*Tạo tự động bởi AI Finance Advisor*
-*Ngày: ${now.toLocaleDateString('vi-VN')}*`
+${t('dashboard.aiPlanFooter')}
+${t('dashboard.aiPlanDate', { date: now.toLocaleDateString() })}`
     await notesStore.createNote({
       title,
       content,
@@ -460,7 +461,7 @@ function renderAiMarkdown(text: string): string {
           <button 
             @click="ui.toggleHideBalances()" 
             class="ml-auto text-text-tertiary hover:text-accent flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-bg-hover"
-            title="Ẩn/hiện số dư"
+            :title="t('dashboard.toggleBalance')"
           >
             <EyeOff v-if="ui.hideBalances" :size="16" />
             <Eye v-else :size="16" />
@@ -516,8 +517,8 @@ function renderAiMarkdown(text: string): string {
             <Bot :size="16" class="text-blue-400" />
           </div>
           <div>
-            <div class="text-[0.6875rem] text-text-tertiary font-medium">AI Finance Advisor</div>
-            <div class="text-sm font-bold text-text-primary">{{ formatMoneyShort(finance.totalBalance) }} · {{ finance.wallets.length }} tài khoản</div>
+            <div class="text-[0.6875rem] text-text-tertiary font-medium">{{ t('dashboard.aiAdvisorTitle') }}</div>
+            <div class="text-sm font-bold text-text-primary">{{ formatMoneyShort(finance.totalBalance) }} · {{ t('dashboard.accountCount', { n: finance.wallets.length }) }}</div>
           </div>
         </div>
         <!-- Net flow summary -->
@@ -526,7 +527,7 @@ function renderAiMarkdown(text: string): string {
             <Sparkles :size="16" :class="finance.monthIncome >= finance.monthExpense ? 'text-success' : 'text-error'" />
           </div>
           <div>
-            <div class="text-[0.6875rem] text-text-tertiary font-medium">Dòng tiền tháng này</div>
+            <div class="text-[0.6875rem] text-text-tertiary font-medium">{{ t('dashboard.monthlyNetFlow') }}</div>
             <div class="text-sm font-bold" :class="finance.monthIncome >= finance.monthExpense ? 'text-success' : 'text-error'">
               {{ finance.monthIncome >= finance.monthExpense ? '+' : '' }}{{ formatMoneyShort(finance.monthIncome - finance.monthExpense) }}
             </div>
@@ -559,9 +560,9 @@ function renderAiMarkdown(text: string): string {
             <div class="bg-blue-500/10 flex h-7 w-7 items-center justify-center rounded-lg">
               <Bot :size="14" class="text-blue-400" />
             </div>
-            AI Finance Advisor
+            {{ t('dashboard.aiAdvisorTitle') }}
           </h3>
-          <span class="text-[0.625rem] text-text-disabled bg-bg-elevated px-2 py-0.5 rounded-full">{{ new Date().toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' }) }}</span>
+          <span class="text-[0.625rem] text-text-disabled bg-bg-elevated px-2 py-0.5 rounded-full">{{ new Date().toLocaleDateString(undefined, { month: 'long', year: 'numeric' }) }}</span>
         </div>
 
 
@@ -572,7 +573,7 @@ function renderAiMarkdown(text: string): string {
           <input
             v-model="aiQuestion"
             type="text"
-            placeholder="VD: Tôi muốn mua laptop 20tr tháng này, có nên chi không?"
+            :placeholder="t('dashboard.aiExamplePlaceholder')"
             class="w-full bg-bg-elevated border border-border-subtle rounded-2xl pl-4 pr-24 py-3 text-[0.875rem] text-text-primary focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/40 outline-none transition-all placeholder:text-text-disabled"
             @keyup.enter="askAiAdvisor"
             :disabled="isAiLoading"
@@ -587,7 +588,7 @@ function renderAiMarkdown(text: string): string {
           >
             <div v-if="isAiLoading" class="h-3.5 w-3.5 rounded-full border-2 border-blue-400 border-t-transparent animate-spin" />
             <Bot v-else :size="13" />
-            {{ isAiLoading ? 'Đang phân tích...' : 'Hỏi AI' }}
+            {{ isAiLoading ? t('dashboard.aiAnalyzing') : t('dashboard.askAi') }}
           </button>
         </div>
 
@@ -596,7 +597,7 @@ function renderAiMarkdown(text: string): string {
           <!-- Header bar -->
           <div class="flex items-center justify-between mb-2">
             <span class="text-[0.6875rem] font-semibold text-blue-400 flex items-center gap-1.5">
-              <Bot :size="12" /> AI Finance Advisor
+              <Bot :size="12" /> {{ t('dashboard.aiAdvisorTitle') }}
             </span>
             <button class="text-text-disabled hover:text-error p-1 rounded hover:bg-error/10 transition-colors" @click="showAiPanel = false">
               <X :size="12" />
@@ -632,16 +633,16 @@ function renderAiMarkdown(text: string): string {
             >
               <div v-if="isSavingNote" class="h-3 w-3 border border-accent border-t-transparent rounded-full animate-spin" />
               <BookmarkPlus v-else :size="13" />
-              {{ isSavingNote ? 'Đang lưu...' : 'Lưu vào Notes' }}
+              {{ isSavingNote ? t('dashboard.savingToNotes') : t('dashboard.saveToNotes') }}
             </button>
             <span v-else class="flex items-center gap-1.5 text-[0.75rem] text-success font-medium">
-              <CheckCircle2 :size="13" /> Đã lưu vào Notes
+              <CheckCircle2 :size="13" /> {{ t('dashboard.savedToNotes') }}
             </span>
             <button
               class="ml-auto text-[0.625rem] text-text-disabled hover:text-accent flex items-center gap-0.5 px-2 py-1 rounded hover:bg-accent/10 transition-colors"
               @click="showAiPanel = false; aiQuestion = ''"
             >
-              <Zap :size="10" /> Hỏi tiếp
+              <Zap :size="10" /> {{ t('dashboard.askMore') }}
             </button>
           </div>
         </div>
@@ -649,7 +650,7 @@ function renderAiMarkdown(text: string): string {
         <!-- Empty state hint -->
         <div v-if="!showAiPanel" class="flex items-center gap-2 text-text-disabled text-[0.75rem]">
           <Bot :size="14" class="text-blue-400/60 shrink-0" />
-          <span>Nhập kế hoạch chi tiêu của bạn → AI sẽ tư vấn dựa trên số dư thực tế</span>
+          <span>{{ t('dashboard.aiEmptyHint') }}</span>
         </div>
       </div>
       </div>
@@ -752,18 +753,18 @@ function renderAiMarkdown(text: string): string {
       <div class="bg-bg-surface border-border-default rounded-xl border p-5">
         <!-- Header with tabs -->
         <div class="mb-4 flex items-center justify-between">
-          <h3 class="text-sm font-semibold">{{ t('dashboard.walletBreakdown') || 'Chi tiêu theo ví' }}</h3>
+          <h3 class="text-sm font-semibold">{{ t('dashboard.walletBreakdown') }}</h3>
           <div class="flex items-center gap-1 rounded-lg bg-bg-elevated p-0.5">
             <button
               class="rounded-md px-2.5 py-1 text-[0.6875rem] font-medium transition-all"
               :class="walletBreakdownTab === 'expense' ? 'bg-bg-surface text-error shadow-sm' : 'text-text-tertiary hover:text-text-secondary'"
               @click="walletBreakdownTab = 'expense'"
-            >Chi</button>
+            >{{ t('dashboard.expense') }}</button>
             <button
               class="rounded-md px-2.5 py-1 text-[0.6875rem] font-medium transition-all"
               :class="walletBreakdownTab === 'income' ? 'bg-bg-surface text-success shadow-sm' : 'text-text-tertiary hover:text-text-secondary'"
               @click="walletBreakdownTab = 'income'"
-            >Thu</button>
+            >{{ t('dashboard.income') }}</button>
           </div>
         </div>
 

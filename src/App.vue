@@ -100,21 +100,70 @@ if (isMobileOrTablet.value) {
     --sar: env(safe-area-inset-right, 0px);
   }
 
-  /* The fixed header needs top offset for the notch/dynamic island */
+  /* ── Prevent pull-to-refresh (iOS PWA bouncy reload) ── */
+  html, body {
+    overscroll-behavior-y: none;
+    overflow: hidden; /* body doesn't scroll — only <main> scrolls */
+    height: 100%;
+    height: 100dvh;
+  }
+
+  #finnote-app {
+    height: 100%;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  /* ── Hide scrollbar in PWA mode (native feel) ── */
+  * {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+  }
+  *::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+  }
+
+  /* ── Safe Area: Header ── */
   .pwa-header-safe {
     /* Use max() to ensure at least 24px padding for older iPhones without notches */
     padding-top: max(env(safe-area-inset-top), 24px) !important;
     height: calc(3.5rem + max(env(safe-area-inset-top), 24px)) !important;
   }
 
-  /* Main content area needs to account for the taller header */
+  /* ── Safe Area: Main content ── */
   .pwa-main-safe {
     top: calc(3.5rem + max(env(safe-area-inset-top), 24px)) !important;
+    /* Bottom padding so content doesn't hide behind home indicator */
+    padding-bottom: max(env(safe-area-inset-bottom), 20px) !important;
+    /* Smooth momentum scrolling */
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain; /* prevent pull-to-refresh on main scroll area */
   }
 
-  /* Bottom elements (scroll-to-top, toast) need bottom safe area */
+  /* ── Safe Area: Sidebar ── */
+  .pwa-sidebar-safe {
+    top: calc(3.5rem + max(env(safe-area-inset-top), 24px)) !important;
+    padding-bottom: max(env(safe-area-inset-bottom), 16px) !important;
+  }
+
+  /* ── Safe Area: Bottom-positioned elements ── */
   .pwa-bottom-safe {
-    padding-bottom: max(env(safe-area-inset-bottom), 16px);
+    padding-bottom: max(env(safe-area-inset-bottom), 16px) !important;
+  }
+
+  /* Fixed bottom buttons (scroll-to-top, FABs) */
+  .pwa-fab-safe {
+    bottom: calc(1.5rem + max(env(safe-area-inset-bottom), 16px)) !important;
+  }
+
+  /* Toast container needs bottom safe area */
+  #toast-container {
+    bottom: calc(1rem + max(env(safe-area-inset-bottom), 16px)) !important;
+  }
+
+  /* Modal/dialog bottom padding (buttons at bottom of modals) */
+  .pwa-modal-safe {
+    padding-bottom: max(env(safe-area-inset-bottom), 16px) !important;
   }
 }
 
@@ -132,8 +181,8 @@ if (isMobileOrTablet.value) {
 /* Ultra-premium glassmorphism mimicking iOS 26+ native rendering */
 @supports ((-webkit-backdrop-filter: saturate(180%) blur(20px)) or (backdrop-filter: saturate(180%) blur(20px))) {
   @media (display-mode: standalone) {
+    /* ── Header glass ── */
     .liquid-glass {
-      /* Deep transparency, high blur, subtle white inner border and shadow */
       background: rgba(15, 15, 25, 0.4) !important;
       -webkit-backdrop-filter: saturate(200%) blur(40px) brightness(1.05) !important;
       backdrop-filter: saturate(200%) blur(40px) brightness(1.05) !important;
@@ -141,12 +190,89 @@ if (isMobileOrTablet.value) {
       box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
     }
 
-    .liquid-glass-card {
+    /* ── Cards glass ── */
+    .liquid-glass-card,
+    .card-premium,
+    .glass {
       background: rgba(25, 25, 38, 0.45) !important;
       -webkit-backdrop-filter: saturate(180%) blur(24px) !important;
       backdrop-filter: saturate(180%) blur(24px) !important;
       border: 0.5px solid rgba(255, 255, 255, 0.1) !important;
       box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+    }
+
+    /* ── Sidebar glass ── */
+    .liquid-glass-sidebar {
+      background: rgba(10, 10, 18, 0.55) !important;
+      -webkit-backdrop-filter: saturate(180%) blur(30px) brightness(1.02) !important;
+      backdrop-filter: saturate(180%) blur(30px) brightness(1.02) !important;
+      border-right: 0.5px solid rgba(255, 255, 255, 0.08) !important;
+    }
+
+    /* ── Modal / Dialog glass overlay ── */
+    .liquid-glass-modal {
+      background: rgba(18, 18, 30, 0.65) !important;
+      -webkit-backdrop-filter: saturate(180%) blur(20px) !important;
+      backdrop-filter: saturate(180%) blur(20px) !important;
+      border: 0.5px solid rgba(255, 255, 255, 0.12) !important;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+    }
+
+    /* ── Toast glass ── */
+    .liquid-glass-toast {
+      background: rgba(22, 22, 35, 0.6) !important;
+      -webkit-backdrop-filter: saturate(180%) blur(20px) !important;
+      backdrop-filter: saturate(180%) blur(20px) !important;
+      border: 0.5px solid rgba(255, 255, 255, 0.1) !important;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+    }
+
+    /* ── Notification dropdown glass ── */
+    .liquid-glass-dropdown {
+      background: rgba(15, 15, 28, 0.75) !important;
+      -webkit-backdrop-filter: saturate(200%) blur(30px) !important;
+      backdrop-filter: saturate(200%) blur(30px) !important;
+      border: 0.5px solid rgba(255, 255, 255, 0.1) !important;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+    }
+
+    /* ── Light theme glass adjustments ── */
+    [data-theme='light'] .liquid-glass {
+      background: rgba(255, 255, 255, 0.55) !important;
+      -webkit-backdrop-filter: saturate(180%) blur(40px) brightness(1.1) !important;
+      backdrop-filter: saturate(180%) blur(40px) brightness(1.1) !important;
+      border-bottom: 0.5px solid rgba(255, 255, 255, 0.6) !important;
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.7) !important;
+    }
+
+    [data-theme='light'] .liquid-glass-card,
+    [data-theme='light'] .card-premium,
+    [data-theme='light'] .glass {
+      background: rgba(255, 255, 255, 0.5) !important;
+      border: 0.5px solid rgba(255, 255, 255, 0.5) !important;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+    }
+
+    [data-theme='light'] .liquid-glass-sidebar {
+      background: rgba(255, 255, 255, 0.45) !important;
+      border-right: 0.5px solid rgba(255, 255, 255, 0.4) !important;
+    }
+
+    [data-theme='light'] .liquid-glass-modal {
+      background: rgba(255, 255, 255, 0.7) !important;
+      border: 0.5px solid rgba(255, 255, 255, 0.5) !important;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+    }
+
+    [data-theme='light'] .liquid-glass-dropdown {
+      background: rgba(255, 255, 255, 0.8) !important;
+      border: 0.5px solid rgba(255, 255, 255, 0.5) !important;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.06) !important;
+    }
+
+    [data-theme='light'] .liquid-glass-toast {
+      background: rgba(255, 255, 255, 0.65) !important;
+      border: 0.5px solid rgba(255, 255, 255, 0.5) !important;
     }
   }
 }
@@ -160,7 +286,7 @@ if (isMobileOrTablet.value) {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Cho phép select text trong các input/textarea */
+/* Allow select text in inputs/textareas */
 .device--mobile input,
 .device--mobile textarea,
 .device--mobile [contenteditable],

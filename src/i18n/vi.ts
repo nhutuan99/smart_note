@@ -21,7 +21,13 @@ export default {
     copy: 'Copy',
     copied: 'Đã copy!',
     login: 'Đăng nhập',
-    back: 'Quay lại'
+    back: 'Quay lại',
+    scrollToTop: 'Lên đầu trang',
+    toggleTheme: 'Đổi giao diện',
+    somethingWentWrong: 'Đã xảy ra lỗi',
+    unsavedChanges: 'Chưa lưu',
+    saved: 'Đã lưu {time}',
+    tagsAdded: 'Đã thêm {n} tag'
   },
 
   // ── Time ──
@@ -117,7 +123,25 @@ export default {
     setBudgetSubhint: '⚡ Sau khi lưu, AI sẽ tự động phân tích và gợi ý kế hoạch cho bạn',
     analyzeAndSave: 'Lưu & Phân tích',
     analyzeWithAi: 'Phân tích và lập kế hoạch chi tiêu',
-    refresh: 'Làm mới'
+    refresh: 'Làm mới',
+    greetingMorning: 'Chào buổi sáng',
+    greetingAfternoon: 'Chào buổi chiều',
+    greetingEvening: 'Chào buổi tối',
+    toggleBalance: 'Ẩn/hiện số dư',
+    aiAdvisorTitle: 'Trợ lý tài chính AI',
+    accountCount: '{n} tài khoản',
+    monthlyNetFlow: 'Dòng tiền tháng này',
+    aiExamplePlaceholder: 'VD: Tôi muốn mua laptop 20tr tháng này, có nên chi không?',
+    aiAnalyzing: 'Đang phân tích...',
+    askAi: 'Hỏi AI',
+    savingToNotes: 'Đang lưu...',
+    saveToNotes: 'Lưu vào Notes',
+    savedToNotes: 'Đã lưu vào Notes',
+    askMore: 'Hỏi tiếp',
+    aiEmptyHint: 'Nhập kế hoạch chi tiêu của bạn → AI sẽ tư vấn dựa trên số dư thực tế',
+    aiPlanTitle: '📊 Kế hoạch tài chính - {date}',
+    aiPlanFooter: '*Tạo tự động bởi AI Finance Advisor*',
+    aiPlanDate: '*Ngày: {date}*'
   },
 
   // ── Transactions ──
@@ -134,7 +158,9 @@ export default {
     deleteConfirm: 'Xóa giao dịch',
     empty: 'Chưa có giao dịch',
     emptyHint: 'Thêm giao dịch thủ công hoặc chat qua Telegram',
-    addTransaction: 'Thêm giao dịch'
+    addTransaction: 'Thêm giao dịch',
+    pinDeleteTitle: 'Xác nhận xóa giao dịch',
+    pinDeleteMessage: 'Giao dịch từ {source} được bảo vệ. Nhập mã PIN để xóa.'
   },
 
   // ── Add Transaction ──
@@ -177,11 +203,15 @@ export default {
     title: 'Notes',
     count: '{n} notes',
     newNote: 'Ghi chú mới',
+    untitledNote: 'Ghi chú không có tiêu đề',
     searchPlaceholder: 'Tìm kiếm theo tiêu đề, nội dung hoặc tag...',
     filterAll: 'Tất cả',
     filterPinned: 'Ghim',
     filterRecent: 'Gần đây',
     noContent: 'Chưa có nội dung...',
+    deleteTitle: 'Xóa ghi chú',
+    deleteMessage: 'Ghi chú này sẽ bị xóa khỏi hệ thống.\nHành động này không thể hoàn tác.',
+    deleteConfirm: 'Chắc chắn xóa',
     deleteNote: 'Xóa ghi chú này?',
     noteDeleted: 'Đã xóa ghi chú',
     noResults: 'Không tìm thấy kết quả',
@@ -269,7 +299,9 @@ export default {
     deleteForever: 'Xóa vĩnh viễn',
     passwordRequired: 'Vui lòng nhập mật khẩu',
     accountDeleted: 'Tài khoản đã được xóa vĩnh viễn',
-    wrongPassword: 'Mật khẩu không chính xác'
+    wrongPassword: 'Mật khẩu không chính xác',
+    pinResetFailed: 'Đặt lại PIN thất bại',
+    fallbackRate: 'đang dùng tỷ giá dự phòng'
   },
 
   // ── Login ──
@@ -319,6 +351,7 @@ export default {
     resetPassword: 'Đặt lại mật khẩu',
     resetting: 'Đang đặt lại...',
     resetSuccess: 'Đặt lại mật khẩu thành công! Vui lòng đăng nhập lại.',
+    resetFailed: 'Đặt lại mật khẩu thất bại',
     passMismatch: 'Mật khẩu xác nhận không khớp',
     passMinLength: 'Mật khẩu phải có ít nhất 6 ký tự',
     // Forgot PIN
@@ -465,5 +498,13 @@ export default {
     syncTitle: 'Bạn có biết?',
     syncMessage: 'FinNote hỗ trợ đồng bộ giao dịch ngân hàng tự động qua iOS Shortcuts mà không cần đăng nhập tài khoản ngân hàng.',
     syncAction: 'Tìm hiểu ngay'
+  },
+
+  // ── PWA Install Guide ──
+  pwa: {
+    installTitle: 'Cài FinNote lên iPhone',
+    installDesc: 'Chạy như app native — toàn màn hình, không cần App Store',
+    step1: 'Nhấn <strong>Share</strong> (🔲↑) ở thanh dưới Safari',
+    step2: 'Chọn <strong>"Thêm vào Màn hình chính"</strong>'
   }
 }
