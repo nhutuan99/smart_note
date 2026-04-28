@@ -6,6 +6,7 @@ import ToastContainer from '@/components/ui/ToastContainer.vue'
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import PinDialog from '@/components/PinDialog.vue'
 import BugReportModal from '@/components/ui/BugReportModal.vue'
+import PwaInstallGuide from '@/components/ui/PwaInstallGuide.vue'
 import { ArrowUp } from 'lucide-vue-next'
 import { useUiStore } from '@/stores/ui'
 import { useNotificationStore } from '@/stores/notifications'
@@ -145,7 +146,7 @@ useEventListener(document, 'visibilitychange', syncOnVisible)
     <main
       ref="mainRef"
       @scroll="handleScroll"
-      class="fixed top-[3.5rem] right-0 bottom-0 w-full overflow-y-auto transition-all duration-300 scroll-smooth"
+      class="pwa-main-safe fixed top-[3.5rem] right-0 bottom-0 w-full overflow-y-auto transition-all duration-300 scroll-smooth"
       :class="ui.sidebarOpen ? 'md:w-[calc(100%-16.25rem)]' : 'md:w-[calc(100%-3.75rem)]'"
     >
       <div class="mx-auto w-full max-w-5xl px-4 py-5 sm:px-6 sm:py-6 lg:px-10 lg:py-8">
@@ -185,6 +186,7 @@ useEventListener(document, 'visibilitychange', syncOnVisible)
       :show="ui.showBugReport" 
       @close="ui.showBugReport = false" 
     />
+    <PwaInstallGuide />
   </div>
 </template>
 

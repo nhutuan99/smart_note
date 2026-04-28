@@ -86,22 +86,78 @@ if (isMobileOrTablet.value) {
 <style>
 #finnote-app {
   min-height: 100vh;
-  /* iOS PWA safe area — prevent content from being hidden behind notch/home indicator */
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
-  padding-left: env(safe-area-inset-left);
-  padding-right: env(safe-area-inset-right);
+  min-height: 100dvh; /* Dynamic viewport height — accounts for iOS bottom bar */
+}
+
+/* ── iOS PWA Standalone Mode ─────────────────────────────────────────────────── */
+
+/* When running as installed PWA (Add to Home Screen), push fixed header below status bar */
+@media (display-mode: standalone) {
+  :root {
+    --sat: env(safe-area-inset-top, 0px);
+    --sab: env(safe-area-inset-bottom, 0px);
+    --sal: env(safe-area-inset-left, 0px);
+    --sar: env(safe-area-inset-right, 0px);
+  }
+
+  /* The fixed header needs top offset for the notch/dynamic island */
+  .pwa-header-safe {
+    padding-top: env(safe-area-inset-top) !important;
+  }
+
+  /* Main content area needs to account for the taller header */
+  .pwa-main-safe {
+    top: calc(3.5rem + env(safe-area-inset-top)) !important;
+  }
+
+  /* Bottom elements (scroll-to-top, toast) need bottom safe area */
+  .pwa-bottom-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* iOS Safari standalone fallback (older iOS versions) */
+@supports (-webkit-touch-callout: none) {
+  @media (display-mode: standalone) {
+    body {
+      /* Prevent rubber-band bouncing at edges */
+      overscroll-behavior-y: none;
+    }
+  }
+}
+
+/* ── Apple Liquid Glass Effect (iOS 26+) ─────────────────────────────────────── */
+/* Enhanced glassmorphism for devices supporting advanced backdrop-filter */
+@supports ((-webkit-backdrop-filter: saturate(180%) blur(20px)) or (backdrop-filter: saturate(180%) blur(20px))) {
+  @media (display-mode: standalone) {
+    .liquid-glass {
+      background: rgba(18, 18, 28, 0.55) !important;
+      -webkit-backdrop-filter: saturate(180%) blur(24px) brightness(1.1) !important;
+      backdrop-filter: saturate(180%) blur(24px) brightness(1.1) !important;
+      border-bottom: 1px solid rgba(124, 111, 247, 0.12) !important;
+      box-shadow:
+        0 1px 0 0 rgba(255, 255, 255, 0.04) inset,
+        0 4px 16px rgba(0, 0, 0, 0.25) !important;
+    }
+
+    .liquid-glass-card {
+      background: rgba(22, 22, 35, 0.6) !important;
+      -webkit-backdrop-filter: saturate(150%) blur(16px) !important;
+      backdrop-filter: saturate(150%) blur(16px) !important;
+      border: 1px solid rgba(124, 111, 247, 0.08) !important;
+      box-shadow:
+        0 1px 0 0 rgba(255, 255, 255, 0.03) inset,
+        0 2px 8px rgba(0, 0, 0, 0.2) !important;
+    }
+  }
 }
 
 /* ── Prevent text-selection zoom on touch devices ───────────────────────────── */
 .device--mobile,
 .device--tablet {
-  /* Ngăn iOS double-tap zoom vào text */
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
-
-  /* Ngăn tap highlight flash */
   -webkit-tap-highlight-color: transparent;
 }
 

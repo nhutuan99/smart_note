@@ -53,7 +53,7 @@ function handleLogout() {
 
 <template>
   <header
-    class="border-border-default fixed top-0 right-0 left-0 z-50 flex h-[3.5rem] items-center justify-between border-b bg-bg-surface/85 px-4 backdrop-blur-xl transition-colors duration-300"
+    class="pwa-header-safe liquid-glass border-border-default fixed top-0 right-0 left-0 z-50 flex h-[3.5rem] items-center justify-between border-b bg-bg-surface/85 px-4 backdrop-blur-xl transition-colors duration-300"
   >
     <!-- Left -->
     <div class="flex items-center gap-3">
