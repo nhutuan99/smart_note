@@ -16,3 +16,8 @@ app.use(i18n)
 setHttpClientRouter(router)
 
 app.mount('#app')
+
+// Fade out the PWA splash screen after Vue has mounted
+setTimeout(() => {
+  ;(window as any).__removeSplash?.()
+}, 800)
