@@ -331,7 +331,7 @@ ${walletLines || '  Chưa có tài khoản'}
 ${categoryLines || '  Chưa có giao dịch'}`
 }
 
-const { streamText: aiInsightText, loading: isAiLoading, askAbout: askAi } = useAi()
+const { streamText: aiInsightText, loading: isAiLoading, askFinance } = useAi()
 const aiQuestion = ref('')
 const showAiPanel = ref(false)
 const isSavingNote = ref(false)
@@ -345,18 +345,18 @@ async function askAiAdvisor() {
   noteSaved.value = false
 
   const context = buildFinanceContext()
-  const prompt = `${context}
 
-CÂU Hỏi CỦA NGƯỜI DÙNG: ${q}
+  // Build a self-contained prompt: finance context + user question in one block.
+  // The backend 'finance' action has its own system prompt as a finance expert.
+  // We do NOT label context as "Note content" — that misleads the model.
+  const fullPrompt = `${context}
 
-QUY TẬc TRẢ LỜI:
-1. Dựa trên số dư thực tế của các tài khoản (đã liệt kê trên), đánh giá kế hoạch chi tiêu có khả thi không
-2. Nếu khả thi: đưa ra plan cụ thể (khi nào chi, từ tài khoản nào, tác động đến số dư)
-3. Nếu không khả thi: nói rõ tại sao, gợi ý cách điều chỉnh
-4. Xem xét đến thời gian còn lại trong tháng và xu hướng chi tiêu
-5. Ngắn gọn, thực tế, dùng emoji, format Markdown, tối đa 200 từ`
+---
+CÂU HỎI CỦA NGƯỜI DÙNG: ${q}
 
-  await askAi(prompt, q)
+Hãy trả lời dựa trên dữ liệu tài chính ở trên. Ngắn gọn, thực tế, dùng emoji và Markdown.`
+
+  await askFinance(fullPrompt)
 }
 
 async function saveAiInsightAsNote() {

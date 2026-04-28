@@ -1992,7 +1992,15 @@ const AI_SYSTEM_PROMPTS: Record<string, string> = {
   continue: 'You are a writing assistant. Continue the user text naturally in 2-3 sentences. Match the tone and language. Return ONLY the continuation, no explanation.',
   improve: 'You are an editor. Improve the grammar and style of the user text. Keep the original meaning and language. Return ONLY the improved text.',
   tags: 'You are a tagging assistant. Suggest 3-5 relevant tags for the content. Return ONLY a comma-separated list of lowercase tags, nothing else.',
-  ask: 'You are a helpful assistant. Answer the user question based on the provided note content. Be concise and clear.'
+  ask: 'You are a helpful assistant. Answer the user question based on the provided note content. Be concise and clear.',
+  finance: `Bạn là chuyên gia tư vấn tài chính cá nhân thông minh cho ứng dụng Smart Note.
+Nhiệm vụ: Phân tích dữ liệu tài chính thực tế của người dùng và trả lời câu hỏi của họ một cách chính xác, ngắn gọn, thực tế.
+Quy tắc quan trọng:
+- Chỉ tư vấn dựa trên số liệu thực tế đã được cung cấp (số dư tài khoản, thu chi tháng)
+- KHÔNG bịa đặt số liệu hay đưa ra con số không có trong dữ liệu
+- Trả lời bằng tiếng Việt, dùng Markdown và emoji
+- Ngắn gọn, tối đa 200 từ
+- Nếu câu hỏi không liên quan đến tài chính, lịch sự từ chối và nhắc lại vai trò`
 }
 
 async function handleAi(request: Request, env: Env): Promise<Response> {
@@ -2009,7 +2017,11 @@ async function handleAi(request: Request, env: Env): Promise<Response> {
   if (!systemPrompt) return errorResponse(`Unknown action: ${action}`)
 
   let userMessage: string
-  if (action === 'ask') {
+  if (action === 'finance') {
+    // Finance advisor: content already contains the full context + embedded question
+    // Do NOT wrap with "Note content:" — that confuses the model
+    userMessage = content
+  } else if (action === 'ask') {
     userMessage = content
       ? `Note content:\n${content}\n\nQuestion: ${question}`
       : `Question: ${question}`
@@ -2050,7 +2062,11 @@ async function handleAiStream(request: Request, env: Env): Promise<Response> {
   if (!systemPrompt) return errorResponse(`Unknown action: ${action}`)
 
   let userMessage: string
-  if (action === 'ask') {
+  if (action === 'finance') {
+    // Finance advisor: content already contains the full context + embedded question
+    // Do NOT wrap with "Note content:" — that confuses the model about its role
+    userMessage = content
+  } else if (action === 'ask') {
     userMessage = content
       ? `Note content:\n${content}\n\nQuestion: ${question}`
       : `Question: ${question}`

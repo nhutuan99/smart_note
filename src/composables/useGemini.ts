@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { httpClient } from '@/shared/api/httpClient'
 
-type AiAction = 'summarize' | 'continue' | 'improve' | 'tags' | 'ask'
+type AiAction = 'summarize' | 'continue' | 'improve' | 'tags' | 'ask' | 'finance'
 
 interface AiPayload {
   action: AiAction
@@ -106,10 +106,16 @@ export function useAi() {
     return result.split(',').map(t => t.trim().toLowerCase()).filter(Boolean).slice(0, 5)
   }
 
-  const summarize     = (content: string) => runStream({ action: 'summarize', content })
+  const summarize       = (content: string) => runStream({ action: 'summarize', content })
   const continueWriting = (content: string) => runStream({ action: 'continue',  content })
   const improveWriting  = (content: string) => runStream({ action: 'improve',   content })
-  const askAbout = (content: string, question: string) => runStream({ action: 'ask', content, question })
+  const askAbout        = (content: string, question: string) => runStream({ action: 'ask', content, question })
+
+  /**
+   * Finance Advisor — dedicated action that tells the model it's a finance expert,
+   * not a note Q&A bot. `fullPrompt` must embed the finance context + user question.
+   */
+  const askFinance      = (fullPrompt: string) => runStream({ action: 'finance', content: fullPrompt })
 
   return {
     loading,
@@ -119,7 +125,8 @@ export function useAi() {
     continueWriting,
     improveWriting,
     suggestTags,
-    askAbout
+    askAbout,
+    askFinance
   }
 }
 
