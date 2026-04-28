@@ -1,35 +1,40 @@
 /**
  * useFaviconBadge
  *
- * Dynamically overlays a red notification dot on the browser tab favicon.
- * Uses Canvas API to draw base icon + red circle, then sets <link rel="icon">.
- * Restores the original SVG favicon when unreadCount returns to 0.
+ * Facebook-style notification badge on browser tab:
+ * - Favicon: red circle with white count number in top-right of icon
+ * - Document title: "(3) Smart Note" prefix when unread > 0
+ * - Shows "99+" when count exceeds 99
+ * - Caches base favicon PNG after first load (no repeated network calls)
+ * - Restores original favicon + title on unmount or when count = 0
  *
  * Complies with vue-expert.md:
- * - No module-level mutable state (all state is local to each invocation)
- * - SVG source cached as base64 after first load (no repeated network requests)
  * - Strict TypeScript — no `any`
- * - onUnmounted cleanup registered (auto via Vue lifecycle)
- * - Error logged to console, never swallowed silently
+ * - Import order: Vue core → types
+ * - Error handling: try/catch + console.warn (never swallowed)
+ * - onUnmounted cleanup (stop watcher + restore favicon + title)
+ * - Module-level cache is read-only after first write (safe)
  */
 
 // 1. Vue core
 import { watch, onUnmounted } from 'vue'
 import type { Ref } from 'vue'
 
-// ─── Constants ───────────────────────────────────────────────────────────────
+// ─── Constants ────────────────────────────────────────────────────────────────
 
-const FAVICON_SVG_PATH = '/favicon.svg'
-const DOT_COLOR        = '#ef4444' // red-500
-const DOT_RADIUS       = 7         // px, on 32×32 canvas
-const CANVAS_SIZE      = 32        // px
+const FAVICON_SVG_PATH  = '/favicon.svg'
+const CANVAS_SIZE       = 64          // Higher res → crisper text on retina
+const BADGE_COLOR       = '#ef4444'   // red-500
+const BADGE_TEXT_COLOR  = '#ffffff'
+const BADGE_RADIUS      = 13          // px radius of badge circle
+const BASE_TITLE        = 'Smart Note'
 
-// ─── Module-level cache (read-only after first load, safe) ───────────────────
+// ─── Module-level read-only cache ─────────────────────────────────────────────
 
-/** Base64 PNG of the plain favicon (no dot). Populated on first render. */
+/** Base64 PNG of plain favicon (no badge). Set once, never mutated again. */
 let _cachedBasePng: string | null = null
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getFaviconLinkEl(): HTMLLinkElement {
   const existing = document.querySelector<HTMLLinkElement>('link[rel~="icon"]')
@@ -40,126 +45,142 @@ function getFaviconLinkEl(): HTMLLinkElement {
   return el
 }
 
-/** Load SVG → HTMLImageElement, resolves even on error (graceful degradation). */
+/** Load any URL into an HTMLImageElement. Resolves even on network error. */
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve) => {
     const img = new Image()
     img.crossOrigin = 'anonymous'
     img.onload  = () => resolve(img)
-    img.onerror = () => resolve(img) // still use (will be blank)
+    img.onerror = () => resolve(img)
     img.src = src
   })
 }
 
-/** Draw image onto 32×32 canvas, return PNG base64. */
-function drawToCanvas(img: HTMLImageElement, showDot: boolean): string | null {
+/** Format count label: 1–99 as-is, 100+ as "99+". */
+function formatBadgeLabel(count: number): string {
+  return count > 99 ? '99+' : String(count)
+}
+
+/**
+ * Draw base icon + optional count badge onto canvas.
+ * Returns PNG base64 string, or null on canvas init failure.
+ */
+function drawFaviconCanvas(baseImg: HTMLImageElement, count: number): string | null {
   const canvas = document.createElement('canvas')
   canvas.width  = CANVAS_SIZE
   canvas.height = CANVAS_SIZE
   const ctx = canvas.getContext('2d')
   if (!ctx) return null
 
-  ctx.drawImage(img, 0, 0, CANVAS_SIZE, CANVAS_SIZE)
+  // Draw base favicon
+  ctx.drawImage(baseImg, 0, 0, CANVAS_SIZE, CANVAS_SIZE)
 
-  if (showDot) {
-    const x = CANVAS_SIZE - DOT_RADIUS - 1
-    const y = DOT_RADIUS + 1
-
-    // Black ring (separation from icon)
-    ctx.beginPath()
-    ctx.arc(x, y, DOT_RADIUS + 1.5, 0, Math.PI * 2)
-    ctx.fillStyle = '#000000'
-    ctx.fill()
-
-    // Red notification dot
-    ctx.beginPath()
-    ctx.arc(x, y, DOT_RADIUS, 0, Math.PI * 2)
-    ctx.fillStyle = DOT_COLOR
-    ctx.fill()
+  if (count <= 0) {
+    return canvas.toDataURL('image/png')
   }
+
+  // ── Badge positioning — top-right ─────────────────────────────────────────
+  const cx = CANVAS_SIZE - BADGE_RADIUS - 2
+  const cy = BADGE_RADIUS + 2
+
+  // Dark ring for visual separation from icon background
+  ctx.beginPath()
+  ctx.arc(cx, cy, BADGE_RADIUS + 2, 0, Math.PI * 2)
+  ctx.fillStyle = '#1a1a1a'
+  ctx.fill()
+
+  // Red badge circle
+  ctx.beginPath()
+  ctx.arc(cx, cy, BADGE_RADIUS, 0, Math.PI * 2)
+  ctx.fillStyle = BADGE_COLOR
+  ctx.fill()
+
+  // White count text
+  const label    = formatBadgeLabel(count)
+  const fontSize = label.length > 1 ? 18 : 20   // smaller font for 2+ chars
+  ctx.font        = `bold ${fontSize}px -apple-system, sans-serif`
+  ctx.fillStyle   = BADGE_TEXT_COLOR
+  ctx.textAlign   = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillText(label, cx, cy + 1)   // +1 px optical centering
 
   return canvas.toDataURL('image/png')
 }
 
+/** Update document.title with count prefix (Facebook-style). */
+function updateTitle(count: number): void {
+  document.title = count > 0
+    ? `(${formatBadgeLabel(count)}) ${BASE_TITLE}`
+    : BASE_TITLE
+}
+
 /**
- * Render favicon — with or without red dot.
- * Caches the base PNG after the first SVG load to avoid repeated network requests.
+ * Render favicon badge with count number.
+ * Loads base SVG once, then caches as PNG for subsequent renders.
  */
-async function renderFavicon(showDot: boolean): Promise<void> {
+async function renderFavicon(count: number): Promise<void> {
   try {
-    // Ensure base image is loaded (only once per app session)
+    // Load and cache base icon on first call
     if (!_cachedBasePng) {
-      const img   = await loadImage(FAVICON_SVG_PATH)
-      const plain = drawToCanvas(img, false)
+      const svg   = await loadImage(FAVICON_SVG_PATH)
+      const plain = drawFaviconCanvas(svg, 0)
       if (!plain) return
       _cachedBasePng = plain
     }
 
-    if (!showDot) {
-      // Restore plain cached favicon — no canvas needed
-      getFaviconLinkEl().href = _cachedBasePng
-      return
-    }
-
-    // For dot: re-draw from cached base (avoids another network request)
-    const imgWithDot = new Image()
-    await new Promise<void>((resolve) => {
-      imgWithDot.onload  = () => resolve()
-      imgWithDot.onerror = () => resolve()
-      imgWithDot.src = _cachedBasePng as string
-    })
-
-    const withDot = drawToCanvas(imgWithDot, true)
-    if (withDot) {
-      getFaviconLinkEl().href = withDot
+    // Re-draw from cached base (skip network)
+    const baseImg = await loadImage(_cachedBasePng)
+    const png     = drawFaviconCanvas(baseImg, count)
+    if (png) {
+      getFaviconLinkEl().href = png
     }
   } catch (err) {
-    // Non-critical — log but do not surface to user
     console.warn('[useFaviconBadge] Failed to render favicon badge:', err)
   }
 }
 
-/** Reset to the original SVG href (clears canvas override). */
-function resetToSvg(): void {
+/** Restore original SVG favicon and plain title. */
+function resetAll(): void {
   getFaviconLinkEl().href = FAVICON_SVG_PATH
+  document.title = BASE_TITLE
 }
 
 // ─── Public composable ────────────────────────────────────────────────────────
 
 /**
- * Watch `unreadCount` and toggle a red dot on the browser tab favicon.
+ * Facebook-style notification badge on the browser tab.
  *
- * Must be called inside `<script setup>` or a composable with an active
- * Vue component instance (required for `onUnmounted` lifecycle hook).
+ * - Favicon shows red circle with count number (e.g. "3", "99+")
+ * - Document title becomes "(3) Smart Note"
+ * - Automatically cleans up on component unmount
+ *
+ * Must be called inside `<script setup>` or an active Vue component instance.
  *
  * @example
  * ```ts
- * // In AppLayout.vue <script setup>
+ * // AppLayout.vue <script setup>
  * useFaviconBadge(computed(() => notificationStore.unreadCount))
  * ```
  */
 export function useFaviconBadge(unreadCount: Ref<number>): void {
-  // Track previous dot-visibility state to avoid redundant re-renders
-  let prevHasDot: boolean | null = null
+  let prevCount = -1
 
   const stopWatch = watch(
     unreadCount,
     (count: number) => {
-      const hasDot = count > 0
+      // Skip if count is identical to last render
+      if (count === prevCount) return
+      prevCount = count
 
-      // Skip re-render if dot visibility hasn't changed
-      if (hasDot === prevHasDot) return
-      prevHasDot = hasDot
-
-      renderFavicon(hasDot)
+      updateTitle(count)
+      renderFavicon(count)
     },
     { immediate: true }
   )
 
-  // Cleanup: stop watcher + restore plain SVG favicon when component unmounts
   onUnmounted(() => {
     stopWatch()
-    resetToSvg()
-    prevHasDot = null
+    resetAll()
+    prevCount = -1
   })
 }
