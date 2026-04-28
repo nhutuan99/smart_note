@@ -102,17 +102,19 @@ if (isMobileOrTablet.value) {
 
   /* The fixed header needs top offset for the notch/dynamic island */
   .pwa-header-safe {
-    padding-top: env(safe-area-inset-top) !important;
+    /* Use max() to ensure at least 24px padding for older iPhones without notches */
+    padding-top: max(env(safe-area-inset-top), 24px) !important;
+    height: calc(3.5rem + max(env(safe-area-inset-top), 24px)) !important;
   }
 
   /* Main content area needs to account for the taller header */
   .pwa-main-safe {
-    top: calc(3.5rem + env(safe-area-inset-top)) !important;
+    top: calc(3.5rem + max(env(safe-area-inset-top), 24px)) !important;
   }
 
   /* Bottom elements (scroll-to-top, toast) need bottom safe area */
   .pwa-bottom-safe {
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-bottom: max(env(safe-area-inset-bottom), 16px);
   }
 }
 
@@ -127,27 +129,24 @@ if (isMobileOrTablet.value) {
 }
 
 /* ── Apple Liquid Glass Effect (iOS 26+) ─────────────────────────────────────── */
-/* Enhanced glassmorphism for devices supporting advanced backdrop-filter */
+/* Ultra-premium glassmorphism mimicking iOS 26+ native rendering */
 @supports ((-webkit-backdrop-filter: saturate(180%) blur(20px)) or (backdrop-filter: saturate(180%) blur(20px))) {
   @media (display-mode: standalone) {
     .liquid-glass {
-      background: rgba(18, 18, 28, 0.55) !important;
-      -webkit-backdrop-filter: saturate(180%) blur(24px) brightness(1.1) !important;
-      backdrop-filter: saturate(180%) blur(24px) brightness(1.1) !important;
-      border-bottom: 1px solid rgba(124, 111, 247, 0.12) !important;
-      box-shadow:
-        0 1px 0 0 rgba(255, 255, 255, 0.04) inset,
-        0 4px 16px rgba(0, 0, 0, 0.25) !important;
+      /* Deep transparency, high blur, subtle white inner border and shadow */
+      background: rgba(15, 15, 25, 0.4) !important;
+      -webkit-backdrop-filter: saturate(200%) blur(40px) brightness(1.05) !important;
+      backdrop-filter: saturate(200%) blur(40px) brightness(1.05) !important;
+      border-bottom: 0.5px solid rgba(255, 255, 255, 0.15) !important;
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
     }
 
     .liquid-glass-card {
-      background: rgba(22, 22, 35, 0.6) !important;
-      -webkit-backdrop-filter: saturate(150%) blur(16px) !important;
-      backdrop-filter: saturate(150%) blur(16px) !important;
-      border: 1px solid rgba(124, 111, 247, 0.08) !important;
-      box-shadow:
-        0 1px 0 0 rgba(255, 255, 255, 0.03) inset,
-        0 2px 8px rgba(0, 0, 0, 0.2) !important;
+      background: rgba(25, 25, 38, 0.45) !important;
+      -webkit-backdrop-filter: saturate(180%) blur(24px) !important;
+      backdrop-filter: saturate(180%) blur(24px) !important;
+      border: 0.5px solid rgba(255, 255, 255, 0.1) !important;
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
     }
   }
 }
