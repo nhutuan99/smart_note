@@ -57,7 +57,7 @@ if (isMobileOrTablet.value) {
 
 <template>
   <div
-    id="smart-note-app"
+    id="finnote-app"
     :class="[`device--${deviceType}`]"
   >
     <!--
@@ -84,7 +84,7 @@ if (isMobileOrTablet.value) {
 </template>
 
 <style>
-#smart-note-app {
+#finnote-app {
   min-height: 100vh;
 }
 

@@ -1,6 +1,6 @@
 
 /**
- * Smart Note - Cloudflare Worker API (KV Storage)
+ * FinNote - Cloudflare Worker API (KV Storage)
  *
  * Includes: Auth, Notes CRUD, Finance CRUD, Telegram Webhook (OpenClaw)
  *
@@ -1993,7 +1993,7 @@ const AI_SYSTEM_PROMPTS: Record<string, string> = {
   improve: 'You are an editor. Improve the grammar and style of the user text. Keep the original meaning and language. Return ONLY the improved text.',
   tags: 'You are a tagging assistant. Suggest 3-5 relevant tags for the content. Return ONLY a comma-separated list of lowercase tags, nothing else.',
   ask: 'You are a helpful assistant. Answer the user question based on the provided note content. Be concise and clear.',
-  finance: `Bạn là chuyên gia tư vấn tài chính cá nhân thông minh cho ứng dụng Smart Note.
+  finance: `Bạn là chuyên gia tư vấn tài chính cá nhân thông minh cho ứng dụng FinNote.
 Nhiệm vụ: Phân tích dữ liệu tài chính thực tế của người dùng và trả lời câu hỏi của họ một cách chính xác, ngắn gọn, thực tế.
 Quy tắc quan trọng:
 - Chỉ tư vấn dựa trên số liệu thực tế đã được cung cấp (số dư tài khoản, thu chi tháng)
@@ -2180,7 +2180,7 @@ async function handleReportBug(userId: string, request: Request, env: Env): Prom
     </div>
     ${report.image === '__has_image__' ? '<div style="margin-top:20px;padding:12px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;color:#d97706;font-size:13px;display:inline-block">📎 Có ảnh đính kèm — vui lòng xem trong Admin Dashboard</div>' : ''}
     <div style="margin-top:32px;padding-top:20px;border-top:1px solid #eee;text-align:center">
-      <p style="margin:0;color:#94a3b8;font-size:12px">Smart Note Feedback System</p>
+      <p style="margin:0;color:#94a3b8;font-size:12px">FinNote Feedback System</p>
       <p style="margin:4px 0 0;color:#cbd5e1;font-size:11px;font-family:monospace">ID: ${report.id}</p>
     </div>
   </div>
@@ -2193,7 +2193,7 @@ async function handleReportBug(userId: string, request: Request, env: Env): Prom
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          from: 'Smart Note <onboarding@resend.dev>',
+          from: 'FinNote <onboarding@resend.dev>',
           to: ['tintphcm@gmail.com'],
           subject: `[${isFeature ? 'Feature' : 'Bug'}] ${title}`,
           html: emailHtml

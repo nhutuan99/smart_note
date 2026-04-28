@@ -60,7 +60,7 @@ function exportNotes() {
   )
   const a = document.createElement('a')
   a.href = URL.createObjectURL(blob)
-  a.download = `smart-note-export-${new Date().toISOString().split('T')[0]}.json`
+  a.download = `finnote-export-${new Date().toISOString().split('T')[0]}.json`
   a.click()
   URL.revokeObjectURL(a.href)
   ui.showToast('success', t('settings.exportSuccess'))
