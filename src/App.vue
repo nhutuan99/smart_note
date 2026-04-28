@@ -86,6 +86,11 @@ if (isMobileOrTablet.value) {
 <style>
 #finnote-app {
   min-height: 100vh;
+  /* iOS PWA safe area — prevent content from being hidden behind notch/home indicator */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 /* ── Prevent text-selection zoom on touch devices ───────────────────────────── */
