@@ -66,7 +66,7 @@ function navigateWallet(walletId: string) {
   ></div>
 
   <aside
-    class="liquid-glass-sidebar pwa-sidebar-safe bg-bg-surface border-border-default fixed top-[3.5rem] bottom-0 z-40 flex -translate-x-full flex-col overflow-hidden border-r transition-all duration-300 md:translate-x-0"
+    class="pwa-sidebar-safe bg-bg-surface border-border-default fixed top-[3.5rem] bottom-0 z-40 flex -translate-x-full flex-col overflow-hidden border-r transition-all duration-300 md:translate-x-0"
     :class="[
       ui.sidebarOpen ? 'w-[16.25rem] translate-x-0' : 'w-[3.75rem] md:w-[3.75rem]',
       ui.sidebarOpen ? '' : '-translate-x-full md:translate-x-0'

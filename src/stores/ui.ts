@@ -16,7 +16,7 @@ export interface ConfirmOptions {
 }
 
 export const useUiStore = defineStore('ui', () => {
-  const sidebarOpen = ref(true)
+  const sidebarOpen = ref(window.innerWidth >= 768)
   const searchOpen = ref(false)
   const showBugReport = ref(false)
   const toasts = ref<Toast[]>([])

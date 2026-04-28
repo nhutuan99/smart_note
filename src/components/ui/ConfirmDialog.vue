@@ -24,7 +24,7 @@ function handleCancel() {
       @click.self="handleCancel"
     >
       <div 
-        class="liquid-glass-modal pwa-modal-safe bg-bg-elevated border-border-default w-full max-w-sm rounded-[1.25rem] border p-6 shadow-2xl relative animate-in zoom-in-95 duration-200"
+        class="pwa-modal-safe bg-bg-elevated border-border-default w-full max-w-sm rounded-[1.25rem] border p-6 shadow-2xl relative animate-in zoom-in-95 duration-200"
       >
         <button
           @click="handleCancel"

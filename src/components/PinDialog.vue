@@ -99,7 +99,7 @@ async function verifyPin() {
         ></div>
 
         <!-- Dialog -->
-        <div class="liquid-glass-modal pwa-modal-safe bg-bg-surface border-border-default relative w-full max-w-[20rem] rounded-2xl border p-6 shadow-lg">
+        <div class="pwa-modal-safe bg-bg-surface border-border-default relative w-full max-w-[20rem] rounded-2xl border p-6 shadow-lg">
           <!-- Close -->
           <button
             @click="emit('cancelled')"

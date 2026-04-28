@@ -286,9 +286,9 @@ watch(
 </script>
 
 <template>
-  <div class="bg-bg-base text-text-primary relative flex min-h-screen items-center justify-center p-4">
+  <div class="bg-bg-base text-text-primary relative flex min-h-screen min-h-[100dvh] items-center justify-center p-4 pt-[max(env(safe-area-inset-top,0px),1rem)]">
     <!-- Language Switcher -->
-    <div class="absolute right-6 top-6 flex items-center gap-2 z-10">
+    <div class="absolute right-6 z-10" style="top: max(env(safe-area-inset-top, 0px), 1.5rem)">
       <button 
         @click="setLocale('vi')"
         :class="['text-sm font-semibold transition-colors', locale === 'vi' ? 'text-accent' : 'text-text-tertiary hover:text-text-primary']"

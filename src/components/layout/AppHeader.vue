@@ -53,7 +53,7 @@ function handleLogout() {
 
 <template>
   <header
-    class="pwa-header-safe liquid-glass border-border-default fixed top-0 right-0 left-0 z-50 flex h-[3.5rem] items-center justify-between border-b bg-bg-surface/85 px-4 backdrop-blur-xl transition-colors duration-300"
+    class="pwa-header-safe border-border-default fixed top-0 right-0 left-0 z-50 flex h-[3.5rem] items-center justify-between border-b bg-bg-surface/85 px-4 backdrop-blur-xl transition-colors duration-300"
   >
     <!-- Left -->
     <div class="flex items-center gap-3">
@@ -119,7 +119,6 @@ function handleLogout() {
           <div
             v-if="bellOpen"
             class="
-              liquid-glass-dropdown
               fixed left-1/2 top-[4.25rem] z-50 w-[calc(100vw-2rem)] -translate-x-1/2
               sm:absolute sm:left-auto sm:top-full sm:translate-x-0 sm:-right-2 sm:w-[22rem] sm:mt-3
               bg-bg-surface border-border-default overflow-hidden rounded-xl border shadow-xl
