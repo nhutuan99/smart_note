@@ -326,23 +326,23 @@ async function handleTogglePin(id: string, e: Event) {
 .orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.18;
+  filter: blur(90px);
+  opacity: 0.28;
   animation: orbDrift ease-in-out infinite;
 }
 .orb-1 {
-  width: 28rem;
-  height: 28rem;
-  background: radial-gradient(circle, #7c6ff7 0%, transparent 70%);
-  top: -6rem;
-  left: -4rem;
+  width: 36rem;
+  height: 36rem;
+  background: radial-gradient(circle, #7c6ff7 0%, transparent 65%);
+  top: -8rem;
+  left: -6rem;
   animation-duration: 18s;
   animation-delay: 0s;
 }
 .orb-2 {
   width: 22rem;
   height: 22rem;
-  background: radial-gradient(circle, #3b82f6 0%, transparent 70%);
+  background: radial-gradient(circle, #a78bfa 0%, transparent 70%);
   bottom: 10rem;
   right: -5rem;
   animation-duration: 22s;
@@ -351,7 +351,7 @@ async function handleTogglePin(id: string, e: Event) {
 .orb-3 {
   width: 18rem;
   height: 18rem;
-  background: radial-gradient(circle, #8b5cf6 0%, transparent 70%);
+  background: radial-gradient(circle, #6d60f0 0%, transparent 70%);
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);

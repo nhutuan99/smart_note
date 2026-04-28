@@ -242,7 +242,7 @@ const trafficBg = computed(() => {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse 60% 40% at 10% 20%, rgba(16,185,129,.08) 0%, transparent 70%);
+  background: radial-gradient(ellipse 60% 40% at 10% 20%, rgba(124,111,247,.07) 0%, transparent 70%);
   pointer-events: none;
 }
 .widget-card:hover { border-color: var(--border-strong); }

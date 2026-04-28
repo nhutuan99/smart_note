@@ -302,12 +302,18 @@ watch(
       ></div>
     </div>
 
+    <!-- Ambient violet orbs (background glow) -->
+    <div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+      <div class="login-orb login-orb-1"></div>
+      <div class="login-orb login-orb-2"></div>
+    </div>
+
     <div class="relative z-10 w-full max-w-[25rem] px-6">
       <!-- Logo -->
       <div class="mb-8 text-center">
         <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center">
           <!-- Smart Note Brand Logo -->
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" class="h-full w-full drop-shadow-[0_0_12px_rgba(16,185,129,0.4)]">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" class="h-full w-full drop-shadow-[0_0_12px_rgba(124,111,247,0.5)]">
             <defs>
               <linearGradient id="login-bg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
                 <stop offset="0%" stop-color="#0d1117"/>
@@ -668,5 +674,27 @@ watch(
 .slide-leave-to {
   opacity: 0;
   transform: translateY(-0.75rem);
+}
+
+/* ── Ambient orbs ── */
+.login-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.30;
+}
+.login-orb-1 {
+  width: 32rem;
+  height: 32rem;
+  background: radial-gradient(circle, #7c6ff7 0%, transparent 65%);
+  top: -10rem;
+  left: -10rem;
+}
+.login-orb-2 {
+  width: 26rem;
+  height: 26rem;
+  background: radial-gradient(circle, #a78bfa 0%, transparent 65%);
+  bottom: -8rem;
+  right: -8rem;
 }
 </style>

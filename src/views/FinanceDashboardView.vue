@@ -450,7 +450,7 @@ function renderAiMarkdown(text: string): string {
         <!-- Decorative subtle glow -->
         <div class="absolute -right-8 -top-8 w-32 h-32 bg-accent/20 rounded-full blur-3xl pointer-events-none"></div>
         <div class="mb-3 flex items-center gap-2 relative z-10">
-          <div class="flex h-9 w-9 items-center justify-center rounded-lg" style="background: rgba(20, 184, 166, 0.12);">
+          <div class="flex h-9 w-9 items-center justify-center rounded-lg" style="background: rgba(124, 111, 247, 0.12);">
             <Wallet
               :size="18"
               class="text-accent"
