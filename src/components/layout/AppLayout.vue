@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import AppHeader from './AppHeader.vue'
 import AppSidebar from './AppSidebar.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
@@ -13,6 +13,7 @@ import { useNotesStore } from '@/stores/notes'
 import { useFinanceStore } from '@/stores/finance'
 import { useAuthStore } from '@/stores/auth'
 import { useEventListener } from '@/composables/useEventListener'
+import { useFaviconBadge } from '@/composables/useFaviconBadge'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 
@@ -23,6 +24,9 @@ const financeStore = useFinanceStore()
 const auth = useAuthStore()
 const router = useRouter()
 const { t } = useI18n()
+
+// 🔴 Browser tab red dot when there are unread notifications
+useFaviconBadge(computed(() => notificationStore.unreadCount))
 
 const showScrollTop = ref(false)
 const mainRef = ref<HTMLElement | null>(null)
