@@ -77,17 +77,17 @@ function handleLogout() {
                 <stop offset="100%" stop-color="#111827"/>
               </linearGradient>
               <linearGradient id="hdr-glow" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stop-color="#10b981"/>
-                <stop offset="100%" stop-color="#06d6a0"/>
+                <stop offset="0%" stop-color="#7c6ff7"/>
+                <stop offset="100%" stop-color="#a78bfa"/>
               </linearGradient>
             </defs>
             <rect width="64" height="64" rx="14" fill="url(#hdr-bg)"/>
-            <rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#10b981" stroke-opacity="0.25" stroke-width="1"/>
+            <rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#7c6ff7" stroke-opacity="0.25" stroke-width="1"/>
             <path d="M 16 22 C 16 18 19 15 24 15 L 34 15 C 38 15 41 17.5 41 21.5 C 41 24.5 39 26.5 36 27.5 L 24 31 C 20 32.2 18 34.5 18 38 C 18 42.5 21.5 45 26 45 L 36 45 C 40.5 45 44 42.5 44 38.5"
               stroke="url(#hdr-glow)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-            <path d="M 44 10 L 39 22 L 44 22 L 38 34" stroke="#06d6a0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.85"/>
-            <circle cx="47" cy="49" r="3.5" fill="#10b981" opacity="0.9"/>
-            <circle cx="47" cy="49" r="1.8" fill="#06d6a0"/>
+            <path d="M 44 10 L 39 22 L 44 22 L 38 34" stroke="#a78bfa" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.85"/>
+            <circle cx="47" cy="49" r="3.5" fill="#7c6ff7" opacity="0.9"/>
+            <circle cx="47" cy="49" r="1.8" fill="#a78bfa"/>
           </svg>
         </div>
         <span class="hidden md:inline group-hover:text-accent transition-colors duration-150">Smart Note</span>
@@ -226,7 +226,7 @@ function handleLogout() {
                     v-else
                     class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl shadow-sm"
                     :class="n.type === 'bank_in'
-                      ? 'bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 ring-1 ring-emerald-500/20'
+                      ? 'bg-gradient-to-br from-violet-500/20 to-violet-500/5 ring-1 ring-violet-500/20'
                       : n.type === 'bank_out'
                         ? 'bg-gradient-to-br from-red-500/20 to-red-500/5 ring-1 ring-red-500/20'
                         : 'bg-gradient-to-br from-blue-500/20 to-blue-500/5 ring-1 ring-blue-500/20'"

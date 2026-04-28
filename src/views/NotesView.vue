@@ -333,7 +333,7 @@ async function handleTogglePin(id: string, e: Event) {
 .orb-1 {
   width: 28rem;
   height: 28rem;
-  background: radial-gradient(circle, #10b981 0%, transparent 70%);
+  background: radial-gradient(circle, #7c6ff7 0%, transparent 70%);
   top: -6rem;
   left: -4rem;
   animation-duration: 18s;

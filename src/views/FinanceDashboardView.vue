@@ -122,21 +122,21 @@ const weeklyChartData = computed(() => ({
     {
       label: t('dashboard.income'),
       data: finance.weeklyStats.map(d => d.income),
-      borderColor: '#10b981',
+      borderColor: '#7c6ff7',
       backgroundColor: (ctx: any) => {
         const chart = ctx.chart
         const { ctx: c, chartArea } = chart
         if (!chartArea) return 'rgba(16, 185, 129, 0.1)'
         const gradient = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom)
-        gradient.addColorStop(0, 'rgba(16, 185, 129, 0.25)')
-        gradient.addColorStop(0.6, 'rgba(16, 185, 129, 0.05)')
-        gradient.addColorStop(1, 'rgba(16, 185, 129, 0)')
+        gradient.addColorStop(0, 'rgba(124, 111, 247, 0.25)')
+        gradient.addColorStop(0.6, 'rgba(124, 111, 247, 0.05)')
+        gradient.addColorStop(1, 'rgba(124, 111, 247, 0)')
         return gradient
       },
       borderWidth: 2,
       pointRadius: 0,
       pointHoverRadius: 5,
-      pointHoverBackgroundColor: '#10b981',
+      pointHoverBackgroundColor: '#7c6ff7',
       pointHoverBorderColor: '#ffffff',
       pointHoverBorderWidth: 2,
       tension: 0.4,
@@ -729,9 +729,9 @@ function renderAiMarkdown(text: string): string {
         <!-- Live values row -->
         <div class="mb-3 flex items-center gap-4">
           <div class="flex items-center gap-1.5">
-            <span class="h-[3px] w-3 rounded-full bg-emerald-500"></span>
+            <span class="h-[3px] w-3 rounded-full bg-violet-400"></span>
             <span class="text-text-tertiary text-[0.6875rem]">{{ t('dashboard.income') }}</span>
-            <span class="text-emerald-400 text-[0.8125rem] font-bold tabular-nums">
+            <span class="text-violet-400 text-[0.8125rem] font-bold tabular-nums">
               {{ hoverIncome ?? formatMoneyShort(finance.monthIncome) }}
             </span>
           </div>
