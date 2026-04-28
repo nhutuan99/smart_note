@@ -25,8 +25,7 @@ import type { Ref } from 'vue'
 const FAVICON_SRC       = '/images/logo-512.png'
 const CANVAS_SIZE       = 64          // Higher res → crisper text on retina
 const BADGE_COLOR       = '#ef4444'   // red-500
-const BADGE_TEXT_COLOR  = '#ffffff'
-const BADGE_RADIUS      = 13          // px radius of badge circle
+const BADGE_RADIUS      = 10          // px radius of dot badge
 const BASE_TITLE        = 'FinNote'
 
 // ─── Module-level read-only cache ─────────────────────────────────────────────
@@ -85,7 +84,7 @@ function drawFaviconCanvas(baseImg: HTMLImageElement, count: number): string | n
 
   // Dark ring for visual separation from icon background
   ctx.beginPath()
-  ctx.arc(cx, cy, BADGE_RADIUS + 2, 0, Math.PI * 2)
+  ctx.arc(cx, cy, BADGE_RADIUS + 3, 0, Math.PI * 2)
   ctx.fillStyle = '#1a1a1a'
   ctx.fill()
 
@@ -94,15 +93,6 @@ function drawFaviconCanvas(baseImg: HTMLImageElement, count: number): string | n
   ctx.arc(cx, cy, BADGE_RADIUS, 0, Math.PI * 2)
   ctx.fillStyle = BADGE_COLOR
   ctx.fill()
-
-  // White count text
-  const label    = formatBadgeLabel(count)
-  const fontSize = label.length > 1 ? 18 : 20   // smaller font for 2+ chars
-  ctx.font        = `bold ${fontSize}px -apple-system, sans-serif`
-  ctx.fillStyle   = BADGE_TEXT_COLOR
-  ctx.textAlign   = 'center'
-  ctx.textBaseline = 'middle'
-  ctx.fillText(label, cx, cy + 1)   // +1 px optical centering
 
   return canvas.toDataURL('image/png')
 }
