@@ -17,7 +17,7 @@ export default {
     preview: 'Xem trước',
     copyLink: 'Copy Link',
     export: 'Xuất dữ liệu',
-    version: 'Smart Note v1.0.0',
+    version: 'FinNote v1.0.0',
     copy: 'Copy',
     copied: 'Đã copy!',
     login: 'Đăng nhập',
@@ -332,12 +332,12 @@ export default {
   // ── AutoSync ──
   autoSync: {
     title: 'Đồng bộ tự động (iOS)',
-    desc: 'Tự động ghi nhận giao dịch ngân hàng từ SMS vào Smart Note thông qua iOS Shortcuts — an toàn, miễn phí, không cần đăng nhập ngân hàng.',
+    desc: 'Tự động ghi nhận giao dịch ngân hàng từ SMS vào FinNote thông qua iOS Shortcuts — an toàn, miễn phí, không cần đăng nhập ngân hàng.',
     whyTitle: 'Tại sao nên dùng SMS Shortcuts?',
     security: '<strong>Bảo mật 100%:</strong> Không cần cung cấp mật khẩu đăng nhập ngân hàng.',
     native: '<strong>Apple Native:</strong> Sử dụng Phím tắt (Shortcuts) mặc định của iPhone.',
     free: '<strong>Miễn phí:</strong> Không cần qua trung gian bên thứ 3 nào.',
-    instant: '<strong>Tức thì:</strong> SMS biến động số dư → tự động ghi vào Smart Note (~30 giây).',
+    instant: '<strong>Tức thì:</strong> SMS biến động số dư → tự động ghi vào FinNote (~30 giây).',
     step1Title: '1. Đường dẫn Webhook của bạn',
     step1Desc: 'Đường dẫn này chứa mã định danh duy nhất của bạn. Tuyệt đối không chia sẻ cho người khác.',
     step2Title: '2. Hướng dẫn thiết lập trên iPhone',
@@ -463,7 +463,7 @@ export default {
   // ── Guide ──
   guide: {
     syncTitle: 'Bạn có biết?',
-    syncMessage: 'Smart Note hỗ trợ đồng bộ giao dịch ngân hàng tự động qua iOS Shortcuts mà không cần đăng nhập tài khoản ngân hàng.',
+    syncMessage: 'FinNote hỗ trợ đồng bộ giao dịch ngân hàng tự động qua iOS Shortcuts mà không cần đăng nhập tài khoản ngân hàng.',
     syncAction: 'Tìm hiểu ngay'
   }
 }

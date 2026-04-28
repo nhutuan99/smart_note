@@ -17,7 +17,7 @@ export default {
     preview: 'Preview',
     copyLink: 'Copy Link',
     export: 'Export',
-    version: 'Smart Note v1.0.0',
+    version: 'FinNote v1.0.0',
     copy: 'Copy',
     copied: 'Copied!',
     login: 'Login',
@@ -332,12 +332,12 @@ export default {
   // ── AutoSync ──
   autoSync: {
     title: 'Auto Sync (iOS)',
-    desc: 'Automatically record bank transactions from SMS into Smart Note via iOS Shortcuts — secure, free, no bank login needed.',
+    desc: 'Automatically record bank transactions from SMS into FinNote via iOS Shortcuts — secure, free, no bank login needed.',
     whyTitle: 'Why use SMS Shortcuts?',
     security: '<strong>100% Secure:</strong> No bank login credentials required.',
     native: '<strong>Apple Native:</strong> Uses the built-in Shortcuts app on iPhone.',
     free: '<strong>Free:</strong> No third-party intermediaries needed.',
-    instant: '<strong>Instant:</strong> SMS balance notifications → auto-recorded in Smart Note (~30 seconds).',
+    instant: '<strong>Instant:</strong> SMS balance notifications → auto-recorded in FinNote (~30 seconds).',
     step1Title: '1. Your Webhook URL',
     step1Desc: 'This URL contains your unique identifier. Do not share it with anyone.',
     step2Title: '2. Setup Guide for iPhone',
@@ -463,7 +463,7 @@ export default {
   // ── Guide ──
   guide: {
     syncTitle: 'Did you know?',
-    syncMessage: 'Smart Note supports automatic bank transaction sync via iOS Shortcuts without requiring bank credentials.',
+    syncMessage: 'FinNote supports automatic bank transaction sync via iOS Shortcuts without requiring bank credentials.',
     syncAction: 'Learn More'
   }
 }
