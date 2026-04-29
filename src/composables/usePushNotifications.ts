@@ -7,10 +7,11 @@
  * 3. Service worker must handle 'push' and 'notificationclick' events
  */
 
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { httpClient } from '@/shared/api/httpClient'
 import { useUiStore } from '@/stores/ui'
 import { useI18n } from 'vue-i18n'
+import { useEventListener } from './useEventListener'
 
 // Public VAPID key — must match the one on the backend
 const VAPID_PUBLIC_KEY =
@@ -154,14 +155,11 @@ export function usePushNotifications() {
     }
   }
 
+  useEventListener(document, 'visibilitychange', handleVisibilityChange)
+
   onMounted(() => {
     checkSupport()
     checkState()
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-  })
-
-  onUnmounted(() => {
-    document.removeEventListener('visibilitychange', handleVisibilityChange)
   })
 
   return {
