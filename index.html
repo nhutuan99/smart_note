@@ -79,6 +79,13 @@
   </head>
   <body>
     <!-- PWA Splash Screen (outside #app so Vue doesn't destroy it on mount) -->
+    <!-- Theme detection: apply before splash renders to avoid flash -->
+    <script>
+      (function() {
+        var theme = localStorage.getItem('sn_theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', theme);
+      })();
+    </script>
     <div id="pwa-splash">
       <!-- Animated background glow -->
       <div class="splash-glow"></div>
@@ -97,10 +104,27 @@
     </div>
 
     <style>
+      /* ── Splash Dark (default) ── */
+      #pwa-splash {
+        --splash-bg: #000;
+        --splash-title-color: #fff;
+        --splash-subtitle-color: #525252;
+        --splash-progress-bg: #1a1a1a;
+        --splash-glow-opacity: 0.2;
+      }
+      /* ── Splash Light ── */
+      [data-theme='light'] #pwa-splash {
+        --splash-bg: #f8fafc;
+        --splash-title-color: #0f172a;
+        --splash-subtitle-color: #64748b;
+        --splash-progress-bg: #e2e8f0;
+        --splash-glow-opacity: 0.12;
+      }
+
       #pwa-splash {
         position: fixed; inset: 0; z-index: 99999;
         display: flex; flex-direction: column; align-items: center; justify-content: center;
-        background: #000;
+        background: var(--splash-bg);
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         padding-top: env(safe-area-inset-top, 0px);
         transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
@@ -112,7 +136,7 @@
       .splash-glow {
         position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%);
         width: 280px; height: 280px;
-        background: radial-gradient(circle, rgba(124,111,247,0.2) 0%, rgba(124,111,247,0.05) 40%, transparent 70%);
+        background: radial-gradient(circle, rgba(124,111,247,var(--splash-glow-opacity)) 0%, rgba(124,111,247,0.05) 40%, transparent 70%);
         border-radius: 50%;
         animation: splash-glow-pulse 3s ease-in-out infinite;
       }
@@ -135,16 +159,16 @@
         animation: splash-shimmer-spin 2.5s linear infinite;
       }
       .splash-title {
-        font-size: 26px; font-weight: 800; color: #fff;
+        font-size: 26px; font-weight: 800; color: var(--splash-title-color);
         letter-spacing: -0.5px; margin-bottom: 6px;
         position: relative; z-index: 1;
       }
       .splash-subtitle {
-        font-size: 13px; color: #525252; letter-spacing: 0.5px;
+        font-size: 13px; color: var(--splash-subtitle-color); letter-spacing: 0.5px;
         margin-bottom: 40px; position: relative; z-index: 1;
       }
       .splash-progress {
-        width: 120px; height: 3px; background: #1a1a1a;
+        width: 120px; height: 3px; background: var(--splash-progress-bg);
         border-radius: 3px; overflow: hidden; position: relative; z-index: 1;
       }
       .splash-progress-bar {

@@ -9,8 +9,9 @@ import { httpClient } from '@/shared/api/httpClient'
 import { useI18n } from 'vue-i18n'
 import { setLocale, currentLocale } from '@/i18n'
 import type { User } from '@/types'
-import { User as UserIcon, Database, Download, LogOut, HardDrive, FileText, Shield, Lock, Eye, EyeOff, AlertTriangle, Trash2, Camera, Save, Link, Globe, KeyRound, DollarSign, Bug, ChevronDown, Check, ImageIcon } from 'lucide-vue-next'
+import { User as UserIcon, Database, Download, LogOut, HardDrive, FileText, Shield, Lock, Eye, EyeOff, AlertTriangle, Trash2, Camera, Save, Link, Globe, KeyRound, DollarSign, Bug, ChevronDown, Check, ImageIcon, Bell } from 'lucide-vue-next'
 import { useCurrency, type CurrencyCode } from '@/composables/useCurrency'
+import { usePushNotifications } from '@/composables/usePushNotifications'
 
 const { t } = useI18n()
 const auth = useAuthStore()
@@ -34,6 +35,7 @@ function changeLocale(locale: 'vi' | 'en') {
 
 // ── Currency ──
 const { currency, rateDisplay, rateLoading, rateError, setCurrency, fetchExchangeRate } = useCurrency()
+const { isSupported: pushSupported, isSubscribed: pushSubscribed, isStandalone: pushStandalone, permissionState: pushPermission, loading: pushLoading, toggle: togglePush } = usePushNotifications()
 
 function changeCurrency(code: CurrencyCode) {
   setCurrency(code)
@@ -713,6 +715,48 @@ function cancelForgotPin() {
             </div>
           </Transition>
         </Teleport>
+      </div>
+    </div>
+
+    <!-- Push Notifications -->
+    <div class="mb-6">
+      <div class="text-text-secondary mb-3 flex items-center gap-2">
+        <Bell :size="18" />
+        <h3 class="text-sm font-semibold">{{ t('settings.pushNotifications') }}</h3>
+      </div>
+      <div class="bg-bg-surface border-border-default rounded-xl border p-5">
+        <div class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+          <div>
+            <h4 class="mb-0.5 text-sm font-semibold">{{ t('settings.pushNotifications') }}</h4>
+            <p class="text-text-tertiary text-sm">
+              <template v-if="!pushSupported">{{ t('settings.pushNotSupported') }}</template>
+              <template v-else-if="pushPermission === 'denied'">{{ t('settings.pushDenied') }}</template>
+              <template v-else-if="pushSubscribed">{{ t('settings.pushEnabled') }}</template>
+              <template v-else>{{ t('settings.pushDisabled') }}</template>
+            </p>
+            <!-- iOS standalone hint -->
+            <p v-if="pushSupported && !pushStandalone" class="text-warning mt-1.5 text-xs">
+              📱 {{ t('settings.pushInstallHint') }}
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span
+              v-if="pushSubscribed"
+              class="bg-success/10 text-success rounded-full px-2.5 py-0.5 text-[0.6875rem] font-medium"
+            >
+              🔔 ON
+            </span>
+            <button
+              @click="togglePush"
+              :disabled="pushLoading || !pushSupported || pushPermission === 'denied'"
+              class="border-border-default text-text-secondary hover:bg-bg-hover hover:text-text-primary flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <span v-if="pushLoading" class="h-4 w-4 animate-spin rounded-full border-2 border-text-disabled border-l-accent"></span>
+              <Bell v-else :size="16" />
+              {{ pushSubscribed ? t('settings.pushDisable') : t('settings.pushEnable') }}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 

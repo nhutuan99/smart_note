@@ -301,7 +301,17 @@ export default {
     accountDeleted: 'Tài khoản đã được xóa vĩnh viễn',
     wrongPassword: 'Mật khẩu không chính xác',
     pinResetFailed: 'Đặt lại PIN thất bại',
-    fallbackRate: 'đang dùng tỷ giá dự phòng'
+    fallbackRate: 'đang dùng tỷ giá dự phòng',
+    // Push Notifications
+    pushNotifications: 'Thông báo đẩy',
+    pushDesc: 'Nhận thông báo giao dịch ngân hàng ngay trên màn hình khóa',
+    pushEnable: 'Bật thông báo đẩy',
+    pushDisable: 'Tắt thông báo đẩy',
+    pushEnabled: 'Đã bật — Bạn sẽ nhận thông báo giao dịch trên thiết bị',
+    pushDisabled: 'Nhận thông báo giao dịch như một ứng dụng thực thụ',
+    pushNotSupported: 'Trình duyệt không hỗ trợ thông báo đẩy',
+    pushDenied: 'Quyền thông báo đã bị từ chối. Vui lòng vào Cài đặt thiết bị để bật lại.',
+    pushInstallHint: 'Để nhận thông báo trên iOS, bạn cần cài FinNote lên Màn hình chính trước (Add to Home Screen)'
   },
 
   // ── Login ──

@@ -288,17 +288,17 @@ watch(
 <template>
   <div class="bg-bg-base text-text-primary relative flex min-h-screen min-h-[100dvh] items-center justify-center p-4 pt-[max(env(safe-area-inset-top,0px),1rem)]">
     <!-- Language Switcher -->
-    <div class="absolute right-6 z-10" style="top: max(env(safe-area-inset-top, 0px), 1.5rem)">
+    <div class="absolute right-4 z-10 flex items-center gap-1" style="top: max(env(safe-area-inset-top, 0px), 1rem)">
       <button 
         @click="setLocale('vi')"
-        :class="['text-sm font-semibold transition-colors', locale === 'vi' ? 'text-accent' : 'text-text-tertiary hover:text-text-primary']"
+        :class="['text-sm font-semibold transition-colors rounded-lg px-3 py-2', locale === 'vi' ? 'text-accent bg-accent-subtle' : 'text-text-tertiary hover:text-text-primary hover:bg-bg-hover']"
       >
         VI
       </button>
-      <span class="text-border-strong text-sm">|</span>
+      <span class="text-border-strong text-xs select-none">|</span>
       <button 
         @click="setLocale('en')"
-        :class="['text-sm font-semibold transition-colors', locale === 'en' ? 'text-accent' : 'text-text-tertiary hover:text-text-primary']"
+        :class="['text-sm font-semibold transition-colors rounded-lg px-3 py-2', locale === 'en' ? 'text-accent bg-accent-subtle' : 'text-text-tertiary hover:text-text-primary hover:bg-bg-hover']"
       >
         EN
       </button>

@@ -20,6 +20,8 @@ interface Env {
   GOOGLE_CLIENT_ID: string
   GOOGLE_CLIENT_SECRET: string
   RESEND_API_KEY: string
+  VAPID_PUBLIC_KEY: string
+  VAPID_PRIVATE_KEY: string
   AI: Ai
 }
 
@@ -85,6 +87,15 @@ interface NotificationData {
     walletName?: string
     bankName?: string
   }
+}
+
+interface PushSubscriptionRecord {
+  endpoint: string
+  keys: {
+    p256dh: string
+    auth: string
+  }
+  createdAt: string
 }
 
 // ====== Default Wallets (created on register) ======
@@ -1151,6 +1162,13 @@ async function handleNotificationWebhook(request: Request, env: Env): Promise<Re
   if (notiList.length > 100) notiList.splice(100)
   await putJSON(env.SMART_NOTE_KV, `users/${userId}/notifications`, notiList)
 
+  // Send push notification to user's devices
+  try {
+    const pushTitle = parsed.type === 'income' ? '💰 Tiền vào tài khoản' : '💸 Tiền ra tài khoản'
+    const pushBody = `${parsed.type === 'income' ? '+' : '-'}${parsed.amount.toLocaleString('vi-VN')}đ • ${walletName}`
+    await sendPushToUser(userId, env, { title: pushTitle, body: pushBody, tag: `tx-${tx.id}`, url: '/' })
+  } catch { /* push is best-effort */ }
+
   return jsonResponse({
     success: true,
     data: tx,
@@ -1360,6 +1378,13 @@ async function handleCassoWebhook(request: Request, env: Env): Promise<Response>
     // Giữ tối đa 100 noti
     if (notiList.length > 100) notiList.splice(100)
     await putJSON(env.SMART_NOTE_KV, `users/${userId}/notifications`, notiList)
+
+    // Send push notification for each Casso transaction
+    try {
+      const pushTitle = type === 'income' ? '💰 Tiền vào tài khoản' : '💸 Tiền ra tài khoản'
+      const pushBody = `${type === 'income' ? '+' : '-'}${amount.toLocaleString('vi-VN')}đ • ${walletName}`
+      await sendPushToUser(userId, env, { title: pushTitle, body: pushBody, tag: `casso-${tx.id}`, url: '/' })
+    } catch { /* push is best-effort */ }
   }
 
   if (created.length > 0) {
@@ -1871,6 +1896,13 @@ async function processSmsTransaction(
   await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/transactions`, txs)
   await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`, wallets)
 
+  // Send push notification to user's devices
+  try {
+    const pushTitle = parsed.type === 'income' ? '💰 Tiền vào tài khoản' : '💸 Tiền ra tài khoản'
+    const pushBody = `${parsed.type === 'income' ? '+' : '-'}${parsed.amount.toLocaleString('vi-VN')}đ • ${walletName}`
+    await sendPushToUser(userId, env, { title: pushTitle, body: pushBody, tag: `sms-${tx.id}`, url: '/' })
+  } catch { /* push is best-effort */ }
+
   // Update latest_request and history with success details (awaited — ensures debug data is persisted)
   await updateWebhookStatus(userId, env, {
     status: 'success',
@@ -2206,6 +2238,109 @@ async function handleReportBug(userId: string, request: Request, env: Env): Prom
 }
 
 
+// ====== Push Notification Handlers ======
+
+import { buildPushPayload } from '@block65/webcrypto-web-push'
+
+async function handlePushSubscribe(userId: string, request: Request, env: Env): Promise<Response> {
+  const body = (await request.json()) as any
+  const { endpoint, keys } = body
+
+  if (!endpoint || !keys?.p256dh || !keys?.auth) {
+    return errorResponse('Invalid push subscription data')
+  }
+
+  // Load existing subscriptions
+  const subs = (await getJSON<PushSubscriptionRecord[]>(env.SMART_NOTE_KV, `users/${userId}/push_subscriptions`)) || []
+
+  // Avoid duplicates
+  const exists = subs.some(s => s.endpoint === endpoint)
+  if (!exists) {
+    subs.push({
+      endpoint,
+      keys: { p256dh: keys.p256dh, auth: keys.auth },
+      createdAt: new Date().toISOString()
+    })
+    await putJSON(env.SMART_NOTE_KV, `users/${userId}/push_subscriptions`, subs)
+  }
+
+  return jsonResponse({ success: true, message: 'Push subscription saved' })
+}
+
+async function handlePushUnsubscribe(userId: string, request: Request, env: Env): Promise<Response> {
+  const { endpoint } = (await request.json()) as any
+  if (!endpoint) return errorResponse('Endpoint is required')
+
+  const subs = (await getJSON<PushSubscriptionRecord[]>(env.SMART_NOTE_KV, `users/${userId}/push_subscriptions`)) || []
+  const filtered = subs.filter(s => s.endpoint !== endpoint)
+  await putJSON(env.SMART_NOTE_KV, `users/${userId}/push_subscriptions`, filtered)
+
+  return jsonResponse({ success: true, message: 'Push subscription removed' })
+}
+
+/**
+ * Send a push notification to all registered devices for a user.
+ * Best-effort: errors are logged but don't block the caller.
+ */
+async function sendPushToUser(
+  userId: string,
+  env: Env,
+  payload: { title: string; body: string; tag?: string; url?: string; data?: any }
+): Promise<void> {
+  if (!env.VAPID_PUBLIC_KEY || !env.VAPID_PRIVATE_KEY) return
+
+  const subs = (await getJSON<PushSubscriptionRecord[]>(env.SMART_NOTE_KV, `users/${userId}/push_subscriptions`)) || []
+  if (subs.length === 0) return
+
+  const vapid = {
+    subject: 'mailto:admin@finnote.app',
+    publicKey: env.VAPID_PUBLIC_KEY,
+    privateKey: env.VAPID_PRIVATE_KEY
+  }
+
+  const expiredEndpoints: string[] = []
+
+  // Build the message according to the library API: { data: string, options: { ttl } }
+  const message = {
+    data: JSON.stringify(payload),
+    options: { ttl: 60 * 60 } // 1 hour TTL
+  }
+
+  for (const sub of subs) {
+    try {
+      const pushPayload = await buildPushPayload(
+        message,
+        { endpoint: sub.endpoint, expirationTime: null, keys: sub.keys },
+        vapid
+      )
+
+      // CF Workers fetch doesn't accept Uint8Array directly — convert to ArrayBuffer
+      const fetchInit = {
+        ...pushPayload,
+        body: pushPayload.body instanceof Uint8Array
+          ? pushPayload.body.buffer as ArrayBuffer
+          : pushPayload.body
+      }
+
+      const res = await fetch(sub.endpoint, fetchInit as RequestInit)
+
+      // 404 or 410 means the subscription is expired/invalid → clean up
+      if (res.status === 404 || res.status === 410) {
+        expiredEndpoints.push(sub.endpoint)
+      }
+    } catch (err) {
+      console.error(`[PUSH] Failed to send to ${sub.endpoint}:`, err)
+    }
+  }
+
+  // Clean up expired subscriptions
+  if (expiredEndpoints.length > 0) {
+    const remaining = subs.filter(s => !expiredEndpoints.includes(s.endpoint))
+    await putJSON(env.SMART_NOTE_KV, `users/${userId}/push_subscriptions`, remaining)
+  }
+}
+
+
 // ====== Main Router ======
 
 export default {
@@ -2380,6 +2515,14 @@ export default {
       const pendingMatch = path.match(/^\/api\/pending\/(.+)\/resolve$/)
       if (pendingMatch && request.method === 'POST') {
         return handleResolvePending(userId, pendingMatch[1], env)
+      }
+
+      // Push Notifications
+      if (path === '/api/push/subscribe' && request.method === 'POST') {
+        return handlePushSubscribe(userId, request, env)
+      }
+      if (path === '/api/push/unsubscribe' && request.method === 'POST') {
+        return handlePushUnsubscribe(userId, request, env)
       }
 
       // AI

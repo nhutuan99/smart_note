@@ -301,7 +301,17 @@ export default {
     accountDeleted: 'Account has been permanently deleted',
     wrongPassword: 'Incorrect password',
     pinResetFailed: 'PIN reset failed',
-    fallbackRate: 'using fallback rate'
+    fallbackRate: 'using fallback rate',
+    // Push Notifications
+    pushNotifications: 'Push Notifications',
+    pushDesc: 'Receive bank transaction alerts on your lock screen',
+    pushEnable: 'Enable Push',
+    pushDisable: 'Disable Push',
+    pushEnabled: 'Active — You will receive transaction alerts on this device',
+    pushDisabled: 'Get transaction alerts like a native app',
+    pushNotSupported: 'Push notifications not supported on this browser',
+    pushDenied: 'Notification permission denied. Please enable it in your device settings.',
+    pushInstallHint: 'To receive push on iOS, install FinNote to your Home Screen first (Add to Home Screen)'
   },
 
   // ── Login ──
