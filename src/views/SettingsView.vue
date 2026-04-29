@@ -458,10 +458,7 @@ function cancelForgotPin() {
           </div>
           <div class="mt-2 flex items-center justify-end gap-2">
             <button
-              @click="
-                isEditingProfile = false
-                profileForm = { name: auth.user?.name || '', avatarUrl: auth.user?.avatarUrl || '' }
-              "
+              @click="isEditingProfile = false; profileForm = { name: auth.user?.name || '', avatarUrl: auth.user?.avatarUrl || '' }"
               class="text-text-secondary hover:text-text-primary rounded-lg px-4 py-2 text-sm transition-colors"
             >
               {{ t('common.cancel') }}
@@ -674,10 +671,7 @@ function cancelForgotPin() {
 
               <div class="flex gap-2">
                 <button
-                  @click="
-                    showPinForm = false
-                    pinForm = { currentPin: '', newPin: '', confirmPin: '' }
-                  "
+                  @click="showPinForm = false; pinForm = { currentPin: '', newPin: '', confirmPin: '' }"
                   class="border-border-default text-text-secondary hover:bg-bg-hover flex-1 rounded-lg border py-2 text-sm"
                 >
                   {{ t('common.cancel') }}
@@ -697,10 +691,7 @@ function cancelForgotPin() {
                 class="text-center"
               >
                 <button
-                  @click="
-                    showPinForm = false
-                    forgotPinStep = 'password'
-                  "
+                  @click="showPinForm = false; forgotPinStep = 'password'"
                   class="text-text-tertiary hover:text-accent text-xs transition-colors"
                 >
                   {{ t('settings.forgotPin') }}
@@ -917,12 +908,7 @@ function cancelForgotPin() {
             </span>
             <button
               v-if="pushSubscribed"
-              @click="
-                testPush({
-                  title: 'FinNote',
-                  body: '🏓 Anh hẹn em Pickleball, FTEL hẹn nhau Pickleball...'
-                })
-              "
+              @click="testPush({ title: '💰 Tiền vào tài khoản', body: '+2.000.000đ • TPBank', unreadCount: 1 })"
               :disabled="pushLoading"
               class="border-border-default text-text-secondary hover:bg-bg-hover hover:text-text-primary flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-all duration-150 disabled:opacity-40"
               title="Gửi thông báo thử nghiệm"
@@ -986,11 +972,7 @@ function cancelForgotPin() {
           </div>
           <button
             id="logout-btn"
-            @click="
-              finance.reset()
-              auth.logout()
-              router.push('/login')
-            "
+            @click="finance.reset(); auth.logout(); router.push('/login')"
             class="border-border-default hover:bg-bg-hover hover:text-text-primary text-text-secondary flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-150"
           >
             <LogOut :size="16" />
@@ -1086,10 +1068,7 @@ function cancelForgotPin() {
               </div>
               <div class="flex gap-3">
                 <button
-                  @click="
-                    isDeleteModalOpen = false
-                    deletePasswordForm.password = ''
-                  "
+                  @click="isDeleteModalOpen = false; deletePasswordForm.password = ''"
                   class="border-border-default text-text-secondary hover:bg-bg-hover flex-1 rounded-xl border py-2.5 font-medium transition-colors"
                 >
                   {{ t('common.cancel') }}
