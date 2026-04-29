@@ -75,13 +75,13 @@ export const useBlogStore = defineStore('blog', () => {
   }
 
   async function generateContent(topic: string, imageBase64?: string) {
-    const response = await httpClient.post<{ data: any }>('/api/blogs/generate-content', { topic, imageBase64 })
-    return response?.data
+    const response = await httpClient.post<any>('/api/blogs/generate-content', { topic, imageBase64 })
+    return response
   }
 
   async function generateImage(prompt: string) {
-    const response = await httpClient.post<{ data: { imageUrl: string } }>('/api/blogs/generate-image', { prompt })
-    return response?.data?.imageUrl
+    const response = await httpClient.post<{ imageUrl: string }>('/api/blogs/generate-image', { prompt })
+    return response?.imageUrl
   }
 
   return {
