@@ -577,6 +577,7 @@ export default {
     emptyPublic: 'Chưa có bài viết nào',
     emptyPublicHint: 'Các bài viết mới sẽ sớm được cập nhật.',
     backToList: 'Quay lại danh sách',
-    editor: 'Biên tập viên FinNote'
+    editor: 'Biên tập viên FinNote',
+    minRead: 'phút đọc'
   }
 }

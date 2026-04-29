@@ -577,6 +577,7 @@ export default {
     emptyPublic: 'No posts yet',
     emptyPublicHint: 'New posts will be available soon.',
     backToList: 'Back to list',
-    editor: 'FinNote Editor'
+    editor: 'FinNote Editor',
+    minRead: 'min read'
   }
 }

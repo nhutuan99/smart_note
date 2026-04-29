@@ -294,20 +294,31 @@ export async function handleGenerateBlogImage(userId: string, request: Request, 
   const { prompt } = (await request.json()) as { prompt: string }
   if (!prompt) return errorResponse('Missing prompt', 400)
 
-  const optimizedPrompt = `A high quality, modern illustration for a finance blog post about: ${prompt}. Style: flat design, minimalist, vivid colors, vector art, dribbble style.`
+  const optimizedPrompt = `A premium, modern illustration for a finance blog: ${prompt}. Style: clean gradient background, minimal flat design, professional finance theme, vivid accent colors, editorial quality.`
 
   try {
-    const response = await env.AI.run('@cf/stabilityai/stable-diffusion-xl-base-1.0', {
-      prompt: optimizedPrompt
+    const response = await env.AI.run('@cf/black-forest-labs/flux-1-schnell' as any, {
+      prompt: optimizedPrompt,
+      num_steps: 4
     })
     
-    // Convert binary image to base64
-    const buffer = await new Response(response).arrayBuffer()
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)))
-    const dataUrl = `data:image/jpeg;base64,${base64}`
+    // Convert ReadableStream/ArrayBuffer to base64 safely (handles large images)
+    const buffer = response instanceof ReadableStream
+      ? await new Response(response).arrayBuffer()
+      : (response as any) instanceof ArrayBuffer ? response as ArrayBuffer
+      : await new Response(response as any).arrayBuffer()
+    
+    const bytes = new Uint8Array(buffer as ArrayBuffer)
+    let binary = ''
+    const chunkSize = 8192
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize))
+    }
+    const base64 = btoa(binary)
+    const dataUrl = `data:image/png;base64,${base64}`
 
     return jsonResponse({ success: true, data: { imageUrl: dataUrl } })
   } catch (err: any) {
-    return errorResponse(err.message || 'Image AI generation failed', 500)
+    return errorResponse(err.message || 'Image generation failed', 500)
   }
 }
