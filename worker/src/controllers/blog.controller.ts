@@ -165,65 +165,73 @@ Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải th
   try {
     let text = ''
 
-    if (env.GEMINI_API_KEY) {
-      // Use Google Gemini API
-      let inlineData = undefined
-      if (imageBase64) {
-        const match = imageBase64.match(/^data:(image\/[a-zA-Z]+);base64,(.+)$/)
-        if (match) {
-          inlineData = { mime_type: match[1], data: match[2] }
+    // Try Gemini first, fallback to Cloudflare AI
+    let useGemini = !!env.GEMINI_API_KEY
+    if (useGemini) {
+      try {
+        let inlineData = undefined
+        if (imageBase64) {
+          const match = imageBase64.match(/^data:(image\/[a-zA-Z]+);base64,(.+)$/)
+          if (match) {
+            inlineData = { mime_type: match[1], data: match[2] }
+          } else {
+            inlineData = { mime_type: "image/jpeg", data: imageBase64 }
+          }
+        }
+
+        const promptParts: any[] = []
+        if (topic) promptParts.push({ text: `Yêu cầu / Chủ đề: ${topic}` })
+        if (inlineData) promptParts.push({ inline_data: inlineData })
+        if (promptParts.length === 0) promptParts.push({ text: "Hãy viết 1 bài blog về quản lý tài chính cá nhân." })
+
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${env.GEMINI_API_KEY}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              system_instruction: {
+                parts: [{ text: systemPrompt }]
+              },
+              contents: [{
+                parts: promptParts
+              }],
+              generationConfig: {
+                temperature: 0.7,
+                response_mime_type: "application/json"
+              }
+            })
+          }
+        )
+
+        if (!response.ok) {
+          const errObj: any = await response.json().catch(() => ({}))
+          console.warn('Gemini failed, falling back to CF AI:', errObj?.error?.message)
+          useGemini = false // trigger fallback
         } else {
-          // Attempt default decode if no data prefix
-          inlineData = { mime_type: "image/jpeg", data: imageBase64 }
+          const data: any = await response.json()
+          text = data?.candidates?.[0]?.content?.parts?.[0]?.text || ''
         }
+      } catch (geminiErr: any) {
+        console.warn('Gemini error, falling back to CF AI:', geminiErr.message)
+        useGemini = false // trigger fallback
       }
+    }
 
-      const promptParts: any[] = []
-      if (topic) promptParts.push({ text: `Yêu cầu / Chủ đề: ${topic}` })
-      if (inlineData) promptParts.push({ inline_data: inlineData })
-      if (promptParts.length === 0) promptParts.push({ text: "Hãy viết 1 bài blog về quản lý tài chính cá nhân." })
-
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${env.GEMINI_API_KEY}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            system_instruction: {
-              parts: [{ text: systemPrompt }]
-            },
-            contents: [{
-              parts: promptParts
-            }],
-            generationConfig: {
-              temperature: 0.7,
-              response_mime_type: "application/json"
-            }
-          })
-        }
-      )
-
-      if (!response.ok) {
-        const errObj: any = await response.json().catch(() => ({}))
-        throw new Error(errObj?.error?.message || `Gemini API error: ${response.statusText}`)
-      }
-
-      const data: any = await response.json()
-      text = data?.candidates?.[0]?.content?.parts?.[0]?.text || ''
-    } else {
-      // Fallback to Cloudflare AI
+    // Fallback: Cloudflare Workers AI
+    if (!useGemini || !text) {
       if (!env.AI) return errorResponse('AI binding not configured', 503)
 
-      const response = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+      const cfResponse = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: `Chủ đề: ${topic}` }
         ],
-        max_tokens: 2000,
+        max_tokens: 4000,
         temperature: 0.7
       }) as any
 
-      text = response?.response || ''
+      text = cfResponse?.response || ''
     }
 
     // Try to extract json
@@ -236,8 +244,7 @@ Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải th
     try {
       result = JSON.parse(text)
     } catch {
-      // Fallback
-      return errorResponse('Failed to parse AI JSON response: ' + text, 500)
+      return errorResponse('Failed to parse AI JSON response: ' + text.substring(0, 200), 500)
     }
 
     return jsonResponse({ success: true, data: result })
