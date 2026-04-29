@@ -81,6 +81,7 @@ import {
   handleDeleteBlog,
   handleGenerateBlogContent,
   handleGenerateBlogImage,
+  handleGetImage,
 } from './controllers/blog.controller'
 
 export default {
@@ -131,6 +132,10 @@ export default {
       const publicBlogMatch = path.match(/^\/api\/blogs\/([^\/]+)$/)
       if (publicBlogMatch && request.method === 'GET') {
         return handleGetBlog(publicBlogMatch[1], env)
+      }
+      const imageMatch = path.match(/^\/api\/images\/([^\/]+)$/)
+      if (imageMatch && request.method === 'GET') {
+        return handleGetImage(imageMatch[1], env)
       }
 
       // Protected routes - verify JWT

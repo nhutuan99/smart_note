@@ -40,6 +40,18 @@ export async function handleGetBlog(slug: string, env: Env): Promise<Response> {
   return jsonResponse({ success: true, data: blog })
 }
 
+export async function handleGetImage(id: string, env: Env): Promise<Response> {
+  const file = await env.SMART_NOTE_KV.get(`public/images/${id}`, 'arrayBuffer')
+  if (!file) return new Response('Image not found', { status: 404 })
+
+  return new Response(file, {
+    headers: {
+      'Content-Type': 'image/png',
+      'Cache-Control': 'public, max-age=31536000' // Cache for 1 year
+    }
+  })
+}
+
 // ====== Admin Blog Endpoints ======
 
 export async function handleCreateBlog(userId: string, request: Request, env: Env): Promise<Response> {
@@ -302,22 +314,20 @@ export async function handleGenerateBlogImage(userId: string, request: Request, 
       num_steps: 4
     })
     
-    // Convert ReadableStream/ArrayBuffer to base64 safely (handles large images)
+    // Convert ReadableStream/ArrayBuffer safely (handles large images)
     const buffer = response instanceof ReadableStream
       ? await new Response(response).arrayBuffer()
       : (response as any) instanceof ArrayBuffer ? response as ArrayBuffer
       : await new Response(response as any).arrayBuffer()
     
-    const bytes = new Uint8Array(buffer as ArrayBuffer)
-    let binary = ''
-    const chunkSize = 8192
-    for (let i = 0; i < bytes.length; i += chunkSize) {
-      binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize))
-    }
-    const base64 = btoa(binary)
-    const dataUrl = `data:image/png;base64,${base64}`
+    // Save image directly to KV
+    const imageId = generateId()
+    await env.SMART_NOTE_KV.put(`public/images/${imageId}`, buffer)
+    
+    const host = new URL(request.url).origin
+    const imageUrl = `${host}/api/images/${imageId}`
 
-    return jsonResponse({ success: true, data: { imageUrl: dataUrl } })
+    return jsonResponse({ success: true, data: { imageUrl } })
   } catch (err: any) {
     return errorResponse(err.message || 'Image generation failed', 500)
   }
