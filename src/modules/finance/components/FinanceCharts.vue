@@ -263,9 +263,9 @@ const activeWalletStats = computed(() => walletBreakdownTab.value === 'expense' 
             </span>
           </div>
           <div class="flex items-center gap-1.5">
-            <span class="h-[3px] w-3 rounded-full bg-red-500"></span>
+            <span class="h-[3px] w-3 rounded-full bg-error"></span>
             <span class="text-text-tertiary text-[0.6875rem]">{{ t('dashboard.expense') }}</span>
-            <span class="text-red-400 text-[0.8125rem] font-bold tabular-nums">
+            <span class="text-error text-[0.8125rem] font-bold tabular-nums">
               {{ hoverExpense ?? formatMoneyShort(finance.monthExpense) }}
             </span>
           </div>
@@ -322,7 +322,7 @@ const activeWalletStats = computed(() => walletBreakdownTab.value === 'expense' 
             <div class="bg-bg-elevated h-1.5 overflow-hidden rounded-full">
               <div
                 class="h-full rounded-full transition-all duration-500"
-                :style="{ width: ws.percentage + '%', backgroundColor: walletBreakdownTab === 'expense' ? '#ef4444' : '#10b981' }"
+                :style="{ width: ws.percentage + '%', backgroundColor: walletBreakdownTab === 'expense' ? 'var(--error)' : 'var(--success)' }"
               ></div>
             </div>
           </div>

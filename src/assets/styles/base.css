@@ -33,10 +33,10 @@
   --color-border-strong: var(--border-strong);
 
   /* Status */
-  --color-success: #10b981;
-  --color-error: #ef4444;
-  --color-warning: #f59e0b;
-  --color-info: #3b82f6;
+  --color-success: var(--success);
+  --color-error: var(--error);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
 
   /* Layout & Typography */
   --spacing-header: 3.5rem;
@@ -77,6 +77,12 @@
   --shadow-card: none;
   --shadow-md: none;
   --shadow-lg: none;
+  
+  /* Status Colors (Soft/Desaturated for Dark Mode) */
+  --success: #34d399; /* Emerald 400 */
+  --error: #fb7185; /* Rose 400 */
+  --warning: #fbbf24; /* Amber 400 */
+  --info: #60a5fa; /* Blue 400 */
 }
 
 /* ============================================
@@ -106,6 +112,12 @@
   --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.03);
+
+  /* Status Colors (Rich/Deeper for Light Mode) */
+  --success: #10b981; /* Emerald 500 */
+  --error: #f43f5e; /* Rose 500 */
+  --warning: #f59e0b; /* Amber 500 */
+  --info: #3b82f6; /* Blue 500 */
 }
 
 /* ============================================

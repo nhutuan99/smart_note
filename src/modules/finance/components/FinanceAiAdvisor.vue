@@ -168,8 +168,8 @@ function renderAiMarkdown(text: string): string {
       <div class="flex items-center gap-6 divide-x divide-border-subtle flex-1 overflow-x-auto no-scrollbar">
         <!-- Balance summary -->
         <div class="flex items-center gap-3 shrink-0">
-          <div class="bg-blue-500/10 flex h-8 w-8 items-center justify-center rounded-lg">
-            <Bot :size="16" class="text-blue-400" />
+          <div class="bg-info/10 flex h-8 w-8 items-center justify-center rounded-lg">
+            <Bot :size="16" class="text-info" />
           </div>
           <div>
             <div class="text-[0.6875rem] text-text-tertiary font-medium">{{ t('dashboard.aiAdvisorTitle') }}</div>
@@ -212,8 +212,8 @@ function renderAiMarkdown(text: string): string {
         <!-- Header -->
         <div class="mb-4 flex items-center justify-between">
           <h3 class="text-sm font-semibold flex items-center gap-2">
-            <div class="bg-blue-500/10 flex h-7 w-7 items-center justify-center rounded-lg">
-              <Bot :size="14" class="text-blue-400" />
+            <div class="bg-info/10 flex h-7 w-7 items-center justify-center rounded-lg">
+              <Bot :size="14" class="text-info" />
             </div>
             {{ t('dashboard.aiAdvisorTitle') }}
           </h3>
@@ -229,19 +229,19 @@ function renderAiMarkdown(text: string): string {
             v-model="aiQuestion"
             type="text"
             :placeholder="t('dashboard.aiExamplePlaceholder')"
-            class="w-full bg-bg-elevated border border-border-subtle rounded-2xl pl-4 pr-24 py-3 text-[0.875rem] text-text-primary focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/40 outline-none transition-all placeholder:text-text-disabled"
+            class="w-full bg-bg-elevated border border-border-subtle rounded-2xl pl-4 pr-24 py-3 text-[0.875rem] text-text-primary focus:border-info/60 focus:ring-1 focus:ring-info/40 outline-none transition-all placeholder:text-text-disabled"
             @keyup.enter="askAiAdvisor"
             :disabled="isAiLoading"
           />
           <button
             class="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[0.75rem] font-semibold transition-all"
             :class="aiQuestion.trim() && !isAiLoading
-              ? 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 border border-blue-500/30'
+              ? 'bg-info/20 text-info hover:bg-info/30 border border-info/30'
               : 'text-text-disabled bg-transparent'"
             :disabled="!aiQuestion.trim() || isAiLoading"
             @click="askAiAdvisor"
           >
-            <div v-if="isAiLoading" class="h-3.5 w-3.5 rounded-full border-2 border-blue-400 border-t-transparent animate-spin" />
+            <div v-if="isAiLoading" class="h-3.5 w-3.5 rounded-full border-2 border-info border-t-transparent animate-spin" />
             <Bot v-else :size="13" />
             {{ isAiLoading ? t('dashboard.aiAnalyzing') : t('dashboard.askAi') }}
           </button>
@@ -251,7 +251,7 @@ function renderAiMarkdown(text: string): string {
         <div v-if="showAiPanel">
           <!-- Header bar -->
           <div class="flex items-center justify-between mb-2">
-            <span class="text-[0.6875rem] font-semibold text-blue-400 flex items-center gap-1.5">
+            <span class="text-[0.6875rem] font-semibold text-info flex items-center gap-1.5">
               <Bot :size="12" /> {{ t('dashboard.aiAdvisorTitle') }}
             </span>
             <button class="text-text-disabled hover:text-error p-1 rounded hover:bg-error/10 transition-colors" @click="showAiPanel = false">
@@ -271,7 +271,7 @@ function renderAiMarkdown(text: string): string {
           <!-- AI response rich render -->
           <div
             v-if="aiInsightText"
-            class="ai-rich-response bg-blue-500/5 border border-blue-500/15 rounded-xl p-4 mb-3 max-h-72 overflow-y-auto"
+            class="ai-rich-response bg-info/5 border border-info/15 rounded-xl p-4 mb-3 max-h-72 overflow-y-auto"
             v-html="renderAiMarkdown(aiInsightText)"
           />
 
@@ -304,7 +304,7 @@ function renderAiMarkdown(text: string): string {
 
         <!-- Empty state hint -->
         <div v-if="!showAiPanel" class="flex items-center gap-2 text-text-disabled text-[0.75rem]">
-          <Bot :size="14" class="text-blue-400/60 shrink-0" />
+          <Bot :size="14" class="text-info/60 shrink-0" />
           <span>{{ t('dashboard.aiEmptyHint') }}</span>
         </div>
       </div>
@@ -402,8 +402,8 @@ function renderAiMarkdown(text: string): string {
       <div class="flex items-center gap-6 divide-x divide-border-subtle flex-1 overflow-x-auto no-scrollbar">
         <!-- Balance summary -->
         <div class="flex items-center gap-3 shrink-0">
-          <div class="bg-blue-500/10 flex h-8 w-8 items-center justify-center rounded-lg">
-            <Bot :size="16" class="text-blue-400" />
+          <div class="bg-info/10 flex h-8 w-8 items-center justify-center rounded-lg">
+            <Bot :size="16" class="text-info" />
           </div>
           <div>
             <div class="text-[0.6875rem] text-text-tertiary font-medium">{{ t('dashboard.aiAdvisorTitle') }}</div>
@@ -446,8 +446,8 @@ function renderAiMarkdown(text: string): string {
         <!-- Header -->
         <div class="mb-4 flex items-center justify-between">
           <h3 class="text-sm font-semibold flex items-center gap-2">
-            <div class="bg-blue-500/10 flex h-7 w-7 items-center justify-center rounded-lg">
-              <Bot :size="14" class="text-blue-400" />
+            <div class="bg-info/10 flex h-7 w-7 items-center justify-center rounded-lg">
+              <Bot :size="14" class="text-info" />
             </div>
             {{ t('dashboard.aiAdvisorTitle') }}
           </h3>
@@ -463,19 +463,19 @@ function renderAiMarkdown(text: string): string {
             v-model="aiQuestion"
             type="text"
             :placeholder="t('dashboard.aiExamplePlaceholder')"
-            class="w-full bg-bg-elevated border border-border-subtle rounded-2xl pl-4 pr-24 py-3 text-[0.875rem] text-text-primary focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/40 outline-none transition-all placeholder:text-text-disabled"
+            class="w-full bg-bg-elevated border border-border-subtle rounded-2xl pl-4 pr-24 py-3 text-[0.875rem] text-text-primary focus:border-info/60 focus:ring-1 focus:ring-info/40 outline-none transition-all placeholder:text-text-disabled"
             @keyup.enter="askAiAdvisor"
             :disabled="isAiLoading"
           />
           <button
             class="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[0.75rem] font-semibold transition-all"
             :class="aiQuestion.trim() && !isAiLoading
-              ? 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 border border-blue-500/30'
+              ? 'bg-info/20 text-info hover:bg-info/30 border border-info/30'
               : 'text-text-disabled bg-transparent'"
             :disabled="!aiQuestion.trim() || isAiLoading"
             @click="askAiAdvisor"
           >
-            <div v-if="isAiLoading" class="h-3.5 w-3.5 rounded-full border-2 border-blue-400 border-t-transparent animate-spin" />
+            <div v-if="isAiLoading" class="h-3.5 w-3.5 rounded-full border-2 border-info border-t-transparent animate-spin" />
             <Bot v-else :size="13" />
             {{ isAiLoading ? t('dashboard.aiAnalyzing') : t('dashboard.askAi') }}
           </button>
@@ -485,7 +485,7 @@ function renderAiMarkdown(text: string): string {
         <div v-if="showAiPanel">
           <!-- Header bar -->
           <div class="flex items-center justify-between mb-2">
-            <span class="text-[0.6875rem] font-semibold text-blue-400 flex items-center gap-1.5">
+            <span class="text-[0.6875rem] font-semibold text-info flex items-center gap-1.5">
               <Bot :size="12" /> {{ t('dashboard.aiAdvisorTitle') }}
             </span>
             <button class="text-text-disabled hover:text-error p-1 rounded hover:bg-error/10 transition-colors" @click="showAiPanel = false">
@@ -505,7 +505,7 @@ function renderAiMarkdown(text: string): string {
           <!-- AI response rich render -->
           <div
             v-if="aiInsightText"
-            class="ai-rich-response bg-blue-500/5 border border-blue-500/15 rounded-xl p-4 mb-3 max-h-72 overflow-y-auto"
+            class="ai-rich-response bg-info/5 border border-info/15 rounded-xl p-4 mb-3 max-h-72 overflow-y-auto"
             v-html="renderAiMarkdown(aiInsightText)"
           />
 
@@ -538,7 +538,7 @@ function renderAiMarkdown(text: string): string {
 
         <!-- Empty state hint -->
         <div v-if="!showAiPanel" class="flex items-center gap-2 text-text-disabled text-[0.75rem]">
-          <Bot :size="14" class="text-blue-400/60 shrink-0" />
+          <Bot :size="14" class="text-info/60 shrink-0" />
           <span>{{ t('dashboard.aiEmptyHint') }}</span>
         </div>
       </div>
@@ -626,9 +626,9 @@ function renderAiMarkdown(text: string): string {
             </span>
           </div>
           <div class="flex items-center gap-1.5">
-            <span class="h-[3px] w-3 rounded-full bg-red-500"></span>
+            <span class="h-[3px] w-3 rounded-full bg-error"></span>
             <span class="text-text-tertiary text-[0.6875rem]">{{ t('dashboard.expense') }}</span>
-            <span class="text-red-400 text-[0.8125rem] font-bold tabular-nums">
+            <span class="text-error text-[0.8125rem] font-bold tabular-nums">
               {{ hoverExpense ?? formatMoneyShort(finance.monthExpense) }}
             </span>
           </div>
@@ -685,9 +685,8 @@ function renderAiMarkdown(text: string): string {
             <div class="bg-bg-elevated h-1.5 overflow-hidden rounded-full">
               <div
                 class="h-full rounded-full transition-all duration-500"
-                :style="{ width: ws.percentage + '%', backgroundColor: walletBreakdownTab === 'expense' ? '#ef4444' : '#10b981' }"
+                :style="{ width: ws.percentage + '%', backgroundColor: walletBreakdownTab === 'expense' ? 'var(--error)' : 'var(--success)' }"
               ></div>
-            </div>
           </div>
         </div>
 
