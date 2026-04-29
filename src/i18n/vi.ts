@@ -316,7 +316,12 @@ export default {
     pushDisabled: 'Nhận thông báo giao dịch như một ứng dụng thực thụ',
     pushNotSupported: 'Trình duyệt không hỗ trợ thông báo đẩy',
     pushDenied: 'Quyền thông báo đã bị từ chối. Vui lòng vào Cài đặt thiết bị để bật lại.',
-    pushInstallHint: 'Để nhận thông báo trên iOS, bạn cần cài FinNote lên Màn hình chính trước (Add to Home Screen)'
+    pushInstallHint: '📱 Để nhận thông báo trên iOS, bạn cần cài FinNote lên Màn hình chính trước (Add to Home Screen)',
+    pushPermissionDenied: 'Quyền thông báo bị từ chối',
+    pushSubscribeSuccess: '🔔 Đã bật thông báo đẩy!',
+    pushSubscribeFailed: 'Không thể bật thông báo',
+    pushUnsubscribeSuccess: 'Đã tắt thông báo đẩy',
+    pushUnsubscribeFailed: 'Không thể tắt thông báo',
   },
 
   // ── Login ──

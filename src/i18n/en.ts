@@ -313,10 +313,15 @@ export default {
     pushEnable: 'Enable Push',
     pushDisable: 'Disable Push',
     pushEnabled: 'Active — You will receive transaction alerts on this device',
-    pushDisabled: 'Get transaction alerts like a native app',
-    pushNotSupported: 'Push notifications not supported on this browser',
-    pushDenied: 'Notification permission denied. Please enable it in your device settings.',
-    pushInstallHint: 'To receive push on iOS, install FinNote to your Home Screen first (Add to Home Screen)'
+    pushDisabled: 'Receive transaction notifications like a native app',
+    pushNotSupported: 'Browser does not support push notifications',
+    pushDenied: 'Notification permission denied. Please enable in device settings.',
+    pushInstallHint: '📱 To receive notifications on iOS, please install FinNote to Home Screen first',
+    pushPermissionDenied: 'Notification permission denied',
+    pushSubscribeSuccess: '🔔 Push notifications enabled!',
+    pushSubscribeFailed: 'Failed to enable notifications',
+    pushUnsubscribeSuccess: 'Push notifications disabled',
+    pushUnsubscribeFailed: 'Failed to disable notifications',
   },
 
   // ── Login ──

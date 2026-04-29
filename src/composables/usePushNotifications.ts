@@ -10,6 +10,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { httpClient } from '@/shared/api/httpClient'
 import { useUiStore } from '@/stores/ui'
+import { useI18n } from 'vue-i18n'
 
 // Public VAPID key — must match the one on the backend
 const VAPID_PUBLIC_KEY =
@@ -28,6 +29,7 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
 
 export function usePushNotifications() {
   const ui = useUiStore()
+  const { t } = useI18n()
 
   const isSupported = ref(false)
   const isSubscribed = ref(false)
@@ -73,7 +75,7 @@ export function usePushNotifications() {
       permissionState.value = permission
 
       if (permission !== 'granted') {
-        ui.showToast('error', 'Notification permission denied')
+        ui.showToast('error', t('settings.pushPermissionDenied'))
         return
       }
 
@@ -88,10 +90,10 @@ export function usePushNotifications() {
       await httpClient.post('/api/push/subscribe', sub.toJSON())
 
       isSubscribed.value = true
-      ui.showToast('success', '🔔 Push notifications enabled!')
+      ui.showToast('success', t('settings.pushSubscribeSuccess'))
     } catch (err: any) {
       console.error('[PUSH] Subscribe error:', err)
-      ui.showToast('error', err.message || 'Failed to enable notifications')
+      ui.showToast('error', err.message || t('settings.pushSubscribeFailed'))
     } finally {
       loading.value = false
     }
@@ -113,10 +115,10 @@ export function usePushNotifications() {
       }
 
       isSubscribed.value = false
-      ui.showToast('success', 'Push notifications disabled')
+      ui.showToast('success', t('settings.pushUnsubscribeSuccess'))
     } catch (err: any) {
       console.error('[PUSH] Unsubscribe error:', err)
-      ui.showToast('error', err.message || 'Failed to disable notifications')
+      ui.showToast('error', err.message || t('settings.pushUnsubscribeFailed'))
     } finally {
       loading.value = false
     }
