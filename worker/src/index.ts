@@ -2278,6 +2278,15 @@ async function handlePushUnsubscribe(userId: string, request: Request, env: Env)
   return jsonResponse({ success: true, message: 'Push subscription removed' })
 }
 
+async function handlePushTest(userId: string, request: Request, env: Env): Promise<Response> {
+  const body = (await request.json()) as any
+  const title = body.title || 'FinNote'
+  const text = body.body || 'Bạn có thông báo mới'
+  
+  await sendPushToUser(userId, env, { title, body: text, url: '/' })
+  return jsonResponse({ success: true, message: 'Push notification sent' })
+}
+
 /**
  * Send a push notification to all registered devices for a user.
  * Best-effort: errors are logged but don't block the caller.
@@ -2523,6 +2532,9 @@ export default {
       }
       if (path === '/api/push/unsubscribe' && request.method === 'POST') {
         return handlePushUnsubscribe(userId, request, env)
+      }
+      if (path === '/api/push/test' && request.method === 'POST') {
+        return handlePushTest(userId, request, env)
       }
 
       // AI

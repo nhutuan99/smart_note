@@ -122,6 +122,21 @@ export function usePushNotifications() {
     }
   }
 
+  /** Test push notification */
+  async function testPush(payload?: { title?: string; body?: string }) {
+    if (!isSupported.value) return
+    loading.value = true
+    try {
+      await httpClient.post('/api/push/test', payload || {})
+      ui.showToast('success', 'Đã gửi thông báo thử nghiệm')
+    } catch (err: any) {
+      console.error('[PUSH] Test error:', err)
+      ui.showToast('error', err.message || 'Failed to send test push')
+    } finally {
+      loading.value = false
+    }
+  }
+
   /** Toggle subscription */
   async function toggle() {
     if (isSubscribed.value) {
@@ -144,6 +159,7 @@ export function usePushNotifications() {
     loading,
     subscribe,
     unsubscribe,
-    toggle
+    toggle,
+    testPush
   }
 }

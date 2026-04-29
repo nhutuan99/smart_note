@@ -35,7 +35,7 @@ function changeLocale(locale: 'vi' | 'en') {
 
 // ── Currency ──
 const { currency, rateDisplay, rateLoading, rateError, setCurrency, fetchExchangeRate } = useCurrency()
-const { isSupported: pushSupported, isSubscribed: pushSubscribed, isStandalone: pushStandalone, permissionState: pushPermission, loading: pushLoading, toggle: togglePush } = usePushNotifications()
+const { isSupported: pushSupported, isSubscribed: pushSubscribed, isStandalone: pushStandalone, permissionState: pushPermission, loading: pushLoading, toggle: togglePush, testPush } = usePushNotifications()
 
 function changeCurrency(code: CurrencyCode) {
   setCurrency(code)
@@ -746,6 +746,15 @@ function cancelForgotPin() {
             >
               🔔 ON
             </span>
+            <button
+              v-if="pushSubscribed"
+              @click="testPush({ title: 'FinNote', body: '🏓 Anh hẹn em Pickleball, FTEL hẹn nhau Pickleball...' })"
+              :disabled="pushLoading"
+              class="border-border-default text-text-secondary hover:bg-bg-hover hover:text-text-primary flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-all duration-150 disabled:opacity-40"
+              title="Gửi thông báo thử nghiệm"
+            >
+              Test
+            </button>
             <button
               @click="togglePush"
               :disabled="pushLoading || !pushSupported || pushPermission === 'denied'"
