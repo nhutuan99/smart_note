@@ -329,11 +329,7 @@ const formatDate = (dateStr: string) => {
 
 /* Headings */
 .blog-content :deep(h1) {
-  font-size: 1.875rem;
-  font-weight: 800;
-  color: var(--color-text-primary);
-  margin: 2.5rem 0 1rem;
-  letter-spacing: -0.02em;
+  display: none; /* Hide markdown h1 to prevent double title with Hero section */
 }
 .blog-content :deep(h2) {
   font-size: 1.375rem;

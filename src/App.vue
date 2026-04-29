@@ -88,6 +88,19 @@ onMounted(() => {
       Public pages (blog) — full-width, no sidebar, no auth required.
     -->
     <div v-else-if="isPublicPage" class="public-layout">
+      <!-- Public Header for Unauthenticated Users to discover the app -->
+      <header v-if="!auth.isAuthenticated" class="public-header">
+        <div class="public-header__container">
+          <router-link to="/" class="public-header__logo">
+            <img src="/logo-512.png" alt="FinNote" class="w-8 h-8 object-contain" />
+            <span class="font-bold text-[1.125rem] text-text-primary tracking-tight">FinNote</span>
+          </router-link>
+          <router-link to="/login" class="public-header__btn">
+            Mở ứng dụng
+          </router-link>
+        </div>
+      </header>
+
       <div class="public-layout__content custom-scrollbar">
         <router-view />
       </div>
@@ -113,6 +126,51 @@ onMounted(() => {
   min-height: 100vh;
   min-height: 100dvh;
   background: var(--color-bg-primary);
+  display: flex;
+  flex-direction: column;
+}
+.public-header {
+  border-bottom: 1px solid var(--color-border-subtle);
+  background: rgba(13, 14, 18, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.public-header__container {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.public-header__logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+.public-header__logo:hover {
+  opacity: 0.8;
+}
+.public-header__btn {
+  background: var(--color-accent);
+  color: white;
+  padding: 0.5rem 1.25rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px 0 rgba(124, 111, 247, 0.25);
+}
+.public-header__btn:hover {
+  transform: translateY(-1px);
+  background: var(--color-accent-hover);
+  box-shadow: 0 6px 20px rgba(124, 111, 247, 0.23);
 }
 .public-layout__content {
   max-width: 100%;

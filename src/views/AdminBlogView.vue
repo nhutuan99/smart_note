@@ -641,11 +641,7 @@ const formatDate = (dateStr: string) => {
   line-height: 1.8;
 }
 .blog-preview__content :deep(h1) {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--color-text-primary);
-  margin: 2rem 0 1rem;
-  letter-spacing: -0.02em;
+  display: none; /* Hide markdown h1 to prevent double title with preview header */
 }
 .blog-preview__content :deep(h2) {
   font-size: 1.25rem;
