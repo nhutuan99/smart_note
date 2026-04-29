@@ -119,10 +119,10 @@ function dayTotal(txs: Transaction[]) {
         <table class="w-full text-left text-sm whitespace-nowrap">
           <thead class="bg-bg-subtle border-border-subtle border-b text-xs uppercase text-text-tertiary">
             <tr>
-              <th class="px-4 py-3 font-medium w-[45%]">Giao dịch</th>
-              <th class="px-4 py-3 font-medium">Tài khoản</th>
-              <th class="px-4 py-3 font-medium text-center">Nguồn</th>
-              <th class="px-4 py-3 font-medium text-right">Số tiền</th>
+              <th class="px-4 py-3 font-medium w-[45%]">{{ t('transactions.tableTransaction') }}</th>
+              <th class="px-4 py-3 font-medium">{{ t('transactions.tableWallet') }}</th>
+              <th class="px-4 py-3 font-medium text-center">{{ t('transactions.tableSource') }}</th>
+              <th class="px-4 py-3 font-medium text-right">{{ t('transactions.tableAmount') }}</th>
               <th class="px-4 py-3 w-12"></th>
             </tr>
           </thead>
@@ -242,7 +242,7 @@ function dayTotal(txs: Transaction[]) {
       <!-- Pagination Footer -->
       <div v-if="totalPages > 1" class="flex items-center justify-between px-4 py-3 bg-bg-surface border-t border-border-default">
         <div class="text-xs text-text-secondary">
-          Hiển thị {{ (currentPage - 1) * pageSize + 1 }}-{{ Math.min(currentPage * pageSize, transactions.length) }} / {{ transactions.length }}
+          {{ t('transactions.pagination', { start: (currentPage - 1) * pageSize + 1, end: Math.min(currentPage * pageSize, transactions.length), total: transactions.length }) }}
         </div>
         <div class="flex items-center gap-1">
           <button 

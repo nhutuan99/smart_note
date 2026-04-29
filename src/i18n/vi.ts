@@ -160,7 +160,12 @@ export default {
     emptyHint: 'Thêm giao dịch thủ công hoặc chat qua Telegram',
     addTransaction: 'Thêm giao dịch',
     pinDeleteTitle: 'Xác nhận xóa giao dịch',
-    pinDeleteMessage: 'Giao dịch từ {source} được bảo vệ. Nhập mã PIN để xóa.'
+    pinDeleteMessage: 'Giao dịch từ {source} được bảo vệ. Nhập mã PIN để xóa.',
+    tableTransaction: 'Giao dịch',
+    tableWallet: 'Tài khoản',
+    tableSource: 'Nguồn',
+    tableAmount: 'Số tiền',
+    pagination: 'Hiển thị {start}-{end} / {total}'
   },
 
   // ── Add Transaction ──

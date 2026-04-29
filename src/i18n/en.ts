@@ -160,7 +160,12 @@ export default {
     emptyHint: 'Add a transaction manually or chat via Telegram',
     addTransaction: 'Add Transaction',
     pinDeleteTitle: 'Confirm delete transaction',
-    pinDeleteMessage: 'Transaction from {source} is protected. Enter your PIN to delete.'
+    pinDeleteMessage: 'Transaction from {source} is protected. Enter your PIN to delete.',
+    tableTransaction: 'Transaction',
+    tableWallet: 'Account',
+    tableSource: 'Source',
+    tableAmount: 'Amount',
+    pagination: 'Showing {start}-{end} / {total}'
   },
 
   // ── Add Transaction ──
