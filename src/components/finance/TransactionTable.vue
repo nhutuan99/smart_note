@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { Transaction } from '@/types'
 import { formatVND, getCategoryConfig } from '@/constants/finance'
@@ -10,7 +10,9 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Calendar,
-  Plus
+  Plus,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-vue-next'
 
 const props = defineProps<{
@@ -26,10 +28,41 @@ const emit = defineEmits<{
 const { t, tm } = useI18n()
 const finance = useFinancePolling()
 
-// Group transactions by date
+const currentPage = ref(1)
+const pageSize = 15
+
+// Reset pagination when data changes
+watch(() => props.transactions, () => {
+  currentPage.value = 1
+}, { deep: true })
+
+const paginatedTransactions = computed(() => {
+  const start = (currentPage.value - 1) * pageSize
+  return props.transactions.slice(start, start + pageSize)
+})
+
+const totalPages = computed(() => Math.ceil(props.transactions.length / pageSize))
+
+const displayedPages = computed(() => {
+  const pages: (number | string)[] = []
+  for (let i = 1; i <= totalPages.value; i++) {
+    if (
+      i === 1 || 
+      i === totalPages.value || 
+      (i >= currentPage.value - 1 && i <= currentPage.value + 1)
+    ) {
+      pages.push(i)
+    } else if (pages[pages.length - 1] !== '...') {
+      pages.push('...')
+    }
+  }
+  return pages
+})
+
+// Group paginated transactions by date
 const groupedTransactions = computed(() => {
   const groups: Record<string, Transaction[]> = {}
-  props.transactions.forEach((tx) => {
+  paginatedTransactions.value.forEach((tx) => {
     if (!groups[tx.date]) groups[tx.date] = []
     groups[tx.date].push(tx)
   })
@@ -204,6 +237,42 @@ function dayTotal(txs: Transaction[]) {
             </tbody>
           </template>
         </table>
+      </div>
+
+      <!-- Pagination Footer -->
+      <div v-if="totalPages > 1" class="flex items-center justify-between px-4 py-3 bg-bg-surface border-t border-border-default">
+        <div class="text-xs text-text-secondary">
+          Hiển thị {{ (currentPage - 1) * pageSize + 1 }}-{{ Math.min(currentPage * pageSize, transactions.length) }} / {{ transactions.length }}
+        </div>
+        <div class="flex items-center gap-1">
+          <button 
+            class="p-1.5 rounded-md hover:bg-bg-hover text-text-secondary disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+            :disabled="currentPage === 1"
+            @click="currentPage--"
+          >
+            <ChevronLeft :size="16" />
+          </button>
+          
+          <template v-for="(page, idx) in displayedPages" :key="idx">
+            <span v-if="page === '...'" class="px-2 text-text-tertiary">...</span>
+            <button 
+              v-else
+              class="min-w-[28px] h-7 px-2 text-xs font-medium rounded-md transition-colors"
+              :class="currentPage === page ? 'bg-accent text-white hover:bg-accent-strong' : 'text-text-secondary hover:bg-bg-hover'"
+              @click="currentPage = page as number"
+            >
+              {{ page }}
+            </button>
+          </template>
+
+          <button 
+            class="p-1.5 rounded-md hover:bg-bg-hover text-text-secondary disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+            :disabled="currentPage === totalPages"
+            @click="currentPage++"
+          >
+            <ChevronRight :size="16" />
+          </button>
+        </div>
       </div>
     </div>
   </template>
