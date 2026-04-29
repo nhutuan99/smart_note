@@ -8,6 +8,7 @@ export interface Env {
   VAPID_PUBLIC_KEY: string
   VAPID_PRIVATE_KEY: string
   AI: any // Cloudflare AI binding
+  GEMINI_API_KEY?: string
 }
 
 export interface UserData {

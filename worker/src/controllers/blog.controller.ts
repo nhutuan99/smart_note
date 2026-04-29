@@ -147,7 +147,6 @@ export async function handleDeleteBlog(userId: string, slug: string, env: Env): 
 
 export async function handleGenerateBlogContent(userId: string, request: Request, env: Env): Promise<Response> {
   if (!(await isAdmin(userId, env))) return errorResponse('Forbidden', 403)
-  if (!env.AI) return errorResponse('AI binding not configured', 503)
 
   const { topic } = (await request.json()) as { topic: string }
   if (!topic) return errorResponse('Missing topic', 400)
@@ -164,16 +163,53 @@ Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải th
 }`
 
   try {
-    const response = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: `Chủ đề: ${topic}` }
-      ],
-      max_tokens: 2000,
-      temperature: 0.7
-    }) as any
+    let text = ''
 
-    let text = response?.response || ''
+    if (env.GEMINI_API_KEY) {
+      // Use Google Gemini API
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${env.GEMINI_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            system_instruction: {
+              parts: { text: systemPrompt }
+            },
+            contents: [{
+              parts: [{ text: `Chủ đề: ${topic}` }]
+            }],
+            generationConfig: {
+              temperature: 0.7,
+              response_mime_type: "application/json"
+            }
+          })
+        }
+      )
+
+      if (!response.ok) {
+        const errObj: any = await response.json().catch(() => ({}))
+        throw new Error(errObj?.error?.message || `Gemini API error: ${response.statusText}`)
+      }
+
+      const data: any = await response.json()
+      text = data?.candidates?.[0]?.content?.parts?.[0]?.text || ''
+    } else {
+      // Fallback to Cloudflare AI
+      if (!env.AI) return errorResponse('AI binding not configured', 503)
+
+      const response = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: `Chủ đề: ${topic}` }
+        ],
+        max_tokens: 2000,
+        temperature: 0.7
+      }) as any
+
+      text = response?.response || ''
+    }
+
     // Try to extract json
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (jsonMatch) {

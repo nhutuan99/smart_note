@@ -34,10 +34,15 @@ function openModal() {
   isModalOpen.value = true
 }
 
-async function handleGenerateContent() {
-  if (!aiTopic.value.trim()) return
+async function handleGenerateAll() {
+  if (!aiTopic.value.trim()) {
+    uiStore.showToast('warning', 'Vui lòng nhập ý tưởng trước')
+    return
+  }
+  
   isGenerating.value = true
   try {
+    uiStore.showToast('info', 'Đang nhờ AI viết bài...')
     const data = await blogStore.generateContent(aiTopic.value)
     if (data) {
       form.value.title = data.title || ''
@@ -45,29 +50,17 @@ async function handleGenerateContent() {
       form.value.content = data.content || ''
       form.value.tags = data.tags || []
       
-      // Auto-fill image prompt
-      aiImagePrompt.value = data.seoKeywords || aiTopic.value
+      const imagePrompt = data.seoKeywords || aiTopic.value
+      uiStore.showToast('info', 'Đang tạo ảnh bìa...')
+      const imageUrl = await blogStore.generateImage(imagePrompt)
+      if (imageUrl) {
+        form.value.imageUrl = imageUrl
+      }
       
-      uiStore.showToast('success', 'Đã tạo nội dung bằng AI!')
+      uiStore.showToast('success', 'Đã tự động tạo xong bài viết!')
     }
   } catch (err: any) {
-    uiStore.showToast('error', 'Lỗi khi tạo nội dung: ' + err.message)
-  } finally {
-    isGenerating.value = false
-  }
-}
-
-async function handleGenerateImage() {
-  if (!aiImagePrompt.value.trim()) return
-  isGenerating.value = true
-  try {
-    const imageUrl = await blogStore.generateImage(aiImagePrompt.value)
-    if (imageUrl) {
-      form.value.imageUrl = imageUrl
-      uiStore.showToast('success', 'Đã tạo ảnh minh họa!')
-    }
-  } catch (err: any) {
-    uiStore.showToast('error', 'Lỗi khi tạo ảnh: ' + err.message)
+    uiStore.showToast('error', 'Lỗi: ' + err.message)
   } finally {
     isGenerating.value = false
   }
@@ -182,33 +175,26 @@ async function handleDelete(slug: string) {
         <div class="p-5 overflow-y-auto flex-1 custom-scrollbar space-y-6">
           
           <!-- AI Generation Section -->
-          <div class="bg-accent-subtle/30 border border-accent/20 rounded-xl p-5 space-y-4">
-            <h3 class="text-sm font-semibold text-accent flex items-center gap-2"><Sparkles :size="14" /> Trợ lý AI</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-[0.6875rem] text-text-secondary mb-1 uppercase font-semibold tracking-wide">Chủ đề bài viết</label>
-                <div class="flex gap-2">
-                  <input v-model="aiTopic" type="text" class="input-modern flex-1 text-sm" placeholder="VD: Mẹo tiết kiệm cho sinh viên..." :disabled="isGenerating" />
-                  <button class="btn-primary text-sm whitespace-nowrap" @click="handleGenerateContent" :disabled="isGenerating || !aiTopic.trim()">
-                    {{ isGenerating ? 'Đang viết...' : 'Tạo Nội Dung' }}
-                  </button>
-                </div>
+          <div class="bg-gradient-to-r from-accent/10 to-transparent border border-accent/20 rounded-xl p-6 space-y-4">
+            <h3 class="text-sm font-semibold text-accent flex items-center gap-2 mb-2"><Sparkles :size="16" /> Tự động hóa bằng AI</h3>
+            <div class="flex flex-col md:flex-row gap-3 items-end">
+              <div class="flex-1 w-full">
+                <label class="block text-[0.6875rem] text-text-secondary mb-1 uppercase font-semibold tracking-wide">Bạn muốn viết về gì?</label>
+                <input v-model="aiTopic" type="text" class="input-modern w-full text-base py-3" placeholder="VD: Mẹo tiết kiệm 10 triệu/tháng với FinNote..." :disabled="isGenerating" @keyup.enter="handleGenerateAll" />
               </div>
-              <div>
-                <label class="block text-[0.6875rem] text-text-secondary mb-1 uppercase font-semibold tracking-wide">Prompt tạo ảnh</label>
-                <div class="flex gap-2">
-                  <input v-model="aiImagePrompt" type="text" class="input-modern flex-1 text-sm" placeholder="Mô tả ảnh tiếng Anh..." :disabled="isGenerating" />
-                  <button class="btn-secondary text-sm whitespace-nowrap" @click="handleGenerateImage" :disabled="isGenerating || !aiImagePrompt.trim()">
-                    <ImageIcon :size="14" /> Tạo Ảnh
-                  </button>
-                </div>
-              </div>
+              <button class="btn-primary py-3 px-6 h-[46px] whitespace-nowrap shadow-lg shadow-accent/20 hover:shadow-accent/40" @click="handleGenerateAll" :disabled="isGenerating || !aiTopic.trim()">
+                <Sparkles v-if="!isGenerating" :size="16" />
+                <span v-if="isGenerating" class="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"></span>
+                {{ isGenerating ? 'AI đang làm việc...' : 'Tự Động Viết Bài' }}
+              </button>
             </div>
+            <p class="text-[0.6875rem] text-text-tertiary">Chỉ cần 1 click, AI sẽ tự viết nội dung, làm chuẩn SEO và tạo luôn ảnh bìa cho bạn.</p>
           </div>
 
-          <!-- Form Fields -->
-          <div class="grid grid-cols-1 gap-4">
-            <div>
+          <!-- Form Fields (Collapsible or just separated) -->
+          <div class="mt-8 border-t border-border-subtle pt-6">
+            <h3 class="text-sm font-semibold text-text-secondary mb-4">Chi tiết bài viết (Có thể tự sửa)</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <label class="block text-sm text-text-secondary mb-1">Tiêu đề (Tạo tự động Slug)</label>
               <input v-model="form.title" type="text" class="input-modern w-full" />
             </div>
@@ -229,8 +215,8 @@ async function handleDelete(slug: string) {
             </div>
 
             <div>
-              <label class="block text-sm text-text-secondary mb-1">Nội dung (Markdown)</label>
-              <textarea v-model="form.content" rows="12" class="input-modern w-full font-mono text-sm leading-relaxed"></textarea>
+              <label class="block text-[0.6875rem] font-medium text-text-secondary mb-1">Nội dung bài (Markdown)</label>
+              <textarea v-model="form.content" rows="12" class="input-modern w-full font-mono text-sm leading-relaxed p-4 bg-bg-elevated/50 border-border-default hover:border-border-hover focus:border-accent transition-colors"></textarea>
             </div>
           </div>
         </div>
