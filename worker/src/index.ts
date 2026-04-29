@@ -1166,7 +1166,8 @@ async function handleNotificationWebhook(request: Request, env: Env): Promise<Re
   try {
     const pushTitle = parsed.type === 'income' ? '💰 Tiền vào tài khoản' : '💸 Tiền ra tài khoản'
     const pushBody = `${parsed.type === 'income' ? '+' : '-'}${parsed.amount.toLocaleString('vi-VN')}đ • ${walletName}`
-    await sendPushToUser(userId, env, { title: pushTitle, body: pushBody, tag: `tx-${tx.id}`, url: '/' })
+    const unreadCount = notiList.filter(n => !n.read).length
+    await sendPushToUser(userId, env, { title: pushTitle, body: pushBody, tag: `tx-${tx.id}`, url: '/', unreadCount })
   } catch { /* push is best-effort */ }
 
   return jsonResponse({
@@ -2282,8 +2283,9 @@ async function handlePushTest(userId: string, request: Request, env: Env): Promi
   const body = (await request.json()) as any
   const title = body.title || 'FinNote'
   const text = body.body || 'Bạn có thông báo mới'
-  
-  await sendPushToUser(userId, env, { title, body: text, url: '/' })
+  const notiList = (await getJSON<NotificationData[]>(env.SMART_NOTE_KV, `users/${userId}/notifications`)) || []
+  const unreadCount = notiList.filter(n => !n.read).length
+  await sendPushToUser(userId, env, { title, body: text, url: '/', unreadCount })
   return jsonResponse({ success: true, message: 'Push notification sent' })
 }
 
@@ -2294,7 +2296,7 @@ async function handlePushTest(userId: string, request: Request, env: Env): Promi
 async function sendPushToUser(
   userId: string,
   env: Env,
-  payload: { title: string; body: string; tag?: string; url?: string; data?: any }
+  payload: { title: string; body: string; tag?: string; url?: string; data?: any; unreadCount?: number }
 ): Promise<void> {
   if (!env.VAPID_PUBLIC_KEY || !env.VAPID_PRIVATE_KEY) return
 

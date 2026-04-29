@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { httpClient } from '@/shared/api/httpClient'
 import { AUTH_TOKEN_KEY } from '@/constants/auth'
 
@@ -26,6 +26,19 @@ export const useNotificationStore = defineStore('notifications', () => {
   let lastFetchTime = 0
 
   const unreadCount = computed(() => notifications.value.filter(n => !n.read).length)
+
+  // Sync PWA App Badge on iOS/Android
+  watch(unreadCount, (count) => {
+    if (navigator && 'setAppBadge' in navigator) {
+      if (count > 0) {
+        navigator.setAppBadge(count).catch(() => {})
+      } else {
+        if ('clearAppBadge' in navigator) {
+          navigator.clearAppBadge().catch(() => {})
+        }
+      }
+    }
+  }, { immediate: true })
 
   const filtered = computed(() =>
     filter.value === 'unread'
