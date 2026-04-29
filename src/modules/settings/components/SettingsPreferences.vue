@@ -24,7 +24,7 @@ function changeCurrency(code: CurrencyCode) {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-6 mb-6">
     <!-- Language -->
     <div>
       <div class="text-text-secondary mb-3 flex items-center gap-2">
