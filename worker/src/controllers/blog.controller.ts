@@ -174,7 +174,7 @@ Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải th
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             system_instruction: {
-              parts: { text: systemPrompt }
+              parts: [{ text: systemPrompt }]
             },
             contents: [{
               parts: [{ text: `Chủ đề: ${topic}` }]
