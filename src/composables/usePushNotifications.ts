@@ -7,7 +7,7 @@
  * 3. Service worker must handle 'push' and 'notificationclick' events
  */
 
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { httpClient } from '@/shared/api/httpClient'
 import { useUiStore } from '@/stores/ui'
 import { useI18n } from 'vue-i18n'
@@ -148,9 +148,20 @@ export function usePushNotifications() {
     }
   }
 
+  function handleVisibilityChange() {
+    if (document.visibilityState === 'visible') {
+      checkState()
+    }
+  }
+
   onMounted(() => {
     checkSupport()
     checkState()
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+  })
+
+  onUnmounted(() => {
+    document.removeEventListener('visibilitychange', handleVisibilityChange)
   })
 
   return {

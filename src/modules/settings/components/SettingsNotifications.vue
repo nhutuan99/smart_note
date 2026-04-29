@@ -47,7 +47,7 @@ const {
           </span>
           <button
             @click="togglePush"
-            :disabled="pushLoading || !pushSupported || pushPermission === 'denied'"
+            :disabled="pushLoading || !pushSupported"
             class="border-border-default text-text-secondary hover:bg-bg-hover hover:text-text-primary flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <span
