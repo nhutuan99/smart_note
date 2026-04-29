@@ -56,7 +56,7 @@ async function confirmDeleteAccount() {
         <button
           id="logout-btn"
           @click="finance.reset(); auth.logout(); router.push('/login')"
-          class="border-border-default hover:bg-bg-hover hover:text-text-primary text-text-secondary flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-150"
+          class="btn-secondary shrink-0 whitespace-nowrap"
         >
           <LogOut :size="16" />
           {{ t('settings.signOut') }}
@@ -128,11 +128,11 @@ async function confirmDeleteAccount() {
               <div class="flex gap-3">
                 <button
                   @click="isDeleteModalOpen = false; deletePasswordForm.password = ''"
-                  class="border-border-default text-text-secondary hover:bg-bg-hover flex-1 rounded-xl border py-2.5 font-medium transition-colors"
+                  class="btn-secondary flex-1"
                 >
                   {{ t('common.cancel') }}
                 </button>
-                <button @click="confirmDeleteAccount" :disabled="deleteLoading" class="bg-error flex-1 rounded-xl py-2.5 font-medium text-white shadow-lg shadow-red-500/30 transition-opacity disabled:opacity-50">
+                <button @click="confirmDeleteAccount" :disabled="deleteLoading" class="btn-danger flex-1 py-2.5 shadow-lg shadow-red-500/30 disabled:opacity-50">
                   <span v-if="deleteLoading" class="inline-block h-5 w-5 animate-spin rounded-full border-2 border-white/20 border-l-white"></span>
                   <span v-else>{{ t('settings.deleteConfirmBtn') }}</span>
                 </button>

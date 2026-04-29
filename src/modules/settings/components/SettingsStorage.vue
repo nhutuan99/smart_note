@@ -73,7 +73,7 @@ function exportNotes() {
         <div class="border-border-default border-t pt-4">
           <div class="bg-bg-elevated mb-2 h-1.5 overflow-hidden rounded-full">
             <div
-              class="bg-accent h-full min-w-[0.125rem] rounded-full transition-all duration-300"
+              class="bg-accent h-full min-w-0.5 rounded-full transition-all duration-300"
               :style="{ width: Math.min((parseFloat(storageUsed) / 10240) * 100, 100) + '%' }"
             ></div>
           </div>
@@ -88,7 +88,7 @@ function exportNotes() {
         <Download :size="18" />
         <h3 class="text-sm font-semibold">{{ t('settings.dataManagement') }}</h3>
       </div>
-      <div class="bg-bg-surface border-border-default rounded-xl border p-5">
+      <div class="card-premium p-5">
         <div class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
           <div>
             <h4 class="mb-0.5 text-sm font-semibold">{{ t('settings.exportNotes') }}</h4>
@@ -97,7 +97,7 @@ function exportNotes() {
           <button
             id="export-notes-btn"
             @click="exportNotes"
-            class="border-border-default text-text-secondary hover:bg-bg-hover hover:text-text-primary flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-150"
+            class="btn-secondary shrink-0"
           >
             <Download :size="16" />
             {{ t('settings.exportData') }}

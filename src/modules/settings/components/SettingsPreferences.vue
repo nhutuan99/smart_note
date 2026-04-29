@@ -31,7 +31,7 @@ function changeCurrency(code: CurrencyCode) {
         <Globe :size="18" />
         <h3 class="text-sm font-semibold">{{ t('settings.language') }}</h3>
       </div>
-      <div class="bg-bg-surface border-border-default rounded-xl border p-5">
+      <div class="card-premium p-5">
         <div class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
           <div>
             <h4 class="mb-0.5 text-sm font-semibold">{{ t('settings.language') }}</h4>
@@ -71,7 +71,7 @@ function changeCurrency(code: CurrencyCode) {
         <DollarSign :size="18" />
         <h3 class="text-sm font-semibold">{{ t('settings.currency') }}</h3>
       </div>
-      <div class="bg-bg-surface border-border-default rounded-xl border p-5">
+      <div class="card-premium p-5">
         <div class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
           <div>
             <h4 class="mb-0.5 text-sm font-semibold">{{ t('settings.currencyDisplay') }}</h4>

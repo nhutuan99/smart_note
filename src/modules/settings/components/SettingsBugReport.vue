@@ -13,7 +13,7 @@ const ui = useUiStore()
       <Bug :size="18" />
       <h3 class="text-sm font-semibold">{{ t('bugReport.sectionTitle') }}</h3>
     </div>
-    <div class="bg-bg-surface border-border-default rounded-xl border p-5">
+    <div class="card-premium p-5">
       <div class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
         <div>
           <h4 class="mb-0.5 text-sm font-semibold">{{ t('bugReport.sendReport') }}</h4>

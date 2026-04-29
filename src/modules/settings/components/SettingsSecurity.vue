@@ -136,7 +136,7 @@ function cancelForgotPin() {
         <Lock :size="18" />
         <h3 class="text-sm font-semibold">{{ t('settings.pinSecurity') }}</h3>
       </div>
-      <div class="bg-bg-surface border-border-default rounded-xl border p-5">
+      <div class="card-premium p-5">
         <div class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
           <div>
             <h4 class="mb-0.5 text-sm font-semibold">
@@ -155,7 +155,7 @@ function cancelForgotPin() {
             </span>
             <button
               @click="showPinForm = !showPinForm"
-              class="border-border-default text-text-secondary hover:bg-bg-hover hover:text-text-primary flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-150"
+              class="btn-secondary shrink-0 whitespace-nowrap"
             >
               <Lock :size="16" />
               {{ hasPin ? t('settings.changePin') : t('settings.setupPin') }}
@@ -242,7 +242,7 @@ function cancelForgotPin() {
               <div class="flex gap-2">
                 <button
                   @click="showPinForm = false; pinForm = { currentPin: '', newPin: '', confirmPin: '' }"
-                  class="border-border-default text-text-secondary hover:bg-bg-hover flex-1 rounded-lg border py-2 text-sm"
+                  class="btn-secondary flex-1"
                 >
                   {{ t('common.cancel') }}
                 </button>
@@ -418,7 +418,7 @@ function cancelForgotPin() {
                     <div class="flex gap-2">
                       <button
                         @click="cancelForgotPin"
-                        class="border-border-default text-text-secondary hover:bg-bg-hover flex-1 rounded-lg border py-2 text-sm"
+                        class="btn-secondary flex-1"
                       >
                         {{ t('common.cancel') }}
                       </button>

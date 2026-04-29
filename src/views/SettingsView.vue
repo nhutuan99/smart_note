@@ -34,7 +34,7 @@ const { t } = useI18n()
         <span class="text-text-secondary font-semibold tracking-wide">FinNote</span>
       </div>
       <p class="text-text-tertiary text-xs">
-        &copy; {{ new Date().getFullYear() }} Antigravity. All rights reserved.
+        &copy; {{ new Date().getFullYear() }} FinNote. All rights reserved.
       </p>
     </div>
   </div>
