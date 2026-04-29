@@ -148,8 +148,8 @@ export async function handleDeleteBlog(userId: string, slug: string, env: Env): 
 export async function handleGenerateBlogContent(userId: string, request: Request, env: Env): Promise<Response> {
   if (!(await isAdmin(userId, env))) return errorResponse('Forbidden', 403)
 
-  const { topic } = (await request.json()) as { topic: string }
-  if (!topic) return errorResponse('Missing topic', 400)
+  const { topic, imageBase64 } = (await request.json()) as { topic: string; imageBase64?: string }
+  if (!topic && !imageBase64) return errorResponse('Missing topic or image', 400)
 
   const systemPrompt = `Bạn là một chuyên gia viết blog về quản lý tài chính cá nhân.
 Nhiệm vụ: Viết một bài blog chuẩn SEO về chủ đề được yêu cầu để giúp người dùng biết cách quản lý tiền bạc và giới thiệu khéo léo về ứng dụng "FinNote".
@@ -167,6 +167,22 @@ Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải th
 
     if (env.GEMINI_API_KEY) {
       // Use Google Gemini API
+      let inlineData = undefined
+      if (imageBase64) {
+        const match = imageBase64.match(/^data:(image\/[a-zA-Z]+);base64,(.+)$/)
+        if (match) {
+          inlineData = { mime_type: match[1], data: match[2] }
+        } else {
+          // Attempt default decode if no data prefix
+          inlineData = { mime_type: "image/jpeg", data: imageBase64 }
+        }
+      }
+
+      const promptParts: any[] = []
+      if (topic) promptParts.push({ text: `Yêu cầu / Chủ đề: ${topic}` })
+      if (inlineData) promptParts.push({ inline_data: inlineData })
+      if (promptParts.length === 0) promptParts.push({ text: "Hãy viết 1 bài blog về quản lý tài chính cá nhân." })
+
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${env.GEMINI_API_KEY}`,
         {
@@ -177,7 +193,7 @@ Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải th
               parts: [{ text: systemPrompt }]
             },
             contents: [{
-              parts: [{ text: `Chủ đề: ${topic}` }]
+              parts: promptParts
             }],
             generationConfig: {
               temperature: 0.7,

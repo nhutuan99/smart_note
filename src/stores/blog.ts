@@ -74,8 +74,8 @@ export const useBlogStore = defineStore('blog', () => {
     }
   }
 
-  async function generateContent(topic: string) {
-    const response = await httpClient.post<{ data: any }>('/api/blogs/generate-content', { topic })
+  async function generateContent(topic: string, imageBase64?: string) {
+    const response = await httpClient.post<{ data: any }>('/api/blogs/generate-content', { topic, imageBase64 })
     return response?.data
   }
 

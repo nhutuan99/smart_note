@@ -11,6 +11,7 @@ const uiStore = useUiStore()
 const isModalOpen = ref(false)
 const isGenerating = ref(false)
 const aiTopic = ref('')
+const aiImageBase64 = ref('')
 const aiImagePrompt = ref('')
 
 const form = ref<Partial<Blog>>({
@@ -35,15 +36,15 @@ function openModal() {
 }
 
 async function handleGenerateAll() {
-  if (!aiTopic.value.trim()) {
-    uiStore.showToast('warning', 'Vui lòng nhập ý tưởng trước')
+  if (!aiTopic.value.trim() && !aiImageBase64.value) {
+    uiStore.showToast('warning', 'Vui lòng nhập ý tưởng hoặc dán ảnh vào')
     return
   }
   
   isGenerating.value = true
   try {
-    uiStore.showToast('info', 'Đang nhờ AI viết bài...')
-    const data = await blogStore.generateContent(aiTopic.value)
+    uiStore.showToast('info', 'Đang nhờ AI phân tích & viết bài...')
+    const data = await blogStore.generateContent(aiTopic.value, aiImageBase64.value)
     if (data) {
       form.value.title = data.title || ''
       form.value.excerpt = data.excerpt || ''
@@ -64,6 +65,27 @@ async function handleGenerateAll() {
   } finally {
     isGenerating.value = false
   }
+}
+
+function handlePaste(e: ClipboardEvent) {
+  const items = e.clipboardData?.items
+  if (!items) return
+  for (let i = 0; i < items.length; i++) {
+    if (items[i].type.indexOf('image') !== -1) {
+      const blob = items[i].getAsFile()
+      if (blob) {
+        const reader = new FileReader()
+        reader.onload = (event) => {
+          aiImageBase64.value = event.target?.result as string
+        }
+        reader.readAsDataURL(blob)
+      }
+    }
+  }
+}
+
+function removeUploadedImage() {
+  aiImageBase64.value = ''
 }
 
 async function handleSave() {
@@ -164,31 +186,53 @@ async function handleDelete(slug: string) {
     <div v-if="isModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div class="card-premium w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl border-border-default">
         <!-- Header -->
-        <div class="flex items-center justify-between p-5 border-b border-border-subtle shrink-0">
-          <h2 class="text-lg font-bold flex items-center gap-2">
-            <Sparkles :size="18" class="text-accent" /> Soạn bài viết bằng AI
+        <div class="flex items-center justify-between p-6 border-b border-border-subtle shrink-0">
+          <h2 class="text-xl font-bold flex items-center gap-2">
+            <Sparkles :size="20" class="text-accent" /> Soạn bài viết bằng AI
           </h2>
-          <button class="text-text-disabled hover:text-text-primary" @click="isModalOpen = false">Đóng</button>
+          <button class="text-text-disabled hover:text-text-primary p-2" @click="isModalOpen = false">Đóng</button>
         </div>
 
         <!-- Body -->
-        <div class="p-5 overflow-y-auto flex-1 custom-scrollbar space-y-6">
+        <div class="p-8 overflow-y-auto flex-1 custom-scrollbar space-y-8">
           
           <!-- AI Generation Section -->
-          <div class="bg-gradient-to-r from-accent/10 to-transparent border border-accent/20 rounded-xl p-6 space-y-4">
-            <h3 class="text-sm font-semibold text-accent flex items-center gap-2 mb-2"><Sparkles :size="16" /> Tự động hóa bằng AI</h3>
-            <div class="flex flex-col md:flex-row gap-3 items-end">
-              <div class="flex-1 w-full">
-                <label class="block text-[0.6875rem] text-text-secondary mb-1 uppercase font-semibold tracking-wide">Bạn muốn viết về gì?</label>
-                <input v-model="aiTopic" type="text" class="input-modern w-full text-base py-3" placeholder="VD: Mẹo tiết kiệm 10 triệu/tháng với FinNote..." :disabled="isGenerating" @keyup.enter="handleGenerateAll" />
-              </div>
-              <button class="btn-primary py-3 px-6 h-[46px] whitespace-nowrap shadow-lg shadow-accent/20 hover:shadow-accent/40" @click="handleGenerateAll" :disabled="isGenerating || !aiTopic.trim()">
-                <Sparkles v-if="!isGenerating" :size="16" />
-                <span v-if="isGenerating" class="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"></span>
-                {{ isGenerating ? 'AI đang làm việc...' : 'Tự Động Viết Bài' }}
-              </button>
+          <div class="bg-gradient-to-br from-accent/10 to-transparent border border-accent/20 rounded-2xl p-8 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-base font-bold text-accent flex items-center gap-2"><Sparkles :size="18" /> Tự động hóa đa phương tiện</h3>
+              <p class="text-[0.75rem] text-text-tertiary">Dán ảnh (Ctrl+V) hoặc nhập text để AI tự viết</p>
             </div>
-            <p class="text-[0.6875rem] text-text-tertiary">Chỉ cần 1 click, AI sẽ tự viết nội dung, làm chuẩn SEO và tạo luôn ảnh bìa cho bạn.</p>
+            
+            <div class="flex flex-col gap-4">
+              <div class="relative">
+                <textarea 
+                  v-model="aiTopic" 
+                  @paste="handlePaste"
+                  rows="3"
+                  class="input-modern w-full text-base p-4 resize-none min-h-[100px]" 
+                  placeholder="Gõ ý tưởng của bạn, hoặc dán (Ctrl+V) một bức ảnh vào đây để AI phân tích..." 
+                  :disabled="isGenerating" 
+                ></textarea>
+                
+                <!-- Image Preview Overlay -->
+                <div v-if="aiImageBase64" class="absolute bottom-4 right-4 group">
+                  <div class="w-16 h-16 rounded-lg overflow-hidden border-2 border-accent shadow-lg bg-bg-surface">
+                    <img :src="aiImageBase64" class="w-full h-full object-cover" />
+                    <button @click="removeUploadedImage" class="absolute -top-2 -right-2 bg-error text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Trash2 :size="12" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="flex justify-end">
+                <button class="btn-primary py-3 px-8 h-[48px] shadow-lg shadow-accent/20 hover:shadow-accent/40" @click="handleGenerateAll" :disabled="isGenerating || (!aiTopic.trim() && !aiImageBase64)">
+                  <Sparkles v-if="!isGenerating" :size="18" class="mr-2" />
+                  <span v-if="isGenerating" class="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"></span>
+                  {{ isGenerating ? 'AI đang phân tích và viết...' : 'Tự Động Viết Bài' }}
+                </button>
+              </div>
+            </div>
           </div>
 
           <!-- Form Fields (Collapsible or just separated) -->
@@ -222,10 +266,10 @@ async function handleDelete(slug: string) {
         </div>
 
         <!-- Footer -->
-        <div class="p-5 border-t border-border-subtle flex items-center justify-end gap-3 shrink-0 bg-bg-surface rounded-b-xl">
-          <button class="btn-secondary" @click="isModalOpen = false">Hủy</button>
-          <button class="btn-primary" @click="handleSave" :disabled="isGenerating">
-            <CheckCircle2 :size="16" /> Xuất Bản Blog
+        <div class="p-6 border-t border-border-subtle flex items-center justify-end gap-4 shrink-0 bg-bg-surface rounded-b-xl">
+          <button class="btn-secondary px-6" @click="isModalOpen = false">Hủy</button>
+          <button class="btn-primary px-6" @click="handleSave" :disabled="isGenerating">
+            <CheckCircle2 :size="18" class="mr-2" /> Xuất Bản Blog
           </button>
         </div>
       </div>
