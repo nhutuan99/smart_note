@@ -268,6 +268,7 @@ export default {
     dataManagement: 'Data Management',
     exportNotes: 'Export Notes',
     exportDesc: 'Download all your notes as a JSON file',
+    exportData: 'Export Data',
     exportSuccess: 'Notes exported successfully',
     // PIN
     pinSecurity: 'PIN Security',

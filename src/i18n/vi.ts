@@ -268,6 +268,7 @@ export default {
     dataManagement: 'Quản lý dữ liệu',
     exportNotes: 'Xuất Notes',
     exportDesc: 'Tải xuống tất cả ghi chú dưới dạng JSON',
+    exportData: 'Xuất dữ liệu',
     exportSuccess: 'Xuất notes thành công',
     // PIN
     pinSecurity: 'Bảo mật PIN',
