@@ -13,9 +13,9 @@ export const useBlogStore = defineStore('blog', () => {
     isLoading.value = true
     error.value = null
     try {
-      const response = await httpClient.get<{ data: Blog[] }>('/api/blogs')
-      if (response && response.data) {
-        blogs.value = response.data
+      const response = await httpClient.get<Blog[]>('/api/blogs')
+      if (response) {
+        blogs.value = response
       }
     } catch (err: any) {
       error.value = err.message || 'Failed to fetch blogs'
@@ -28,10 +28,10 @@ export const useBlogStore = defineStore('blog', () => {
     isLoading.value = true
     error.value = null
     try {
-      const response = await httpClient.get<{ data: Blog }>(`/api/blogs/${slug}`)
-      if (response && response.data) {
-        currentBlog.value = response.data
-        return response.data
+      const response = await httpClient.get<Blog>(`/api/blogs/${slug}`)
+      if (response) {
+        currentBlog.value = response
+        return response
       }
     } catch (err: any) {
       error.value = err.message || 'Failed to fetch blog'
@@ -43,25 +43,25 @@ export const useBlogStore = defineStore('blog', () => {
 
   // Admin Methods
   async function createBlog(data: Partial<Blog>) {
-    const response = await httpClient.post<{ data: Blog }>('/api/blogs', data)
-    if (response && response.data) {
-      blogs.value.unshift(response.data)
-      return response.data
+    const response = await httpClient.post<Blog>('/api/blogs', data)
+    if (response) {
+      blogs.value.unshift(response)
+      return response
     }
     return null
   }
 
   async function updateBlog(slug: string, data: Partial<Blog>) {
-    const response = await httpClient.put<{ data: Blog }>(`/api/blogs/${slug}`, data)
-    if (response && response.data) {
+    const response = await httpClient.put<Blog>(`/api/blogs/${slug}`, data)
+    if (response) {
       const index = blogs.value.findIndex((b) => b.slug === slug)
       if (index !== -1) {
-        blogs.value[index] = response.data
+        blogs.value[index] = response
       }
       if (currentBlog.value?.slug === slug) {
-        currentBlog.value = response.data
+        currentBlog.value = response
       }
-      return response.data
+      return response
     }
     return null
   }

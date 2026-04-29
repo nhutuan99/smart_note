@@ -171,9 +171,14 @@ async function handleSave() {
 
   try {
     isGenerating.value = true
-    await blogStore.createBlog(form.value)
-    uiStore.showToast('success', t('blog.published'))
-    isModalOpen.value = false
+    const newBlog = await blogStore.createBlog(form.value)
+    if (newBlog) {
+      uiStore.showToast('success', t('blog.published'))
+      isModalOpen.value = false
+      router.push(`/blog/${newBlog.slug}`)
+    } else {
+      uiStore.showToast('error', t('blog.publishFailed'))
+    }
   } catch (err: any) {
     uiStore.showToast('error', t('blog.publishFailed') + ': ' + err.message)
   } finally {
