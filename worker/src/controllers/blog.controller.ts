@@ -225,7 +225,7 @@ Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải th
       // Step 1: Generate metadata only (small JSON)
       const metaPrompt = `Bạn là chuyên gia SEO blog tài chính. Trả về ĐÚNG JSON (không có text thêm):
 {"title":"Tiêu đề hấp dẫn dưới 60 ký tự","excerpt":"Mô tả SEO dưới 160 ký tự","tags":["tag1","tag2","tag3"],"seoKeywords":"keyword1, keyword2"}`
-      const metaResponse = await env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
+      const metaResponse = await env.AI.run('@cf/meta/llama-3.1-8b-instruct' as any, {
         messages: [
           { role: 'system', content: metaPrompt },
           { role: 'user', content: `Chủ đề: ${topic}` }
@@ -245,12 +245,12 @@ Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải th
       const contentPrompt = `Bạn là chuyên gia viết blog tài chính cá nhân. Viết bài blog bằng Markdown cho chủ đề dưới đây.
 Yêu cầu: Có mở bài, thân bài chia H2/H3, bullet points, bold text, kết bài Call to Action giới thiệu FinNote.
 Chỉ trả về nội dung Markdown, không bọc trong JSON hay code block.`
-      const contentResponse = await env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
+      const contentResponse = await env.AI.run('@cf/meta/llama-3.1-8b-instruct' as any, {
         messages: [
           { role: 'system', content: contentPrompt },
           { role: 'user', content: `Tiêu đề: ${meta.title || topic}\nChủ đề: ${topic}` }
         ],
-        max_tokens: 8192,
+        max_tokens: 2048,
         temperature: 0.7
       }) as any
 
