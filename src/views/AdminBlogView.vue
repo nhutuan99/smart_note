@@ -119,13 +119,15 @@ async function handleGenerate() {
         form.value.content = inputContent.value // Keep original markdown
         form.value.tags = data.tags || []
 
-        // Generate cover image from topic
-        uiStore.showToast('info', t('blog.generatingCover'))
-        const imagePrompt = data.seoKeywords || data.title || ''
-        if (imagePrompt) {
-          const imageUrl = await blogStore.generateImage(imagePrompt)
-          if (imageUrl) form.value.imageUrl = imageUrl
-        }
+        // Generate cover image (non-blocking)
+        try {
+          const imagePrompt = data.seoKeywords || data.title || ''
+          if (imagePrompt) {
+            uiStore.showToast('info', t('blog.generatingCover'))
+            const imageUrl = await blogStore.generateImage(imagePrompt)
+            if (imageUrl) form.value.imageUrl = imageUrl
+          }
+        } catch { /* cover image is optional */ }
 
         previewHtml.value = await marked(form.value.content || '', { async: true })
         hasPreview.value = true
@@ -141,11 +143,13 @@ async function handleGenerate() {
         form.value.content = data.content || ''
         form.value.tags = data.tags || []
 
-        // Generate cover image
-        const imagePrompt = data.seoKeywords || inputContent.value
-        uiStore.showToast('info', t('blog.generatingCover'))
-        const imageUrl = await blogStore.generateImage(imagePrompt)
-        if (imageUrl) form.value.imageUrl = imageUrl
+        // Generate cover image (non-blocking)
+        try {
+          const imagePrompt = data.seoKeywords || inputContent.value
+          uiStore.showToast('info', t('blog.generatingCover'))
+          const imageUrl = await blogStore.generateImage(imagePrompt)
+          if (imageUrl) form.value.imageUrl = imageUrl
+        } catch { /* cover image is optional */ }
 
         previewHtml.value = await marked(form.value.content || '', { async: true })
         hasPreview.value = true
