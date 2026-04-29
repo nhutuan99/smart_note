@@ -22,7 +22,7 @@ const router = useRouter()
 const finance = useFinancePolling()
 const ui = useUiStore()
 
-const AUTO_SOURCES: Transaction['source'][] = ['sms', 'casso', 'notification', 'telegram']
+const AUTO_SOURCES: Transaction['source'][] = ['sms', 'notification', 'telegram']
 
 async function deleteTx(tx: Transaction) {
   // Auto-sourced transactions require PIN to prevent accidental/unauthorized deletion

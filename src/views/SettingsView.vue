@@ -9,7 +9,31 @@ import { httpClient } from '@/shared/api/httpClient'
 import { useI18n } from 'vue-i18n'
 import { setLocale, currentLocale } from '@/i18n'
 import type { User } from '@/types'
-import { User as UserIcon, Database, Download, LogOut, HardDrive, FileText, Shield, Lock, Eye, EyeOff, AlertTriangle, Trash2, Camera, Save, Link, Globe, KeyRound, DollarSign, Bug, ChevronDown, Check, ImageIcon, Bell } from 'lucide-vue-next'
+import {
+  User as UserIcon,
+  Database,
+  Download,
+  LogOut,
+  HardDrive,
+  FileText,
+  Shield,
+  Lock,
+  Eye,
+  EyeOff,
+  AlertTriangle,
+  Trash2,
+  Camera,
+  Save,
+  Link,
+  Globe,
+  KeyRound,
+  DollarSign,
+  Bug,
+  ChevronDown,
+  Check,
+  ImageIcon,
+  Bell
+} from 'lucide-vue-next'
 import { useCurrency, type CurrencyCode } from '@/composables/useCurrency'
 import { usePushNotifications } from '@/composables/usePushNotifications'
 
@@ -21,9 +45,12 @@ const finance = useFinanceStore()
 const router = useRouter()
 
 const imgError = ref(false)
-watch(() => auth.user?.avatarUrl, () => {
-  imgError.value = false
-})
+watch(
+  () => auth.user?.avatarUrl,
+  () => {
+    imgError.value = false
+  }
+)
 
 // ── Language ──
 const selectedLocale = ref(currentLocale())
@@ -34,8 +61,17 @@ function changeLocale(locale: 'vi' | 'en') {
 }
 
 // ── Currency ──
-const { currency, rateDisplay, rateLoading, rateError, setCurrency, fetchExchangeRate } = useCurrency()
-const { isSupported: pushSupported, isSubscribed: pushSubscribed, isStandalone: pushStandalone, permissionState: pushPermission, loading: pushLoading, toggle: togglePush, testPush } = usePushNotifications()
+const { currency, rateDisplay, rateLoading, rateError, setCurrency, fetchExchangeRate } =
+  useCurrency()
+const {
+  isSupported: pushSupported,
+  isSubscribed: pushSubscribed,
+  isStandalone: pushStandalone,
+  permissionState: pushPermission,
+  loading: pushLoading,
+  toggle: togglePush,
+  testPush
+} = usePushNotifications()
 
 function changeCurrency(code: CurrencyCode) {
   setCurrency(code)
@@ -96,10 +132,13 @@ const deletePasswordForm = ref({ password: '' })
 const showDeletePassword = ref(false)
 
 async function confirmDeleteAccount() {
-  if (!deletePasswordForm.value.password) return ui.showToast('error', t('settings.passwordRequired'))
+  if (!deletePasswordForm.value.password)
+    return ui.showToast('error', t('settings.passwordRequired'))
   try {
     deleteLoading.value = true
-    await httpClient.post('/api/auth/delete-account', { password: deletePasswordForm.value.password })
+    await httpClient.post('/api/auth/delete-account', {
+      password: deletePasswordForm.value.password
+    })
     ui.showToast('success', t('settings.accountDeleted'))
     isDeleteModalOpen.value = false
     finance.reset()
@@ -125,7 +164,9 @@ onMounted(async () => {
   try {
     const data = await httpClient.get<{ hasPin: boolean }>('/api/pin')
     hasPin.value = data?.hasPin || false
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 })
 
 async function savePin() {
@@ -223,8 +264,6 @@ async function resetPinWithPassword() {
   }
 }
 
-
-
 function cancelForgotPin() {
   forgotPinStep.value = null
   forgotPinPassword.value = ''
@@ -254,14 +293,22 @@ function cancelForgotPin() {
           <div class="border-border-default flex overflow-hidden rounded-lg border">
             <button
               class="px-4 py-2 text-sm font-medium transition-all duration-150"
-              :class="selectedLocale === 'vi' ? 'bg-accent-subtle text-accent' : 'bg-bg-surface text-text-secondary hover:bg-bg-hover'"
+              :class="
+                selectedLocale === 'vi'
+                  ? 'bg-accent-subtle text-accent'
+                  : 'bg-bg-surface text-text-secondary hover:bg-bg-hover'
+              "
               @click="changeLocale('vi')"
             >
               Tiếng Việt
             </button>
             <button
               class="border-border-default border-l px-4 py-2 text-sm font-medium transition-all duration-150"
-              :class="selectedLocale === 'en' ? 'bg-accent-subtle text-accent' : 'bg-bg-surface text-text-secondary hover:bg-bg-hover'"
+              :class="
+                selectedLocale === 'en'
+                  ? 'bg-accent-subtle text-accent'
+                  : 'bg-bg-surface text-text-secondary hover:bg-bg-hover'
+              "
               @click="changeLocale('en')"
             >
               English
@@ -282,27 +329,44 @@ function cancelForgotPin() {
           <div>
             <h4 class="mb-0.5 text-sm font-semibold">{{ t('settings.currencyDisplay') }}</h4>
             <p class="text-text-tertiary text-sm">{{ t('settings.currencyDesc') }}</p>
-            <p v-if="currency === 'USD' && rateDisplay" class="text-accent mt-1 text-xs font-medium">
+            <p
+              v-if="currency === 'USD' && rateDisplay"
+              class="text-accent mt-1 text-xs font-medium"
+            >
               📊 {{ rateDisplay }}
             </p>
-            <p v-if="rateError && currency === 'USD'" class="text-warning mt-1 text-xs">
+            <p
+              v-if="rateError && currency === 'USD'"
+              class="text-warning mt-1 text-xs"
+            >
               ⚠️ {{ rateError }} ({{ t('settings.fallbackRate') }})
             </p>
           </div>
           <div class="border-border-default flex overflow-hidden rounded-lg border">
             <button
               class="px-4 py-2 text-sm font-medium transition-all duration-150"
-              :class="currency === 'VND' ? 'bg-accent-subtle text-accent' : 'bg-bg-surface text-text-secondary hover:bg-bg-hover'"
+              :class="
+                currency === 'VND'
+                  ? 'bg-accent-subtle text-accent'
+                  : 'bg-bg-surface text-text-secondary hover:bg-bg-hover'
+              "
               @click="changeCurrency('VND')"
             >
               🇻🇳 VND (đ)
             </button>
             <button
               class="border-border-default border-l px-4 py-2 text-sm font-medium transition-all duration-150"
-              :class="currency === 'USD' ? 'bg-accent-subtle text-accent' : 'bg-bg-surface text-text-secondary hover:bg-bg-hover'"
+              :class="
+                currency === 'USD'
+                  ? 'bg-accent-subtle text-accent'
+                  : 'bg-bg-surface text-text-secondary hover:bg-bg-hover'
+              "
               @click="changeCurrency('USD')"
             >
-              <span v-if="rateLoading" class="inline-block h-3 w-3 animate-spin rounded-full border-2 border-text-disabled border-l-accent mr-1"></span>
+              <span
+                v-if="rateLoading"
+                class="border-text-disabled border-l-accent mr-1 inline-block h-3 w-3 animate-spin rounded-full border-2"
+              ></span>
               🇺🇸 USD ($)
             </button>
           </div>
@@ -317,7 +381,10 @@ function cancelForgotPin() {
         <h3 class="text-sm font-semibold">{{ t('settings.profile') }}</h3>
       </div>
       <div class="card-premium p-5">
-        <div v-if="!isEditingProfile" class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+        <div
+          v-if="!isEditingProfile"
+          class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center"
+        >
           <div class="flex items-center gap-4">
             <div
               v-if="!auth.user?.avatarUrl || imgError"
@@ -325,11 +392,11 @@ function cancelForgotPin() {
             >
               {{ auth.user?.name?.charAt(0)?.toUpperCase() || 'U' }}
             </div>
-            <img 
-              v-else 
+            <img
+              v-else
               v-show="!imgError"
-              :src="auth.user?.avatarUrl" 
-              alt="Avatar" 
+              :src="auth.user?.avatarUrl"
+              alt="Avatar"
               class="h-[3.25rem] w-[3.25rem] rounded-full object-cover shadow-sm"
               referrerpolicy="no-referrer"
               @error="imgError = true"
@@ -348,9 +415,14 @@ function cancelForgotPin() {
         </div>
 
         <!-- Edit Profile Form -->
-        <div v-else class="flex flex-col gap-4">
+        <div
+          v-else
+          class="flex flex-col gap-4"
+        >
           <div>
-            <label class="text-text-secondary mb-1 block text-[0.6875rem] font-medium">{{ t('settings.displayName') }}</label>
+            <label class="text-text-secondary mb-1 block text-[0.6875rem] font-medium">
+              {{ t('settings.displayName') }}
+            </label>
             <input
               v-model="profileForm.name"
               type="text"
@@ -359,9 +431,14 @@ function cancelForgotPin() {
             />
           </div>
           <div>
-            <label class="text-text-secondary mb-1 block text-[0.6875rem] font-medium">{{ t('settings.avatarUrl') }}</label>
+            <label class="text-text-secondary mb-1 block text-[0.6875rem] font-medium">
+              {{ t('settings.avatarUrl') }}
+            </label>
             <div class="flex items-center gap-2">
-              <Camera :size="16" class="text-text-tertiary" />
+              <Camera
+                :size="16"
+                class="text-text-tertiary"
+              />
               <input
                 v-model.trim="profileForm.avatarUrl"
                 type="url"
@@ -381,7 +458,10 @@ function cancelForgotPin() {
           </div>
           <div class="mt-2 flex items-center justify-end gap-2">
             <button
-              @click="isEditingProfile = false; profileForm = { name: auth.user?.name || '', avatarUrl: auth.user?.avatarUrl || '' }"
+              @click="
+                isEditingProfile = false
+                profileForm = { name: auth.user?.name || '', avatarUrl: auth.user?.avatarUrl || '' }
+              "
               class="text-text-secondary hover:text-text-primary rounded-lg px-4 py-2 text-sm transition-colors"
             >
               {{ t('common.cancel') }}
@@ -391,8 +471,14 @@ function cancelForgotPin() {
               :disabled="profileLoading || !profileForm.name"
               class="btn-primary"
             >
-              <span v-if="profileLoading" class="h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-l-black"></span>
-              <Save v-else :size="14" />
+              <span
+                v-if="profileLoading"
+                class="h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-l-black"
+              ></span>
+              <Save
+                v-else
+                :size="14"
+              />
               <span>{{ t('settings.saveChanges') }}</span>
             </button>
           </div>
@@ -415,7 +501,9 @@ function cancelForgotPin() {
             />
             <div>
               <div class="text-base font-semibold">{{ storageUsed }} KB</div>
-              <div class="text-text-tertiary text-[0.6875rem]">{{ t('settings.localStorageUsed') }}</div>
+              <div class="text-text-tertiary text-[0.6875rem]">
+                {{ t('settings.localStorageUsed') }}
+              </div>
             </div>
           </div>
           <div class="flex items-center gap-3">
@@ -517,7 +605,9 @@ function cancelForgotPin() {
             <div class="flex max-w-[20rem] flex-col gap-3">
               <!-- Current PIN (only if has existing PIN) -->
               <div v-if="hasPin">
-                <label class="text-text-secondary mb-1 block text-[0.6875rem] font-medium">{{ t('settings.currentPin') }}</label>
+                <label class="text-text-secondary mb-1 block text-[0.6875rem] font-medium">
+                  {{ t('settings.currentPin') }}
+                </label>
                 <div class="relative">
                   <input
                     v-model="pinForm.currentPin"
@@ -532,14 +622,19 @@ function cancelForgotPin() {
                     class="text-text-tertiary hover:text-text-primary absolute top-1/2 right-3 -translate-y-1/2"
                     @click="showCurrentPin = !showCurrentPin"
                   >
-                    <component :is="showCurrentPin ? EyeOff : Eye" :size="14" />
+                    <component
+                      :is="showCurrentPin ? EyeOff : Eye"
+                      :size="14"
+                    />
                   </button>
                 </div>
               </div>
 
               <!-- New PIN -->
               <div>
-                <label class="text-text-secondary mb-1 block text-[0.6875rem] font-medium">{{ t('settings.newPin') }}</label>
+                <label class="text-text-secondary mb-1 block text-[0.6875rem] font-medium">
+                  {{ t('settings.newPin') }}
+                </label>
                 <div class="relative">
                   <input
                     v-model="pinForm.newPin"
@@ -554,14 +649,19 @@ function cancelForgotPin() {
                     class="text-text-tertiary hover:text-text-primary absolute top-1/2 right-3 -translate-y-1/2"
                     @click="showNewPin = !showNewPin"
                   >
-                    <component :is="showNewPin ? EyeOff : Eye" :size="14" />
+                    <component
+                      :is="showNewPin ? EyeOff : Eye"
+                      :size="14"
+                    />
                   </button>
                 </div>
               </div>
 
               <!-- Confirm PIN -->
               <div>
-                <label class="text-text-secondary mb-1 block text-[0.6875rem] font-medium">{{ t('settings.confirmPin') }}</label>
+                <label class="text-text-secondary mb-1 block text-[0.6875rem] font-medium">
+                  {{ t('settings.confirmPin') }}
+                </label>
                 <input
                   v-model="pinForm.confirmPin"
                   type="password"
@@ -574,7 +674,10 @@ function cancelForgotPin() {
 
               <div class="flex gap-2">
                 <button
-                  @click="showPinForm = false; pinForm = { currentPin: '', newPin: '', confirmPin: '' }"
+                  @click="
+                    showPinForm = false
+                    pinForm = { currentPin: '', newPin: '', confirmPin: '' }
+                  "
                   class="border-border-default text-text-secondary hover:bg-bg-hover flex-1 rounded-lg border py-2 text-sm"
                 >
                   {{ t('common.cancel') }}
@@ -589,9 +692,15 @@ function cancelForgotPin() {
               </div>
 
               <!-- Forgot PIN link (only when editing existing PIN) -->
-              <div v-if="hasPin" class="text-center">
+              <div
+                v-if="hasPin"
+                class="text-center"
+              >
                 <button
-                  @click="showPinForm = false; forgotPinStep = 'password'"
+                  @click="
+                    showPinForm = false
+                    forgotPinStep = 'password'
+                  "
                   class="text-text-tertiary hover:text-accent text-xs transition-colors"
                 >
                   {{ t('settings.forgotPin') }}
@@ -604,27 +713,46 @@ function cancelForgotPin() {
         <!-- ── Forgot PIN Password Modal ── -->
         <Teleport to="body">
           <Transition name="fade">
-            <div v-if="forgotPinStep !== null" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="cancelForgotPin"></div>
-              <div class="bg-bg-surface border-border-default relative w-full max-w-[22rem] rounded-2xl border p-6 shadow-xl">
-
+            <div
+              v-if="forgotPinStep !== null"
+              class="fixed inset-0 z-50 flex items-center justify-center p-4"
+            >
+              <div
+                class="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                @click="cancelForgotPin"
+              ></div>
+              <div
+                class="bg-bg-surface border-border-default relative w-full max-w-[22rem] rounded-2xl border p-6 shadow-xl"
+              >
                 <!-- Step: password – verify identity -->
                 <template v-if="forgotPinStep === 'password'">
                   <div class="mb-5 flex items-center gap-3">
-                    <div class="bg-warning/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
-                      <Lock :size="20" class="text-warning" />
+                    <div
+                      class="bg-warning/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+                    >
+                      <Lock
+                        :size="20"
+                        class="text-warning"
+                      />
                     </div>
                     <div>
                       <h3 class="font-semibold">{{ t('forgot.pinTitle') }}</h3>
-                      <p class="text-text-tertiary text-xs">{{ t('forgot.pinVerifyPasswordDesc') }}</p>
+                      <p class="text-text-tertiary text-xs">
+                        {{ t('forgot.pinVerifyPasswordDesc') }}
+                      </p>
                     </div>
                   </div>
 
                   <div class="flex flex-col gap-3">
                     <div>
-                      <label class="text-text-secondary mb-1 block text-xs font-medium">{{ t('settings.confirmPassword') }}</label>
+                      <label class="text-text-secondary mb-1 block text-xs font-medium">
+                        {{ t('settings.confirmPassword') }}
+                      </label>
                       <div class="relative">
-                        <Lock :size="16" class="text-text-tertiary pointer-events-none absolute top-1/2 left-3 -translate-y-1/2" />
+                        <Lock
+                          :size="16"
+                          class="text-text-tertiary pointer-events-none absolute top-1/2 left-3 -translate-y-1/2"
+                        />
                         <input
                           v-model="forgotPinPassword"
                           :type="showForgotPinPassword ? 'text' : 'password'"
@@ -638,23 +766,37 @@ function cancelForgotPin() {
                           class="text-text-tertiary hover:text-text-primary absolute top-1/2 right-3 -translate-y-1/2"
                           @click="showForgotPinPassword = !showForgotPinPassword"
                         >
-                          <component :is="showForgotPinPassword ? EyeOff : Eye" :size="14" />
+                          <component
+                            :is="showForgotPinPassword ? EyeOff : Eye"
+                            :size="14"
+                          />
                         </button>
                       </div>
                     </div>
 
-                    <p v-if="forgotPinError" class="text-error text-center text-sm">{{ forgotPinError }}</p>
+                    <p
+                      v-if="forgotPinError"
+                      class="text-error text-center text-sm"
+                    >
+                      {{ forgotPinError }}
+                    </p>
 
                     <button
                       @click="verifyPasswordForPin"
                       :disabled="forgotPinLoading || !forgotPinPassword"
                       class="btn-primary w-full justify-center py-2.5 disabled:opacity-50"
                     >
-                      <span v-if="forgotPinLoading" class="h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-l-black"></span>
+                      <span
+                        v-if="forgotPinLoading"
+                        class="h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-l-black"
+                      ></span>
                       <span v-else>{{ t('common.confirm') }}</span>
                     </button>
 
-                    <button @click="cancelForgotPin" class="text-text-tertiary hover:text-text-primary text-center text-sm transition-colors">
+                    <button
+                      @click="cancelForgotPin"
+                      class="text-text-tertiary hover:text-text-primary text-center text-sm transition-colors"
+                    >
                       {{ t('common.cancel') }}
                     </button>
                   </div>
@@ -663,8 +805,13 @@ function cancelForgotPin() {
                 <!-- Step: newpin – set new PIN -->
                 <template v-else-if="forgotPinStep === 'newpin'">
                   <div class="mb-5 flex items-center gap-3">
-                    <div class="bg-accent/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
-                      <KeyRound :size="20" class="text-accent" />
+                    <div
+                      class="bg-accent/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+                    >
+                      <KeyRound
+                        :size="20"
+                        class="text-accent"
+                      />
                     </div>
                     <div>
                       <h3 class="font-semibold">{{ t('forgot.pinNewTitle') }}</h3>
@@ -674,7 +821,9 @@ function cancelForgotPin() {
 
                   <div class="flex flex-col gap-3">
                     <div>
-                      <label class="text-text-secondary mb-1 block text-xs font-medium">{{ t('settings.newPin') }}</label>
+                      <label class="text-text-secondary mb-1 block text-xs font-medium">
+                        {{ t('settings.newPin') }}
+                      </label>
                       <input
                         v-model="forgotPinNew"
                         type="password"
@@ -685,7 +834,9 @@ function cancelForgotPin() {
                       />
                     </div>
                     <div>
-                      <label class="text-text-secondary mb-1 block text-xs font-medium">{{ t('settings.confirmPin') }}</label>
+                      <label class="text-text-secondary mb-1 block text-xs font-medium">
+                        {{ t('settings.confirmPin') }}
+                      </label>
                       <input
                         v-model="forgotPinConfirm"
                         type="password"
@@ -696,16 +847,29 @@ function cancelForgotPin() {
                       />
                     </div>
 
-                    <p v-if="forgotPinError" class="text-error text-center text-sm">{{ forgotPinError }}</p>
+                    <p
+                      v-if="forgotPinError"
+                      class="text-error text-center text-sm"
+                    >
+                      {{ forgotPinError }}
+                    </p>
 
                     <div class="flex gap-2">
-                      <button @click="cancelForgotPin" class="border-border-default text-text-secondary hover:bg-bg-hover flex-1 rounded-lg border py-2 text-sm">{{ t('common.cancel') }}</button>
+                      <button
+                        @click="cancelForgotPin"
+                        class="border-border-default text-text-secondary hover:bg-bg-hover flex-1 rounded-lg border py-2 text-sm"
+                      >
+                        {{ t('common.cancel') }}
+                      </button>
                       <button
                         @click="resetPinWithPassword"
                         :disabled="forgotPinLoading || !forgotPinNew || !forgotPinConfirm"
                         class="btn-primary flex-1 justify-center py-2 disabled:opacity-50"
                       >
-                        <span v-if="forgotPinLoading" class="h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-l-black"></span>
+                        <span
+                          v-if="forgotPinLoading"
+                          class="h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-l-black"
+                        ></span>
                         <span v-else>{{ t('settings.savePin') }}</span>
                       </button>
                     </div>
@@ -730,12 +894,17 @@ function cancelForgotPin() {
             <h4 class="mb-0.5 text-sm font-semibold">{{ t('settings.pushNotifications') }}</h4>
             <p class="text-text-tertiary text-sm">
               <template v-if="!pushSupported">{{ t('settings.pushNotSupported') }}</template>
-              <template v-else-if="pushPermission === 'denied'">{{ t('settings.pushDenied') }}</template>
+              <template v-else-if="pushPermission === 'denied'">
+                {{ t('settings.pushDenied') }}
+              </template>
               <template v-else-if="pushSubscribed">{{ t('settings.pushEnabled') }}</template>
               <template v-else>{{ t('settings.pushDisabled') }}</template>
             </p>
             <!-- iOS standalone hint -->
-            <p v-if="pushSupported && !pushStandalone" class="text-warning mt-1.5 text-xs">
+            <p
+              v-if="pushSupported && !pushStandalone"
+              class="text-warning mt-1.5 text-xs"
+            >
               📱 {{ t('settings.pushInstallHint') }}
             </p>
           </div>
@@ -747,12 +916,32 @@ function cancelForgotPin() {
               🔔 ON
             </span>
             <button
+              v-if="pushSubscribed"
+              @click="
+                testPush({
+                  title: 'FinNote',
+                  body: '🏓 Anh hẹn em Pickleball, FTEL hẹn nhau Pickleball...'
+                })
+              "
+              :disabled="pushLoading"
+              class="border-border-default text-text-secondary hover:bg-bg-hover hover:text-text-primary flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-all duration-150 disabled:opacity-40"
+              title="Gửi thông báo thử nghiệm"
+            >
+              Test
+            </button>
+            <button
               @click="togglePush"
               :disabled="pushLoading || !pushSupported || pushPermission === 'denied'"
-              class="border-border-default text-text-secondary hover:bg-bg-hover hover:text-text-primary flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+              class="border-border-default text-text-secondary hover:bg-bg-hover hover:text-text-primary flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              <span v-if="pushLoading" class="h-4 w-4 animate-spin rounded-full border-2 border-text-disabled border-l-accent"></span>
-              <Bell v-else :size="16" />
+              <span
+                v-if="pushLoading"
+                class="border-text-disabled border-l-accent h-4 w-4 animate-spin rounded-full border-2"
+              ></span>
+              <Bell
+                v-else
+                :size="16"
+              />
               {{ pushSubscribed ? t('settings.pushDisable') : t('settings.pushEnable') }}
             </button>
           </div>
@@ -780,7 +969,6 @@ function cancelForgotPin() {
             {{ t('bugReport.reportNow') }}
           </button>
         </div>
-
       </div>
     </div>
 
@@ -798,8 +986,12 @@ function cancelForgotPin() {
           </div>
           <button
             id="logout-btn"
-            @click="finance.reset(); auth.logout(); router.push('/login')"
-            class="border-border-default hover:bg-bg-hover hover:text-text-primary rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-150 flex items-center gap-2 text-text-secondary"
+            @click="
+              finance.reset()
+              auth.logout()
+              router.push('/login')
+            "
+            class="border-border-default hover:bg-bg-hover hover:text-text-primary text-text-secondary flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-150"
           >
             <LogOut :size="16" />
             {{ t('settings.signOut') }}
@@ -809,8 +1001,12 @@ function cancelForgotPin() {
         <div class="border-border-default mt-5 border-t pt-5">
           <div class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
             <div>
-              <h4 class="mb-0.5 text-sm font-semibold text-error">{{ t('settings.deleteAccount') }}</h4>
-              <p class="text-text-tertiary text-[0.8125rem]">{{ t('settings.deleteAccountDesc') }}</p>
+              <h4 class="text-error mb-0.5 text-sm font-semibold">
+                {{ t('settings.deleteAccount') }}
+              </h4>
+              <p class="text-text-tertiary text-[0.8125rem]">
+                {{ t('settings.deleteAccountDesc') }}
+              </p>
             </div>
             <button
               @click="isDeleteModalOpen = true"
@@ -827,24 +1023,45 @@ function cancelForgotPin() {
     <!-- Delete Account Modal -->
     <Teleport to="body">
       <Transition name="fade">
-        <div v-if="isDeleteModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="isDeleteModalOpen = false"></div>
-          
-          <div class="bg-bg-surface border-border-default relative w-full max-w-[24rem] rounded-2xl border p-6 shadow-xl">
+        <div
+          v-if="isDeleteModalOpen"
+          class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        >
+          <div
+            class="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            @click="isDeleteModalOpen = false"
+          ></div>
+
+          <div
+            class="bg-bg-surface border-border-default relative w-full max-w-[24rem] rounded-2xl border p-6 shadow-xl"
+          >
             <div class="mb-4 flex justify-center">
               <div class="bg-error/10 flex h-14 w-14 items-center justify-center rounded-full">
-                <AlertTriangle :size="28" class="text-error" />
+                <AlertTriangle
+                  :size="28"
+                  class="text-error"
+                />
               </div>
             </div>
-            
-            <h3 class="mb-2 text-center text-lg font-bold text-error">{{ t('settings.deleteAccountTitle') }}</h3>
-            <p class="text-text-secondary mb-6 text-center text-sm" v-html="t('settings.deleteAccountWarning')"></p>
+
+            <h3 class="text-error mb-2 text-center text-lg font-bold">
+              {{ t('settings.deleteAccountTitle') }}
+            </h3>
+            <p
+              class="text-text-secondary mb-6 text-center text-sm"
+              v-html="t('settings.deleteAccountWarning')"
+            ></p>
 
             <div class="flex flex-col gap-4">
               <div>
-                <label class="text-text-secondary mb-1 block text-sm font-medium">{{ t('settings.confirmPassword') }}</label>
+                <label class="text-text-secondary mb-1 block text-sm font-medium">
+                  {{ t('settings.confirmPassword') }}
+                </label>
                 <div class="relative">
-                  <Lock :size="18" class="text-text-tertiary absolute top-1/2 left-3 -translate-y-1/2" />
+                  <Lock
+                    :size="18"
+                    class="text-text-tertiary absolute top-1/2 left-3 -translate-y-1/2"
+                  />
                   <input
                     v-model="deletePasswordForm.password"
                     :type="showDeletePassword ? 'text' : 'password'"
@@ -856,14 +1073,23 @@ function cancelForgotPin() {
                     @click="showDeletePassword = !showDeletePassword"
                     class="text-text-tertiary hover:text-text-primary absolute top-1/2 right-3 -translate-y-1/2 transition-colors"
                   >
-                    <Eye v-if="!showDeletePassword" :size="18" />
-                    <EyeOff v-else :size="18" />
+                    <Eye
+                      v-if="!showDeletePassword"
+                      :size="18"
+                    />
+                    <EyeOff
+                      v-else
+                      :size="18"
+                    />
                   </button>
                 </div>
               </div>
               <div class="flex gap-3">
                 <button
-                  @click="isDeleteModalOpen = false; deletePasswordForm.password = ''"
+                  @click="
+                    isDeleteModalOpen = false
+                    deletePasswordForm.password = ''
+                  "
                   class="border-border-default text-text-secondary hover:bg-bg-hover flex-1 rounded-xl border py-2.5 font-medium transition-colors"
                 >
                   {{ t('common.cancel') }}
@@ -871,9 +1097,12 @@ function cancelForgotPin() {
                 <button
                   @click="confirmDeleteAccount"
                   :disabled="deleteLoading || !deletePasswordForm.password"
-                  class="bg-error hover:bg-error/90 flex-1 justify-center flex items-center rounded-xl py-2.5 font-semibold text-white transition-colors disabled:opacity-50"
+                  class="bg-error hover:bg-error/90 flex flex-1 items-center justify-center rounded-xl py-2.5 font-semibold text-white transition-colors disabled:opacity-50"
                 >
-                  <span v-if="deleteLoading" class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-l-white"></span>
+                  <span
+                    v-if="deleteLoading"
+                    class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-l-white"
+                  ></span>
                   <span v-else>{{ t('settings.deleteForever') }}</span>
                 </button>
               </div>

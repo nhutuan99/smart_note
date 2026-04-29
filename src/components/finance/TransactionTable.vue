@@ -206,12 +206,6 @@ function dayTotal(txs: Transaction[]) {
                     SMS
                   </span>
                   <span
-                    v-else-if="tx.source === 'casso'"
-                    class="bg-accent/10 text-accent rounded px-2 py-1 text-[0.6875rem] font-medium"
-                  >
-                    Casso
-                  </span>
-                  <span
                     v-else-if="tx.source === 'notification'"
                     class="bg-warning/10 text-warning rounded px-2 py-1 text-[0.6875rem] font-medium"
                   >
@@ -357,10 +351,8 @@ function dayTotal(txs: Transaction[]) {
                   class="px-2 py-0.5 rounded text-[0.6875rem] font-bold"
                   :class="{
                     'bg-info/10 text-info': selectedTx.source === 'telegram',
-                    'bg-success/10 text-success': selectedTx.source === 'sms',
-                    'bg-accent/10 text-accent': selectedTx.source === 'casso',
                     'bg-warning/10 text-warning': selectedTx.source === 'notification',
-                    'bg-bg-hover text-text-secondary': !['telegram','sms','casso','notification'].includes(selectedTx.source)
+                    'bg-bg-hover text-text-secondary': !['telegram','sms','notification'].includes(selectedTx.source)
                   }"
                 >{{ selectedTx.source || 'Manual' }}</span>
               </span>

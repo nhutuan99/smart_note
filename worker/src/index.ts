@@ -16,7 +16,6 @@ interface Env {
   SMART_NOTE_KV: KVNamespace
   JWT_SECRET: string
   TELEGRAM_WEBHOOK_SECRET: string
-  CASSO_WEBHOOK_SECRET: string
   GOOGLE_CLIENT_ID: string
   GOOGLE_CLIENT_SECRET: string
   RESEND_API_KEY: string
@@ -51,7 +50,7 @@ interface TransactionData {
   category: string
   note: string
   walletId: string
-  source: 'manual' | 'telegram' | 'notification' | 'casso' | 'sms'
+  source: 'manual' | 'telegram' | 'notification' | 'sms'
   date: string
   createdAt: string
 }
@@ -1212,195 +1211,6 @@ async function handleMarkAllNotificationsRead(userId: string, env: Env): Promise
 async function handleClearNotifications(userId: string, env: Env): Promise<Response> {
   await putJSON(env.SMART_NOTE_KV, `users/${userId}/notifications`, [])
   return jsonResponse({ success: true })
-}
-
-// ====== Casso Bank Webhook ======
-// Docs: https://docs.casso.vn
-// Casso gửi POST mỗi khi có giao dịch mới vào tài khoản ngân hàng đã liên kết.
-// Payload example:
-// {
-//   "error": 0,
-//   "data": {
-//     "id": 1234567, "tid": "FT23123456789",
-//     "description": "MBVCB.123456. Nguyen Van A chuyen tien",
-//     "amount": 500000,             // dương = nhận (income), âm = chi (expense)
-//     "cusum_balance": 2500000,
-//     "when": "2024-01-20 08:30:00",
-//     "bankSubAccId": "0123456789",
-//     "bankName": "Techcombank",
-//     "bankAbbr": "TCB"
-//   }
-// }
-
-// Map Casso bankAbbr/bankName → tên ví trong SmartNote
-const CASSO_BANK_MAP: Record<string, string[]> = {
-  'Techcombank':  ['techcombank', 'tcb'],
-  'TPBank':       ['tpbank', 'tpb', 'tp bank'],
-  'MBBank':       ['mbbank', 'mb bank', 'mb', 'quân đội'],
-  'Vietcombank':  ['vietcombank', 'vcb'],
-  'BIDV':         ['bidv'],
-  'Agribank':     ['agribank', 'agr'],
-  'VietinBank':   ['vietinbank', 'viettin', 'ctg'],
-  'ACB':          ['acb'],
-  'VPBank':       ['vpbank', 'vp bank'],
-  'SHBank':       ['shbank', 'sh bank'],
-  'MSB':          ['msb', 'maritime'],
-  'MoMo':         ['momo'],
-  'ZaloPay':      ['zalopay', 'zalo pay'],
-}
-
-function matchWalletByCasso(wallets: WalletData[], bankName: string, bankAbbr: string): string {
-  const needle = (bankName + ' ' + bankAbbr).toLowerCase()
-
-  // 1. Tìm theo mapping chuẩn
-  for (const [walletKey, aliases] of Object.entries(CASSO_BANK_MAP)) {
-    const isMatch = aliases.some(alias => needle.includes(alias))
-    if (isMatch) {
-      const found = wallets.find(w => w.name.toLowerCase().includes(walletKey.toLowerCase()))
-      if (found) return found.id
-    }
-  }
-
-  // 2. Fuzzy: tìm thẳng theo bankAbbr trong tên ví
-  if (bankAbbr) {
-    const found = wallets.find(w => w.name.toLowerCase().includes(bankAbbr.toLowerCase()))
-    if (found) return found.id
-  }
-
-  // 3. Fallback: ví đầu tiên
-  return wallets[0]?.id || ''
-}
-
-function parseCassoDate(when: string): string {
-  // Casso format: "2024-01-20 08:30:00" → "2024-01-20"
-  try {
-    return when.substring(0, 10)
-  } catch {
-    return new Date().toISOString().substring(0, 10)
-  }
-}
-
-async function handleCassoWebhook(request: Request, env: Env): Promise<Response> {
-  // Xác thực webhook key từ Casso (cấu hình trong Casso dashboard)
-  const secret = request.headers.get('secure-token') ||
-                 request.headers.get('Authorization')?.replace('Bearer ', '') || ''
-
-  if (env.CASSO_WEBHOOK_SECRET && secret !== env.CASSO_WEBHOOK_SECRET) {
-    console.warn('[CASSO] Unauthorized webhook attempt')
-    return errorResponse('Unauthorized', 401)
-  }
-
-  let body: any
-  try {
-    body = await request.json()
-  } catch {
-    return errorResponse('Invalid JSON body')
-  }
-
-  // Casso gửi object hoặc array các giao dịch
-  const records: any[] = Array.isArray(body?.data) ? body.data
-    : body?.data ? [body.data]
-    : []
-
-  if (records.length === 0) {
-    return jsonResponse({ success: true, message: 'No records to process' })
-  }
-
-  // Lấy userId từ query param: /api/webhook/casso?userId=xxx
-  const url = new URL(request.url)
-  const userId = url.searchParams.get('userId')
-  if (!userId) return errorResponse('Missing userId query param')
-
-  // Verify user exists
-  const user = await getJSON<UserData>(env.SMART_NOTE_KV, `users/${userId}/profile`)
-  if (!user) return errorResponse('User not found', 404)
-
-  const wallets = (await getJSON<WalletData[]>(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`)) || []
-  const txs = (await getJSON<TransactionData[]>(env.SMART_NOTE_KV, `users/${userId}/finance/transactions`)) || []
-
-  const created: TransactionData[] = []
-
-  for (const record of records) {
-    const rawAmount: number = record.amount ?? 0
-    if (rawAmount === 0) continue
-
-    const type: 'income' | 'expense' = rawAmount > 0 ? 'income' : 'expense'
-    const amount = Math.abs(rawAmount)
-    const bankName: string = record.bankName ?? record.bank_name ?? ''
-    const bankAbbr: string = record.bankAbbr ?? record.bank_abbr ?? ''
-    const description: string = record.description ?? record.memo ?? ''
-    const when: string = record.when ?? record.createdAt ?? ''
-
-    const walletId = matchWalletByCasso(wallets, bankName, bankAbbr)
-
-    // Tránh duplicate: kiểm tra theo Casso transaction ID
-    const cassoTid: string = String(record.tid ?? record.id ?? '')
-    const alreadyExists = txs.some(t => t.note?.includes(`[casso:${cassoTid}]`))
-    if (alreadyExists) {
-      console.log(`[CASSO] Duplicate skipped: ${cassoTid}`)
-      continue
-    }
-
-    const tx: TransactionData = {
-      id: generateId(),
-      type,
-      amount,
-      category: type === 'income' ? 'bank_receive' : 'bank_transfer',
-      note: `${description} [casso:${cassoTid}]`.trim(),
-      walletId,
-      source: 'casso',
-      date: parseCassoDate(when),
-      createdAt: new Date().toISOString()
-    }
-
-    txs.push(tx)
-    created.push(tx)
-
-    // Cập nhật số dư ví
-    const walletIdx = wallets.findIndex(w => w.id === walletId)
-    if (walletIdx !== -1) {
-      wallets[walletIdx].balance += type === 'income' ? amount : -amount
-    }
-
-    // Tạo notification
-    const walletName = wallets.find(w => w.id === walletId)?.name || 'ví'
-    const notiList = (await getJSON<NotificationData[]>(
-      env.SMART_NOTE_KV, `users/${userId}/notifications`
-    )) || []
-    notiList.unshift({
-      id: generateId(),
-      type: type === 'income' ? 'bank_in' : 'bank_out',
-      title: `[Casso] ${type === 'income' ? 'Tiền vào tài khoản' : 'Tiền ra tài khoản'}`,
-      body: `${type === 'income' ? '+' : '-'}${amount.toLocaleString('vi-VN')}đ • Ghi vào ví: ${walletName}`,
-      read: false,
-      createdAt: new Date().toISOString(),
-      meta: { amount, txType: type, walletName, bankName: bankName || bankAbbr }
-    })
-    // Giữ tối đa 100 noti
-    if (notiList.length > 100) notiList.splice(100)
-    await putJSON(env.SMART_NOTE_KV, `users/${userId}/notifications`, notiList)
-
-    // Send push notification for each Casso transaction
-    try {
-      const pushTitle = type === 'income' ? '💰 Tiền vào tài khoản' : '💸 Tiền ra tài khoản'
-      const pushBody = `${type === 'income' ? '+' : '-'}${amount.toLocaleString('vi-VN')}đ • ${walletName}`
-      const unreadCount = notiList.filter(n => !n.read).length
-      await sendPushToUser(userId, env, { title: pushTitle, body: pushBody, tag: `casso-${tx.id}`, url: '/', unreadCount })
-    } catch { /* push is best-effort */ }
-  }
-
-  if (created.length > 0) {
-    await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/transactions`, txs)
-    await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`, wallets)
-  }
-
-  console.log(`[CASSO] Processed ${created.length}/${records.length} transactions for user ${userId}`)
-
-  return jsonResponse({
-    success: true,
-    message: `Đã ghi ${created.length} giao dịch từ ngân hàng`,
-    data: created
-  })
 }
 
 // ─── iOS SMS Webhook ──────────────────────────────────────────────────────────
