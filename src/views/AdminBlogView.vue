@@ -387,17 +387,7 @@ const formatDate = (dateStr: string) => {
                 </div>
 
                 <!-- Rendered Markdown Content -->
-                <div class="blog-preview__content prose prose-invert prose-emerald max-w-none
-                  prose-headings:font-bold prose-headings:tracking-tight
-                  prose-h2:text-lg prose-h2:mt-8 prose-h2:mb-4 prose-h2:text-text-primary prose-h2:border-b prose-h2:border-border-subtle prose-h2:pb-2
-                  prose-h3:text-base prose-h3:mt-6 prose-h3:mb-3
-                  prose-p:text-sm prose-p:leading-relaxed prose-p:text-text-secondary prose-p:mb-4
-                  prose-a:text-accent prose-a:font-medium prose-a:no-underline hover:prose-a:underline
-                  prose-blockquote:border-l-4 prose-blockquote:border-accent prose-blockquote:bg-accent-subtle/20 prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r-lg prose-blockquote:italic
-                  prose-ul:text-text-secondary prose-li:my-1
-                  prose-strong:text-text-primary"
-                  v-html="previewHtml"
-                ></div>
+                <div class="blog-preview__content" v-html="previewHtml"></div>
               </div>
             </div>
 
@@ -644,13 +634,140 @@ const formatDate = (dateStr: string) => {
   max-height: 18rem;
 }
 
+/* ── Content Body — Magazine Typography (Matches BlogDetailView) ── */
+.blog-preview__content {
+  color: var(--color-text-secondary);
+  font-size: 0.9375rem;
+  line-height: 1.8;
+}
+.blog-preview__content :deep(h1) {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  margin: 2rem 0 1rem;
+  letter-spacing: -0.02em;
+}
+.blog-preview__content :deep(h2) {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 2rem 0 0.875rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--color-border-subtle);
+  letter-spacing: -0.01em;
+}
+.blog-preview__content :deep(h3) {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 1.5rem 0 0.75rem;
+}
+.blog-preview__content :deep(p) {
+  margin-bottom: 1.25rem;
+  color: var(--color-text-secondary);
+}
+.blog-preview__content :deep(a) {
+  color: var(--color-accent);
+  font-weight: 500;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.15s ease;
+}
+.blog-preview__content :deep(a:hover) {
+  border-bottom-color: var(--color-accent);
+}
+.blog-preview__content :deep(strong) {
+  color: var(--color-text-primary);
+  font-weight: 700;
+}
 .blog-preview__content :deep(ul) {
-  list-style-type: disc;
-  padding-left: 1.5rem;
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 1.25rem;
+}
+.blog-preview__content :deep(ul > li) {
+  position: relative;
+  padding-left: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+.blog-preview__content :deep(ul > li::before) {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.6em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-accent);
 }
 .blog-preview__content :deep(ol) {
-  list-style-type: decimal;
-  padding-left: 1.5rem;
+  list-style: none;
+  padding-left: 0;
+  counter-reset: blog-ol;
+  margin-bottom: 1.25rem;
+}
+.blog-preview__content :deep(ol > li) {
+  position: relative;
+  padding-left: 1.75rem;
+  margin-bottom: 0.5rem;
+  counter-increment: blog-ol;
+}
+.blog-preview__content :deep(ol > li::before) {
+  content: counter(blog-ol);
+  position: absolute;
+  left: 0;
+  top: 0.1em;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: #fff;
+  font-size: 0.625rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.blog-preview__content :deep(blockquote) {
+  margin: 1.5rem 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--color-accent);
+  background: rgba(124, 111, 247, 0.06);
+  border-radius: 0 0.5rem 0.5rem 0;
+  font-style: italic;
+  color: var(--color-text-primary);
+}
+.blog-preview__content :deep(blockquote p) {
+  margin-bottom: 0;
+}
+.blog-preview__content :deep(code) {
+  font-size: 0.85em;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-default);
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  color: var(--color-accent);
+}
+.blog-preview__content :deep(pre) {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-default);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 1.25rem 0;
+}
+.blog-preview__content :deep(pre code) {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: var(--color-text-primary);
+}
+.blog-preview__content :deep(img) {
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-border-default);
+  margin: 1.25rem 0;
+  max-width: 100%;
+  height: auto;
 }
 
 /* ── Tags ── */
