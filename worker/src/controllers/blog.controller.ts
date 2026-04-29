@@ -218,23 +218,57 @@ Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải th
       }
     }
 
-    // Fallback: Cloudflare Workers AI
+    // Fallback: Cloudflare Workers AI (2-step to avoid truncation)
     if (!useGemini || !text) {
       if (!env.AI) return errorResponse('AI binding not configured', 503)
 
-      const cfResponse = await env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
+      // Step 1: Generate metadata only (small JSON)
+      const metaPrompt = `Bạn là chuyên gia SEO blog tài chính. Trả về ĐÚNG JSON (không có text thêm):
+{"title":"Tiêu đề hấp dẫn dưới 60 ký tự","excerpt":"Mô tả SEO dưới 160 ký tự","tags":["tag1","tag2","tag3"],"seoKeywords":"keyword1, keyword2"}`
+      const metaResponse = await env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
         messages: [
-          { role: 'system', content: systemPrompt },
+          { role: 'system', content: metaPrompt },
           { role: 'user', content: `Chủ đề: ${topic}` }
+        ],
+        max_tokens: 512,
+        temperature: 0.7
+      }) as any
+
+      let metaText = metaResponse?.response || ''
+      const metaMatch = metaText.match(/\{[\s\S]*\}/)
+      if (metaMatch) metaText = metaMatch[0]
+
+      let meta: any = {}
+      try { meta = JSON.parse(metaText) } catch { meta = { title: topic, excerpt: '', tags: [], seoKeywords: '' } }
+
+      // Step 2: Generate full blog content as Markdown (no JSON wrapper)
+      const contentPrompt = `Bạn là chuyên gia viết blog tài chính cá nhân. Viết bài blog bằng Markdown cho chủ đề dưới đây.
+Yêu cầu: Có mở bài, thân bài chia H2/H3, bullet points, bold text, kết bài Call to Action giới thiệu FinNote.
+Chỉ trả về nội dung Markdown, không bọc trong JSON hay code block.`
+      const contentResponse = await env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
+        messages: [
+          { role: 'system', content: contentPrompt },
+          { role: 'user', content: `Tiêu đề: ${meta.title || topic}\nChủ đề: ${topic}` }
         ],
         max_tokens: 8192,
         temperature: 0.7
       }) as any
 
-      text = cfResponse?.response || ''
+      const blogContent = contentResponse?.response || ''
+
+      return jsonResponse({
+        success: true,
+        data: {
+          title: meta.title || topic,
+          excerpt: meta.excerpt || '',
+          tags: meta.tags || [],
+          seoKeywords: meta.seoKeywords || '',
+          content: blogContent
+        }
+      })
     }
 
-    // Try to extract json
+    // Parse Gemini response (single JSON)
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (jsonMatch) {
       text = jsonMatch[0]
@@ -244,24 +278,7 @@ Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải th
     try {
       result = JSON.parse(text)
     } catch {
-      // Attempt to repair truncated JSON
-      try {
-        let repaired = text
-        // Close any unclosed strings
-        const quoteCount = (repaired.match(/(?<!\\)"/g) || []).length
-        if (quoteCount % 2 !== 0) repaired += '"'
-        // Close unclosed arrays/objects
-        const opens = (repaired.match(/[\[{]/g) || []).length
-        const closes = (repaired.match(/[\]}]/g) || []).length
-        for (let i = 0; i < opens - closes; i++) {
-          // Determine which to close based on last unclosed opener
-          const lastOpen = repaired.lastIndexOf('{') > repaired.lastIndexOf('[') ? '}' : ']'
-          repaired += lastOpen
-        }
-        result = JSON.parse(repaired)
-      } catch {
-        return errorResponse('Failed to parse AI JSON response: ' + text.substring(0, 200), 500)
-      }
+      return errorResponse('Failed to parse AI response', 500)
     }
 
     return jsonResponse({ success: true, data: result })
