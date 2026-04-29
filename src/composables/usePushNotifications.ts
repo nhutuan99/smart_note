@@ -14,8 +14,7 @@ import { useI18n } from 'vue-i18n'
 import { useEventListener } from './useEventListener'
 
 // Public VAPID key — must match the one on the backend
-const VAPID_PUBLIC_KEY =
-  'BDx3Yup7JurMcaGcdckYyq2iOFKsDNuqIWtL-UAprbtDbcj5akio4VyY5mSuPVFJfbFhNTig9AXmeMP1Ef1von8'
+const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
