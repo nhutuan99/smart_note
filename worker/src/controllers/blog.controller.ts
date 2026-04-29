@@ -184,7 +184,7 @@ Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải th
       if (promptParts.length === 0) promptParts.push({ text: "Hãy viết 1 bài blog về quản lý tài chính cá nhân." })
 
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${env.GEMINI_API_KEY}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${env.GEMINI_API_KEY}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
