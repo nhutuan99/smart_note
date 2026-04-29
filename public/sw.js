@@ -1,5 +1,5 @@
 // FinNote Service Worker — Offline Cache + Push Notifications
-const CACHE_NAME = 'finnote-v2'
+const CACHE_NAME = 'finnote-v1'
 const STATIC_ASSETS = [
   '/',
   '/images/logo-512.png'
@@ -97,10 +97,7 @@ self.addEventListener('notificationclick', (event) => {
       for (const client of clientList) {
         if (client.url.includes(self.location.origin) && 'focus' in client) {
           client.focus()
-          // navigate() may not be available on all browsers (especially iOS)
-          if (typeof client.navigate === 'function') {
-            client.navigate(targetUrl)
-          }
+          client.navigate(targetUrl)
           return
         }
       }

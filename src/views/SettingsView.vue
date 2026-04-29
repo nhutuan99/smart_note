@@ -35,7 +35,7 @@ function changeLocale(locale: 'vi' | 'en') {
 
 // ── Currency ──
 const { currency, rateDisplay, rateLoading, rateError, setCurrency, fetchExchangeRate } = useCurrency()
-const { isSupported: pushSupported, isSubscribed: pushSubscribed, isStandalone: pushStandalone, permissionState: pushPermission, loading: pushLoading, debugInfo: pushDebug, toggle: togglePush } = usePushNotifications()
+const { isSupported: pushSupported, isSubscribed: pushSubscribed, isStandalone: pushStandalone, permissionState: pushPermission, loading: pushLoading, toggle: togglePush } = usePushNotifications()
 
 function changeCurrency(code: CurrencyCode) {
   setCurrency(code)
@@ -737,10 +737,6 @@ function cancelForgotPin() {
             <!-- iOS standalone hint -->
             <p v-if="pushSupported && !pushStandalone" class="text-warning mt-1.5 text-xs">
               📱 {{ t('settings.pushInstallHint') }}
-            </p>
-            <!-- Debug info (subtle, for troubleshooting) -->
-            <p v-if="pushDebug" class="text-text-disabled mt-1 text-[0.625rem] font-mono leading-tight opacity-60">
-              {{ pushDebug }}
             </p>
           </div>
           <div class="flex items-center gap-2">

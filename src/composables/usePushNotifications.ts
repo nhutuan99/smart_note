@@ -12,7 +12,8 @@ import { httpClient } from '@/shared/api/httpClient'
 import { useUiStore } from '@/stores/ui'
 
 // Public VAPID key — must match the one on the backend
-const VAPID_PUBLIC_KEY = 'BDx3Yup7JurMcaGcdckYyq2iOFKsDNuqIWtL-UAprbtDbcj5akio4VyY5mSuPVFJfbFhNTig9AXmeMP1Ef1von8'
+const VAPID_PUBLIC_KEY =
+  'BDx3Yup7JurMcaGcdckYyq2iOFKsDNuqIWtL-UAprbtDbcj5akio4VyY5mSuPVFJfbFhNTig9AXmeMP1Ef1von8'
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
@@ -32,22 +33,18 @@ export function usePushNotifications() {
   const isSubscribed = ref(false)
   const permissionState = ref<NotificationPermission>('default')
   const loading = ref(false)
-  const debugInfo = ref('')
 
   /** PWA must be in standalone mode for iOS push to work */
-  const isStandalone = computed(() =>
-    window.matchMedia('(display-mode: standalone)').matches ||
-    (navigator as any).standalone === true
+  const isStandalone = computed(
+    () =>
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (navigator as any).standalone === true
   )
 
   /** Check if push notifications are supported in this environment */
   function checkSupport() {
     isSupported.value =
-      'serviceWorker' in navigator &&
-      'PushManager' in window &&
-      'Notification' in window
-    
-    debugInfo.value = `Support: SW=${'serviceWorker' in navigator}, PM=${'PushManager' in window}, N=${'Notification' in window}, Standalone=${isStandalone.value}`
+      'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window
   }
 
   /** Read current permission + subscription state */
@@ -60,36 +57,14 @@ export function usePushNotifications() {
       const reg = await navigator.serviceWorker.ready
       const sub = await reg.pushManager.getSubscription()
       isSubscribed.value = !!sub
-
-      // Health check: if we think we're subscribed but subscription is expired/null,
-      // update the state to reflect reality
-      if (!sub && isSubscribed.value) {
-        isSubscribed.value = false
-      }
-
-      debugInfo.value += ` | Permission=${permissionState.value} | Sub=${!!sub}`
-      if (sub) {
-        debugInfo.value += ` | Endpoint=${sub.endpoint.substring(0, 50)}...`
-      }
-    } catch (err) {
+    } catch {
       isSubscribed.value = false
-      debugInfo.value += ` | CheckError: ${err}`
     }
   }
 
   /** Request permission and subscribe */
   async function subscribe() {
-    if (!isSupported.value) {
-      ui.showToast('error', 'Push notifications không được hỗ trợ trên thiết bị này')
-      return
-    }
-
-    // iOS requires standalone mode
-    if (!isStandalone.value) {
-      ui.showToast('error', '📱 Vui lòng cài app về Home Screen trước khi bật thông báo')
-      return
-    }
-
+    if (!isSupported.value) return
     loading.value = true
 
     try {
@@ -98,52 +73,25 @@ export function usePushNotifications() {
       permissionState.value = permission
 
       if (permission !== 'granted') {
-        ui.showToast('error', 'Quyền thông báo bị từ chối. Vào Settings iOS → FinNote → bật Notifications')
+        ui.showToast('error', 'Notification permission denied')
         return
       }
 
-      // 2. Ensure service worker is ready
+      // 2. Subscribe via PushManager
       const reg = await navigator.serviceWorker.ready
-      
-      // 3. Unsubscribe from any existing stale subscription first
-      const existingSub = await reg.pushManager.getSubscription()
-      if (existingSub) {
-        try {
-          await existingSub.unsubscribe()
-        } catch {
-          // Best-effort cleanup
-        }
-      }
-
-      // 4. Subscribe via PushManager
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
       })
 
-      // 5. Send subscription to backend
-      const subJson = sub.toJSON()
-      console.log('[PUSH] Subscription created:', {
-        endpoint: subJson.endpoint?.substring(0, 60),
-        hasKeys: !!(subJson.keys?.p256dh && subJson.keys?.auth)
-      })
-
-      await httpClient.post('/api/push/subscribe', subJson)
+      // 3. Send subscription to backend
+      await httpClient.post('/api/push/subscribe', sub.toJSON())
 
       isSubscribed.value = true
-      ui.showToast('success', '🔔 Đã bật thông báo đẩy!')
+      ui.showToast('success', '🔔 Push notifications enabled!')
     } catch (err: any) {
       console.error('[PUSH] Subscribe error:', err)
-      
-      // Provide more specific error messages
-      let msg = err.message || 'Không thể bật thông báo'
-      if (msg.includes('push service')) {
-        msg = 'Không thể kết nối push service. Thử lại sau.'
-      } else if (msg.includes('applicationServerKey')) {
-        msg = 'Lỗi VAPID key. Liên hệ admin.'
-      }
-      
-      ui.showToast('error', msg)
+      ui.showToast('error', err.message || 'Failed to enable notifications')
     } finally {
       loading.value = false
     }
@@ -165,10 +113,10 @@ export function usePushNotifications() {
       }
 
       isSubscribed.value = false
-      ui.showToast('success', 'Đã tắt thông báo đẩy')
+      ui.showToast('success', 'Push notifications disabled')
     } catch (err: any) {
       console.error('[PUSH] Unsubscribe error:', err)
-      ui.showToast('error', err.message || 'Không thể tắt thông báo')
+      ui.showToast('error', err.message || 'Failed to disable notifications')
     } finally {
       loading.value = false
     }
@@ -183,35 +131,9 @@ export function usePushNotifications() {
     }
   }
 
-  /**
-   * Health check: verify subscription is still valid.
-   * iOS can silently invalidate subscriptions after periods of inactivity.
-   * Call this on app mount to auto-detect stale subscriptions.
-   */
-  async function healthCheck() {
-    if (!isSupported.value || !isStandalone.value) return
-    if (permissionState.value !== 'granted') return
-
-    try {
-      const reg = await navigator.serviceWorker.ready
-      const sub = await reg.pushManager.getSubscription()
-      
-      if (!sub && isSubscribed.value) {
-        // Subscription was invalidated — reset state
-        console.warn('[PUSH] Subscription expired/invalidated, resetting state')
-        isSubscribed.value = false
-        ui.showToast('warning', '⚠️ Thông báo đẩy đã hết hạn. Vui lòng bật lại trong Cài đặt.')
-      }
-    } catch (err) {
-      console.error('[PUSH] Health check error:', err)
-    }
-  }
-
   onMounted(() => {
     checkSupport()
     checkState()
-    // Run health check after a short delay to not block initial render
-    setTimeout(healthCheck, 3000)
   })
 
   return {
@@ -220,10 +142,8 @@ export function usePushNotifications() {
     isStandalone,
     permissionState,
     loading,
-    debugInfo,
     subscribe,
     unsubscribe,
-    toggle,
-    healthCheck
+    toggle
   }
 }
