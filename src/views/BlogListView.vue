@@ -2,8 +2,10 @@
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useBlogStore } from '@/stores/blog'
+import { useI18n } from 'vue-i18n'
 import { Calendar, ChevronRight, Hash } from 'lucide-vue-next'
 
+const { t, locale } = useI18n()
 const router = useRouter()
 const blogStore = useBlogStore()
 
@@ -12,7 +14,8 @@ onMounted(() => {
 })
 
 const formatDate = (dateStr: string) => {
-  return new Date(dateStr).toLocaleDateString('vi-VN', {
+  const loc = locale.value === 'vi' ? 'vi-VN' : 'en-US'
+  return new Date(dateStr).toLocaleDateString(loc, {
     year: 'numeric',
     month: 'long',
     day: 'numeric'
@@ -22,8 +25,8 @@ const formatDate = (dateStr: string) => {
 
 <template>
   <div class="max-w-[48rem] mx-auto pb-12">
-    <h1 class="mb-2 text-3xl font-bold tracking-tight md:mb-4">Blog Tài Chính</h1>
-    <p class="text-text-tertiary mb-8">Kiến thức quản lý tài chính cá nhân và các mẹo sử dụng FinNote hiệu quả.</p>
+    <h1 class="mb-2 text-2xl font-bold tracking-tight md:mb-4">{{ t('blog.listTitle') }}</h1>
+    <p class="text-text-tertiary text-sm mb-8">{{ t('blog.listDesc') }}</p>
 
     <!-- Loading State -->
     <div v-if="blogStore.isLoading && !blogStore.blogs.length" class="space-y-6">
@@ -64,11 +67,11 @@ const formatDate = (dateStr: string) => {
           </p>
           
           <div class="flex flex-wrap items-center gap-2 mt-auto">
-            <span v-for="tag in blog.tags" :key="tag" class="text-[0.6875rem] font-medium text-text-secondary bg-bg-elevated px-2 py-1 rounded-md flex items-center gap-1">
+            <span v-for="tag in blog.tags" :key="tag" class="blog-list-tag">
               <Hash :size="10" /> {{ tag }}
             </span>
-            <span class="ml-auto text-[0.75rem] font-semibold text-accent flex items-center gap-1 group-hover:gap-2 transition-all">
-              Đọc tiếp <ChevronRight :size="14" />
+            <span class="ml-auto text-[0.75rem] font-semibold text-accent flex items-center gap-1 group-hover:gap-2 transition-all whitespace-nowrap">
+              {{ t('blog.readMore') }} <ChevronRight :size="14" />
             </span>
           </div>
         </div>
@@ -80,8 +83,23 @@ const formatDate = (dateStr: string) => {
       <div class="text-text-disabled mb-4">
         <Calendar :size="48" class="mx-auto opacity-50" />
       </div>
-      <h3 class="text-lg font-medium mb-1">Chưa có bài viết nào</h3>
-      <p class="text-text-tertiary text-sm">Các bài viết mới sẽ sớm được cập nhật.</p>
+      <h3 class="text-lg font-medium mb-1">{{ t('blog.emptyPublic') }}</h3>
+      <p class="text-text-tertiary text-sm">{{ t('blog.emptyPublicHint') }}</p>
     </div>
   </div>
 </template>
+
+<style scoped>
+.blog-list-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-elevated);
+  padding: 0.1875rem 0.5rem;
+  border-radius: 0.375rem;
+  white-space: nowrap;
+}
+</style>

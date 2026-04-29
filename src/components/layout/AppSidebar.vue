@@ -125,7 +125,7 @@ function navigateWallet(walletId: string) {
           @click="closeSidebarOnMobile"
         >
           <ShieldAlert :size="ui.sidebarOpen ? 18 : 22" />
-          <span v-if="ui.sidebarOpen">Quản lý Blog</span>
+          <span v-if="ui.sidebarOpen">{{ t('blog.manageTitle') }}</span>
         </router-link>
 
       </nav>

@@ -528,5 +528,55 @@ export default {
     installDesc: 'Run as a native app — full screen, no App Store required',
     step1: 'Tap <strong>Share</strong> (🔲↑) at the bottom of Safari',
     step2: 'Select <strong>"Add to Home Screen"</strong>'
+  },
+
+  // ── Blog ──
+  blog: {
+    // Admin page
+    manageTitle: 'Blog Management',
+    manageDesc: 'FinNote blog content administration',
+    newPost: 'New Post',
+    empty: 'No blog posts yet.',
+    // Table
+    tableTitle: 'Title',
+    tableStatus: 'Status',
+    tableDate: 'Created',
+    tableActions: 'Actions',
+    statusPublished: 'Published',
+    statusDraft: 'Draft',
+    // Modal
+    modalTitle: 'Create New Post',
+    tabAiGenerate: 'AI Generate',
+    tabPasteMarkdown: 'Paste Markdown',
+    aiHint: 'Type an idea or paste an image (Ctrl+V) — AI will write the entire blog post.',
+    pasteHint: 'Paste existing Markdown content — AI will extract title, description, and tags.',
+    aiTopicPlaceholder: 'E.g. Smart saving tips for Gen Z?',
+    pasteMarkdownPlaceholder: '# Post Title\n\nPaste your markdown content here...',
+    generateBtn: 'Analyze & Create',
+    generating: 'AI processing...',
+    analyzing: 'Analyzing content...',
+    aiWriting: 'AI is writing...',
+    generatingCover: 'Generating cover image...',
+    generateSuccess: 'Post created successfully!',
+    generateFailed: 'Failed to create post',
+    // Preview
+    previewLabel: 'Post Preview',
+    editInput: 'Back to edit',
+    // Publish
+    publishBtn: 'Publish Blog',
+    missingContent: 'Please create a post before publishing',
+    published: 'Post published successfully!',
+    publishFailed: 'Failed to publish',
+    // Delete
+    deleteConfirm: 'Are you sure you want to delete this post?',
+    deleted: 'Post deleted',
+    // Public pages
+    listTitle: 'Finance Blog',
+    listDesc: 'Personal finance management tips and FinNote guides.',
+    readMore: 'Read more',
+    emptyPublic: 'No posts yet',
+    emptyPublicHint: 'New posts will be available soon.',
+    backToList: 'Back to list',
+    editor: 'FinNote Editor'
   }
 }

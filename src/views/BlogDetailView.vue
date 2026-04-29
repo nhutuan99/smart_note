@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useBlogStore } from '@/stores/blog'
+import { useI18n } from 'vue-i18n'
 import { marked } from 'marked'
 import { ArrowLeft, Calendar, Hash, User as UserIcon } from 'lucide-vue-next'
 
+const { t, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const blogStore = useBlogStore()
@@ -37,7 +39,8 @@ onMounted(async () => {
 })
 
 const formatDate = (dateStr: string) => {
-  return new Date(dateStr).toLocaleDateString('vi-VN', {
+  const loc = locale.value === 'vi' ? 'vi-VN' : 'en-US'
+  return new Date(dateStr).toLocaleDateString(loc, {
     year: 'numeric',
     month: 'long',
     day: 'numeric'
@@ -50,9 +53,9 @@ const formatDate = (dateStr: string) => {
     <!-- Back Button -->
     <button
       @click="router.push('/blog')"
-      class="mb-6 flex items-center gap-2 text-text-tertiary hover:text-text-primary transition-colors text-sm font-medium"
+      class="mb-6 flex items-center gap-2 text-text-tertiary hover:text-text-primary transition-colors text-sm font-medium whitespace-nowrap"
     >
-      <ArrowLeft :size="16" /> Quay lại danh sách
+      <ArrowLeft :size="16" /> {{ t('blog.backToList') }}
     </button>
 
     <!-- Loading State -->
@@ -71,34 +74,34 @@ const formatDate = (dateStr: string) => {
     </div>
 
     <!-- Blog Content -->
-    <article v-else-if="blogStore.currentBlog" class="blog-article bg-bg-surface border border-border-default rounded-3xl p-6 md:p-10 shadow-sm relative overflow-hidden">
+    <article v-else-if="blogStore.currentBlog" class="blog-article bg-bg-surface border border-border-default rounded-2xl p-6 md:p-10 shadow-sm relative overflow-hidden">
       <!-- Decorator glow -->
       <div class="absolute -top-40 -right-40 w-80 h-80 bg-accent/20 rounded-full blur-[100px] pointer-events-none"></div>
       
       <!-- Header -->
       <header class="mb-10 relative z-10">
         <div class="flex flex-wrap items-center gap-2 mb-6">
-          <span v-for="tag in blogStore.currentBlog.tags" :key="tag" class="text-[0.75rem] font-bold tracking-wider uppercase text-accent bg-accent/10 border border-accent/20 px-3 py-1 rounded-full flex items-center gap-1">
+          <span v-for="tag in blogStore.currentBlog.tags" :key="tag" class="blog-detail-tag">
             <Hash :size="12" /> {{ tag }}
           </span>
         </div>
         
-        <h1 class="text-3xl md:text-5xl font-extrabold tracking-tight mb-6 leading-[1.15] text-text-primary">
+        <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-6 leading-[1.15] text-text-primary">
           {{ blogStore.currentBlog.title }}
         </h1>
         
-        <div class="flex items-center gap-4 text-[0.875rem] text-text-secondary bg-bg-elevated/50 p-4 rounded-2xl border border-border-subtle inline-flex">
+        <div class="flex items-center gap-4 text-[0.875rem] text-text-secondary bg-bg-elevated/50 p-4 rounded-xl border border-border-subtle inline-flex">
           <div class="flex items-center gap-2">
             <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center text-accent">
               <UserIcon :size="16" />
             </div>
             <div class="flex flex-col">
               <span class="font-semibold text-text-primary">{{ blogStore.currentBlog.author.name }}</span>
-              <span class="text-[0.6875rem] text-text-tertiary">Biên tập viên FinNote</span>
+              <span class="text-[0.6875rem] text-text-tertiary">{{ t('blog.editor') }}</span>
             </div>
           </div>
           <div class="w-px h-8 bg-border-default mx-2"></div>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 whitespace-nowrap">
             <Calendar :size="16" class="text-text-tertiary" />
             <span class="font-medium">{{ formatDate(blogStore.currentBlog.createdAt) }}</span>
           </div>
@@ -106,7 +109,7 @@ const formatDate = (dateStr: string) => {
       </header>
 
       <!-- Cover Image -->
-      <figure v-if="blogStore.currentBlog.imageUrl" class="mb-12 rounded-2xl overflow-hidden border border-border-default shadow-xl relative group">
+      <figure v-if="blogStore.currentBlog.imageUrl" class="mb-12 rounded-xl overflow-hidden border border-border-default shadow-lg relative group">
         <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
         <img :src="blogStore.currentBlog.imageUrl" :alt="blogStore.currentBlog.title" class="w-full h-auto object-cover max-h-[450px] transform group-hover:scale-[1.02] transition-transform duration-700" />
       </figure>
@@ -136,5 +139,21 @@ const formatDate = (dateStr: string) => {
 .blog-article :deep(ol) {
   list-style-type: decimal;
   padding-left: 1.5rem;
+}
+
+.blog-detail-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  background: rgba(124, 111, 247, 0.1);
+  border: 1px solid rgba(124, 111, 247, 0.2);
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  white-space: nowrap;
 }
 </style>

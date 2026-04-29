@@ -528,5 +528,55 @@ export default {
     installDesc: 'Chạy như app native — toàn màn hình, không cần App Store',
     step1: 'Nhấn <strong>Share</strong> (🔲↑) ở thanh dưới Safari',
     step2: 'Chọn <strong>"Thêm vào Màn hình chính"</strong>'
+  },
+
+  // ── Blog ──
+  blog: {
+    // Admin page
+    manageTitle: 'Quản Lý Blog',
+    manageDesc: 'Trang quản trị nội dung blog FinNote',
+    newPost: 'Bài viết mới',
+    empty: 'Chưa có bài viết nào.',
+    // Table
+    tableTitle: 'Tiêu đề',
+    tableStatus: 'Trạng thái',
+    tableDate: 'Ngày tạo',
+    tableActions: 'Thao tác',
+    statusPublished: 'Đã đăng',
+    statusDraft: 'Nháp',
+    // Modal
+    modalTitle: 'Soạn bài viết mới',
+    tabAiGenerate: 'AI Viết Bài',
+    tabPasteMarkdown: 'Paste Markdown',
+    aiHint: 'Gõ ý tưởng hoặc dán ảnh (Ctrl+V) — AI sẽ tự viết toàn bộ bài blog.',
+    pasteHint: 'Dán nội dung Markdown sẵn có — AI sẽ tự trích xuất tiêu đề, mô tả, tags.',
+    aiTopicPlaceholder: 'VD: Tiết kiệm như nào là hợp lý cho Gen Z?',
+    pasteMarkdownPlaceholder: '# Tiêu đề bài viết\n\nDán nội dung markdown của bạn vào đây...',
+    generateBtn: 'Phân tích & Tạo bài',
+    generating: 'AI đang xử lý...',
+    analyzing: 'Đang phân tích nội dung...',
+    aiWriting: 'AI đang viết bài...',
+    generatingCover: 'Đang tạo ảnh bìa...',
+    generateSuccess: 'Đã tạo xong bài viết!',
+    generateFailed: 'Lỗi khi tạo bài viết',
+    // Preview
+    previewLabel: 'Xem trước bài viết',
+    editInput: 'Quay lại chỉnh sửa',
+    // Publish
+    publishBtn: 'Xuất Bản Blog',
+    missingContent: 'Vui lòng tạo bài viết trước khi xuất bản',
+    published: 'Đã xuất bản bài viết!',
+    publishFailed: 'Lỗi khi xuất bản',
+    // Delete
+    deleteConfirm: 'Bạn có chắc chắn muốn xóa bài viết này?',
+    deleted: 'Đã xóa bài viết',
+    // Public pages
+    listTitle: 'Blog Tài Chính',
+    listDesc: 'Kiến thức quản lý tài chính cá nhân và các mẹo sử dụng FinNote hiệu quả.',
+    readMore: 'Đọc tiếp',
+    emptyPublic: 'Chưa có bài viết nào',
+    emptyPublicHint: 'Các bài viết mới sẽ sớm được cập nhật.',
+    backToList: 'Quay lại danh sách',
+    editor: 'Biên tập viên FinNote'
   }
 }
