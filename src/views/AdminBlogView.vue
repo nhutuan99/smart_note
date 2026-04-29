@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useBlogStore } from '@/stores/blog'
 import { useUiStore } from '@/stores/ui'
 import { useI18n } from 'vue-i18n'
@@ -19,6 +20,7 @@ import {
 import type { Blog } from '@/types'
 
 const { t } = useI18n()
+const router = useRouter()
 const blogStore = useBlogStore()
 const uiStore = useUiStore()
 
