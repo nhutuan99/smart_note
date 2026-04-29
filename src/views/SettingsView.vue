@@ -551,7 +551,7 @@ function cancelForgotPin() {
           <button
             id="export-notes-btn"
             @click="exportNotes"
-            class="border-border-default text-text-secondary hover:bg-bg-hover hover:text-text-primary flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-150"
+            class="border-border-default text-text-secondary hover:bg-bg-hover hover:text-text-primary flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-150"
           >
             <Download :size="16" />
             {{ t('common.export') }}
@@ -585,7 +585,7 @@ function cancelForgotPin() {
             </span>
             <button
               @click="showPinForm = !showPinForm"
-              class="border-border-default text-text-secondary hover:bg-bg-hover hover:text-text-primary flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-150"
+              class="border-border-default text-text-secondary hover:bg-bg-hover hover:text-text-primary flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-150"
             >
               <Lock :size="16" />
               {{ hasPin ? t('settings.changePin') : t('settings.setupPin') }}
@@ -948,7 +948,7 @@ function cancelForgotPin() {
           </div>
           <button
             @click="ui.showBugReport = true"
-            class="border-danger text-danger hover:bg-danger/10 flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-150"
+            class="border-danger text-danger hover:bg-danger/10 flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-150"
           >
             <Bug :size="16" />
             {{ t('bugReport.reportNow') }}
@@ -972,7 +972,7 @@ function cancelForgotPin() {
           <button
             id="logout-btn"
             @click="finance.reset(); auth.logout(); router.push('/login')"
-            class="border-border-default hover:bg-bg-hover hover:text-text-primary text-text-secondary flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-150"
+            class="border-border-default hover:bg-bg-hover hover:text-text-primary text-text-secondary flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-150"
           >
             <LogOut :size="16" />
             {{ t('settings.signOut') }}
@@ -991,7 +991,7 @@ function cancelForgotPin() {
             </div>
             <button
               @click="isDeleteModalOpen = true"
-              class="border-error text-error hover:bg-error/10 flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-150"
+              class="border-error text-error hover:bg-error/10 flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-150"
             >
               <Trash2 :size="16" />
               {{ t('settings.deleteAccount') }}
