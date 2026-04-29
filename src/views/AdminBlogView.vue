@@ -214,12 +214,12 @@ const formatDate = (dateStr: string) => {
     <!-- Blog List Table -->
     <div class="card-premium overflow-hidden">
       <table class="w-full text-left text-sm">
-        <thead class="bg-bg-elevated text-text-tertiary">
+        <thead class="bg-bg-elevated text-text-tertiary whitespace-nowrap">
           <tr>
             <th class="px-6 py-4 font-medium">{{ t('blog.tableTitle') }}</th>
-            <th class="px-6 py-4 font-medium w-28">{{ t('blog.tableStatus') }}</th>
-            <th class="px-6 py-4 font-medium w-36">{{ t('blog.tableDate') }}</th>
-            <th class="px-6 py-4 font-medium w-20 text-right">{{ t('blog.tableActions') }}</th>
+            <th class="px-6 py-4 font-medium">{{ t('blog.tableStatus') }}</th>
+            <th class="px-6 py-4 font-medium">{{ t('blog.tableDate') }}</th>
+            <th class="px-6 py-4 font-medium text-right">{{ t('blog.tableActions') }}</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-border-subtle">
