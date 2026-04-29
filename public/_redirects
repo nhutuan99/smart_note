@@ -1,1 +1,10 @@
+# Static assets - serve directly (critical for social media crawlers)
+/images/* /images/:splat 200
+/manifest.json /manifest.json 200
+/robots.txt /robots.txt 200
+/sitemap.xml /sitemap.xml 200
+/sw.js /sw.js 200
+/vite.svg /vite.svg 200
+
+# SPA fallback - must be LAST
 /* /index.html 200
