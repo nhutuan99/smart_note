@@ -65,6 +65,12 @@ self.addEventListener('push', (event) => {
     }
   }
 
+  // Handle native app badge (iOS 16.4+ & Android)
+  if (self.navigator && self.navigator.setAppBadge) {
+    const unreadCount = data.unreadCount || 1 // Backend can pass unreadCount
+    self.navigator.setAppBadge(unreadCount).catch(() => {})
+  }
+
   const options = {
     body: data.body || '',
     icon: '/images/logo-512.png',
@@ -88,6 +94,11 @@ self.addEventListener('push', (event) => {
 // Handle notification click — open or focus the app
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
+
+  // Clear native app badge on click
+  if (self.navigator && self.navigator.clearAppBadge) {
+    self.navigator.clearAppBadge().catch(() => {})
+  }
 
   const targetUrl = event.notification.data?.url || '/'
 
