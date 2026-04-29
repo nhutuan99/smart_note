@@ -222,12 +222,12 @@ Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải th
     if (!useGemini || !text) {
       if (!env.AI) return errorResponse('AI binding not configured', 503)
 
-      const cfResponse = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+      const cfResponse = await env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: `Chủ đề: ${topic}` }
         ],
-        max_tokens: 4000,
+        max_tokens: 8192,
         temperature: 0.7
       }) as any
 
@@ -244,7 +244,24 @@ Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải th
     try {
       result = JSON.parse(text)
     } catch {
-      return errorResponse('Failed to parse AI JSON response: ' + text.substring(0, 200), 500)
+      // Attempt to repair truncated JSON
+      try {
+        let repaired = text
+        // Close any unclosed strings
+        const quoteCount = (repaired.match(/(?<!\\)"/g) || []).length
+        if (quoteCount % 2 !== 0) repaired += '"'
+        // Close unclosed arrays/objects
+        const opens = (repaired.match(/[\[{]/g) || []).length
+        const closes = (repaired.match(/[\]}]/g) || []).length
+        for (let i = 0; i < opens - closes; i++) {
+          // Determine which to close based on last unclosed opener
+          const lastOpen = repaired.lastIndexOf('{') > repaired.lastIndexOf('[') ? '}' : ']'
+          repaired += lastOpen
+        }
+        result = JSON.parse(repaired)
+      } catch {
+        return errorResponse('Failed to parse AI JSON response: ' + text.substring(0, 200), 500)
+      }
     }
 
     return jsonResponse({ success: true, data: result })
