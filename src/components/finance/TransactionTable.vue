@@ -180,8 +180,17 @@ function dayTotal(txs: Transaction[]) {
                       <span v-else class="text-lg">{{ getCategoryConfig(tx.category).icon }}</span>
                     </div>
                     
-                    <div class="max-w-[14rem] sm:max-w-[20rem] truncate font-medium text-text-primary" :title="tx.note || t(`categories.${tx.category}`)">
-                      {{ tx.note || t(`categories.${tx.category}`) }}
+                    <div class="group/tooltip relative flex-1 min-w-0">
+                      <div class="max-w-[14rem] sm:max-w-[20rem] truncate font-medium text-text-primary">
+                        {{ tx.note || t(`categories.${tx.category}`) }}
+                      </div>
+                      
+                      <!-- Custom Tooltip (PC only) -->
+                      <div class="pointer-events-none absolute left-0 bottom-full mb-1 z-50 hidden w-max max-w-[300px] opacity-0 transition-all duration-200 group-hover/tooltip:opacity-100 group-hover/tooltip:-translate-y-1 md:block shadow-2xl">
+                        <div class="rounded-lg border border-border-default bg-bg-surface/95 backdrop-blur-xl px-3 py-2 text-sm text-text-primary shadow-xl ring-1 ring-black/5 whitespace-normal break-words">
+                          {{ tx.note || t(`categories.${tx.category}`) }}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </td>
