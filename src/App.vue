@@ -26,17 +26,18 @@ const { deviceType, isMobileOrTablet } = useDevice()
 const isAuthPage = computed(() => route.name === 'login')
 
 /**
+ * Public pages (blog) — rendered without sidebar, accessible without login.
+ */
+const isPublicPage = computed(() => !!route.meta.isPublic)
+
+/**
  * Gate: only render AppLayout when:
  * 1. Auth state has been resolved (authReady)
  * 2. User is authenticated
- * 3. Current route is NOT the login page
- *
- * This eliminates the 1-frame flash of the dashboard that occurred
- * because `v-else` previously rendered AppLayout before the router
- * guard could fire and redirect to /login.
+ * 3. Current route is NOT the login page or public page
  */
 const showLayout = computed(
-  () => auth.authReady && auth.isAuthenticated && !isAuthPage.value
+  () => auth.authReady && auth.isAuthenticated && !isAuthPage.value && !isPublicPage.value
 )
 
 // ─── Block double-tap zoom (mobile/tablet) ────────────────────────────────────
@@ -84,26 +85,44 @@ onMounted(() => {
     <router-view v-if="isAuthPage" />
 
     <!--
+      Public pages (blog) — full-width, no sidebar, no auth required.
+    -->
+    <div v-else-if="isPublicPage" class="public-layout">
+      <div class="public-layout__content custom-scrollbar">
+        <router-view />
+      </div>
+    </div>
+
+    <!--
       Authenticated app shell.
-      Only rendered when authReady=true AND isAuthenticated=true.
-      This prevents the flash of the dashboard layout before the
-      router guard has a chance to redirect to /login.
     -->
     <AppLayout v-else-if="showLayout" />
 
-    <!--
-      While auth resolves or redirecting — render nothing (black screen).
-      In practice this is near-instant since localStorage is synchronous,
-      but the guard still fires on the next microtask tick.
-    -->
-    <!-- intentional empty: router guard will redirect before next paint -->
+    <!-- While auth resolves — render nothing -->
   </div>
 </template>
 
 <style>
 #finnote-app {
   min-height: 100vh;
-  min-height: 100dvh; /* Dynamic viewport height — accounts for iOS bottom bar */
+  min-height: 100dvh;
+}
+
+/* ── Public Layout (Blog pages — no sidebar) ── */
+.public-layout {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--color-bg-primary);
+}
+.public-layout__content {
+  max-width: 100%;
+  padding: 2rem 1.5rem;
+  overflow-y: auto;
+}
+@media (min-width: 768px) {
+  .public-layout__content {
+    padding: 3rem 2rem;
+  }
 }
 
 /* ── iOS PWA Standalone Mode ─────────────────────────────────────────────────── */
