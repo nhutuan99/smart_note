@@ -882,7 +882,6 @@ function cancelForgotPin() {
       <div class="bg-bg-surface border-border-default rounded-xl border p-5">
         <div class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
           <div>
-            <h4 class="mb-0.5 text-sm font-semibold">{{ t('settings.pushNotifications') }}</h4>
             <p class="text-text-tertiary text-sm">
               <template v-if="!pushSupported">{{ t('settings.pushNotSupported') }}</template>
               <template v-else-if="pushPermission === 'denied'">
@@ -896,7 +895,7 @@ function cancelForgotPin() {
               v-if="pushSupported && !pushStandalone"
               class="text-warning mt-1.5 text-xs"
             >
-              📱 {{ t('settings.pushInstallHint') }}
+              {{ t('settings.pushInstallHint') }}
             </p>
           </div>
           <div class="flex items-center gap-2">
