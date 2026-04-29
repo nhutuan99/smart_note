@@ -748,7 +748,7 @@ function cancelForgotPin() {
             </span>
             <button
               v-if="pushSubscribed"
-              @click="testPush({ title: 'FinNote', body: '🏓 Anh hẹn em Pickleball, FTEL hẹn nhau Pickleball...', unreadCount: 1 })"
+              @click="testPush({ title: '💰 Tiền vào tài khoản', body: '+2.000.000đ • TPBank', unreadCount: 1 })"
               :disabled="pushLoading"
               class="border-border-default text-text-secondary hover:bg-bg-hover hover:text-text-primary flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-all duration-150 disabled:opacity-40"
               title="Gửi thông báo thử nghiệm"
