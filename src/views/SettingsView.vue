@@ -579,7 +579,7 @@ function cancelForgotPin() {
           <div class="flex items-center gap-2">
             <span
               v-if="hasPin"
-              class="bg-success/10 text-success rounded-full px-2.5 py-0.5 text-[0.6875rem] font-medium"
+              class="bg-success/10 text-success shrink-0 whitespace-nowrap rounded-full px-2.5 py-0.5 text-[0.6875rem] font-medium"
             >
               {{ t('settings.pinActive') }}
             </span>
@@ -902,7 +902,7 @@ function cancelForgotPin() {
           <div class="flex items-center gap-2">
             <span
               v-if="pushSubscribed"
-              class="bg-success/10 text-success rounded-full px-2.5 py-0.5 text-[0.6875rem] font-medium"
+              class="bg-success/10 text-success shrink-0 whitespace-nowrap rounded-full px-2.5 py-0.5 text-[0.6875rem] font-medium"
             >
               {{ t('settings.pinActive') }}
             </span>
