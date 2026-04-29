@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // 1. Vue core
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 
 // 2. Vue ecosystem
 import { useRoute } from 'vue-router'
@@ -53,6 +53,23 @@ function preventDoubleTapZoom(e: TouchEvent) {
 if (isMobileOrTablet.value) {
   useEventListener(document, 'touchend', preventDoubleTapZoom as EventListener, { passive: false })
 }
+
+// ─── Clear PWA App Badge on open/focus ─────────────────────────────────────────
+onMounted(() => {
+  const clearBadge = () => {
+    if (navigator && 'clearAppBadge' in navigator) {
+      ;(navigator as any).clearAppBadge().catch(() => {})
+    }
+  }
+
+  clearBadge()
+
+  useEventListener(document, 'visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      clearBadge()
+    }
+  })
+})
 </script>
 
 <template>

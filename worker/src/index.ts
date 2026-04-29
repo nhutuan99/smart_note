@@ -1384,7 +1384,7 @@ async function handleCassoWebhook(request: Request, env: Env): Promise<Response>
     try {
       const pushTitle = type === 'income' ? '💰 Tiền vào tài khoản' : '💸 Tiền ra tài khoản'
       const pushBody = `${type === 'income' ? '+' : '-'}${amount.toLocaleString('vi-VN')}đ • ${walletName}`
-      await sendPushToUser(userId, env, { title: pushTitle, body: pushBody, tag: `casso-${tx.id}`, url: '/' })
+      await sendPushToUser(userId, env, { title: pushTitle, body: pushBody, tag: `casso-${tx.id}`, url: '/', unreadCount: 1 })
     } catch { /* push is best-effort */ }
   }
 
@@ -1901,7 +1901,7 @@ async function processSmsTransaction(
   try {
     const pushTitle = parsed.type === 'income' ? '💰 Tiền vào tài khoản' : '💸 Tiền ra tài khoản'
     const pushBody = `${parsed.type === 'income' ? '+' : '-'}${parsed.amount.toLocaleString('vi-VN')}đ • ${walletName}`
-    await sendPushToUser(userId, env, { title: pushTitle, body: pushBody, tag: `sms-${tx.id}`, url: '/' })
+    await sendPushToUser(userId, env, { title: pushTitle, body: pushBody, tag: `sms-${tx.id}`, url: '/', unreadCount: 1 })
   } catch { /* push is best-effort */ }
 
   // Update latest_request and history with success details (awaited — ensures debug data is persisted)

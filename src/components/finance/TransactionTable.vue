@@ -12,7 +12,8 @@ import {
   Calendar,
   Plus,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  X
 } from 'lucide-vue-next'
 
 const props = defineProps<{
@@ -28,8 +29,15 @@ const emit = defineEmits<{
 const { t, tm } = useI18n()
 const finance = useFinancePolling()
 
+const selectedTx = ref<Transaction | null>(null)
 const currentPage = ref(1)
 const pageSize = 15
+
+// Format precise time for modal
+function formatDateTime(dateStr: string) {
+  const d = new Date(dateStr)
+  return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}, ${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`
+}
 
 // Reset pagination when data changes
 watch(() => props.transactions, () => {
@@ -145,7 +153,8 @@ function dayTotal(txs: Transaction[]) {
               <tr
                 v-for="tx in txs"
                 :key="tx.id"
-                class="group hover:bg-bg-hover transition-colors duration-150"
+                class="group hover:bg-bg-hover transition-colors duration-150 cursor-pointer"
+                @click="selectedTx = tx"
               >
                 <!-- Giao dịch (Icon + Note) -->
                 <td class="px-4 py-3">
@@ -227,7 +236,7 @@ function dayTotal(txs: Transaction[]) {
                 <td class="px-4 py-3 w-12 text-right">
                   <button
                     class="text-text-tertiary hover:text-error hover:bg-bg-active inline-flex rounded p-1.5 opacity-100 md:opacity-0 transition-all duration-150 md:group-hover:opacity-100"
-                    @click="emit('delete', tx)"
+                    @click.stop="emit('delete', tx)"
                     title="Xóa giao dịch"
                   >
                     <Trash2 :size="16" />
@@ -289,4 +298,83 @@ function dayTotal(txs: Transaction[]) {
       </button>
     </div>
   </template>
+  <!-- Transaction Detail Modal -->
+  <Teleport to="body">
+    <Transition name="fade">
+      <div v-if="selectedTx" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="selectedTx = null"></div>
+        
+        <div class="bg-bg-surface border-border-default relative w-full max-w-[24rem] rounded-2xl border p-6 shadow-xl flex flex-col gap-5">
+          <!-- Header -->
+          <div class="flex justify-between items-start">
+            <div class="flex items-center gap-3">
+              <div
+                class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl overflow-hidden border border-border-default/30 shadow-sm"
+                :style="{ backgroundColor: getWalletBrand(finance.getWalletName(selectedTx.walletId))?.logoUrl ? '#fff' : getCategoryConfig(selectedTx.category).color + '15' }"
+              >
+                <img
+                  v-if="getWalletBrand(finance.getWalletName(selectedTx.walletId))?.logoUrl"
+                  :src="getWalletBrand(finance.getWalletName(selectedTx.walletId))!.logoUrl"
+                  :alt="finance.getWalletName(selectedTx.walletId)"
+                  class="h-8 w-8 object-contain"
+                />
+                <span v-else class="text-2xl">{{ getCategoryConfig(selectedTx.category).icon }}</span>
+              </div>
+              <div>
+                <h3 class="text-lg font-bold text-text-primary">{{ t(`categories.${selectedTx.category}`) }}</h3>
+                <p class="text-xs text-text-tertiary">{{ formatDateTime(selectedTx.createdAt || selectedTx.date) }}</p>
+              </div>
+            </div>
+            <button @click="selectedTx = null" class="text-text-tertiary hover:bg-bg-hover hover:text-text-primary p-1.5 rounded-lg transition-colors">
+              <X :size="20" />
+            </button>
+          </div>
+
+          <!-- Amount -->
+          <div class="bg-bg-elevated border-border-default rounded-xl border p-4 flex flex-col items-center justify-center gap-1">
+            <div class="text-xs font-medium uppercase text-text-secondary">{{ selectedTx.type === 'income' ? t('transactions.filterIncome') : t('transactions.filterExpense') }}</div>
+            <div
+              class="text-2xl font-bold flex items-center gap-1"
+              :class="selectedTx.type === 'income' ? 'text-success' : 'text-error'"
+            >
+              <ArrowUpRight v-if="selectedTx.type === 'income'" :size="20" />
+              <ArrowDownRight v-else :size="20" />
+              {{ formatVND(selectedTx.amount) }}
+            </div>
+          </div>
+
+          <!-- Details List -->
+          <div class="flex flex-col gap-3">
+            <div class="flex justify-between items-start border-b border-border-subtle pb-3">
+              <span class="text-sm text-text-secondary min-w-[5rem]">{{ t('transactions.tableWallet') }}</span>
+              <span class="text-sm font-medium text-text-primary text-right">{{ finance.getWalletName(selectedTx.walletId) }}</span>
+            </div>
+            
+            <div class="flex justify-between items-start border-b border-border-subtle pb-3">
+              <span class="text-sm text-text-secondary min-w-[5rem]">{{ t('transactions.tableSource') }}</span>
+              <span class="text-sm font-medium text-text-primary text-right uppercase">
+                <span
+                  class="px-2 py-0.5 rounded text-[0.6875rem] font-bold"
+                  :class="{
+                    'bg-info/10 text-info': selectedTx.source === 'telegram',
+                    'bg-success/10 text-success': selectedTx.source === 'sms',
+                    'bg-accent/10 text-accent': selectedTx.source === 'casso',
+                    'bg-warning/10 text-warning': selectedTx.source === 'notification',
+                    'bg-bg-hover text-text-secondary': !['telegram','sms','casso','notification'].includes(selectedTx.source)
+                  }"
+                >{{ selectedTx.source || 'Manual' }}</span>
+              </span>
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+              <span class="text-sm text-text-secondary">{{ t('addTx.note') }}</span>
+              <div class="bg-bg-active/30 rounded-lg p-3 border border-border-subtle max-h-[150px] overflow-y-auto">
+                <p class="text-sm text-text-primary leading-relaxed break-words whitespace-pre-wrap">{{ selectedTx.note || t(`categories.${selectedTx.category}`) }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
 </template>

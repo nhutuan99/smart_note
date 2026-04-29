@@ -123,7 +123,7 @@ export function usePushNotifications() {
   }
 
   /** Test push notification */
-  async function testPush(payload?: { title?: string; body?: string }) {
+  async function testPush(payload?: { title?: string; body?: string; unreadCount?: number }) {
     if (!isSupported.value) return
     loading.value = true
     try {
