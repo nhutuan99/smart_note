@@ -9,51 +9,18 @@ import { getWalletBrand } from '@/constants/walletBrands'
 import { useI18n } from 'vue-i18n'
 import type { Transaction } from '@/types'
 import {
-  Search,
   Plus,
-  Trash2,
-  ArrowUpRight,
-  ArrowDownRight,
-  Filter,
-  Calendar,
   ChevronDown,
   Check,
   Wallet
 } from 'lucide-vue-next'
 
+import TransactionTable from '@/components/finance/TransactionTable.vue'
+
 const { t, tm } = useI18n()
 const router = useRouter()
 const finance = useFinancePolling()
 const ui = useUiStore()
-
-// Group transactions by date
-const groupedTransactions = computed(() => {
-  const groups: Record<string, Transaction[]> = {}
-  finance.filteredTransactions.forEach((tx) => {
-    if (!groups[tx.date]) groups[tx.date] = []
-    groups[tx.date].push(tx)
-  })
-  return Object.entries(groups).sort(([a], [b]) => b.localeCompare(a))
-})
-
-function formatDateGroup(dateStr: string) {
-  const d = new Date(dateStr)
-  const today = new Date()
-  const yesterday = new Date()
-  yesterday.setDate(yesterday.getDate() - 1)
-
-  if (dateStr === today.toISOString().substring(0, 10)) return t('common.today')
-  if (dateStr === yesterday.toISOString().substring(0, 10)) return t('common.yesterday')
-
-  const days = tm('days.long') as string[]
-  return `${days[d.getDay()]}, ${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`
-}
-
-function dayTotal(txs: Transaction[]) {
-  const income = txs.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0)
-  const expense = txs.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
-  return { income, expense, net: income - expense }
-}
 
 const AUTO_SOURCES: Transaction['source'][] = ['sms', 'casso', 'notification', 'telegram']
 
@@ -248,164 +215,13 @@ useEventListener(document, 'click', handleClickOutside)
       </div>
     </div>
 
-    <!-- Transaction Groups / Loading -->
-    <template v-if="finance.loading">
-      <div class="space-y-4">
-        <div v-for="i in 2" :key="'grp-' + i">
-          <div class="mb-2 flex items-center justify-between px-1">
-            <div class="skeleton h-4 w-24"></div>
-            <div class="skeleton h-4 w-16"></div>
-          </div>
-          <div class="bg-bg-surface border-border-default divide-border-subtle divide-y overflow-hidden rounded-xl border">
-            <div v-for="j in 3" :key="'item-' + j" class="flex items-center gap-3 px-4 py-3">
-              <div class="skeleton h-10 w-10 rounded-xl"></div>
-              <div class="flex-1 space-y-2">
-                <div class="skeleton h-4 w-3/4"></div>
-                <div class="skeleton h-3 w-1/2"></div>
-              </div>
-              <div class="skeleton h-5 w-16"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </template>
-
-    <template v-else-if="groupedTransactions.length">
-      <div class="space-y-4">
-      <div
-        v-for="[date, txs] in groupedTransactions"
-        :key="date"
-      >
-        <!-- Date Header -->
-        <div class="mb-2 flex items-center justify-between px-1">
-          <span class="text-text-secondary text-sm font-medium">
-            {{ formatDateGroup(date) }}
-          </span>
-          <span
-            class="text-sm font-medium"
-            :class="dayTotal(txs).net >= 0 ? 'text-success' : 'text-error'"
-          >
-            {{ dayTotal(txs).net >= 0 ? '+' : '' }}{{ formatVND(dayTotal(txs).net) }}
-          </span>
-        </div>
-
-        <!-- Transaction Items -->
-        <div
-          class="bg-bg-surface border-border-default divide-border-subtle divide-y overflow-hidden rounded-xl border"
-        >
-          <div
-            v-for="tx in txs"
-            :key="tx.id"
-            class="group hover:bg-bg-hover flex items-center gap-3 px-4 py-3 transition-colors duration-150"
-          >
-            <!-- Wallet Logo / Category Icon -->
-            <div
-              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl overflow-hidden"
-              :style="{ backgroundColor: getWalletBrand(finance.getWalletName(tx.walletId))?.logoUrl ? '#fff' : getCategoryConfig(tx.category).color + '15' }"
-            >
-              <!-- Bank/Wallet logo -->
-              <img
-                v-if="getWalletBrand(finance.getWalletName(tx.walletId))?.logoUrl"
-                :src="getWalletBrand(finance.getWalletName(tx.walletId))!.logoUrl"
-                :alt="finance.getWalletName(tx.walletId)"
-                class="h-7 w-7 object-contain"
-                loading="lazy"
-              />
-              <!-- Abbr fallback for brand without logo -->
-              <span
-                v-else-if="getWalletBrand(finance.getWalletName(tx.walletId))"
-                class="text-[10px] font-bold"
-                :style="{ color: getWalletBrand(finance.getWalletName(tx.walletId))!.textColor, backgroundColor: getWalletBrand(finance.getWalletName(tx.walletId))!.bgColor }"
-              >
-                {{ getWalletBrand(finance.getWalletName(tx.walletId))!.abbr }}
-              </span>
-              <!-- Category emoji fallback -->
-              <span v-else class="text-lg">{{ getCategoryConfig(tx.category).icon }}</span>
-            </div>
-
-            <!-- Info -->
-            <div class="min-w-0 flex-1">
-              <div class="truncate text-sm font-medium">
-                {{ tx.note || t(`categories.${tx.category}`) }}
-              </div>
-              <div class="text-text-disabled flex items-center gap-2 text-[0.6875rem]">
-                <span>{{ finance.getWalletName(tx.walletId) }}</span>
-                <span
-                  v-if="tx.source === 'telegram'"
-                  class="bg-info/10 text-info rounded px-1.5 py-0.5 text-[0.625rem] font-medium"
-                >
-                  Telegram
-                </span>
-                <span
-                  v-else-if="tx.source === 'sms'"
-                  class="bg-success/10 text-success rounded px-1.5 py-0.5 text-[0.625rem] font-medium"
-                >
-                  SMS
-                </span>
-                <span
-                  v-else-if="tx.source === 'casso'"
-                  class="bg-accent/10 text-accent rounded px-1.5 py-0.5 text-[0.625rem] font-medium"
-                >
-                  Casso
-                </span>
-                <span
-                  v-else-if="tx.source === 'notification'"
-                  class="bg-warning/10 text-warning rounded px-1.5 py-0.5 text-[0.625rem] font-medium"
-                >
-                  Auto
-                </span>
-              </div>
-            </div>
-
-            <!-- Amount -->
-            <div
-              class="flex items-center gap-0.5 text-sm font-semibold whitespace-nowrap"
-              :class="tx.type === 'income' ? 'text-success' : 'text-error'"
-            >
-              <ArrowUpRight
-                v-if="tx.type === 'income'"
-                :size="14"
-              />
-              <ArrowDownRight
-                v-else
-                :size="14"
-              />
-              {{ formatVND(tx.amount) }}
-            </div>
-
-            <!-- Delete -->
-            <button
-              class="text-text-tertiary hover:text-error hover:bg-bg-active rounded p-2 md:p-1 opacity-100 md:opacity-0 transition-all duration-150 md:group-hover:opacity-100 touch-target"
-              @click="deleteTx(tx)"
-            >
-              <Trash2 :size="16" />
-            </button>
-          </div>
-        </div>
-      </div>
-      </div>
-    </template>
-
-    <!-- Empty -->
-    <template v-else>
-      <div
-        class="flex flex-col items-center py-16 text-center"
-      >
-        <Calendar
-          :size="48"
-          class="text-text-disabled mb-4"
-        />
-        <h3 class="mb-2 text-lg font-semibold">{{ t('transactions.empty') }}</h3>
-        <p class="text-text-tertiary mb-6 text-sm">{{ t('transactions.emptyHint') }}</p>
-        <button
-          @click="router.push('/transactions/add')"
-          class="btn-secondary"
-        >
-          <Plus :size="16" />
-          {{ t('transactions.addTransaction') }}
-        </button>
-      </div>
-    </template>
+    <!-- Transaction Table Component -->
+    <TransactionTable
+      :transactions="finance.filteredTransactions"
+      :loading="finance.loading"
+      @delete="deleteTx"
+      @add="router.push('/transactions/add')"
+    />
   </div>
 </template>
 
