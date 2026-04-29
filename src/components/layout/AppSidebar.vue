@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useRouter, useRoute } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
 import { useFinanceStore } from '@/stores/finance'
 import { useNotesStore } from '@/stores/notes'
@@ -17,12 +18,15 @@ import {
   Clock,
   Plus,
   ChevronLeft,
-  Bug
+  Bug,
+  Sparkles,
+  ShieldAlert
 } from 'lucide-vue-next'
 
 const { t } = useI18n()
 const router = useRouter()
 const route = useRoute()
+const auth = useAuthStore()
 const ui = useUiStore()
 const finance = useFinanceStore()
 const notesStore = useNotesStore()
@@ -33,6 +37,7 @@ const navItems = [
   { key: 'nav.transactions', icon: ArrowLeftRight, route: '/transactions' },
   { key: 'nav.wallets', icon: Wallet, route: '/wallets' },
   { key: 'nav.notes', icon: FileText, route: '/notes' },
+  { key: 'nav.blog', icon: Sparkles, route: '/blog' },
   { key: 'nav.settings', icon: Settings, route: '/settings' }
 ]
 
@@ -107,6 +112,20 @@ function navigateWallet(walletId: string) {
             :size="ui.sidebarOpen ? 18 : 22"
           />
           <span v-if="ui.sidebarOpen">{{ t(item.key) }}</span>
+        </router-link>
+
+        <router-link
+          v-if="auth.user?.email === 'tintphcm@gmail.com'"
+          to="/admin/blog"
+          class="text-accent hover:bg-bg-hover hover:text-accent-hover flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm whitespace-nowrap no-underline transition-all duration-150 mt-2"
+          :class="[
+            isActive('/admin/blog') ? 'bg-bg-hover font-medium' : '',
+            !ui.sidebarOpen ? 'justify-center px-2' : ''
+          ]"
+          @click="closeSidebarOnMobile"
+        >
+          <ShieldAlert :size="ui.sidebarOpen ? 18 : 22" />
+          <span v-if="ui.sidebarOpen">Quản lý Blog</span>
         </router-link>
 
       </nav>

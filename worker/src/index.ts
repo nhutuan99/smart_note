@@ -73,6 +73,16 @@ import {
   handleGetWebhookHistory,
 } from './controllers/misc.controller'
 
+import {
+  handleListBlogs,
+  handleGetBlog,
+  handleCreateBlog,
+  handleUpdateBlog,
+  handleDeleteBlog,
+  handleGenerateBlogContent,
+  handleGenerateBlogImage,
+} from './controllers/blog.controller'
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     if (request.method === 'OPTIONS') {
@@ -114,6 +124,15 @@ export default {
         return handleSmsWebhook(request, env)
       }
 
+      // Public Blog Routes
+      if (path === '/api/blogs' && request.method === 'GET') {
+        return handleListBlogs(request, env)
+      }
+      const publicBlogMatch = path.match(/^\/api\/blogs\/([^\/]+)$/)
+      if (publicBlogMatch && request.method === 'GET') {
+        return handleGetBlog(publicBlogMatch[1], env)
+      }
+
       // Protected routes - verify JWT
       const authHeader = request.headers.get('Authorization')
       if (!authHeader?.startsWith('Bearer ')) {
@@ -132,6 +151,24 @@ export default {
       }
       if (path === '/api/auth/delete-account' && request.method === 'POST') {
         return handleDeleteAccount(userId, request, env)
+      }
+
+      // Admin Blog Routes
+      if (path === '/api/blogs' && request.method === 'POST') {
+        return handleCreateBlog(userId, request, env)
+      }
+      if (path === '/api/blogs/generate-content' && request.method === 'POST') {
+        return handleGenerateBlogContent(userId, request, env)
+      }
+      if (path === '/api/blogs/generate-image' && request.method === 'POST') {
+        return handleGenerateBlogImage(userId, request, env)
+      }
+      const adminBlogMatch = path.match(/^\/api\/blogs\/([^\/]+)$/)
+      if (adminBlogMatch && request.method === 'PUT') {
+        return handleUpdateBlog(userId, adminBlogMatch[1], request, env)
+      }
+      if (adminBlogMatch && request.method === 'DELETE') {
+        return handleDeleteBlog(userId, adminBlogMatch[1], env)
       }
 
       // Bug Report

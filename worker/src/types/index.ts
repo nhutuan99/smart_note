@@ -89,3 +89,25 @@ export interface BudgetData {
   dismissed: boolean
   updatedAt: string
 }
+
+export interface BlogData {
+  id: string
+  slug: string
+  title: string
+  content: string
+  excerpt: string
+  tags: string[]
+  imageUrl?: string
+  author: {
+    name: string
+    email: string
+  }
+  seoMeta: {
+    title: string
+    description: string
+    keywords: string
+  }
+  published: boolean
+  createdAt: string
+  updatedAt: string
+}

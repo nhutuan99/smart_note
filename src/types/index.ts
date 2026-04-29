@@ -103,3 +103,27 @@ export interface ApiResponse<T> {
   data?: T
   error?: string
 }
+
+// ── Blog ──
+
+export interface Blog {
+  id: string
+  slug: string
+  title: string
+  content: string
+  excerpt: string
+  tags: string[]
+  imageUrl?: string
+  author: {
+    name: string
+    email: string
+  }
+  seoMeta: {
+    title: string
+    description: string
+    keywords: string
+  }
+  published: boolean
+  createdAt: string
+  updatedAt: string
+}

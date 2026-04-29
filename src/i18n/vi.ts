@@ -56,8 +56,9 @@ export default {
   nav: {
     dashboard: 'Dashboard',
     transactions: 'Giao dịch',
-    wallets: 'Ví',
-    notes: 'Notes',
+    wallets: 'Tài khoản',
+    notes: 'Ghi chú',
+    blog: 'Blog',
     settings: 'Cài đặt',
     addTransaction: 'Thêm giao dịch',
     walletSection: 'VÍ',

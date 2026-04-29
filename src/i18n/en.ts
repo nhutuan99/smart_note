@@ -58,6 +58,7 @@ export default {
     transactions: 'Transactions',
     wallets: 'Wallets',
     notes: 'Notes',
+    blog: 'Blog',
     settings: 'Settings',
     addTransaction: 'Add Transaction',
     walletSection: 'WALLETS',

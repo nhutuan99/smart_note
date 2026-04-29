@@ -1,0 +1,220 @@
+import { Env, BlogData, UserData } from '../types'
+import { errorResponse, jsonResponse } from '../utils/response'
+import { generateId } from '../utils/crypto'
+import { getJSON, putJSON } from '../services/kv.service'
+
+const ADMIN_EMAIL = 'tintphcm@gmail.com'
+
+// Helper to check admin
+async function isAdmin(userId: string, env: Env): Promise<boolean> {
+  const user = await getJSON<UserData>(env.SMART_NOTE_KV, `users/${userId}`)
+  return user?.email === ADMIN_EMAIL
+}
+
+// Generates a URL-friendly slug
+function createSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '')
+}
+
+// ====== Public Blog Endpoints ======
+
+export async function handleListBlogs(request: Request, env: Env): Promise<Response> {
+  const index = await getJSON<{ blogs: any[] }>(env.SMART_NOTE_KV, `public/blogs/_index`)
+  
+  // Return only published ones
+  const published = (index?.blogs || []).filter(b => b.published !== false)
+  // Sort by date desc
+  published.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+  
+  return jsonResponse({ success: true, data: published })
+}
+
+export async function handleGetBlog(slug: string, env: Env): Promise<Response> {
+  const blog = await getJSON<BlogData>(env.SMART_NOTE_KV, `public/blogs/${slug}`)
+  if (!blog) return errorResponse('Blog not found', 404)
+  return jsonResponse({ success: true, data: blog })
+}
+
+// ====== Admin Blog Endpoints ======
+
+export async function handleCreateBlog(userId: string, request: Request, env: Env): Promise<Response> {
+  if (!(await isAdmin(userId, env))) return errorResponse('Forbidden', 403)
+
+  const body = (await request.json()) as any
+  const id = generateId()
+  const slug = body.slug || createSlug(body.title || 'untitled')
+  const now = new Date().toISOString()
+  
+  const blog: BlogData = {
+    id,
+    slug,
+    title: body.title || 'Untitled',
+    content: body.content || '',
+    excerpt: body.excerpt || '',
+    tags: body.tags || [],
+    imageUrl: body.imageUrl || '',
+    author: {
+      name: 'Admin',
+      email: ADMIN_EMAIL
+    },
+    seoMeta: body.seoMeta || { title: body.title, description: body.excerpt, keywords: '' },
+    published: body.published ?? false,
+    createdAt: now,
+    updatedAt: now
+  }
+
+  // Ensure slug is unique
+  const existing = await getJSON<BlogData>(env.SMART_NOTE_KV, `public/blogs/${slug}`)
+  if (existing) {
+    return errorResponse('Slug already exists', 400)
+  }
+
+  await putJSON(env.SMART_NOTE_KV, `public/blogs/${slug}`, blog)
+
+  // Update index
+  const index = (await getJSON<{ blogs: any[] }>(env.SMART_NOTE_KV, `public/blogs/_index`)) || { blogs: [] }
+  index.blogs.push({
+    id: blog.id,
+    slug: blog.slug,
+    title: blog.title,
+    excerpt: blog.excerpt,
+    tags: blog.tags,
+    imageUrl: blog.imageUrl,
+    published: blog.published,
+    createdAt: blog.createdAt,
+    updatedAt: blog.updatedAt
+  })
+  await putJSON(env.SMART_NOTE_KV, `public/blogs/_index`, index)
+
+  return jsonResponse({ success: true, data: blog }, 201)
+}
+
+export async function handleUpdateBlog(userId: string, slug: string, request: Request, env: Env): Promise<Response> {
+  if (!(await isAdmin(userId, env))) return errorResponse('Forbidden', 403)
+
+  const existing = await getJSON<BlogData>(env.SMART_NOTE_KV, `public/blogs/${slug}`)
+  if (!existing) return errorResponse('Blog not found', 404)
+
+  const body = (await request.json()) as any
+  const updated: BlogData = {
+    ...existing,
+    ...body,
+    slug, // dont allow slug change for simplicity right now
+    updatedAt: new Date().toISOString()
+  }
+
+  await putJSON(env.SMART_NOTE_KV, `public/blogs/${slug}`, updated)
+
+  // Update index
+  const index = (await getJSON<{ blogs: any[] }>(env.SMART_NOTE_KV, `public/blogs/_index`)) || { blogs: [] }
+  const idx = index.blogs.findIndex((b: any) => b.slug === slug)
+  if (idx !== -1) {
+    index.blogs[idx] = {
+      id: updated.id,
+      slug: updated.slug,
+      title: updated.title,
+      excerpt: updated.excerpt,
+      tags: updated.tags,
+      imageUrl: updated.imageUrl,
+      published: updated.published,
+      createdAt: updated.createdAt,
+      updatedAt: updated.updatedAt
+    }
+    await putJSON(env.SMART_NOTE_KV, `public/blogs/_index`, index)
+  }
+
+  return jsonResponse({ success: true, data: updated })
+}
+
+export async function handleDeleteBlog(userId: string, slug: string, env: Env): Promise<Response> {
+  if (!(await isAdmin(userId, env))) return errorResponse('Forbidden', 403)
+
+  await env.SMART_NOTE_KV.delete(`public/blogs/${slug}`)
+
+  const index = (await getJSON<{ blogs: any[] }>(env.SMART_NOTE_KV, `public/blogs/_index`)) || { blogs: [] }
+  index.blogs = index.blogs.filter((b: any) => b.slug !== slug)
+  await putJSON(env.SMART_NOTE_KV, `public/blogs/_index`, index)
+
+  return jsonResponse({ success: true })
+}
+
+// ====== AI Generators ======
+
+export async function handleGenerateBlogContent(userId: string, request: Request, env: Env): Promise<Response> {
+  if (!(await isAdmin(userId, env))) return errorResponse('Forbidden', 403)
+  if (!env.AI) return errorResponse('AI binding not configured', 503)
+
+  const { topic } = (await request.json()) as { topic: string }
+  if (!topic) return errorResponse('Missing topic', 400)
+
+  const systemPrompt = `Bạn là một chuyên gia viết blog về quản lý tài chính cá nhân.
+Nhiệm vụ: Viết một bài blog chuẩn SEO về chủ đề được yêu cầu để giúp người dùng biết cách quản lý tiền bạc và giới thiệu khéo léo về ứng dụng "FinNote".
+Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải thích nào khác ngoài JSON:
+{
+  "title": "Tiêu đề hấp dẫn (dưới 60 ký tự)",
+  "excerpt": "Đoạn mô tả ngắn (dưới 160 ký tự) cho SEO meta description",
+  "tags": ["tag1", "tag2", "tag3"],
+  "seoKeywords": "keyword1, keyword2",
+  "content": "Nội dung bài viết chi tiết được format bằng Markdown. Cần có mở bài, thân bài chia thành nhiều mục (H2, H3) sử dụng bullet points/bold text hợp lý, và kết bài có Call to Action kêu gọi tải/sử dụng app FinNote."
+}`
+
+  try {
+    const response = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: `Chủ đề: ${topic}` }
+      ],
+      max_tokens: 2000,
+      temperature: 0.7
+    }) as any
+
+    let text = response?.response || ''
+    // Try to extract json
+    const jsonMatch = text.match(/\{[\s\S]*\}/)
+    if (jsonMatch) {
+      text = jsonMatch[0]
+    }
+    
+    let result
+    try {
+      result = JSON.parse(text)
+    } catch {
+      // Fallback
+      return errorResponse('Failed to parse AI JSON response: ' + text, 500)
+    }
+
+    return jsonResponse({ success: true, data: result })
+  } catch (err: any) {
+    return errorResponse(err.message || 'AI request failed', 500)
+  }
+}
+
+export async function handleGenerateBlogImage(userId: string, request: Request, env: Env): Promise<Response> {
+  if (!(await isAdmin(userId, env))) return errorResponse('Forbidden', 403)
+  if (!env.AI) return errorResponse('AI binding not configured', 503)
+
+  const { prompt } = (await request.json()) as { prompt: string }
+  if (!prompt) return errorResponse('Missing prompt', 400)
+
+  const optimizedPrompt = `A high quality, modern illustration for a finance blog post about: ${prompt}. Style: flat design, minimalist, vivid colors, vector art, dribbble style.`
+
+  try {
+    const response = await env.AI.run('@cf/stabilityai/stable-diffusion-xl-base-1.0', {
+      prompt: optimizedPrompt
+    })
+    
+    // Convert binary image to base64
+    const buffer = await new Response(response).arrayBuffer()
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)))
+    const dataUrl = `data:image/jpeg;base64,${base64}`
+
+    return jsonResponse({ success: true, data: { imageUrl: dataUrl } })
+  } catch (err: any) {
+    return errorResponse(err.message || 'Image AI generation failed', 500)
+  }
+}

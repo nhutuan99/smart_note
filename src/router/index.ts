@@ -52,6 +52,23 @@ const router = createRouter({
       path: '/auto-sync',
       name: 'auto-sync',
       component: () => import('@/views/AutoSyncView.vue')
+    },
+    {
+      path: '/blog',
+      name: 'blog-list',
+      component: () => import('@/views/BlogListView.vue'),
+      meta: { isPublic: true }
+    },
+    {
+      path: '/blog/:slug',
+      name: 'blog-detail',
+      component: () => import('@/views/BlogDetailView.vue'),
+      meta: { isPublic: true }
+    },
+    {
+      path: '/admin/blog',
+      name: 'admin-blog',
+      component: () => import('@/views/AdminBlogView.vue')
     }
   ]
 })
@@ -70,7 +87,7 @@ router.beforeEach((to) => {
 
   // Protected pages: redirect unauthenticated users to login
   // This prevents broken pages when user hits browser back after logout/401
-  if (!to.meta.requiresGuest && to.path !== '/login' && !auth.isAuthenticated) {
+  if (!to.meta.requiresGuest && !to.meta.isPublic && to.path !== '/login' && !auth.isAuthenticated) {
     return { path: '/login', replace: true }
   }
 })
