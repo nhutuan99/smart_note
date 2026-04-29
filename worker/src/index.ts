@@ -1602,14 +1602,29 @@ async function processSmsTransaction(
   // ── Match wallet by bank name ──
   let walletId = wallets[0]?.id || ''
   if (parsed.bankName) {
-    // Direct match
+    // 1. Direct name match (preferred)
     const found = wallets.find(w => w.name.toLowerCase().includes(parsed.bankName.toLowerCase()))
     if (found) {
       walletId = found.id
     } else {
-      // Try CASSO_BANK_MAP aliases
-      for (const [walletKey, aliases] of Object.entries(CASSO_BANK_MAP)) {
-        if (aliases.some(a => parsed.bankName.toLowerCase().includes(a))) {
+      // 2. Alias fallback using a local bank alias map
+      const BANK_ALIAS_MAP: Record<string, string[]> = {
+        'Techcombank':  ['techcombank', 'tcb'],
+        'TPBank':       ['tpbank', 'tpb', 'tp bank'],
+        'MBBank':       ['mbbank', 'mb bank', 'mb', 'quân đội'],
+        'Vietcombank':  ['vietcombank', 'vcb'],
+        'BIDV':         ['bidv'],
+        'Agribank':     ['agribank', 'agr'],
+        'VietinBank':   ['vietinbank', 'viettin', 'ctg'],
+        'ACB':          ['acb'],
+        'VPBank':       ['vpbank', 'vp bank'],
+        'SHBank':       ['shbank', 'sh bank'],
+        'MSB':          ['msb', 'maritime'],
+        'MoMo':         ['momo'],
+        'ZaloPay':      ['zalopay', 'zalo pay'],
+      }
+      for (const [walletKey, aliases] of Object.entries(BANK_ALIAS_MAP) as [string, string[]][]) {
+        if (aliases.some((a: string) => parsed.bankName.toLowerCase().includes(a))) {
           const w = wallets.find(w => w.name.toLowerCase().includes(walletKey.toLowerCase()))
           if (w) { walletId = w.id; break }
         }
@@ -2204,10 +2219,6 @@ export default {
       }
       if (path === '/api/webhook/notification' && request.method === 'POST') {
         return handleNotificationWebhook(request, env)
-      }
-      // Casso Bank Webhook — POST /api/webhook/casso?userId=<userId>
-      if (path === '/api/webhook/casso' && request.method === 'POST') {
-        return handleCassoWebhook(request, env)
       }
       if (path === '/api/webhook/sms' && request.method === 'POST') {
         return handleSmsWebhook(request, env)
