@@ -354,52 +354,60 @@ const activeWalletStats = computed(() => walletBreakdownTab.value === 'expense' 
         <div
           v-for="tx in finance.recentTransactions.slice(0, 5)"
           :key="tx.id"
-          class="hover:bg-bg-hover flex items-center gap-3 px-4 py-3 transition-colors"
+          class="hover:bg-bg-hover flex items-center gap-3 px-4 py-3 transition-colors cursor-pointer"
+          @click="router.push('/transactions')"
         >
           <!-- Wallet Logo / Category Icon -->
           <div
-            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl overflow-hidden"
-            :style="{ backgroundColor: getWalletBrand(finance.getWalletName(tx.walletId))?.logoUrl ? '#fff' : getCategoryConfig(tx.category).color + '15' }"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg overflow-hidden border border-border-default/30"
+            :style="{ backgroundColor: getWalletBrand(finance.getWalletName(tx.walletId))?.logoUrl ? '#fff' : getCategoryConfig(tx.category).color + '12' }"
           >
             <img
               v-if="getWalletBrand(finance.getWalletName(tx.walletId))?.logoUrl"
               :src="getWalletBrand(finance.getWalletName(tx.walletId))!.logoUrl"
               :alt="finance.getWalletName(tx.walletId)"
-              class="h-7 w-7 object-contain"
+              class="h-6 w-6 object-contain"
               loading="lazy"
             />
             <span
               v-else-if="getWalletBrand(finance.getWalletName(tx.walletId))"
-              class="text-[10px] font-bold"
+              class="text-[9px] font-bold"
               :style="{ color: getWalletBrand(finance.getWalletName(tx.walletId))!.textColor, backgroundColor: getWalletBrand(finance.getWalletName(tx.walletId))!.bgColor }"
             >
               {{ getWalletBrand(finance.getWalletName(tx.walletId))!.abbr }}
             </span>
-            <span v-else class="text-lg">{{ getCategoryConfig(tx.category).icon }}</span>
+            <span v-else class="text-base">{{ getCategoryConfig(tx.category).icon }}</span>
           </div>
           <div class="min-w-0 flex-1">
-            <div class="truncate text-sm font-medium">
-              {{ tx.note || t(`categories.${tx.category}`) }}
+            <div class="flex items-center gap-2">
+              <span class="text-sm font-semibold text-text-primary truncate">
+                {{ t(`categories.${tx.category}`) }}
+              </span>
+              <span
+                v-if="tx.source && tx.source !== 'manual'"
+                class="inline-flex items-center text-[0.625rem] font-bold px-1.5 py-px rounded shrink-0"
+                :class="{
+                  'bg-success/10 text-success': tx.source === 'sms',
+                  'bg-info/10 text-info': tx.source === 'telegram',
+                  'bg-warning/10 text-warning': tx.source === 'notification'
+                }"
+              >
+                {{ tx.source === 'sms' ? 'SMS' : tx.source === 'telegram' ? 'TG' : 'Auto' }}
+              </span>
             </div>
-            <div class="text-text-disabled flex items-center gap-2 text-[0.6875rem]">
+            <div class="text-text-disabled flex items-center gap-1.5 text-[0.6875rem] mt-0.5">
               <span>{{ finance.getWalletName(tx.walletId) }}</span>
-              <span>·</span>
+              <span class="opacity-40">·</span>
               <span>{{ timeSince(tx.createdAt) }}</span>
             </div>
           </div>
           <div
-            class="text-sm font-semibold whitespace-nowrap"
+            class="text-[0.8125rem] font-bold whitespace-nowrap tabular-nums"
             :class="tx.type === 'income' ? 'text-success' : 'text-error'"
           >
             <span class="flex items-center gap-0.5">
-              <ArrowUpRight
-                v-if="tx.type === 'income'"
-                :size="14"
-              />
-              <ArrowDownRight
-                v-else
-                :size="14"
-              />
+              <ArrowUpRight v-if="tx.type === 'income'" :size="14" />
+              <ArrowDownRight v-else :size="14" />
               {{ formatVND(tx.amount) }}
             </span>
           </div>

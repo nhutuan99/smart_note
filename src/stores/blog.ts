@@ -84,6 +84,11 @@ export const useBlogStore = defineStore('blog', () => {
     return response?.imageUrl
   }
 
+  async function uploadImage(imageBase64: string) {
+    const response = await httpClient.post<{ imageUrl: string }>('/api/images', { image: imageBase64 })
+    return response?.imageUrl
+  }
+
   return {
     blogs,
     currentBlog,
@@ -95,6 +100,8 @@ export const useBlogStore = defineStore('blog', () => {
     updateBlog,
     deleteBlog,
     generateContent,
-    generateImage
+    generateImage,
+    uploadImage
   }
 })
+

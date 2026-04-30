@@ -13,7 +13,12 @@ import {
   Plus,
   ChevronLeft,
   ChevronRight,
-  X
+  X,
+  Wallet,
+  Clock,
+  Tag,
+  FileText,
+  Zap
 } from 'lucide-vue-next'
 
 const props = defineProps<{
@@ -37,6 +42,31 @@ const pageSize = 15
 function formatDateTime(dateStr: string) {
   const d = new Date(dateStr)
   return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}, ${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`
+}
+
+function formatTime(dateStr: string) {
+  const d = new Date(dateStr)
+  return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
+}
+
+function getSourceLabel(source: string) {
+  const map: Record<string, string> = {
+    'sms': 'SMS',
+    'telegram': 'Telegram',
+    'notification': 'Auto',
+    'manual': 'Manual'
+  }
+  return map[source] || source
+}
+
+function getSourceClass(source: string) {
+  const map: Record<string, string> = {
+    'sms': 'tx-badge--sms',
+    'telegram': 'tx-badge--telegram',
+    'notification': 'tx-badge--auto',
+    'manual': 'tx-badge--manual'
+  }
+  return map[source] || 'tx-badge--manual'
 }
 
 // Reset pagination when data changes
@@ -127,11 +157,9 @@ function dayTotal(txs: Transaction[]) {
         <table class="w-full text-left text-sm whitespace-nowrap">
           <thead class="bg-bg-subtle border-border-subtle border-b text-xs uppercase text-text-tertiary">
             <tr>
-              <th class="px-4 py-3 font-medium w-[45%]">{{ t('transactions.tableTransaction') }}</th>
-              <th class="px-4 py-3 font-medium">{{ t('transactions.tableWallet') }}</th>
-              <th class="px-4 py-3 font-medium text-center">{{ t('transactions.tableSource') }}</th>
+              <th class="px-4 py-3 font-medium">{{ t('transactions.tableTransaction') }}</th>
               <th class="px-4 py-3 font-medium text-right">{{ t('transactions.tableAmount') }}</th>
-              <th class="px-4 py-3 w-12"></th>
+              <th class="px-4 py-3 w-10"></th>
             </tr>
           </thead>
           
@@ -139,7 +167,7 @@ function dayTotal(txs: Transaction[]) {
             <tbody class="divide-border-subtle divide-y">
               <!-- Date Header Row -->
               <tr class="bg-bg-active/40">
-                <td colspan="5" class="px-4 py-2.5 text-xs font-semibold text-text-secondary">
+                <td colspan="3" class="px-4 py-2.5 text-xs font-semibold text-text-secondary">
                   <div class="flex items-center justify-between">
                     <span>{{ formatDateGroup(date) }}</span>
                     <span :class="dayTotal(txs).net >= 0 ? 'text-success' : 'text-error'">
@@ -149,84 +177,61 @@ function dayTotal(txs: Transaction[]) {
                 </td>
               </tr>
               
-              <!-- Transaction Rows -->
+              <!-- Transaction Rows — Clean & Compact -->
               <tr
                 v-for="tx in txs"
                 :key="tx.id"
                 class="group hover:bg-bg-hover transition-colors duration-150 cursor-pointer"
                 @click="selectedTx = tx"
               >
-                <!-- Giao dịch (Icon + Note) -->
+                <!-- Transaction Info: Icon + Category + Wallet + Source -->
                 <td class="px-4 py-3">
                   <div class="flex items-center gap-3">
+                    <!-- Category/Wallet Icon -->
                     <div
-                      class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl overflow-hidden border border-border-default/30"
-                      :style="{ backgroundColor: getWalletBrand(finance.getWalletName(tx.walletId))?.logoUrl ? '#fff' : getCategoryConfig(tx.category).color + '15' }"
+                      class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg overflow-hidden border border-border-default/30"
+                      :style="{ backgroundColor: getWalletBrand(finance.getWalletName(tx.walletId))?.logoUrl ? '#fff' : getCategoryConfig(tx.category).color + '12' }"
                     >
                       <img
                         v-if="getWalletBrand(finance.getWalletName(tx.walletId))?.logoUrl"
                         :src="getWalletBrand(finance.getWalletName(tx.walletId))!.logoUrl"
                         :alt="finance.getWalletName(tx.walletId)"
-                        class="h-7 w-7 object-contain"
+                        class="h-6 w-6 object-contain"
                         loading="lazy"
                       />
                       <span
                         v-else-if="getWalletBrand(finance.getWalletName(tx.walletId))"
-                        class="text-[10px] font-bold"
+                        class="text-[9px] font-bold"
                         :style="{ color: getWalletBrand(finance.getWalletName(tx.walletId))!.textColor, backgroundColor: getWalletBrand(finance.getWalletName(tx.walletId))!.bgColor }"
                       >
                         {{ getWalletBrand(finance.getWalletName(tx.walletId))!.abbr }}
                       </span>
-                      <span v-else class="text-lg">{{ getCategoryConfig(tx.category).icon }}</span>
+                      <span v-else class="text-base">{{ getCategoryConfig(tx.category).icon }}</span>
                     </div>
                     
-                    <div class="group/tooltip relative flex-1 min-w-0">
-                      <div class="max-w-[14rem] sm:max-w-[20rem] truncate font-medium text-text-primary">
-                        {{ tx.note || t(`categories.${tx.category}`) }}
+                    <!-- Text Info -->
+                    <div class="min-w-0 flex-1">
+                      <div class="flex items-center gap-2">
+                        <span class="text-sm font-semibold text-text-primary truncate max-w-[10rem] sm:max-w-[18rem]">
+                          {{ t(`categories.${tx.category}`) }}
+                        </span>
+                        <span :class="['tx-badge', getSourceClass(tx.source)]">
+                          {{ getSourceLabel(tx.source) }}
+                        </span>
                       </div>
-                      
-                      <!-- Custom Tooltip (PC only) -->
-                      <div class="pointer-events-none absolute left-0 bottom-full mb-1 z-50 hidden w-max max-w-[300px] opacity-0 transition-all duration-200 group-hover/tooltip:opacity-100 group-hover/tooltip:-translate-y-1 md:block shadow-2xl">
-                        <div class="rounded-lg border border-border-default bg-bg-surface/95 backdrop-blur-xl px-3 py-2 text-sm text-text-primary shadow-xl ring-1 ring-black/5 whitespace-normal break-words">
-                          {{ tx.note || t(`categories.${tx.category}`) }}
-                        </div>
+                      <div class="text-[0.6875rem] text-text-disabled mt-0.5 flex items-center gap-1.5 truncate max-w-[14rem] sm:max-w-[22rem]">
+                        <span>{{ finance.getWalletName(tx.walletId) }}</span>
+                        <span class="opacity-40">•</span>
+                        <span>{{ formatTime(tx.createdAt || tx.date) }}</span>
                       </div>
                     </div>
                   </div>
                 </td>
 
-                <!-- Tài khoản -->
-                <td class="px-4 py-3 text-text-secondary">
-                  {{ finance.getWalletName(tx.walletId) }}
-                </td>
-
-                <!-- Nguồn -->
-                <td class="px-4 py-3 text-center">
-                  <span
-                    v-if="tx.source === 'telegram'"
-                    class="bg-info/10 text-info rounded px-2 py-1 text-[0.6875rem] font-medium"
-                  >
-                    Telegram
-                  </span>
-                  <span
-                    v-else-if="tx.source === 'sms'"
-                    class="bg-success/10 text-success rounded px-2 py-1 text-[0.6875rem] font-medium"
-                  >
-                    SMS
-                  </span>
-                  <span
-                    v-else-if="tx.source === 'notification'"
-                    class="bg-warning/10 text-warning rounded px-2 py-1 text-[0.6875rem] font-medium"
-                  >
-                    Auto
-                  </span>
-                  <span v-else class="text-text-disabled text-xs">-</span>
-                </td>
-
-                <!-- Số tiền -->
+                <!-- Amount -->
                 <td class="px-4 py-3 text-right">
                   <div
-                    class="flex items-center justify-end gap-1 font-semibold"
+                    class="flex items-center justify-end gap-1 font-bold text-[0.8125rem] tabular-nums"
                     :class="tx.type === 'income' ? 'text-success' : 'text-error'"
                   >
                     <ArrowUpRight v-if="tx.type === 'income'" :size="14" />
@@ -235,14 +240,14 @@ function dayTotal(txs: Transaction[]) {
                   </div>
                 </td>
 
-                <!-- Hành động -->
-                <td class="px-4 py-3 w-12 text-right">
+                <!-- Delete -->
+                <td class="px-3 py-3 w-10 text-right">
                   <button
-                    class="text-text-tertiary hover:text-error hover:bg-bg-active inline-flex rounded p-1.5 opacity-100 md:opacity-0 transition-all duration-150 md:group-hover:opacity-100"
+                    class="text-text-tertiary hover:text-error hover:bg-error/10 inline-flex rounded-md p-1.5 opacity-100 md:opacity-0 transition-all duration-150 md:group-hover:opacity-100"
                     @click.stop="emit('delete', tx)"
-                    title="Xóa giao dịch"
+                    :title="t('transactions.deleteTitle')"
                   >
-                    <Trash2 :size="16" />
+                    <Trash2 :size="15" />
                   </button>
                 </td>
               </tr>
@@ -301,15 +306,21 @@ function dayTotal(txs: Transaction[]) {
       </button>
     </div>
   </template>
-  <!-- Transaction Detail Modal -->
+
+  <!-- ══════════════════════════════════════════
+       Transaction Detail Card — Rich Modal
+       ══════════════════════════════════════════ -->
   <Teleport to="body">
     <Transition name="fade">
       <div v-if="selectedTx" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="selectedTx = null"></div>
         
-        <div class="bg-bg-surface border-border-default relative w-full max-w-[24rem] rounded-2xl border p-6 shadow-xl flex flex-col gap-5">
+        <div class="tx-detail-card">
+          <!-- Decorative glow -->
+          <div class="tx-detail-card__glow" :class="selectedTx.type === 'income' ? 'tx-detail-card__glow--income' : 'tx-detail-card__glow--expense'"></div>
+
           <!-- Header -->
-          <div class="flex justify-between items-start">
+          <div class="flex justify-between items-start mb-5">
             <div class="flex items-center gap-3">
               <div
                 class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl overflow-hidden border border-border-default/30 shadow-sm"
@@ -324,8 +335,8 @@ function dayTotal(txs: Transaction[]) {
                 <span v-else class="text-2xl">{{ getCategoryConfig(selectedTx.category).icon }}</span>
               </div>
               <div>
-                <h3 class="text-lg font-bold text-text-primary">{{ t(`categories.${selectedTx.category}`) }}</h3>
-                <p class="text-xs text-text-tertiary">{{ formatDateTime(selectedTx.createdAt || selectedTx.date) }}</p>
+                <h3 class="text-base font-bold text-text-primary">{{ t(`categories.${selectedTx.category}`) }}</h3>
+                <p class="text-[0.6875rem] text-text-tertiary mt-0.5">{{ formatDateTime(selectedTx.createdAt || selectedTx.date) }}</p>
               </div>
             </div>
             <button @click="selectedTx = null" class="text-text-tertiary hover:bg-bg-hover hover:text-text-primary p-1.5 rounded-lg transition-colors">
@@ -333,49 +344,238 @@ function dayTotal(txs: Transaction[]) {
             </button>
           </div>
 
-          <!-- Amount -->
-          <div class="bg-bg-elevated border-border-default rounded-xl border p-4 flex flex-col items-center justify-center gap-1">
-            <div class="text-xs font-medium uppercase text-text-secondary">{{ selectedTx.type === 'income' ? t('transactions.filterIncome') : t('transactions.filterExpense') }}</div>
-            <div
-              class="text-2xl font-bold flex items-center gap-1"
-              :class="selectedTx.type === 'income' ? 'text-success' : 'text-error'"
-            >
-              <ArrowUpRight v-if="selectedTx.type === 'income'" :size="20" />
-              <ArrowDownRight v-else :size="20" />
+          <!-- Amount Hero -->
+          <div class="tx-detail-card__amount" :class="selectedTx.type === 'income' ? 'tx-detail-card__amount--income' : 'tx-detail-card__amount--expense'">
+            <div class="text-[0.6875rem] font-semibold uppercase tracking-wider opacity-70 mb-1">
+              {{ selectedTx.type === 'income' ? t('transactions.filterIncome') : t('transactions.filterExpense') }}
+            </div>
+            <div class="text-2xl font-extrabold flex items-center justify-center gap-1.5 tabular-nums">
+              <ArrowUpRight v-if="selectedTx.type === 'income'" :size="22" />
+              <ArrowDownRight v-else :size="22" />
               {{ formatVND(selectedTx.amount) }}
             </div>
           </div>
 
-          <!-- Details List -->
-          <div class="flex flex-col gap-3">
-            <div class="flex justify-between items-start border-b border-border-subtle pb-3">
-              <span class="text-sm text-text-secondary min-w-[5rem]">{{ t('transactions.tableWallet') }}</span>
-              <span class="text-sm font-medium text-text-primary text-right">{{ finance.getWalletName(selectedTx.walletId) }}</span>
+          <!-- Details Grid -->
+          <div class="tx-detail-card__grid">
+            <!-- Wallet -->
+            <div class="tx-detail-card__row">
+              <div class="tx-detail-card__label">
+                <Wallet :size="13" />
+                <span>{{ t('transactions.tableWallet') }}</span>
+              </div>
+              <span class="tx-detail-card__value">{{ finance.getWalletName(selectedTx.walletId) }}</span>
             </div>
-            
-            <div class="flex justify-between items-start border-b border-border-subtle pb-3">
-              <span class="text-sm text-text-secondary min-w-[5rem]">{{ t('transactions.tableSource') }}</span>
-              <span class="text-sm font-medium text-text-primary text-right uppercase">
-                <span
-                  class="px-2 py-0.5 rounded text-[0.6875rem] font-bold"
-                  :class="{
-                    'bg-info/10 text-info': selectedTx.source === 'telegram',
-                    'bg-warning/10 text-warning': selectedTx.source === 'notification',
-                    'bg-bg-hover text-text-secondary': !['telegram','sms','notification'].includes(selectedTx.source)
-                  }"
-                >{{ selectedTx.source || 'Manual' }}</span>
+
+            <!-- Category -->
+            <div class="tx-detail-card__row">
+              <div class="tx-detail-card__label">
+                <Tag :size="13" />
+                <span>{{ t('addTx.category') }}</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <span class="text-sm">{{ getCategoryConfig(selectedTx.category).icon }}</span>
+                <span class="tx-detail-card__value">{{ t(`categories.${selectedTx.category}`) }}</span>
+              </div>
+            </div>
+
+            <!-- Source -->
+            <div class="tx-detail-card__row">
+              <div class="tx-detail-card__label">
+                <Zap :size="13" />
+                <span>{{ t('transactions.tableSource') }}</span>
+              </div>
+              <span :class="['tx-badge', getSourceClass(selectedTx.source)]">
+                {{ getSourceLabel(selectedTx.source) }}
               </span>
             </div>
 
-            <div class="flex flex-col gap-1.5">
-              <span class="text-sm text-text-secondary">{{ t('addTx.note') }}</span>
-              <div class="bg-bg-active/30 rounded-lg p-3 border border-border-subtle max-h-[150px] overflow-y-auto">
-                <p class="text-sm text-text-primary leading-relaxed break-words whitespace-pre-wrap">{{ selectedTx.note || t(`categories.${selectedTx.category}`) }}</p>
+            <!-- Date -->
+            <div class="tx-detail-card__row">
+              <div class="tx-detail-card__label">
+                <Calendar :size="13" />
+                <span>{{ t('transactions.tableDate') || 'Ngày' }}</span>
               </div>
+              <span class="tx-detail-card__value">{{ formatDateTime(selectedTx.date) }}</span>
             </div>
+
+            <!-- Created -->
+            <div class="tx-detail-card__row">
+              <div class="tx-detail-card__label">
+                <Clock :size="13" />
+                <span>{{ t('transactions.created') || 'Tạo lúc' }}</span>
+              </div>
+              <span class="tx-detail-card__value">{{ formatDateTime(selectedTx.createdAt) }}</span>
+            </div>
+          </div>
+
+          <!-- Note -->
+          <div v-if="selectedTx.note" class="mt-4">
+            <div class="flex items-center gap-1.5 text-[0.6875rem] font-semibold text-text-tertiary uppercase tracking-wider mb-2">
+              <FileText :size="12" />
+              <span>{{ t('addTx.note') }}</span>
+            </div>
+            <div class="tx-detail-card__note">
+              <p class="text-sm text-text-primary leading-relaxed break-words whitespace-pre-wrap">{{ selectedTx.note }}</p>
+            </div>
+          </div>
+
+          <!-- Footer Actions -->
+          <div class="flex items-center justify-end gap-2 mt-5 pt-4 border-t border-border-subtle">
+            <button
+              class="tx-detail-card__delete-btn"
+              @click="emit('delete', selectedTx!); selectedTx = null"
+            >
+              <Trash2 :size="14" />
+              <span>{{ t('transactions.deleteConfirm') || 'Xóa' }}</span>
+            </button>
           </div>
         </div>
       </div>
     </Transition>
   </Teleport>
 </template>
+
+<style scoped>
+/* ══════════════════════════════════════════════
+   Transaction Badges — Source labels
+   ══════════════════════════════════════════════ */
+.tx-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.625rem;
+  font-weight: 700;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.tx-badge--sms {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--color-success);
+}
+.tx-badge--telegram {
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--color-info);
+}
+.tx-badge--auto {
+  background: rgba(251, 191, 36, 0.1);
+  color: var(--color-warning);
+}
+.tx-badge--manual {
+  background: var(--color-bg-elevated);
+  color: var(--color-text-disabled);
+}
+
+/* ══════════════════════════════════════════════
+   Transaction Detail Card — Rich Modal
+   ══════════════════════════════════════════════ */
+.tx-detail-card {
+  position: relative;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
+  border-radius: 1.25rem;
+  width: 100%;
+  max-width: 24rem;
+  padding: 1.5rem;
+  box-shadow:
+    0 25px 60px -15px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(124, 111, 247, 0.05);
+  overflow: hidden;
+}
+
+.tx-detail-card__glow {
+  position: absolute;
+  top: -4rem;
+  right: -3rem;
+  width: 12rem;
+  height: 12rem;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(30px);
+}
+.tx-detail-card__glow--income {
+  background: rgba(16, 185, 129, 0.08);
+}
+.tx-detail-card__glow--expense {
+  background: rgba(239, 68, 68, 0.06);
+}
+
+/* Amount hero block */
+.tx-detail-card__amount {
+  border-radius: 0.875rem;
+  padding: 1rem;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+.tx-detail-card__amount--income {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(16, 185, 129, 0.03));
+  border: 1px solid rgba(16, 185, 129, 0.15);
+  color: var(--color-success);
+}
+.tx-detail-card__amount--expense {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(239, 68, 68, 0.03));
+  border: 1px solid rgba(239, 68, 68, 0.12);
+  color: var(--color-error);
+}
+
+/* Details grid */
+.tx-detail-card__grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.tx-detail-card__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.625rem 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+.tx-detail-card__row:last-child {
+  border-bottom: none;
+}
+.tx-detail-card__label {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+}
+.tx-detail-card__value {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+/* Note block */
+.tx-detail-card__note {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  max-height: 10rem;
+  overflow-y: auto;
+}
+
+/* Delete button */
+.tx-detail-card__delete-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-error);
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.15s ease;
+}
+.tx-detail-card__delete-btn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+</style>

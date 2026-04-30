@@ -166,7 +166,9 @@ export default {
     tableWallet: 'Tài khoản',
     tableSource: 'Nguồn',
     tableAmount: 'Số tiền',
-    pagination: 'Hiển thị {start}-{end} / {total}'
+    pagination: 'Hiển thị {start}-{end} / {total}',
+    tableDate: 'Ngày',
+    created: 'Tạo lúc'
   },
 
   // ── Add Transaction ──

@@ -15,7 +15,8 @@ import {
   ArrowLeft,
   X,
   Hash,
-  Loader2
+  Loader2,
+  ImageUp
 } from 'lucide-vue-next'
 import type { Blog } from '@/types'
 
@@ -198,6 +199,31 @@ async function handleDelete(slug: string) {
   }
 }
 
+async function handleCoverUpload(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  if (file.size > 5 * 1024 * 1024) {
+    uiStore.showToast('error', 'Image too large (max 5MB)')
+    return
+  }
+  const reader = new FileReader()
+  reader.onload = async (ev) => {
+    const base64 = ev.target?.result as string
+    if (!base64) return
+    try {
+      uiStore.showToast('info', 'Đang tải ảnh bìa...')
+      const imageUrl = await blogStore.uploadImage(base64)
+      if (imageUrl) {
+        form.value.imageUrl = imageUrl
+        uiStore.showToast('success', 'Đã tải ảnh bìa!')
+      }
+    } catch (err: any) {
+      uiStore.showToast('error', err.message || 'Upload failed')
+    }
+  }
+  reader.readAsDataURL(file)
+}
+
 const formatDate = (dateStr: string) => {
   const locale = useI18n().locale.value === 'vi' ? 'vi-VN' : 'en-US'
   return new Date(dateStr).toLocaleDateString(locale, {
@@ -364,8 +390,15 @@ const formatDate = (dateStr: string) => {
                 </div>
 
                 <!-- Cover Image -->
-                <div v-if="form.imageUrl" class="blog-preview__cover">
-                  <img :src="form.imageUrl" :alt="form.title" />
+                <div class="blog-preview__cover-wrap">
+                  <div v-if="form.imageUrl" class="blog-preview__cover">
+                    <img :src="form.imageUrl" :alt="form.title" />
+                  </div>
+                  <label class="blog-preview__upload-btn">
+                    <ImageUp :size="14" />
+                    <span>{{ form.imageUrl ? 'Thay ảnh bìa' : 'Tải ảnh bìa' }}</span>
+                    <input type="file" accept="image/*" class="hidden" @change="handleCoverUpload" />
+                  </label>
                 </div>
 
                 <!-- Title -->
@@ -625,13 +658,38 @@ const formatDate = (dateStr: string) => {
   border-radius: 0.75rem;
   overflow: hidden;
   border: 1px solid var(--color-border-default);
-  margin-bottom: 1.5rem;
 }
 .blog-preview__cover img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   max-height: 18rem;
+}
+.blog-preview__cover-wrap {
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.blog-preview__upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-elevated);
+  border: 1px dashed var(--color-border-default);
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  align-self: flex-start;
+}
+.blog-preview__upload-btn:hover {
+  background: var(--color-bg-hover);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 /* ── Content Body — Magazine Typography (Matches BlogDetailView) ── */

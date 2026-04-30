@@ -166,7 +166,9 @@ export default {
     tableWallet: 'Account',
     tableSource: 'Source',
     tableAmount: 'Amount',
-    pagination: 'Showing {start}-{end} / {total}'
+    pagination: 'Showing {start}-{end} / {total}',
+    tableDate: 'Date',
+    created: 'Created at'
   },
 
   // ── Add Transaction ──

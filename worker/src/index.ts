@@ -82,6 +82,7 @@ import {
   handleGenerateBlogContent,
   handleGenerateBlogImage,
   handleGetImage,
+  handleUploadImage,
 } from './controllers/blog.controller'
 
 export default {
@@ -167,6 +168,9 @@ export default {
       }
       if (path === '/api/blogs/generate-image' && request.method === 'POST') {
         return handleGenerateBlogImage(userId, request, env)
+      }
+      if (path === '/api/images' && request.method === 'POST') {
+        return handleUploadImage(userId, request, env)
       }
       const adminBlogMatch = path.match(/^\/api\/blogs\/([^\/]+)$/)
       if (adminBlogMatch && request.method === 'PUT') {

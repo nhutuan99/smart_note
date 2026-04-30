@@ -41,7 +41,10 @@ export async function handleGetBlog(slug: string, env: Env): Promise<Response> {
 }
 
 export async function handleGetImage(id: string, env: Env): Promise<Response> {
-  const file = await env.SMART_NOTE_KV.get(`public/images/${id}`, 'arrayBuffer')
+  const { value: file, metadata } = await env.SMART_NOTE_KV.getWithMetadata<{ contentType?: string }>(
+    `public/images/${id}`,
+    'arrayBuffer'
+  )
   if (!file) return new Response('Image not found', {
     status: 404,
     headers: {
@@ -49,23 +52,39 @@ export async function handleGetImage(id: string, env: Env): Promise<Response> {
     }
   })
 
-  // Detect image format from magic bytes
-  const header = new Uint8Array(file.slice(0, 4))
-  let contentType = 'image/jpeg' // default for flux-1-schnell
-  if (header[0] === 0x89 && header[1] === 0x50 && header[2] === 0x4E && header[3] === 0x47) {
-    contentType = 'image/png'
+  // Validate that we actually have binary data (not "[object Object]" string)
+  const byteArray = new Uint8Array(file as ArrayBuffer)
+  if (byteArray.length < 8) {
+    return new Response('Invalid image data', {
+      status: 404,
+      headers: { 'Access-Control-Allow-Origin': '*' }
+    })
+  }
+
+  // Use metadata content-type if available, otherwise detect from magic bytes
+  let contentType = metadata?.contentType || 'image/jpeg'
+  if (!metadata?.contentType) {
+    if (byteArray[0] === 0x89 && byteArray[1] === 0x50 && byteArray[2] === 0x4E && byteArray[3] === 0x47) {
+      contentType = 'image/png'
+    } else if (byteArray[0] === 0x52 && byteArray[1] === 0x49 && byteArray[2] === 0x46 && byteArray[3] === 0x46) {
+      contentType = 'image/webp'
+    } else if (byteArray[0] === 0x47 && byteArray[1] === 0x49 && byteArray[2] === 0x46) {
+      contentType = 'image/gif'
+    }
   }
 
   return new Response(file, {
     headers: {
       'Content-Type': contentType,
-      'Cache-Control': 'public, max-age=31536000',
+      'Content-Length': byteArray.length.toString(),
+      'Cache-Control': 'public, max-age=31536000, immutable',
       'Access-Control-Allow-Origin': '*',
     }
   })
 }
 
 // ====== Admin Blog Endpoints ======
+
 
 export async function handleCreateBlog(userId: string, request: Request, env: Env): Promise<Response> {
   if (!(await isAdmin(userId, env))) return errorResponse('Forbidden', 403)
@@ -337,10 +356,14 @@ export async function handleGenerateBlogImage(userId: string, request: Request, 
       num_steps: 4
     })
     
-    // flux-1-schnell returns { image: "base64_encoded_string" }
     let buffer: ArrayBuffer
 
-    if (response?.image && typeof response.image === 'string') {
+    // Detection order: ReadableStream (most common from Workers AI) > ArrayBuffer > base64 string
+    if (response instanceof ReadableStream) {
+      buffer = await new Response(response).arrayBuffer()
+    } else if (response instanceof ArrayBuffer) {
+      buffer = response
+    } else if (response?.image && typeof response.image === 'string') {
       // Decode base64 string to binary
       const binaryString = atob(response.image)
       const bytes = new Uint8Array(binaryString.length)
@@ -348,17 +371,28 @@ export async function handleGenerateBlogImage(userId: string, request: Request, 
         bytes[i] = binaryString.charCodeAt(i)
       }
       buffer = bytes.buffer
-    } else if (response instanceof ReadableStream) {
-      buffer = await new Response(response).arrayBuffer()
-    } else if (response instanceof ArrayBuffer) {
-      buffer = response
     } else {
+      console.error('Unexpected AI response type:', typeof response, JSON.stringify(response).substring(0, 200))
       return errorResponse('Unexpected AI response format', 500)
     }
-    
-    // Save image directly to KV
+
+    // Validate buffer has actual image data
+    if (!buffer || buffer.byteLength < 100) {
+      console.error('AI returned empty or too-small buffer:', buffer?.byteLength)
+      return errorResponse('AI generated empty image', 500)
+    }
+
+    // Detect content type from magic bytes
+    const header = new Uint8Array(buffer.slice(0, 4))
+    let contentType = 'image/jpeg'
+    if (header[0] === 0x89 && header[1] === 0x50) contentType = 'image/png'
+    else if (header[0] === 0x52 && header[1] === 0x49) contentType = 'image/webp'
+
+    // Save image to KV with metadata
     const imageId = generateId()
-    await env.SMART_NOTE_KV.put(`public/images/${imageId}`, buffer)
+    await env.SMART_NOTE_KV.put(`public/images/${imageId}`, buffer, {
+      metadata: { contentType }
+    })
     
     const host = new URL(request.url).origin
     const imageUrl = `${host}/api/images/${imageId}`
@@ -368,3 +402,47 @@ export async function handleGenerateBlogImage(userId: string, request: Request, 
     return errorResponse(err.message || 'Image generation failed', 500)
   }
 }
+
+// Upload image from base64 (manual upload fallback)
+export async function handleUploadImage(userId: string, request: Request, env: Env): Promise<Response> {
+  if (!(await isAdmin(userId, env))) return errorResponse('Forbidden', 403)
+
+  const { image } = (await request.json()) as { image: string }
+  if (!image) return errorResponse('Missing image data', 400)
+
+  try {
+    // Strip data URL prefix if present
+    let base64Data = image
+    let contentType = 'image/jpeg'
+    const dataUrlMatch = image.match(/^data:(image\/[a-zA-Z+]+);base64,(.+)$/)
+    if (dataUrlMatch) {
+      contentType = dataUrlMatch[1]
+      base64Data = dataUrlMatch[2]
+    }
+
+    // Decode base64 to binary
+    const binaryString = atob(base64Data)
+    const bytes = new Uint8Array(binaryString.length)
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i)
+    }
+
+    if (bytes.length < 100) {
+      return errorResponse('Image data too small', 400)
+    }
+
+    // Save to KV with metadata
+    const imageId = generateId()
+    await env.SMART_NOTE_KV.put(`public/images/${imageId}`, bytes.buffer, {
+      metadata: { contentType }
+    })
+
+    const host = new URL(request.url).origin
+    const imageUrl = `${host}/api/images/${imageId}`
+
+    return jsonResponse({ success: true, data: { imageUrl } })
+  } catch (err: any) {
+    return errorResponse(err.message || 'Image upload failed', 500)
+  }
+}
+
