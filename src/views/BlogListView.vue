@@ -175,10 +175,13 @@ const formatDate = (dateStr: string) => {
         </div>
       </Transition>
 
-      <!-- Button — Icon Only (compact circle) -->
-      <button class="cta-float__btn" @click="router.push('/login')">
+      <!-- Button — Animated Logo -->
+      <button class="cta-float__btn group" @click="router.push('/login')">
         <div class="cta-float__pulse"></div>
-        <Sparkles :size="20" class="text-white relative z-[1]" />
+        <div class="cta-float__spin-border"></div>
+        <div class="cta-float__inner">
+          <img src="/images/logo-512.png" alt="FinNote Logo" class="w-full h-full object-cover" />
+        </div>
       </button>
     </div>
   </div>
@@ -249,42 +252,73 @@ const formatDate = (dateStr: string) => {
   }
 }
 
-/* ── Floating Button (Icon-Only Circle) ── */
+/* ── Floating Button (Animated Logo) ── */
 .cta-float__btn {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 3rem;
-  height: 3rem;
-  color: #fff;
-  background: linear-gradient(135deg, var(--color-accent), #a855f7);
+  width: 3.5rem;
+  height: 3.5rem;
   border-radius: 50%;
   border: none;
+  background: transparent;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   box-shadow:
-    0 4px 20px rgba(124, 111, 247, 0.35),
+    0 4px 20px rgba(124, 111, 247, 0.4),
     0 0 0 0 rgba(124, 111, 247, 0);
   cursor: pointer;
-  overflow: hidden;
 }
 .cta-float__btn:hover {
-  transform: translateY(-2px) scale(1.1);
+  transform: translateY(-4px) scale(1.05);
   box-shadow:
-    0 8px 32px rgba(124, 111, 247, 0.45),
-    0 0 0 4px rgba(124, 111, 247, 0.12);
+    0 8px 32px rgba(124, 111, 247, 0.5),
+    0 0 0 4px rgba(124, 111, 247, 0.15);
+}
+
+.cta-float__spin-border {
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, #7c6ff7, #a855f7, #34d399, #7c6ff7);
+  animation: ctaSpin 3s linear infinite;
+  z-index: 0;
+}
+@keyframes ctaSpin {
+  to { transform: rotate(360deg); }
+}
+
+.cta-float__inner {
+  position: relative;
+  z-index: 1;
+  width: calc(100% - 4px);
+  height: calc(100% - 4px);
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--color-bg-surface);
+  padding: 2px;
+}
+
+.cta-float__inner img {
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+}
+
+.cta-float__btn:hover .cta-float__inner img {
+  transform: scale(1.1);
 }
 
 .cta-float__pulse {
   position: absolute;
-  inset: 0;
+  inset: -10px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent);
+  background: radial-gradient(circle, rgba(124,111,247,0.3) 0%, transparent 70%);
   animation: ctaPulse 2.5s ease-in-out infinite;
+  z-index: -1;
 }
 @keyframes ctaPulse {
-  0%, 100% { opacity: 0; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.08); }
+  0%, 100% { opacity: 0.5; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.1); }
 }
 
 /* ── Tooltip Card ── */
