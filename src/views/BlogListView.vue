@@ -1,18 +1,41 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { onMounted, ref, computed } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useBlogStore } from '@/stores/blog'
 import { useI18n } from 'vue-i18n'
-import { Calendar, ChevronRight, Hash, Zap, BrainCircuit, LayoutDashboard, ArrowRight, Sparkles } from 'lucide-vue-next'
+import { Calendar, ChevronRight, Hash, Zap, BrainCircuit, LayoutDashboard, ArrowRight, Sparkles, X } from 'lucide-vue-next'
 
 const { t, locale } = useI18n()
 const router = useRouter()
+const route = useRoute()
 const blogStore = useBlogStore()
 const showTooltip = ref(false)
+const activeTag = ref<string | null>(null)
 
 onMounted(() => {
   blogStore.fetchBlogs()
+  // Read ?tag= from URL
+  const tagParam = route.query.tag as string | undefined
+  if (tagParam) activeTag.value = tagParam
 })
+
+// All unique tags from all blogs
+const allTags = computed(() => {
+  const tagSet = new Set<string>()
+  blogStore.blogs.forEach(b => b.tags?.forEach(t => tagSet.add(t)))
+  return Array.from(tagSet).sort()
+})
+
+// Filtered blogs based on active tag
+const filteredBlogs = computed(() => {
+  if (!activeTag.value) return blogStore.blogs
+  return blogStore.blogs.filter(b => b.tags?.includes(activeTag.value!))
+})
+
+function setTag(tag: string | null) {
+  activeTag.value = tag
+  router.replace({ query: tag ? { tag } : {} })
+}
 
 const formatDate = (dateStr: string) => {
   const loc = locale.value === 'vi' ? 'vi-VN' : 'en-US'
@@ -27,7 +50,21 @@ const formatDate = (dateStr: string) => {
 <template>
   <div class="max-w-[48rem] mx-auto pb-12">
     <h1 class="mb-2 text-2xl font-bold tracking-tight md:mb-4">{{ t('blog.listTitle') }}</h1>
-    <p class="text-text-tertiary text-sm mb-8">{{ t('blog.listDesc') }}</p>
+    <p class="text-text-tertiary text-sm mb-6">{{ t('blog.listDesc') }}</p>
+
+    <!-- Tag Filter Bar -->
+    <div v-if="allTags.length > 0" class="flex flex-wrap items-center gap-2 mb-8">
+      <button
+        v-for="tag in allTags"
+        :key="tag"
+        class="blog-filter-tag"
+        :class="{ 'blog-filter-tag--active': activeTag === tag }"
+        @click="setTag(activeTag === tag ? null : tag)"
+      >
+        <Hash :size="10" /> {{ tag }}
+        <X v-if="activeTag === tag" :size="10" class="ml-0.5" />
+      </button>
+    </div>
 
     <!-- Loading State -->
     <div v-if="blogStore.isLoading && !blogStore.blogs.length" class="space-y-6">
@@ -43,9 +80,9 @@ const formatDate = (dateStr: string) => {
     </div>
 
     <!-- Blog List -->
-    <div v-else-if="blogStore.blogs.length > 0" class="space-y-6">
+    <div v-else-if="filteredBlogs.length > 0" class="space-y-6">
       <div
-        v-for="blog in blogStore.blogs"
+        v-for="blog in filteredBlogs"
         :key="blog.id"
         class="card-premium p-5 flex flex-col md:flex-row gap-6 cursor-pointer group transition-all duration-300 hover:border-accent/40"
         @click="router.push(`/blog/${blog.slug}`)"
@@ -68,7 +105,11 @@ const formatDate = (dateStr: string) => {
           </p>
           
           <div class="flex flex-wrap items-center gap-2 mt-auto">
-            <span v-for="tag in blog.tags" :key="tag" class="blog-list-tag">
+            <span
+              v-for="tag in blog.tags" :key="tag"
+              class="blog-list-tag cursor-pointer hover:text-accent hover:border-accent/40 transition-colors"
+              @click.stop="setTag(tag)"
+            >
               <Hash :size="10" /> {{ tag }}
             </span>
             <span class="ml-auto text-[0.75rem] font-semibold text-accent flex items-center gap-1 group-hover:gap-2 transition-all whitespace-nowrap">
@@ -84,11 +125,12 @@ const formatDate = (dateStr: string) => {
       <div class="text-text-disabled mb-4">
         <Calendar :size="48" class="mx-auto opacity-50" />
       </div>
-      <h3 class="text-lg font-medium mb-1">{{ t('blog.emptyPublic') }}</h3>
-      <p class="text-text-tertiary text-sm">{{ t('blog.emptyPublicHint') }}</p>
+      <h3 class="text-lg font-medium mb-1">{{ activeTag ? `Không có bài viết với tag "${activeTag}"` : t('blog.emptyPublic') }}</h3>
+      <p class="text-text-tertiary text-sm">{{ activeTag ? '' : t('blog.emptyPublicHint') }}</p>
+      <button v-if="activeTag" class="mt-4 text-accent text-sm font-medium" @click="setTag(null)">← Xem tất cả</button>
     </div>
 
-    <!-- Floating CTA Button with Rich Tooltip -->
+    <!-- Floating CTA — Icon Only -->
     <div class="cta-float" @mouseenter="showTooltip = true" @mouseleave="showTooltip = false">
       <!-- Tooltip Card -->
       <Transition name="tooltip">
@@ -133,13 +175,11 @@ const formatDate = (dateStr: string) => {
         </div>
       </Transition>
 
-      <!-- Button -->
-      <a href="/login" class="cta-float__btn group" @click.prevent="showTooltip ? router.push('/login') : null">
+      <!-- Button — Icon Only (compact circle) -->
+      <button class="cta-float__btn" @click="router.push('/login')">
         <div class="cta-float__pulse"></div>
-        <Sparkles :size="18" class="text-white relative z-[1]" />
-        <span class="cta-float__label">{{ t('blog.appIntroCta') }}</span>
-        <ArrowRight :size="14" class="cta-float__arrow" />
-      </a>
+        <Sparkles :size="20" class="text-white relative z-[1]" />
+      </button>
     </div>
   </div>
 </template>
@@ -156,6 +196,37 @@ const formatDate = (dateStr: string) => {
   padding: 0.1875rem 0.5rem;
   border-radius: 0.375rem;
   white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+/* ── Tag Filter Bar ── */
+.blog-filter-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-elevated);
+  padding: 0.375rem 0.75rem;
+  border-radius: 9999px;
+  border: 1px solid var(--color-border-default);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.blog-filter-tag:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+.blog-filter-tag--active {
+  background: var(--color-accent);
+  color: #fff;
+  border-color: var(--color-accent);
+}
+.blog-filter-tag--active:hover {
+  opacity: 0.9;
+  color: #fff;
 }
 
 /* ══════════════════════════════════════════════
@@ -178,19 +249,18 @@ const formatDate = (dateStr: string) => {
   }
 }
 
-/* ── Floating Button ── */
+/* ── Floating Button (Icon-Only Circle) ── */
 .cta-float__btn {
   position: relative;
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
-  font-size: 0.8125rem;
-  font-weight: 700;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
   color: #fff;
   background: linear-gradient(135deg, var(--color-accent), #a855f7);
-  border-radius: 9999px;
-  text-decoration: none;
+  border-radius: 50%;
+  border: none;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   box-shadow:
     0 4px 20px rgba(124, 111, 247, 0.35),
@@ -199,7 +269,7 @@ const formatDate = (dateStr: string) => {
   overflow: hidden;
 }
 .cta-float__btn:hover {
-  transform: translateY(-2px) scale(1.03);
+  transform: translateY(-2px) scale(1.1);
   box-shadow:
     0 8px 32px rgba(124, 111, 247, 0.45),
     0 0 0 4px rgba(124, 111, 247, 0.12);
@@ -208,27 +278,13 @@ const formatDate = (dateStr: string) => {
 .cta-float__pulse {
   position: absolute;
   inset: 0;
-  border-radius: 9999px;
+  border-radius: 50%;
   background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent);
   animation: ctaPulse 2.5s ease-in-out infinite;
 }
 @keyframes ctaPulse {
   0%, 100% { opacity: 0; transform: scale(1); }
   50% { opacity: 1; transform: scale(1.08); }
-}
-
-.cta-float__label {
-  position: relative;
-  z-index: 1;
-  white-space: nowrap;
-}
-.cta-float__arrow {
-  position: relative;
-  z-index: 1;
-  transition: transform 0.2s ease;
-}
-.cta-float__btn:hover .cta-float__arrow {
-  transform: translateX(2px);
 }
 
 /* ── Tooltip Card ── */

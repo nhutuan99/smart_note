@@ -139,6 +139,48 @@ export default {
         return handleGetImage(imageMatch[1], env)
       }
 
+      // Dynamic Sitemap for SEO
+      if (path === '/api/sitemap.xml' && request.method === 'GET') {
+        const blogsIndex = await env.SMART_NOTE_KV.get('public/blogs/_index', 'json') as { blogs: any[] } | null
+        const blogs = (blogsIndex?.blogs || []).filter((b: any) => b.published !== false)
+        const siteUrl = 'https://finnote-f4n.pages.dev'
+
+        let xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
+  <url>
+    <loc>${siteUrl}</loc>
+    <priority>1.0</priority>
+    <changefreq>daily</changefreq>
+  </url>
+  <url>
+    <loc>${siteUrl}/blog</loc>
+    <priority>0.9</priority>
+    <changefreq>daily</changefreq>
+  </url>`
+
+        for (const blog of blogs) {
+          const lastmod = blog.updatedAt || blog.createdAt || new Date().toISOString()
+          xml += `
+  <url>
+    <loc>${siteUrl}/blog/${blog.slug}</loc>
+    <lastmod>${lastmod.split('T')[0]}</lastmod>
+    <priority>0.8</priority>
+    <changefreq>weekly</changefreq>
+  </url>`
+        }
+
+        xml += '\n</urlset>'
+
+        return new Response(xml, {
+          headers: {
+            'Content-Type': 'application/xml',
+            'Cache-Control': 'public, max-age=3600',
+            ...corsHeaders(),
+          },
+        })
+      }
+
       // Protected routes - verify JWT
       const authHeader = request.headers.get('Authorization')
       if (!authHeader?.startsWith('Bearer ')) {

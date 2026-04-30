@@ -27,17 +27,82 @@ onMounted(async () => {
     if (blog) {
       contentHtml.value = await marked(blog.content, { async: true })
       
-      // Update document title for SEO
-      document.title = `${blog.seoMeta?.title || blog.title} | FinNote`
+      const seoTitle = blog.seoMeta?.title || blog.title
+      const seoDesc = blog.seoMeta?.description || blog.excerpt
+      const blogUrl = `https://finnote-f4n.pages.dev/blog/${blog.slug}`
       
-      // Update meta tags for SEO
-      let metaDesc = document.querySelector('meta[name="description"]')
-      if (!metaDesc) {
-        metaDesc = document.createElement('meta')
-        metaDesc.setAttribute('name', 'description')
-        document.head.appendChild(metaDesc)
+      // Update document title for SEO
+      document.title = `${seoTitle} | FinNote Blog`
+      
+      // Helper to set meta tag
+      const setMeta = (attr: string, key: string, content: string) => {
+        let el = document.querySelector(`meta[${attr}="${key}"]`) as HTMLMetaElement
+        if (!el) {
+          el = document.createElement('meta')
+          el.setAttribute(attr, key)
+          document.head.appendChild(el)
+        }
+        el.setAttribute('content', content)
       }
-      metaDesc.setAttribute('content', blog.seoMeta?.description || blog.excerpt)
+      
+      // Description
+      setMeta('name', 'description', seoDesc)
+      setMeta('name', 'keywords', (blog.seoMeta?.keywords || '') + ',' + (blog.tags || []).join(','))
+      
+      // Open Graph
+      setMeta('property', 'og:type', 'article')
+      setMeta('property', 'og:url', blogUrl)
+      setMeta('property', 'og:title', seoTitle)
+      setMeta('property', 'og:description', seoDesc)
+      if (blog.imageUrl) setMeta('property', 'og:image', blog.imageUrl)
+      setMeta('property', 'og:site_name', 'FinNote Blog')
+      
+      // Article tags
+      setMeta('property', 'article:published_time', blog.createdAt)
+      setMeta('property', 'article:author', blog.author?.name || 'FinNote')
+      blog.tags?.forEach(tag => {
+        const el = document.createElement('meta')
+        el.setAttribute('property', 'article:tag')
+        el.setAttribute('content', tag)
+        document.head.appendChild(el)
+      })
+      
+      // Twitter Card
+      setMeta('name', 'twitter:card', 'summary_large_image')
+      setMeta('name', 'twitter:title', seoTitle)
+      setMeta('name', 'twitter:description', seoDesc)
+      if (blog.imageUrl) setMeta('name', 'twitter:image', blog.imageUrl)
+      
+      // Canonical
+      let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement
+      if (!canonical) {
+        canonical = document.createElement('link')
+        canonical.setAttribute('rel', 'canonical')
+        document.head.appendChild(canonical)
+      }
+      canonical.setAttribute('href', blogUrl)
+      
+      // JSON-LD Article
+      const jsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        headline: seoTitle,
+        description: seoDesc,
+        image: blog.imageUrl || '',
+        author: { '@type': 'Person', name: blog.author?.name || 'FinNote' },
+        publisher: { '@type': 'Organization', name: 'FinNote', logo: { '@type': 'ImageObject', url: 'https://finnote-f4n.pages.dev/images/logo-512.png' } },
+        datePublished: blog.createdAt,
+        dateModified: blog.updatedAt || blog.createdAt,
+        mainEntityOfPage: { '@type': 'WebPage', '@id': blogUrl },
+        keywords: (blog.tags || []).join(', ')
+      }
+      const ldScript = document.createElement('script')
+      ldScript.type = 'application/ld+json'
+      ldScript.textContent = JSON.stringify(jsonLd)
+      ldScript.id = 'blog-jsonld'
+      // Remove old one if exists
+      document.getElementById('blog-jsonld')?.remove()
+      document.head.appendChild(ldScript)
     } else {
       router.replace('/blog')
     }
@@ -87,11 +152,15 @@ const formatDate = (dateStr: string) => {
         <div class="blog-hero__glow"></div>
         <div class="blog-hero__glow2"></div>
         
-        <!-- Tags -->
+        <!-- Tags (clickable) -->
         <div class="flex flex-wrap items-center gap-2 mb-5">
-          <span v-for="tag in blogStore.currentBlog.tags" :key="tag" class="blog-detail-tag">
+          <router-link
+            v-for="tag in blogStore.currentBlog.tags" :key="tag"
+            :to="{ path: '/blog', query: { tag } }"
+            class="blog-detail-tag cursor-pointer hover:border-accent/40 hover:text-accent transition-colors"
+          >
             <Hash :size="10" /> {{ tag }}
-          </span>
+          </router-link>
         </div>
         
         <!-- Title -->

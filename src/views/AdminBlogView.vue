@@ -16,7 +16,9 @@ import {
   X,
   Hash,
   Loader2,
-  ImageUp
+  ImageUp,
+  Pencil,
+  ExternalLink
 } from 'lucide-vue-next'
 import type { Blog } from '@/types'
 
@@ -29,6 +31,7 @@ const uiStore = useUiStore()
 const isModalOpen = ref(false)
 const isGenerating = ref(false)
 const activeTab = ref<'paste' | 'ai'>('ai')
+const editingSlug = ref<string | null>(null)
 
 // ── Input State ──
 const inputContent = ref('')
@@ -63,12 +66,31 @@ const canPublish = computed(() => {
 
 // ── Actions ──
 function openModal() {
+  editingSlug.value = null
   form.value = { title: '', slug: '', excerpt: '', content: '', tags: [], imageUrl: '', published: true }
   inputContent.value = ''
   aiImageBase64.value = ''
   hasPreview.value = false
   previewHtml.value = ''
   activeTab.value = 'ai'
+  isModalOpen.value = true
+}
+
+async function openEditModal(blog: Blog) {
+  editingSlug.value = blog.slug
+  form.value = {
+    title: blog.title,
+    slug: blog.slug,
+    excerpt: blog.excerpt,
+    content: blog.content,
+    tags: [...(blog.tags || [])],
+    imageUrl: blog.imageUrl || '',
+    published: blog.published
+  }
+  inputContent.value = blog.content
+  previewHtml.value = await marked(blog.content || '', { async: true })
+  hasPreview.value = true
+  activeTab.value = 'paste'
   isModalOpen.value = true
 }
 
@@ -174,13 +196,25 @@ async function handleSave() {
 
   try {
     isGenerating.value = true
-    const newBlog = await blogStore.createBlog(form.value)
-    if (newBlog) {
-      uiStore.showToast('success', t('blog.published'))
-      isModalOpen.value = false
-      router.push(`/blog/${newBlog.slug}`)
+    if (editingSlug.value) {
+      // Edit mode
+      const updated = await blogStore.updateBlog(editingSlug.value, form.value)
+      if (updated) {
+        uiStore.showToast('success', 'Đã cập nhật bài viết!')
+        isModalOpen.value = false
+      } else {
+        uiStore.showToast('error', 'Cập nhật thất bại')
+      }
     } else {
-      uiStore.showToast('error', t('blog.publishFailed'))
+      // Create mode
+      const newBlog = await blogStore.createBlog(form.value)
+      if (newBlog) {
+        uiStore.showToast('success', t('blog.published'))
+        isModalOpen.value = false
+        router.push(`/blog/${newBlog.slug}`)
+      } else {
+        uiStore.showToast('error', t('blog.publishFailed'))
+      }
     }
   } catch (err: any) {
     uiStore.showToast('error', t('blog.publishFailed') + ': ' + err.message)
@@ -266,7 +300,7 @@ const formatDate = (dateStr: string) => {
           <tr v-else-if="!blogStore.blogs.length">
             <td colspan="4" class="px-6 py-8 text-center text-text-disabled">{{ t('blog.empty') }}</td>
           </tr>
-          <tr v-for="blog in blogStore.blogs" :key="blog.id" class="hover:bg-bg-hover/50 transition-colors">
+          <tr v-for="blog in blogStore.blogs" :key="blog.id" class="hover:bg-bg-hover/50 transition-colors cursor-pointer" @click="openEditModal(blog)">
             <td class="px-6 py-4 font-medium">
               <div class="line-clamp-1">{{ blog.title }}</div>
               <div class="text-[0.6875rem] text-text-disabled mt-1">/blog/{{ blog.slug }}</div>
@@ -283,10 +317,27 @@ const formatDate = (dateStr: string) => {
             <td class="px-6 py-4 text-text-tertiary text-[0.8125rem]">
               {{ formatDate(blog.createdAt) }}
             </td>
-            <td class="px-6 py-4 text-right">
-              <button class="text-text-tertiary hover:text-error transition-colors p-1.5 rounded-md hover:bg-error/10" @click="handleDelete(blog.slug)">
-                <Trash2 :size="16" />
-              </button>
+            <td class="px-6 py-4 text-right" @click.stop>
+              <div class="flex items-center justify-end gap-1">
+                <button
+                  class="text-text-tertiary hover:text-accent transition-colors p-1.5 rounded-md hover:bg-accent/10"
+                  title="Chỉnh sửa"
+                  @click="openEditModal(blog)"
+                >
+                  <Pencil :size="15" />
+                </button>
+                <a
+                  :href="`/blog/${blog.slug}`"
+                  target="_blank"
+                  class="text-text-tertiary hover:text-accent transition-colors p-1.5 rounded-md hover:bg-accent/10"
+                  title="Xem bài viết"
+                >
+                  <ExternalLink :size="15" />
+                </a>
+                <button class="text-text-tertiary hover:text-error transition-colors p-1.5 rounded-md hover:bg-error/10" @click="handleDelete(blog.slug)">
+                  <Trash2 :size="15" />
+                </button>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -304,7 +355,7 @@ const formatDate = (dateStr: string) => {
             <div class="blog-modal__header">
               <h2 class="text-lg font-bold flex items-center gap-2">
                 <Sparkles :size="18" class="text-accent" />
-                {{ t('blog.modalTitle') }}
+                {{ editingSlug ? 'Chỉnh sửa bài viết' : t('blog.modalTitle') }}
               </h2>
               <button class="blog-modal__close" @click="isModalOpen = false">
                 <X :size="18" />
@@ -435,7 +486,7 @@ const formatDate = (dateStr: string) => {
                 :disabled="isGenerating || !canPublish"
               >
                 <CheckCircle2 :size="16" />
-                <span>{{ t('blog.publishBtn') }}</span>
+                <span>{{ editingSlug ? 'Cập nhật' : t('blog.publishBtn') }}</span>
               </button>
             </div>
           </div>
