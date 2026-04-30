@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useBlogStore } from '@/stores/blog'
 import { useI18n } from 'vue-i18n'
 import { marked } from 'marked'
-import { ArrowLeft, Calendar, Hash, User as UserIcon, Clock, BookOpen } from 'lucide-vue-next'
+import { ArrowLeft, Calendar, Hash, User as UserIcon, Clock, BookOpen, ArrowRight, Zap, BrainCircuit, LayoutDashboard } from 'lucide-vue-next'
 
 const { t, locale } = useI18n()
 const route = useRoute()
@@ -12,6 +12,7 @@ const router = useRouter()
 const blogStore = useBlogStore()
 
 const contentHtml = ref('')
+const showTooltip = ref(false)
 
 // Estimate reading time
 const readingTime = computed(() => {
@@ -177,7 +178,7 @@ const formatDate = (dateStr: string) => {
         <div class="blog-meta">
           <div class="blog-meta__author">
             <div class="blog-meta__avatar">
-              <UserIcon :size="14" />
+              <img src="/images/logo-512.png" alt="FinNote Admin" class="w-full h-full object-cover" />
             </div>
             <div>
               <span class="blog-meta__name">{{ blogStore.currentBlog.author.name }}</span>
@@ -223,6 +224,53 @@ const formatDate = (dateStr: string) => {
         </button>
       </footer>
     </article>
+
+    <!-- Floating CTA (Desktop Tooltip + Mobile Anim) -->
+    <div class="cta-float" @mouseenter="showTooltip = true" @mouseleave="showTooltip = false">
+      <Transition name="tooltip">
+        <div v-if="showTooltip" class="cta-tooltip" @click.stop>
+          <div class="cta-tooltip__glow"></div>
+          <div class="cta-tooltip__glow2"></div>
+          <div class="relative z-[1]">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="cta-tooltip__logo">
+                <img src="/images/logo-512.png" alt="FinNote" class="w-full h-full object-contain rounded-md" />
+              </div>
+              <div>
+                <h3 class="text-sm font-bold text-text-primary leading-tight">{{ t('blog.appIntroTitle') }}</h3>
+                <p class="text-[0.6875rem] text-text-tertiary mt-0.5">PWA • {{ t('blog.appIntroNote') }}</p>
+              </div>
+            </div>
+            <div class="space-y-2 mb-4">
+              <div class="cta-tooltip__feature">
+                <div class="cta-tooltip__feature-icon"><Zap :size="11" /></div>
+                <span>{{ t('blog.appIntroFeature1') }}</span>
+              </div>
+              <div class="cta-tooltip__feature">
+                <div class="cta-tooltip__feature-icon cta-tooltip__feature-icon--purple"><BrainCircuit :size="11" /></div>
+                <span>{{ t('blog.appIntroFeature2') }}</span>
+              </div>
+              <div class="cta-tooltip__feature">
+                <div class="cta-tooltip__feature-icon cta-tooltip__feature-icon--green"><LayoutDashboard :size="11" /></div>
+                <span>{{ t('blog.appIntroFeature3') }}</span>
+              </div>
+            </div>
+            <a href="/login" class="cta-tooltip__action group">
+              <span>{{ t('blog.appIntroCta') }}</span>
+              <ArrowRight :size="14" class="transition-transform group-hover:translate-x-1" />
+            </a>
+          </div>
+        </div>
+      </Transition>
+
+      <button class="cta-float__btn group" @click="router.push('/login')">
+        <div class="cta-float__pulse"></div>
+        <div class="cta-float__spin-border"></div>
+        <div class="cta-float__inner">
+          <img src="/images/logo-512.png" alt="FinNote Logo" class="w-full h-full object-cover" />
+        </div>
+      </button>
+    </div>
   </div>
 </template>
 
@@ -233,18 +281,29 @@ const formatDate = (dateStr: string) => {
 
 .blog-article {
   background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-default);
-  border-radius: 1.25rem;
+  border: none;
+  border-radius: 0;
   overflow: hidden;
-  box-shadow:
-    0 0 0 1px rgba(124, 111, 247, 0.04),
-    0 8px 40px -12px rgba(0, 0, 0, 0.4);
+  box-shadow: none;
+  margin-left: -1rem;
+  margin-right: -1rem;
+}
+@media (min-width: 768px) {
+  .blog-article {
+    margin-left: 0;
+    margin-right: 0;
+    border: 1px solid var(--color-border-default);
+    border-radius: 1.25rem;
+    box-shadow:
+      0 0 0 1px rgba(124, 111, 247, 0.04),
+      0 8px 40px -12px rgba(0, 0, 0, 0.4);
+  }
 }
 
 /* ── Hero Section ── */
 .blog-hero {
   position: relative;
-  padding: 2.5rem 2rem 2rem;
+  padding: 1.5rem 1.25rem 1.5rem;
   overflow: hidden;
 }
 @media (min-width: 768px) {
@@ -273,15 +332,19 @@ const formatDate = (dateStr: string) => {
 .blog-hero__title {
   position: relative;
   z-index: 1;
-  font-size: 1.75rem;
+  font-size: 1.625rem;
   font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
   color: var(--color-text-primary);
   margin-bottom: 1rem;
 }
 @media (min-width: 768px) {
-  .blog-hero__title { font-size: 2.25rem; }
+  .blog-hero__title { 
+    font-size: 2.25rem;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
 }
 
 .blog-hero__excerpt {
@@ -291,9 +354,13 @@ const formatDate = (dateStr: string) => {
   line-height: 1.6;
   color: var(--color-text-secondary);
   margin-bottom: 1.5rem;
-  padding-left: 1rem;
-  border-left: 3px solid var(--color-accent);
-  opacity: 0.85;
+  opacity: 0.9;
+}
+@media (min-width: 768px) {
+  .blog-hero__excerpt {
+    padding-left: 1rem;
+    border-left: 3px solid var(--color-accent);
+  }
 }
 
 /* ── Meta Bar ── */
@@ -304,11 +371,22 @@ const formatDate = (dateStr: string) => {
   align-items: center;
   flex-wrap: wrap;
   gap: 0.75rem;
-  padding: 0.875rem 1rem;
-  background: var(--color-bg-elevated);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 0.75rem;
+  padding: 0.75rem 0;
+  background: transparent;
+  border-top: 1px solid var(--color-border-subtle);
+  border-bottom: 1px solid var(--color-border-subtle);
+  border-radius: 0;
   font-size: 0.8125rem;
+  margin-top: 1.5rem;
+}
+@media (min-width: 768px) {
+  .blog-meta {
+    padding: 0.875rem 1rem;
+    background: var(--color-bg-elevated);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: 0.75rem;
+    margin-top: 0;
+  }
 }
 
 .blog-meta__author {
@@ -321,12 +399,14 @@ const formatDate = (dateStr: string) => {
   width: 2rem;
   height: 2rem;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-accent), rgba(124, 111, 247, 0.5));
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
   flex-shrink: 0;
+  overflow: hidden;
 }
 
 .blog-meta__name {
@@ -387,10 +467,10 @@ const formatDate = (dateStr: string) => {
 
 /* ── Content Body — Magazine Typography ── */
 .blog-content {
-  padding: 2.5rem 2rem 2rem;
+  padding: 1.5rem 1.25rem 2rem;
   color: var(--color-text-secondary);
-  font-size: 1rem;
-  line-height: 1.85;
+  font-size: 1.0625rem;
+  line-height: 1.75;
 }
 @media (min-width: 768px) {
   .blog-content { padding: 3rem 3rem 2.5rem; }
@@ -600,5 +680,201 @@ const formatDate = (dateStr: string) => {
 .blog-detail-tag--sm {
   font-size: 0.625rem;
   padding: 0.1875rem 0.5rem;
+}
+
+/* ── Call To Action — Floating ── */
+.cta-float {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+@media (min-width: 768px) {
+  .cta-float {
+    bottom: 2rem;
+    right: 2rem;
+  }
+}
+
+.cta-float__btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow:
+    0 4px 20px rgba(124, 111, 247, 0.4),
+    0 0 0 0 rgba(124, 111, 247, 0);
+  cursor: pointer;
+}
+.cta-float__btn:hover {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow:
+    0 8px 32px rgba(124, 111, 247, 0.5),
+    0 0 0 4px rgba(124, 111, 247, 0.15);
+}
+
+.cta-float__spin-border {
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, #7c6ff7, #a855f7, #34d399, #7c6ff7);
+  animation: ctaSpin 3s linear infinite;
+  z-index: 0;
+}
+@keyframes ctaSpin {
+  to { transform: rotate(360deg); }
+}
+
+.cta-float__inner {
+  position: relative;
+  z-index: 1;
+  width: calc(100% - 4px);
+  height: calc(100% - 4px);
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--color-bg-surface);
+  padding: 2px;
+}
+
+.cta-float__inner img {
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+}
+
+.cta-float__btn:hover .cta-float__inner img {
+  transform: scale(1.1);
+}
+
+.cta-float__pulse {
+  position: absolute;
+  inset: -10px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(124,111,247,0.3) 0%, transparent 70%);
+  animation: ctaPulse 2.5s ease-in-out infinite;
+  z-index: -1;
+}
+@keyframes ctaPulse {
+  0%, 100% { opacity: 0.5; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+/* Tooltip Card */
+.cta-tooltip {
+  position: absolute;
+  bottom: calc(100% + 0.75rem);
+  right: 0;
+  width: 20rem;
+  padding: 1.25rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(124, 111, 247, 0.25);
+  background: var(--color-bg-surface);
+  box-shadow:
+    0 20px 60px -15px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(124, 111, 247, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  overflow: hidden;
+  backdrop-filter: blur(16px);
+}
+
+.cta-tooltip__glow {
+  position: absolute;
+  top: -3rem;
+  right: -2rem;
+  width: 10rem;
+  height: 10rem;
+  background: radial-gradient(circle, rgba(124, 111, 247, 0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+.cta-tooltip__glow2 {
+  position: absolute;
+  bottom: -2rem;
+  left: -3rem;
+  width: 8rem;
+  height: 8rem;
+  background: radial-gradient(circle, rgba(52, 211, 153, 0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.cta-tooltip__logo {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.625rem;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 0 12px rgba(124, 111, 247, 0.2);
+  border: 1px solid rgba(124, 111, 247, 0.2);
+}
+
+.cta-tooltip__feature {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+.cta-tooltip__feature-icon {
+  width: 1.375rem;
+  height: 1.375rem;
+  border-radius: 0.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: rgba(124, 111, 247, 0.12);
+  color: var(--color-accent);
+}
+.cta-tooltip__feature-icon--purple {
+  background: rgba(168, 85, 247, 0.12);
+  color: #a855f7;
+}
+.cta-tooltip__feature-icon--green {
+  background: rgba(52, 211, 153, 0.12);
+  color: #34d399;
+}
+
+.cta-tooltip__action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, var(--color-accent), #a855f7);
+  border-radius: 0.5rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(124, 111, 247, 0.3);
+}
+.cta-tooltip__action:hover {
+  box-shadow: 0 4px 16px rgba(124, 111, 247, 0.4);
+  transform: translateY(-1px);
+}
+
+.tooltip-enter-active {
+  transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.tooltip-leave-active {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.tooltip-enter-from {
+  opacity: 0;
+  transform: translateY(8px) scale(0.95);
+}
+.tooltip-leave-to {
+  opacity: 0;
+  transform: translateY(4px) scale(0.98);
 }
 </style>
