@@ -2,6 +2,7 @@
 import { onMounted, ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useBlogStore } from '@/stores/blog'
+import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
 import { marked } from 'marked'
 import { ArrowLeft, Calendar, Hash, User as UserIcon, Clock, BookOpen, ArrowRight, Zap, BrainCircuit, LayoutDashboard } from 'lucide-vue-next'
@@ -10,6 +11,7 @@ const { t, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const blogStore = useBlogStore()
+const authStore = useAuthStore()
 
 const contentHtml = ref('')
 const showTooltip = ref(false)
@@ -122,31 +124,36 @@ const formatDate = (dateStr: string) => {
 
 <template>
   <div class="max-w-[52rem] mx-auto pb-16">
-    <!-- Header: Back Button & Locale Switcher -->
-    <div class="flex items-center justify-between mb-6">
+    
+    <!-- Language Switcher (Fixed top-right like LoginView) -->
+    <div 
+      class="fixed right-4 z-50 flex items-center gap-1" 
+      :style="{ top: authStore.isAuthenticated ? 'max(env(safe-area-inset-top, 0px), 1rem)' : 'calc(max(env(safe-area-inset-top, 0px), 1rem) + 4rem)' }"
+    >
+      <button 
+        @click="locale = 'vi'"
+        :class="['text-sm font-semibold transition-colors rounded-lg px-3 py-2', locale === 'vi' ? 'text-accent bg-accent-subtle' : 'text-text-tertiary hover:text-text-primary hover:bg-bg-hover']"
+      >
+        VI
+      </button>
+      <span class="text-border-strong text-xs select-none">|</span>
+      <button 
+        @click="locale = 'en'"
+        :class="['text-sm font-semibold transition-colors rounded-lg px-3 py-2', locale === 'en' ? 'text-accent bg-accent-subtle' : 'text-text-tertiary hover:text-text-primary hover:bg-bg-hover']"
+      >
+        EN
+      </button>
+    </div>
+
+    <!-- Back Button -->
+    <div class="mb-6">
       <button
         @click="router.push('/blog')"
-        class="flex items-center gap-2 text-text-tertiary hover:text-accent transition-colors text-sm font-medium whitespace-nowrap group"
+        class="flex items-center gap-2 text-text-tertiary hover:text-accent transition-colors text-sm font-medium whitespace-nowrap group w-fit"
       >
         <ArrowLeft :size="16" class="transition-transform group-hover:-translate-x-1" />
         {{ t('blog.backToList') }}
       </button>
-
-      <!-- Locale Switcher -->
-      <div class="flex items-center gap-1 bg-bg-elevated p-1 rounded-xl border border-border-subtle shadow-sm">
-        <button
-          @click="locale = 'vi'"
-          :class="['text-xs font-semibold transition-colors rounded-lg px-2.5 py-1.5', locale === 'vi' ? 'text-accent bg-accent-subtle shadow-sm' : 'text-text-tertiary hover:text-text-primary hover:bg-bg-hover']"
-        >
-          VI
-        </button>
-        <button
-          @click="locale = 'en'"
-          :class="['text-xs font-semibold transition-colors rounded-lg px-2.5 py-1.5', locale === 'en' ? 'text-accent bg-accent-subtle shadow-sm' : 'text-text-tertiary hover:text-text-primary hover:bg-bg-hover']"
-        >
-          EN
-        </button>
-      </div>
     </div>
 
     <!-- Loading State -->
