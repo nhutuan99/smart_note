@@ -578,6 +578,14 @@ export default {
     emptyPublicHint: 'Các bài viết mới sẽ sớm được cập nhật.',
     backToList: 'Quay lại danh sách',
     editor: 'Biên tập viên FinNote',
-    minRead: 'phút đọc'
+    minRead: 'phút đọc',
+    // App Intro CTA
+    appIntroTitle: 'FinNote — Quản lý tài chính thông minh',
+    appIntroDesc: 'Theo dõi thu chi, đồng bộ giao dịch ngân hàng tự động, AI phân tích tài chính cá nhân — tất cả trong một ứng dụng miễn phí.',
+    appIntroFeature1: 'Tự động ghi nhận giao dịch qua SMS',
+    appIntroFeature2: 'AI phân tích & tư vấn chi tiêu',
+    appIntroFeature3: 'Dashboard trực quan, dễ sử dụng',
+    appIntroCta: 'Dùng thử miễn phí',
+    appIntroNote: 'Không cần tải app — chạy trực tiếp trên trình duyệt'
   }
 }

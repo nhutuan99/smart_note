@@ -578,6 +578,14 @@ export default {
     emptyPublicHint: 'New posts will be available soon.',
     backToList: 'Back to list',
     editor: 'FinNote Editor',
-    minRead: 'min read'
+    minRead: 'min read',
+    // App Intro CTA
+    appIntroTitle: 'FinNote — Smart Personal Finance',
+    appIntroDesc: 'Track expenses, auto-sync bank transactions, AI-powered financial insights — all in one free app.',
+    appIntroFeature1: 'Auto-record transactions via SMS',
+    appIntroFeature2: 'AI analysis & spending advice',
+    appIntroFeature3: 'Intuitive dashboard, easy to use',
+    appIntroCta: 'Try for free',
+    appIntroNote: 'No download needed — runs directly in your browser'
   }
 }

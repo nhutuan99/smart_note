@@ -20,7 +20,7 @@ import {
   ChevronLeft,
   Bug,
   Newspaper,
-  ShieldAlert
+  PenLine
 } from 'lucide-vue-next'
 
 const { t } = useI18n()
@@ -117,14 +117,14 @@ function navigateWallet(walletId: string) {
         <router-link
           v-if="auth.user?.email === 'tintphcm@gmail.com'"
           to="/admin/blog"
-          class="text-accent hover:bg-bg-hover hover:text-accent-hover flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm whitespace-nowrap no-underline transition-all duration-150 mt-2"
+          class="admin-blog-btn mt-3 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm whitespace-nowrap no-underline transition-all duration-200"
           :class="[
-            isActive('/admin/blog') ? 'bg-bg-hover font-medium' : '',
+            isActive('/admin/blog') ? 'admin-blog-btn--active' : '',
             !ui.sidebarOpen ? 'justify-center px-2' : ''
           ]"
           @click="closeSidebarOnMobile"
         >
-          <ShieldAlert :size="ui.sidebarOpen ? 18 : 22" />
+          <PenLine :size="ui.sidebarOpen ? 16 : 20" />
           <span v-if="ui.sidebarOpen">{{ t('blog.manageTitle') }}</span>
         </router-link>
 
@@ -212,3 +212,37 @@ function navigateWallet(walletId: string) {
     </div>
   </aside>
 </template>
+
+<style scoped>
+.admin-blog-btn {
+  position: relative;
+  background: linear-gradient(135deg, rgba(124, 111, 247, 0.12), rgba(168, 85, 247, 0.08));
+  border: 1px solid rgba(124, 111, 247, 0.25);
+  color: var(--color-accent);
+  font-weight: 600;
+  font-size: 0.8125rem;
+  letter-spacing: 0.01em;
+  overflow: hidden;
+}
+.admin-blog-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(124, 111, 247, 0.15), rgba(168, 85, 247, 0.1));
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.admin-blog-btn:hover::before {
+  opacity: 1;
+}
+.admin-blog-btn:hover {
+  border-color: rgba(124, 111, 247, 0.45);
+  box-shadow: 0 0 16px rgba(124, 111, 247, 0.15);
+  transform: translateY(-1px);
+}
+.admin-blog-btn--active {
+  background: linear-gradient(135deg, rgba(124, 111, 247, 0.2), rgba(168, 85, 247, 0.12));
+  border-color: rgba(124, 111, 247, 0.4);
+  box-shadow: 0 0 12px rgba(124, 111, 247, 0.12);
+}
+</style>
