@@ -224,7 +224,15 @@ async function handleSave() {
 }
 
 async function handleDelete(slug: string) {
-  if (!confirm(t('blog.deleteConfirm'))) return
+  const confirmed = await uiStore.requestConfirm({
+    title: t('common.confirm'),
+    message: t('blog.deleteConfirm'),
+    confirmText: t('common.delete'),
+    cancelText: t('common.cancel'),
+    danger: true
+  })
+  if (!confirmed) return
+  
   try {
     await blogStore.deleteBlog(slug)
     uiStore.showToast('success', t('blog.deleted'))
