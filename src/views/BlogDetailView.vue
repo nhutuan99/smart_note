@@ -122,14 +122,32 @@ const formatDate = (dateStr: string) => {
 
 <template>
   <div class="max-w-[52rem] mx-auto pb-16">
-    <!-- Back Button -->
-    <button
-      @click="router.push('/blog')"
-      class="mb-6 flex items-center gap-2 text-text-tertiary hover:text-accent transition-colors text-sm font-medium whitespace-nowrap group"
-    >
-      <ArrowLeft :size="16" class="transition-transform group-hover:-translate-x-1" />
-      {{ t('blog.backToList') }}
-    </button>
+    <!-- Header: Back Button & Locale Switcher -->
+    <div class="flex items-center justify-between mb-6">
+      <button
+        @click="router.push('/blog')"
+        class="flex items-center gap-2 text-text-tertiary hover:text-accent transition-colors text-sm font-medium whitespace-nowrap group"
+      >
+        <ArrowLeft :size="16" class="transition-transform group-hover:-translate-x-1" />
+        {{ t('blog.backToList') }}
+      </button>
+
+      <!-- Locale Switcher -->
+      <div class="flex items-center gap-1 bg-bg-elevated p-1 rounded-xl border border-border-subtle shadow-sm">
+        <button
+          @click="locale = 'vi'"
+          :class="['text-xs font-semibold transition-colors rounded-lg px-2.5 py-1.5', locale === 'vi' ? 'text-accent bg-accent-subtle shadow-sm' : 'text-text-tertiary hover:text-text-primary hover:bg-bg-hover']"
+        >
+          VI
+        </button>
+        <button
+          @click="locale = 'en'"
+          :class="['text-xs font-semibold transition-colors rounded-lg px-2.5 py-1.5', locale === 'en' ? 'text-accent bg-accent-subtle shadow-sm' : 'text-text-tertiary hover:text-text-primary hover:bg-bg-hover']"
+        >
+          EN
+        </button>
+      </div>
+    </div>
 
     <!-- Loading State -->
     <div v-if="blogStore.isLoading" class="animate-pulse">

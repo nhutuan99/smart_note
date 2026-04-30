@@ -48,8 +48,26 @@ const formatDate = (dateStr: string) => {
 </script>
 
 <template>
-  <div class="max-w-[48rem] mx-auto pb-12">
-    <h1 class="mb-2 text-2xl font-bold tracking-tight md:mb-4">{{ t('blog.listTitle') }}</h1>
+  <div class="max-w-[48rem] mx-auto pb-12 relative">
+    <div class="flex items-center justify-between mb-2 md:mb-4">
+      <h1 class="text-2xl font-bold tracking-tight">{{ t('blog.listTitle') }}</h1>
+      
+      <!-- Locale Switcher -->
+      <div class="flex items-center gap-1 bg-bg-elevated p-1 rounded-xl border border-border-subtle shadow-sm">
+        <button
+          @click="locale = 'vi'"
+          :class="['text-xs font-semibold transition-colors rounded-lg px-2.5 py-1.5', locale === 'vi' ? 'text-accent bg-accent-subtle shadow-sm' : 'text-text-tertiary hover:text-text-primary hover:bg-bg-hover']"
+        >
+          VI
+        </button>
+        <button
+          @click="locale = 'en'"
+          :class="['text-xs font-semibold transition-colors rounded-lg px-2.5 py-1.5', locale === 'en' ? 'text-accent bg-accent-subtle shadow-sm' : 'text-text-tertiary hover:text-text-primary hover:bg-bg-hover']"
+        >
+          EN
+        </button>
+      </div>
+    </div>
     <p class="text-text-tertiary text-sm mb-6">{{ t('blog.listDesc') }}</p>
 
     <!-- Tag Filter Bar -->
