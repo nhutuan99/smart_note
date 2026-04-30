@@ -19,7 +19,7 @@ import {
   Plus,
   ChevronLeft,
   Bug,
-  Sparkles,
+  Newspaper,
   ShieldAlert
 } from 'lucide-vue-next'
 
@@ -37,7 +37,7 @@ const navItems = [
   { key: 'nav.transactions', icon: ArrowLeftRight, route: '/transactions' },
   { key: 'nav.wallets', icon: Wallet, route: '/wallets' },
   { key: 'nav.notes', icon: FileText, route: '/notes' },
-  { key: 'nav.blog', icon: Sparkles, route: '/blog' },
+  { key: 'nav.blog', icon: Newspaper, route: '/blog' },
   { key: 'nav.settings', icon: Settings, route: '/settings' }
 ]
 

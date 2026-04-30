@@ -42,12 +42,25 @@ export async function handleGetBlog(slug: string, env: Env): Promise<Response> {
 
 export async function handleGetImage(id: string, env: Env): Promise<Response> {
   const file = await env.SMART_NOTE_KV.get(`public/images/${id}`, 'arrayBuffer')
-  if (!file) return new Response('Image not found', { status: 404 })
+  if (!file) return new Response('Image not found', {
+    status: 404,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+    }
+  })
+
+  // Detect image format from magic bytes
+  const header = new Uint8Array(file.slice(0, 4))
+  let contentType = 'image/jpeg' // default for flux-1-schnell
+  if (header[0] === 0x89 && header[1] === 0x50 && header[2] === 0x4E && header[3] === 0x47) {
+    contentType = 'image/png'
+  }
 
   return new Response(file, {
     headers: {
-      'Content-Type': 'image/png',
-      'Cache-Control': 'public, max-age=31536000' // Cache for 1 year
+      'Content-Type': contentType,
+      'Cache-Control': 'public, max-age=31536000',
+      'Access-Control-Allow-Origin': '*',
     }
   })
 }
@@ -163,6 +176,11 @@ export async function handleGenerateBlogContent(userId: string, request: Request
   const { topic, imageBase64 } = (await request.json()) as { topic: string; imageBase64?: string }
   if (!topic && !imageBase64) return errorResponse('Missing topic or image', 400)
 
+  // Helper: strip leading H1 from markdown to prevent duplicate title with hero section
+  function stripLeadingH1(md: string): string {
+    return md.replace(/^\s*#\s+[^\n]+\n*/m, '').trim()
+  }
+
   const systemPrompt = `Bạn là một chuyên gia viết blog về quản lý tài chính cá nhân.
 Nhiệm vụ: Viết một bài blog chuẩn SEO về chủ đề được yêu cầu để giúp người dùng biết cách quản lý tiền bạc và giới thiệu khéo léo về ứng dụng "FinNote".
 Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải thích nào khác ngoài JSON:
@@ -171,7 +189,7 @@ Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải th
   "excerpt": "Đoạn mô tả ngắn (dưới 160 ký tự) cho SEO meta description",
   "tags": ["tag1", "tag2", "tag3"],
   "seoKeywords": "keyword1, keyword2",
-  "content": "Nội dung bài viết chi tiết được format bằng Markdown. Cần có mở bài, thân bài chia thành nhiều mục (H2, H3) sử dụng bullet points/bold text hợp lý, và kết bài có Call to Action kêu gọi tải/sử dụng app FinNote."
+  "content": "Nội dung bài viết chi tiết được format bằng Markdown. QUAN TRỌNG: KHÔNG bao gồm tiêu đề H1 (# Tiêu đề) trong content vì title đã được hiển thị riêng ở hero section. Bắt đầu trực tiếp với đoạn mở bài, sau đó thân bài chia thành nhiều mục (H2, H3) sử dụng bullet points/bold text hợp lý, và kết bài có Call to Action kêu gọi tải/sử dụng app FinNote."
 }`
 
   try {
@@ -255,7 +273,7 @@ Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải th
 
       // Step 2: Generate full blog content as Markdown (no JSON wrapper)
       const contentPrompt = `Bạn là chuyên gia viết blog tài chính cá nhân. Viết bài blog bằng Markdown cho chủ đề dưới đây.
-Yêu cầu: Có mở bài, thân bài chia H2/H3, bullet points, bold text, kết bài Call to Action giới thiệu FinNote.
+Yêu cầu: KHÔNG bao gồm tiêu đề H1 (# Tiêu đề) vì title đã hiển thị riêng. Bắt đầu trực tiếp với đoạn mở bài, thân bài chia H2/H3, bullet points, bold text, kết bài Call to Action giới thiệu FinNote.
 Chỉ trả về nội dung Markdown, không bọc trong JSON hay code block.`
       const contentResponse = await env.AI.run('@cf/meta/llama-3.1-8b-instruct' as any, {
         messages: [
@@ -266,7 +284,7 @@ Chỉ trả về nội dung Markdown, không bọc trong JSON hay code block.`
         temperature: 0.7
       }) as any
 
-      const blogContent = contentResponse?.response || ''
+      const blogContent = stripLeadingH1(contentResponse?.response || '')
 
       return jsonResponse({
         success: true,
@@ -293,6 +311,11 @@ Chỉ trả về nội dung Markdown, không bọc trong JSON hay code block.`
       return errorResponse('Failed to parse AI response', 500)
     }
 
+    // Strip H1 from content as safety net
+    if (result.content) {
+      result.content = stripLeadingH1(result.content)
+    }
+
     return jsonResponse({ success: true, data: result })
   } catch (err: any) {
     return errorResponse(err.message || 'AI request failed', 500)
@@ -309,16 +332,29 @@ export async function handleGenerateBlogImage(userId: string, request: Request, 
   const optimizedPrompt = `A premium, modern illustration for a finance blog: ${prompt}. Style: clean gradient background, minimal flat design, professional finance theme, vivid accent colors, editorial quality.`
 
   try {
-    const response = await env.AI.run('@cf/black-forest-labs/flux-1-schnell' as any, {
+    const response: any = await env.AI.run('@cf/black-forest-labs/flux-1-schnell' as any, {
       prompt: optimizedPrompt,
       num_steps: 4
     })
     
-    // Convert ReadableStream/ArrayBuffer safely (handles large images)
-    const buffer = response instanceof ReadableStream
-      ? await new Response(response).arrayBuffer()
-      : (response as any) instanceof ArrayBuffer ? response as ArrayBuffer
-      : await new Response(response as any).arrayBuffer()
+    // flux-1-schnell returns { image: "base64_encoded_string" }
+    let buffer: ArrayBuffer
+
+    if (response?.image && typeof response.image === 'string') {
+      // Decode base64 string to binary
+      const binaryString = atob(response.image)
+      const bytes = new Uint8Array(binaryString.length)
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i)
+      }
+      buffer = bytes.buffer
+    } else if (response instanceof ReadableStream) {
+      buffer = await new Response(response).arrayBuffer()
+    } else if (response instanceof ArrayBuffer) {
+      buffer = response
+    } else {
+      return errorResponse('Unexpected AI response format', 500)
+    }
     
     // Save image directly to KV
     const imageId = generateId()
