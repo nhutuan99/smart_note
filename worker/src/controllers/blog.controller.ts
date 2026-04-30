@@ -412,7 +412,7 @@ export async function handleGenerateBlogImage(userId: string, request: Request, 
 
     // Store in KV as proper binary with metadata
     const imageId = generateId()
-    await env.SMART_NOTE_KV.put(`public/images/${imageId}`, imageBytes.buffer, {
+    await env.SMART_NOTE_KV.put(`public/images/${imageId}`, imageBytes, {
       metadata: { contentType }
     })
     
@@ -458,7 +458,7 @@ export async function handleUploadImage(userId: string, request: Request, env: E
 
     // Save to KV with metadata
     const imageId = generateId()
-    await env.SMART_NOTE_KV.put(`public/images/${imageId}`, bytes.buffer, {
+    await env.SMART_NOTE_KV.put(`public/images/${imageId}`, bytes, {
       metadata: { contentType }
     })
 
