@@ -355,50 +355,75 @@ export async function handleGenerateBlogImage(userId: string, request: Request, 
       prompt: optimizedPrompt,
       num_steps: 4
     })
-    
-    let buffer: ArrayBuffer
 
-    // Detection order: ReadableStream (most common from Workers AI) > ArrayBuffer > base64 string
-    if (response instanceof ReadableStream) {
-      buffer = await new Response(response).arrayBuffer()
-    } else if (response instanceof ArrayBuffer) {
-      buffer = response
-    } else if (response?.image && typeof response.image === 'string') {
-      // Decode base64 string to binary
+    // Diagnostic: log what the AI actually returned
+    const responseType = typeof response
+    const isStream = response instanceof ReadableStream
+    const isBuffer = response instanceof ArrayBuffer
+    const hasImage = response?.image !== undefined
+    const imageType = hasImage ? typeof response.image : 'N/A'
+    console.log(`[BlogImage] AI response — type: ${responseType}, isStream: ${isStream}, isBuffer: ${isBuffer}, hasImage: ${hasImage}, imageType: ${imageType}`)
+
+    let imageBytes: Uint8Array
+
+    // Official Cloudflare docs pattern: response.image is a base64 string (JPEG)
+    // Reference: https://developers.cloudflare.com/workers-ai/models/flux-1-schnell/
+    if (hasImage && typeof response.image === 'string' && response.image.length > 100) {
       const binaryString = atob(response.image)
-      const bytes = new Uint8Array(binaryString.length)
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i)
-      }
-      buffer = bytes.buffer
+      imageBytes = Uint8Array.from(binaryString, (m) => m.codePointAt(0)!)
+      console.log(`[BlogImage] Decoded base64 image: ${imageBytes.length} bytes`)
+    } else if (isStream) {
+      // Fallback: some SDK versions may return ReadableStream
+      const arrayBuffer = await new Response(response).arrayBuffer()
+      imageBytes = new Uint8Array(arrayBuffer)
+      console.log(`[BlogImage] Read stream image: ${imageBytes.length} bytes`)
+    } else if (isBuffer) {
+      imageBytes = new Uint8Array(response)
+      console.log(`[BlogImage] ArrayBuffer image: ${imageBytes.length} bytes`)
     } else {
-      console.error('Unexpected AI response type:', typeof response, JSON.stringify(response).substring(0, 200))
-      return errorResponse('Unexpected AI response format', 500)
+      // Last resort: try to get any data
+      const debugStr = JSON.stringify(response)?.substring(0, 300) || String(response)
+      console.error(`[BlogImage] UNEXPECTED response format: ${debugStr}`)
+      return errorResponse(`Unexpected AI response format (type: ${responseType})`, 500)
     }
 
-    // Validate buffer has actual image data
-    if (!buffer || buffer.byteLength < 100) {
-      console.error('AI returned empty or too-small buffer:', buffer?.byteLength)
-      return errorResponse('AI generated empty image', 500)
+    // Validate: must have substantial binary data
+    if (imageBytes.length < 1000) {
+      console.error(`[BlogImage] Image too small: ${imageBytes.length} bytes`)
+      return errorResponse('AI generated invalid image (too small)', 500)
     }
 
-    // Detect content type from magic bytes
-    const header = new Uint8Array(buffer.slice(0, 4))
+    // Validate: first bytes should be valid image magic bytes
+    const magicOk = (
+      (imageBytes[0] === 0xFF && imageBytes[1] === 0xD8) || // JPEG
+      (imageBytes[0] === 0x89 && imageBytes[1] === 0x50) || // PNG
+      (imageBytes[0] === 0x52 && imageBytes[1] === 0x49) || // RIFF (WebP)
+      (imageBytes[0] === 0x47 && imageBytes[1] === 0x49)    // GIF
+    )
+    if (!magicOk) {
+      console.error(`[BlogImage] Invalid magic bytes: [${imageBytes[0]}, ${imageBytes[1]}, ${imageBytes[2]}, ${imageBytes[3]}]`)
+      // Still store it — flux-1-schnell produces JPEG but bytes may vary
+    }
+
+    // Detect content type (flux-1-schnell defaults to JPEG)
     let contentType = 'image/jpeg'
-    if (header[0] === 0x89 && header[1] === 0x50) contentType = 'image/png'
-    else if (header[0] === 0x52 && header[1] === 0x49) contentType = 'image/webp'
+    if (imageBytes[0] === 0x89 && imageBytes[1] === 0x50) contentType = 'image/png'
+    else if (imageBytes[0] === 0x52 && imageBytes[1] === 0x49) contentType = 'image/webp'
 
-    // Save image to KV with metadata
+    // Store in KV as proper binary with metadata
     const imageId = generateId()
-    await env.SMART_NOTE_KV.put(`public/images/${imageId}`, buffer, {
+    await env.SMART_NOTE_KV.put(`public/images/${imageId}`, imageBytes.buffer, {
       metadata: { contentType }
     })
     
+    console.log(`[BlogImage] Stored image ${imageId}: ${imageBytes.length} bytes, ${contentType}`)
+
     const host = new URL(request.url).origin
     const imageUrl = `${host}/api/images/${imageId}`
 
     return jsonResponse({ success: true, data: { imageUrl } })
   } catch (err: any) {
+    console.error(`[BlogImage] Generation error:`, err.message, err.stack)
     return errorResponse(err.message || 'Image generation failed', 500)
   }
 }
