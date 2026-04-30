@@ -341,6 +341,106 @@ Chỉ trả về nội dung Markdown, không bọc trong JSON hay code block.`
   }
 }
 
+export async function handleRefineBlogContent(userId: string, request: Request, env: Env): Promise<Response> {
+  if (!(await isAdmin(userId, env))) return errorResponse('Forbidden', 403)
+
+  const draftData = (await request.json()) as any
+  if (!draftData || !draftData.content) return errorResponse('Missing draft content', 400)
+
+  const systemPrompt = `Bạn là một Tổng biên tập Blog Tài chính cấp cao (Senior Financial Blog Editor).
+Nhiệm vụ của bạn là đọc và tinh chỉnh (refine) bài blog nháp được cung cấp. Bạn PHẢI:
+1. Viết lại bài viết sao cho tự nhiên, giống con người nhất (human-like style).
+2. Sửa toàn bộ các lỗi pha trộn ngôn ngữ ngớ ngẩn (ví dụ: "tài chínhallenging", "quản lý cost", v.v.).
+3. Bổ sung các ví dụ thực tế (real-world examples) để người đọc dễ hình dung.
+4. Bổ sung một checklist hành động cụ thể hoặc giải pháp rõ ràng (actionable advice) cho người dùng.
+5. Giữ nguyên hoặc tối ưu lại title, excerpt, tags, seoKeywords cho chuẩn SEO.
+Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải thích nào khác ngoài JSON:
+{
+  "title": "Tiêu đề hấp dẫn (dưới 60 ký tự)",
+  "excerpt": "Đoạn mô tả ngắn (dưới 160 ký tự) cho SEO meta description",
+  "tags": ["tag1", "tag2", "tag3"],
+  "seoKeywords": "keyword1, keyword2",
+  "content": "Nội dung bài viết chi tiết được format bằng Markdown (không chứa H1 đầu bài). Đảm bảo nội dung sắc sảo, tự nhiên, có checklist và ví dụ thực tế."
+}`
+
+  try {
+    let text = ''
+    let useGemini = !!env.GEMINI_API_KEY
+    if (useGemini) {
+      try {
+        const promptParts = [
+          { text: `Đây là bản nháp cần tinh chỉnh:\n\nTitle: ${draftData.title}\nExcerpt: ${draftData.excerpt}\nContent:\n${draftData.content}` }
+        ]
+
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${env.GEMINI_API_KEY}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              system_instruction: {
+                parts: [{ text: systemPrompt }]
+              },
+              contents: [{
+                parts: promptParts
+              }],
+              generationConfig: {
+                temperature: 0.5, // lower temp for editor consistency
+                response_mime_type: "application/json"
+              }
+            })
+          }
+        )
+
+        if (!response.ok) {
+          useGemini = false
+        } else {
+          const data: any = await response.json()
+          text = data?.candidates?.[0]?.content?.parts?.[0]?.text || ''
+        }
+      } catch {
+        useGemini = false
+      }
+    }
+
+    if (!useGemini || !text) {
+      if (!env.AI) return errorResponse('AI binding not configured', 503)
+
+      const metaResponse = await env.AI.run('@cf/meta/llama-3.1-8b-instruct' as any, {
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: `Hãy tinh chỉnh bản nháp này và trả về JSON: \n${JSON.stringify(draftData)}` }
+        ],
+        max_tokens: 2048,
+        temperature: 0.5
+      }) as any
+      text = metaResponse?.response || ''
+    }
+
+    const jsonMatch = text.match(/\{[\s\S]*\}/)
+    if (jsonMatch) text = jsonMatch[0]
+    
+    let result
+    try {
+      result = JSON.parse(text)
+    } catch {
+      return errorResponse('Failed to parse AI response', 500)
+    }
+
+    function stripLeadingH1(md: string): string {
+      return md.replace(/^\s*#\s+[^\n]+\n*/m, '').trim()
+    }
+    if (result.content) {
+      result.content = stripLeadingH1(result.content)
+    }
+
+    return jsonResponse({ success: true, data: result })
+  } catch (err: any) {
+    return errorResponse(err.message || 'AI request failed', 500)
+  }
+}
+
+
 export async function handleGenerateBlogImage(userId: string, request: Request, env: Env): Promise<Response> {
   if (!(await isAdmin(userId, env))) return errorResponse('Forbidden', 403)
   if (!env.AI) return errorResponse('AI binding not configured', 503)

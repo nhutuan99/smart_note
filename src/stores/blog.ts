@@ -79,6 +79,11 @@ export const useBlogStore = defineStore('blog', () => {
     return response
   }
 
+  async function refineContent(draftData: any) {
+    const response = await httpClient.post<any>('/api/blogs/refine-content', draftData)
+    return response
+  }
+
   async function generateImage(prompt: string) {
     const response = await httpClient.post<{ imageUrl: string }>('/api/blogs/generate-image', { prompt })
     return response?.imageUrl
@@ -100,6 +105,7 @@ export const useBlogStore = defineStore('blog', () => {
     updateBlog,
     deleteBlog,
     generateContent,
+    refineContent,
     generateImage,
     uploadImage
   }

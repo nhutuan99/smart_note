@@ -160,9 +160,15 @@ async function handleGenerate() {
       }
     } else {
       // Mode AI: Full generation from topic/image
-      uiStore.showToast('info', t('blog.aiWriting'))
-      const data = await blogStore.generateContent(inputContent.value, aiImageBase64.value)
-      if (data) {
+      // STEP 1: Draft
+      uiStore.showToast('info', 'Đang viết bài (Bản nháp)...')
+      const draftData = await blogStore.generateContent(inputContent.value, aiImageBase64.value)
+      
+      if (draftData) {
+        // STEP 2: Refine / Editor Review
+        uiStore.showToast('info', 'Đang review và tinh chỉnh nội dung (AI Editor)...')
+        const data = await blogStore.refineContent(draftData) || draftData // Fallback to draft if refine fails
+
         form.value.title = data.title || ''
         form.value.excerpt = data.excerpt || ''
         form.value.content = data.content || ''

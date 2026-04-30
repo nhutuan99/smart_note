@@ -80,6 +80,7 @@ import {
   handleUpdateBlog,
   handleDeleteBlog,
   handleGenerateBlogContent,
+  handleRefineBlogContent,
   handleGenerateBlogImage,
   handleGetImage,
   handleUploadImage,
@@ -207,6 +208,9 @@ export default {
       }
       if (path === '/api/blogs/generate-content' && request.method === 'POST') {
         return handleGenerateBlogContent(userId, request, env)
+      }
+      if (path === '/api/blogs/refine-content' && request.method === 'POST') {
+        return handleRefineBlogContent(userId, request, env)
       }
       if (path === '/api/blogs/generate-image' && request.method === 'POST') {
         return handleGenerateBlogImage(userId, request, env)

@@ -724,11 +724,16 @@ const formatDate = (dateStr: string) => {
 
 .cta-float__spin-border {
   position: absolute;
-  inset: -2px;
+  inset: -1.5px;
   border-radius: 50%;
-  background: conic-gradient(from 0deg, #7c6ff7, #a855f7, #34d399, #7c6ff7);
+  padding: 1.5px;
+  background: conic-gradient(from 0deg, rgba(124,111,247,0.1), #7c6ff7, rgba(52,211,153,0.1), #7c6ff7);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
   animation: ctaSpin 3s linear infinite;
-  z-index: 0;
+  z-index: 2;
+  pointer-events: none;
 }
 @keyframes ctaSpin {
   to { transform: rotate(360deg); }
@@ -737,12 +742,11 @@ const formatDate = (dateStr: string) => {
 .cta-float__inner {
   position: relative;
   z-index: 1;
-  width: calc(100% - 4px);
-  height: calc(100% - 4px);
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
   overflow: hidden;
   background: var(--color-bg-surface);
-  padding: 2px;
 }
 
 .cta-float__inner img {
