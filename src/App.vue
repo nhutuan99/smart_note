@@ -24,10 +24,10 @@ const { deviceType, isMobileOrTablet } = useDevice()
 useSwipeNavigation()
 
 /**
- * True when the current route is the login page.
- * Used to conditionally render AppLayout vs router-view.
+ * True when the current route should be rendered standalone (no AppLayout).
+ * Used for login and onboarding screens.
  */
-const isAuthPage = computed(() => route.name === 'login')
+const isStandalonePage = computed(() => ['login', 'onboarding'].includes(route.name as string))
 
 /**
  * Public pages (blog) — rendered without sidebar, accessible without login.
@@ -38,10 +38,10 @@ const isPublicPage = computed(() => !!route.meta.isPublic)
  * Gate: only render AppLayout when:
  * 1. Auth state has been resolved (authReady)
  * 2. User is authenticated
- * 3. Current route is NOT the login page or public page
+ * 3. Current route is NOT a standalone page or public page
  */
 const showLayout = computed(
-  () => auth.authReady && auth.isAuthenticated && !isAuthPage.value && !isPublicPage.value
+  () => auth.authReady && auth.isAuthenticated && !isStandalonePage.value && !isPublicPage.value
 )
 
 // ─── Block double-tap zoom (mobile/tablet) ────────────────────────────────────
@@ -83,10 +83,10 @@ onMounted(() => {
     :class="[`device--${deviceType}`]"
   >
     <!--
-      Auth pages (login, forgot-password, etc.)
+      Standalone pages (login, onboarding, etc.)
       Rendered via router-view directly — no AppLayout wrapper.
     -->
-    <router-view v-if="isAuthPage" />
+    <router-view v-if="isStandalonePage" />
 
     <!--
       Public pages (blog) — full-width, no sidebar, no auth required.
