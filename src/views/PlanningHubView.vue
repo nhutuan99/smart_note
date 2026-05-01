@@ -34,7 +34,7 @@ const features = [
   {
     id: 'subscriptions',
     key: 'nav.subscriptions',
-    desc: 'subscriptions.emptyHint',
+    desc: 'subs.emptyHint',
     icon: CreditCard,
     color: '#f59e0b',
     route: '/subscriptions'

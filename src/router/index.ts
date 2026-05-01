@@ -26,7 +26,8 @@ const router = createRouter({
     {
       path: '/transactions/add',
       name: 'add-transaction',
-      component: () => import('@/views/AddTransactionView.vue')
+      component: () => import('@/views/AddTransactionView.vue'),
+      meta: { parentRoute: '/transactions' }
     },
     {
       path: '/wallets',
@@ -36,22 +37,26 @@ const router = createRouter({
     {
       path: '/recurring',
       name: 'recurring',
-      component: () => import('@/views/RecurringView.vue')
+      component: () => import('@/views/RecurringView.vue'),
+      meta: { parentRoute: '/planning' }
     },
     {
       path: '/budget',
       name: 'budget',
-      component: () => import('@/views/BudgetView.vue')
+      component: () => import('@/views/BudgetView.vue'),
+      meta: { parentRoute: '/planning' }
     },
     {
       path: '/savings',
       name: 'savings',
-      component: () => import('@/views/SavingsView.vue')
+      component: () => import('@/views/SavingsView.vue'),
+      meta: { parentRoute: '/planning' }
     },
     {
       path: '/subscriptions',
       name: 'subscriptions',
-      component: () => import('@/views/SubscriptionsView.vue')
+      component: () => import('@/views/SubscriptionsView.vue'),
+      meta: { parentRoute: '/planning' }
     },
     {
       path: '/planning',
@@ -66,7 +71,8 @@ const router = createRouter({
     {
       path: '/notes/:id',
       name: 'note-detail',
-      component: () => import('@/views/NoteDetailView.vue')
+      component: () => import('@/views/NoteDetailView.vue'),
+      meta: { parentRoute: '/notes' }
     },
     {
       path: '/settings',
@@ -88,12 +94,13 @@ const router = createRouter({
       path: '/blog/:slug',
       name: 'blog-detail',
       component: () => import('@/views/BlogDetailView.vue'),
-      meta: { isPublic: true }
+      meta: { isPublic: true, parentRoute: '/blog' }
     },
     {
       path: '/admin/blog',
       name: 'admin-blog',
-      component: () => import('@/views/AdminBlogView.vue')
+      component: () => import('@/views/AdminBlogView.vue'),
+      meta: { parentRoute: '/' }
     }
   ]
 })

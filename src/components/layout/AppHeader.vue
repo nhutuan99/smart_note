@@ -5,11 +5,11 @@ import { useUiStore } from '@/stores/ui'
 import { useNotificationStore } from '@/stores/notifications'
 import { useFinanceStore } from '@/stores/finance'
 import { useEventListener } from '@/composables/useEventListener'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { formatMoney } from '@/composables/useCurrency'
 import { getWalletBrand } from '@/constants/walletBrands'
-import { Menu, Bell, Settings, LogOut, ArrowUpRight, ArrowDownRight, CheckCheck, Trash2, BellOff, Zap, Sun, Moon } from 'lucide-vue-next'
+import { Menu, ChevronLeft, Bell, Settings, LogOut, ArrowUpRight, ArrowDownRight, CheckCheck, Trash2, BellOff, Zap, Sun, Moon } from 'lucide-vue-next'
 
 const { t } = useI18n()
 const auth = useAuthStore()
@@ -17,6 +17,16 @@ const ui = useUiStore()
 const notiStore = useNotificationStore()
 const finance = useFinanceStore()
 const router = useRouter()
+const route = useRoute()
+
+function goBack() {
+  const parent = route.meta.parentRoute as string | undefined
+  if (parent) {
+    router.push(parent)
+  } else {
+    router.back()
+  }
+}
 
 const imgError = ref(false)
 watch(() => auth.user?.avatarUrl, () => {
@@ -58,6 +68,14 @@ function handleLogout() {
     <!-- Left -->
     <div class="flex items-center gap-3">
       <button
+        v-if="route.meta.parentRoute"
+        class="text-text-secondary hover:bg-bg-hover hover:text-text-primary flex h-8.5 w-8.5 items-center justify-center rounded-lg transition-all duration-150"
+        @click="goBack"
+      >
+        <ChevronLeft :size="24" />
+      </button>
+      <button
+        v-else
         id="toggle-sidebar-btn"
         class="text-text-secondary hover:bg-bg-hover hover:text-text-primary flex h-8.5 w-8.5 items-center justify-center rounded-lg transition-all duration-150"
         @click="ui.toggleSidebar"

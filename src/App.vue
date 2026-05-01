@@ -11,6 +11,7 @@ import { useAuthStore } from '@/stores/auth'
 // 4. Composables
 import { useDevice } from '@/composables/useDevice'
 import { useEventListener } from '@/composables/useEventListener'
+import { useSwipeNavigation } from '@/composables/useSwipeNavigation'
 
 // 5. Components
 import AppLayout from '@/components/layout/AppLayout.vue'
@@ -18,6 +19,9 @@ import AppLayout from '@/components/layout/AppLayout.vue'
 const route  = useRoute()
 const auth   = useAuthStore()
 const { deviceType, isMobileOrTablet } = useDevice()
+
+// Enable global edge-swipe navigation
+useSwipeNavigation()
 
 /**
  * True when the current route is the login page.
