@@ -8,6 +8,7 @@ import { useI18n } from 'vue-i18n'
 import type { RecurringTransaction, RecurringFrequency } from '@/types'
 import { Plus, Trash2, Repeat, ToggleLeft, ToggleRight, ArrowUpRight, ArrowDownRight, Clock } from 'lucide-vue-next'
 import CurrencyInput from '@/components/ui/CurrencyInput.vue'
+import CustomDatePicker from '@/components/ui/CustomDatePicker.vue'
 
 const { t } = useI18n()
 const finance = useFinanceStore()
@@ -106,8 +107,10 @@ const monthlyEst = computed(() => {
           </div>
           <input v-model="form.note" type="text" :placeholder="t('addTx.notePlaceholder')" class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border px-4 py-2.5 text-sm transition-all focus:ring-2 focus:outline-none" />
           <div>
-            <label class="text-text-secondary mb-2 block text-sm font-medium">{{ t('recurring.startDate') }}</label>
-            <input v-model="form.nextDate" type="date" class="border-border-default bg-bg-elevated text-text-primary focus:border-accent focus:ring-accent-subtle w-full rounded-lg border px-4 py-2.5 text-sm transition-all focus:ring-2 focus:outline-none" />
+            <CustomDatePicker
+              v-model="form.nextDate"
+              :label="t('recurring.startDate')"
+            />
           </div>
           <div class="flex gap-2">
             <button @click="showAdd = false" class="border-border-default text-text-secondary hover:bg-bg-hover flex-1 rounded-lg border py-2 text-sm transition-all">{{ t('common.cancel') }}</button>

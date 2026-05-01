@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onUnmounted, watch } from 'vue'
+import { ref, computed, onUnmounted, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
 import { useNotificationStore } from '@/stores/notifications'
@@ -19,10 +19,18 @@ const finance = useFinanceStore()
 const router = useRouter()
 const route = useRoute()
 
+// Dynamic back route:
+// - routes with meta.parentRoute use that
+// - /blog when authenticated → go back to '/' (came from in-app)
+const backRoute = computed(() => {
+  if (route.meta.parentRoute) return route.meta.parentRoute as string
+  if (route.path === '/blog' && auth.isAuthenticated) return '/'
+  return null
+})
+
 function goBack() {
-  const parent = route.meta.parentRoute as string | undefined
-  if (parent) {
-    router.push(parent)
+  if (backRoute.value) {
+    router.push(backRoute.value)
   } else {
     router.back()
   }
@@ -68,7 +76,7 @@ function handleLogout() {
     <!-- Left -->
     <div class="flex items-center gap-3">
       <button
-        v-if="route.meta.parentRoute"
+        v-if="backRoute"
         class="text-text-secondary hover:bg-bg-hover hover:text-text-primary flex h-8.5 w-8.5 items-center justify-center rounded-lg transition-all duration-150"
         @click="goBack"
       >

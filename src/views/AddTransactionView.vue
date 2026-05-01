@@ -12,10 +12,11 @@ import { useCurrency } from '@/composables/useCurrency'
 import { getWalletBrand } from '@/constants/walletBrands'
 import { useI18n } from 'vue-i18n'
 import type { TransactionType } from '@/types'
-import { ArrowLeft, Check, ChevronDown, ArrowUpRight, ArrowDownRight, Calendar, Plus } from 'lucide-vue-next'
+import { ArrowLeft, Check, ArrowUpRight, ArrowDownRight, Plus } from 'lucide-vue-next'
 import CurrencyInput from '@/components/ui/CurrencyInput.vue'
+import CustomDatePicker from '@/components/ui/CustomDatePicker.vue'
 
-const { t, tm } = useI18n()
+const { t } = useI18n()
 const router = useRouter()
 const finance = useFinanceStore()
 const { currencySymbol } = useCurrency()
@@ -36,15 +37,6 @@ function getLocalDateString() {
 const date = ref(getLocalDateString())
 const showCategoryPicker = ref(false)
 
-function getDisplayDate(isoString: string) {
-  if (!isoString) return ''
-  const parts = isoString.split('-')
-  if (parts.length === 3) {
-    return `${parts[2]}/${parts[1]}/${parts[0]}` // dd/mm/yyyy
-  }
-  return isoString
-}
-
 // Hide auto-only categories from manual entry (bank_transfer, bank_receive, bank_fee are assigned by SMS/webhook)
 const AUTO_ONLY_KEYS = new Set(['bank_transfer', 'bank_receive', 'bank_fee'])
 
@@ -60,61 +52,6 @@ const isValid = computed(() => {
 })
 
 
-
-// --- Date Picker Logic ---
-const showDatePicker = ref(false)
-const datePickerRef = ref<HTMLElement | null>(null)
-
-const currentMonth = ref(new Date().getMonth())
-const currentYear = ref(new Date().getFullYear())
-
-const blankDays = computed(() => {
-  const d = new Date(currentYear.value, currentMonth.value, 1).getDay()
-  return d === 0 ? 6 : d - 1 // 0 (Sun) becomes 6, 1 (Mon) becomes 0
-})
-
-const daysInMonth = computed(() => {
-  return new Date(currentYear.value, currentMonth.value + 1, 0).getDate()
-})
-
-function changeMonth(step: number) {
-  let newMonth = currentMonth.value + step
-  let newYear = currentYear.value
-  if (newMonth > 11) { newMonth = 0; newYear++ }
-  else if (newMonth < 0) { newMonth = 11; newYear-- }
-  currentMonth.value = newMonth
-  currentYear.value = newYear
-}
-
-function selectDate(day: number) {
-  const y = currentYear.value
-  const m = String(currentMonth.value + 1).padStart(2, '0')
-  const d = String(day).padStart(2, '0')
-  date.value = `${y}-${m}-${d}`
-  showDatePicker.value = false
-}
-
-function isSameDate(day: number) {
-  if (!date.value) return false
-  const [y, m, d] = date.value.split('-').map(Number)
-  return d === day && m === currentMonth.value + 1 && y === currentYear.value
-}
-
-function selectToday() {
-  date.value = getLocalDateString()
-  const [y, m, d] = date.value.split('-').map(Number)
-  currentMonth.value = m - 1
-  currentYear.value = y
-  showDatePicker.value = false
-}
-
-import { useEventListener } from '@/composables/useEventListener'
-useEventListener(document, 'click', (e: MouseEvent) => {
-  if (datePickerRef.value && !datePickerRef.value.contains(e.target as Node)) {
-    showDatePicker.value = false
-  }
-})
-// --- End Date Picker Logic ---
 
 const isSubmitting = ref(false)
 
@@ -299,48 +236,11 @@ async function submit() {
     </div>
 
     <!-- Date (Custom Picker) -->
-    <div class="mb-8 relative" ref="datePickerRef">
-      <label class="text-text-secondary mb-2 block text-sm font-medium">{{ t('addTx.date') }}</label>
-      <button
-        @click="showDatePicker = !showDatePicker"
-        class="border-border-default bg-bg-surface text-text-primary hover:border-border-strong focus:border-accent focus:ring-accent-subtle flex w-full items-center justify-between rounded-xl border px-4 py-2.5 text-sm transition-all duration-150 focus:ring-2 focus:outline-none"
-      >
-        <span class="font-medium">{{ getDisplayDate(date) }}</span>
-        <Calendar :size="16" class="text-text-tertiary" />
-      </button>
-
-      <!-- Dropdown Calendar Modal -->
-      <transition name="slide">
-        <div
-          v-if="showDatePicker"
-          class="absolute bottom-full left-0 z-50 mb-2 w-full max-w-[18rem] rounded-xl border border-border-default bg-bg-elevated p-4 shadow-xl"
-        >
-          <div class="mb-4 flex items-center justify-between">
-            <button @click="changeMonth(-1)" class="p-1 hover:bg-bg-hover rounded-lg transition-colors"><ChevronDown :size="16" class="rotate-90" /></button>
-            <span class="text-sm font-bold">{{ (tm('months') as string[])[currentMonth] }} {{ currentYear }}</span>
-            <button @click="changeMonth(1)" class="p-1 hover:bg-bg-hover rounded-lg transition-colors"><ChevronDown :size="16" class="-rotate-90" /></button>
-          </div>
-          <div class="grid grid-cols-7 gap-1 mb-2 text-center text-[0.6875rem] text-text-tertiary font-semibold">
-            <span v-for="d in (tm('days.short') as string[])" :key="d">{{ d }}</span>
-          </div>
-          <div class="grid grid-cols-7 gap-1">
-            <div v-for="blank in blankDays" :key="'blank-' + blank" class="h-8"></div>
-            <button
-              v-for="day in daysInMonth"
-              :key="day"
-              @click="selectDate(day)"
-              class="h-8 w-full rounded-lg text-sm flex items-center justify-center transition-all duration-150"
-              :class="isSameDate(day) ? 'bg-accent text-white font-bold shadow-md' : 'hover:bg-bg-hover text-text-primary'"
-            >
-              {{ day }}
-            </button>
-          </div>
-          <div class="mt-4 flex gap-2">
-             <button @click="selectToday" class="btn-secondary w-full py-1.5 text-xs">{{ t('common.today') }}</button>
-             <button @click="showDatePicker = false" class="btn-secondary w-full py-1.5 text-xs">{{ t('common.close') }}</button>
-          </div>
-        </div>
-      </transition>
+    <div class="mb-8">
+      <CustomDatePicker
+        v-model="date"
+        :label="t('addTx.date')"
+      />
     </div>
 
     <!-- Submit -->
