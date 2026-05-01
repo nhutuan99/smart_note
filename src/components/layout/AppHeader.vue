@@ -310,7 +310,7 @@ function handleLogout() {
       <template v-if="auth.isAuthenticated">
         <button
           id="user-menu-btn"
-          class="hover:bg-bg-hover group flex items-center gap-2 rounded-lg px-2 py-1 transition-all duration-150"
+          class="group flex items-center gap-1.5 rounded-lg px-1.5 py-1 transition-all duration-150"
           @click="handleLogout"
         >
           <div
@@ -328,10 +328,12 @@ function handleLogout() {
             referrerpolicy="no-referrer"
             @error="imgError = true"
           />
-          <LogOut
-            :size="14"
-            class="text-text-tertiary opacity-100 lg:opacity-0 transition-opacity duration-150 group-hover:opacity-100"
-          />
+          <div
+            class="flex h-7 w-7 items-center justify-center rounded-lg bg-error/10 text-error transition-colors duration-150 group-hover:bg-error/20"
+            :title="t('common.logout')"
+          >
+            <LogOut :size="14" />
+          </div>
         </button>
       </template>
       <template v-else>

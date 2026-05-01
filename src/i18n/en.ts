@@ -27,7 +27,8 @@ export default {
     somethingWentWrong: 'Something went wrong',
     unsavedChanges: 'Unsaved changes',
     saved: 'Saved {time}',
-    tagsAdded: '{n} tag(s) added'
+    tagsAdded: '{n} tag(s) added',
+    logout: 'Logout'
   },
 
   // ── Time ──
@@ -75,6 +76,56 @@ export default {
   // ── Planning Hub ──
   planning: {
     description: 'Advanced financial control center. Plan, track goals, and master your cash flow.'
+  },
+
+  // ── Debt/Loan ──
+  debt: {
+    title: 'Debt / Loan Manager',
+    description: 'Track debts, loans, and payment schedules',
+    add: 'Add Debt',
+    addNew: 'Add New Debt/Loan',
+    borrowed: 'I borrowed',
+    lent: 'I lent',
+    remaining: 'Remaining',
+    paid: 'Paid',
+    overdue: 'Overdue',
+    dueSoon: 'Due soon',
+    active: 'Active',
+    completed: 'Completed',
+    counterparty: 'Person / Organization',
+    counterpartyPlaceholder: 'e.g. Bank ABC, John...',
+    titlePlaceholder: 'e.g. Car loan, Debt to John...',
+    interestRate: 'Interest rate (%/year)',
+    startDate: 'Start date',
+    dueDate: 'Due date',
+    totalBorrowed: 'Total borrowed',
+    totalLent: 'Total lent',
+    markPaid: 'Mark as paid',
+    empty: 'No debts or loans yet',
+    emptyHint: 'Add a mortgage, car loan, or personal debt to track',
+    deleteTitle: 'Delete Debt',
+    deleteMessage: 'This debt/loan will be permanently removed.',
+    count: '{n} items'
+  },
+
+  // ── Onboarding ──
+  onboarding: {
+    welcome: 'Welcome to FinNote!',
+    welcomeDesc: 'Smart personal finance management',
+    step1Title: 'Choose language',
+    step2Title: 'Create your first wallet',
+    step2Desc: 'Add a wallet to start tracking',
+    step3Title: 'Monthly budget',
+    step3Desc: 'Set a spending target (optional)',
+    step4Title: 'AI Assistant ready!',
+    step4Desc: 'FinNote has AI financial analysis, auto-sync bank transactions from SMS, and smart notes.',
+    skip: 'Skip',
+    next: 'Continue',
+    back: 'Back',
+    start: 'Get started!',
+    walletNamePlaceholder: 'e.g. Vietcombank, MoMo, Cash...',
+    initialBalance: 'Initial balance',
+    monthlyBudget: 'Monthly spending target'
   },
 
   // ── Notifications ──
@@ -178,7 +229,15 @@ export default {
     tableAmount: 'Amount',
     pagination: 'Showing {start}-{end} / {total}',
     tableDate: 'Date',
-    created: 'Created at'
+    created: 'Created at',
+    export: 'Export CSV',
+    exportSuccess: 'Export successful',
+    date: 'Date',
+    type: 'Type',
+    category: 'Category',
+    amount: 'Amount',
+    wallet: 'Wallet',
+    source: 'Source'
   },
 
   // ── Add Transaction ──

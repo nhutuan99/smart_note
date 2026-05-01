@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
-import { Target, Waypoints, Repeat, CreditCard, PiggyBank, ArrowRight } from 'lucide-vue-next'
+import { Target, Waypoints, Repeat, CreditCard, PiggyBank, ArrowRight, HandCoins } from 'lucide-vue-next'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -38,6 +38,14 @@ const features = [
     icon: CreditCard,
     color: '#f59e0b',
     route: '/subscriptions'
+  },
+  {
+    id: 'debts',
+    key: 'debt.title',
+    desc: 'debt.emptyHint',
+    icon: HandCoins,
+    color: '#ef4444',
+    route: '/debts'
   }
 ]
 </script>

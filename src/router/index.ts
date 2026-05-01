@@ -14,6 +14,11 @@ const router = createRouter({
       meta: { requiresGuest: true }
     },
     {
+      path: '/onboarding',
+      name: 'onboarding',
+      component: () => import('@/views/OnboardingView.vue')
+    },
+    {
       path: '/',
       name: 'dashboard',
       component: () => import('@/views/FinanceDashboardView.vue')
@@ -56,6 +61,12 @@ const router = createRouter({
       path: '/subscriptions',
       name: 'subscriptions',
       component: () => import('@/views/SubscriptionsView.vue'),
+      meta: { parentRoute: '/planning' }
+    },
+    {
+      path: '/debts',
+      name: 'debts',
+      component: () => import('@/views/DebtView.vue'),
       meta: { parentRoute: '/planning' }
     },
     {
@@ -118,9 +129,14 @@ router.beforeEach((to) => {
   }
 
   // Protected pages: redirect unauthenticated users to login
-  // This prevents broken pages when user hits browser back after logout/401
   if (!to.meta.requiresGuest && !to.meta.isPublic && to.path !== '/login' && !auth.isAuthenticated) {
     return { path: '/login', replace: true }
+  }
+
+  // Onboarding: redirect first-time authenticated users
+  const onboardingDone = localStorage.getItem('finnote_onboarding_completed') === 'true'
+  if (auth.isAuthenticated && !onboardingDone && to.path !== '/onboarding' && to.path !== '/login') {
+    return { path: '/onboarding', replace: true }
   }
 })
 

@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { Wallet, TrendingUp, TrendingDown, Plus, Eye, EyeOff } from 'lucide-vue-next'
+import { Wallet, TrendingUp, TrendingDown, Plus, Eye, EyeOff, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import { useFinancePolling } from '@/composables/useFinancePolling'
 import { useUiStore } from '@/stores/ui'
 import { formatVND } from '@/constants/finance'
@@ -43,6 +43,22 @@ function timeSince(dateStr: string) {
   return t('time.daysAgo', { n: Math.floor(h / 24) })
 }
 
+function prevMonth() {
+  const [y, m] = finance.selectedMonth.split('-').map(Number)
+  const d = new Date(y, m - 2, 1)
+  finance.selectedMonth = d.toISOString().substring(0, 7)
+}
+
+function nextMonth() {
+  const [y, m] = finance.selectedMonth.split('-').map(Number)
+  const d = new Date(y, m, 1)
+  finance.selectedMonth = d.toISOString().substring(0, 7)
+}
+
+const isCurrentMonth = computed(() =>
+  finance.selectedMonth === new Date().toISOString().substring(0, 7)
+)
+
 </script>
 <template>
     <!-- Weather Widget (Acts as Hero) -->
@@ -57,6 +73,27 @@ function timeSince(dateStr: string) {
         </button>
       </template>
     </WeatherWidget>
+
+    <!-- Month Selector -->
+    <div class="mb-5 flex items-center justify-center gap-2">
+      <button
+        @click="prevMonth"
+        class="flex h-8 w-8 items-center justify-center rounded-lg text-text-secondary hover:bg-bg-hover hover:text-text-primary transition-colors"
+      >
+        <ChevronLeft :size="18" />
+      </button>
+      <span class="text-sm font-bold text-text-primary min-w-[10rem] text-center">
+        {{ monthLabel }}
+      </span>
+      <button
+        @click="nextMonth"
+        :disabled="isCurrentMonth"
+        class="flex h-8 w-8 items-center justify-center rounded-lg transition-colors"
+        :class="isCurrentMonth ? 'text-text-disabled cursor-not-allowed' : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary'"
+      >
+        <ChevronRight :size="18" />
+      </button>
+    </div>
 
     <!-- Balance + Income/Expense Cards -->
     <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">

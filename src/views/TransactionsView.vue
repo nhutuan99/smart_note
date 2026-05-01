@@ -12,15 +12,18 @@ import {
   Plus,
   ChevronDown,
   Check,
-  Wallet
+  Wallet,
+  Download
 } from 'lucide-vue-next'
 
 import TransactionTable from '@/components/finance/TransactionTable.vue'
+import { useExportCsv } from '@/composables/useExportCsv'
 
 const { t, tm } = useI18n()
 const router = useRouter()
 const finance = useFinancePolling()
 const ui = useUiStore()
+const { exportTransactions } = useExportCsv()
 
 const AUTO_SOURCES: Transaction['source'][] = ['sms', 'notification', 'telegram']
 
@@ -80,13 +83,23 @@ useEventListener(document, 'click', handleClickOutside)
           {{ t('transactions.count', { n: finance.filteredTransactions.length }) }}
         </p>
       </div>
-      <button
-        @click="router.push('/transactions/add')"
-        class="btn-primary"
-      >
-        <Plus :size="16" />
-        {{ t('transactions.add') }}
-      </button>
+      <div class="flex items-center gap-2">
+        <button
+          @click="exportTransactions(finance.filteredTransactions)"
+          class="btn-secondary"
+          :disabled="finance.filteredTransactions.length === 0"
+        >
+          <Download :size="16" />
+          <span class="hidden sm:inline">{{ t('transactions.export') }}</span>
+        </button>
+        <button
+          @click="router.push('/transactions/add')"
+          class="btn-primary"
+        >
+          <Plus :size="16" />
+          {{ t('transactions.add') }}
+        </button>
+      </div>
     </div>
 
     <!-- Filters -->

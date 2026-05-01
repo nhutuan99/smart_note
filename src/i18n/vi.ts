@@ -27,7 +27,8 @@ export default {
     somethingWentWrong: 'Đã xảy ra lỗi',
     unsavedChanges: 'Chưa lưu',
     saved: 'Đã lưu {time}',
-    tagsAdded: 'Đã thêm {n} tag'
+    tagsAdded: 'Đã thêm {n} tag',
+    logout: 'Đăng xuất'
   },
 
   // ── Time ──
@@ -75,6 +76,56 @@ export default {
   // ── Planning Hub ──
   planning: {
     description: 'Trung tâm kiểm soát tài chính nâng cao. Lên kế hoạch, theo dõi mục tiêu và làm chủ dòng tiền của bạn.'
+  },
+
+  // ── Debt/Loan ──
+  debt: {
+    title: 'Quản lý nợ/vay',
+    description: 'Theo dõi các khoản nợ, khoản vay và lịch thanh toán',
+    add: 'Thêm khoản nợ',
+    addNew: 'Thêm khoản nợ/vay mới',
+    borrowed: 'Tôi vay',
+    lent: 'Tôi cho vay',
+    remaining: 'Còn lại',
+    paid: 'Đã trả',
+    overdue: 'Quá hạn',
+    dueSoon: 'Sắp đến hạn',
+    active: 'Đang hoạt động',
+    completed: 'Đã hoàn tất',
+    counterparty: 'Người/Tổ chức',
+    counterpartyPlaceholder: 'VD: Ngân hàng ABC, Anh Minh...',
+    titlePlaceholder: 'VD: Vay mua xe, Nợ anh A...',
+    interestRate: 'Lãi suất (%/năm)',
+    startDate: 'Ngày bắt đầu',
+    dueDate: 'Ngày đáo hạn',
+    totalBorrowed: 'Tổng nợ',
+    totalLent: 'Tổng cho vay',
+    markPaid: 'Đánh dấu đã trả',
+    empty: 'Chưa có khoản nợ/vay nào',
+    emptyHint: 'Thêm khoản vay mua nhà, xe, hoặc nợ bạn bè để theo dõi',
+    deleteTitle: 'Xóa khoản nợ',
+    deleteMessage: 'Khoản nợ/vay này sẽ bị xóa khỏi hệ thống.',
+    count: '{n} khoản'
+  },
+
+  // ── Onboarding ──
+  onboarding: {
+    welcome: 'Chào mừng đến với FinNote!',
+    welcomeDesc: 'Ứng dụng quản lý tài chính cá nhân thông minh',
+    step1Title: 'Chọn ngôn ngữ',
+    step2Title: 'Tạo ví đầu tiên',
+    step2Desc: 'Thêm ví tiền để bắt đầu theo dõi',
+    step3Title: 'Ngân sách tháng',
+    step3Desc: 'Đặt mục tiêu chi tiêu (có thể bỏ qua)',
+    step4Title: 'Trợ lý AI sẵn sàng!',
+    step4Desc: 'FinNote có AI phân tích tài chính, tự động ghi nhận giao dịch từ SMS ngân hàng, và ghi chú thông minh.',
+    skip: 'Bỏ qua',
+    next: 'Tiếp tục',
+    back: 'Quay lại',
+    start: 'Bắt đầu sử dụng!',
+    walletNamePlaceholder: 'VD: Vietcombank, MoMo, Tiền mặt...',
+    initialBalance: 'Số dư ban đầu',
+    monthlyBudget: 'Mục tiêu chi tiêu tháng'
   },
 
   // ── Notifications ──
@@ -178,7 +229,15 @@ export default {
     tableAmount: 'Số tiền',
     pagination: 'Hiển thị {start}-{end} / {total}',
     tableDate: 'Ngày',
-    created: 'Tạo lúc'
+    created: 'Tạo lúc',
+    export: 'Xuất CSV',
+    exportSuccess: 'Xuất file thành công',
+    date: 'Ngày',
+    type: 'Loại',
+    category: 'Danh mục',
+    amount: 'Số tiền',
+    wallet: 'Ví',
+    source: 'Nguồn'
   },
 
   // ── Add Transaction ──
