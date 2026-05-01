@@ -66,10 +66,13 @@ export async function handleUpdateNote(
   if (!existing) return errorResponse('Note not found', 404)
 
   const body = (await request.json()) as any
+  // Whitelist editable fields only — prevent id/createdAt overwrite
   const updated: NoteData = {
     ...existing,
-    ...body,
-    id: noteId,
+    title: body.title !== undefined ? body.title : existing.title,
+    content: body.content !== undefined ? body.content : existing.content,
+    tags: Array.isArray(body.tags) ? body.tags : existing.tags,
+    pinned: typeof body.pinned === 'boolean' ? body.pinned : existing.pinned,
     updatedAt: new Date().toISOString()
   }
 

@@ -1,5 +1,5 @@
 export function generateId(): string {
-  return Date.now().toString(36) + Math.random().toString(36).substring(2, 9)
+  return crypto.randomUUID().replace(/-/g, '').substring(0, 16)
 }
 
 export async function hashPassword(password: string): Promise<string> {

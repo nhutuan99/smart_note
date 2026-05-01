@@ -5,6 +5,7 @@ import { useBlogStore } from '@/stores/blog'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
 import { marked } from 'marked'
+import DOMPurify from 'dompurify'
 import { ArrowLeft, Calendar, Hash, User as UserIcon, Clock, BookOpen, ArrowRight, Zap, BrainCircuit, LayoutDashboard } from 'lucide-vue-next'
 
 const { t, locale } = useI18n()
@@ -28,7 +29,7 @@ onMounted(async () => {
   if (slug) {
     const blog = await blogStore.fetchBlogBySlug(slug)
     if (blog) {
-      contentHtml.value = await marked(blog.content, { async: true })
+      contentHtml.value = DOMPurify.sanitize(await marked(blog.content, { async: true }))
       
       const seoTitle = blog.seoMeta?.title || blog.title
       const seoDesc = blog.seoMeta?.description || blog.excerpt

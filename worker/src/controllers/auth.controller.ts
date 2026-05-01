@@ -13,6 +13,8 @@ const DEFAULT_WALLETS: Omit<WalletData, 'id'>[] = [
 export async function handleRegister(request: Request, env: Env): Promise<Response> {
   const { email, password, name } = (await request.json()) as any
   if (!email || !password) return errorResponse('Email and password required')
+  if (typeof password !== 'string' || password.length < 6) return errorResponse('Mật khẩu phải có ít nhất 6 ký tự')
+  if (typeof email !== 'string' || !email.includes('@')) return errorResponse('Email không hợp lệ')
 
   const usersIndex =
     (await getJSON<Record<string, string>>(env.SMART_NOTE_KV, 'users/_index')) || {}

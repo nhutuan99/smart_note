@@ -251,6 +251,12 @@ export async function updateWebhookStatus(userId: string, env: Env, updateData: 
 }
 
 export async function handleSmsWebhook(request: Request, env: Env): Promise<Response> {
+  // Validate webhook secret — prevent unauthorized transaction injection
+  const secret = request.headers.get('X-Webhook-Secret')
+  if (secret !== env.TELEGRAM_WEBHOOK_SECRET) {
+    return errorResponse('Unauthorized webhook', 401)
+  }
+
   const contentType = request.headers.get('content-type') || ''
   const url = new URL(request.url)
   const userId = url.searchParams.get('userId')

@@ -88,8 +88,10 @@ import {
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
+    const requestOrigin = request.headers.get('Origin')
+
     if (request.method === 'OPTIONS') {
-      return new Response(null, { headers: corsHeaders() })
+      return new Response(null, { headers: corsHeaders(requestOrigin) })
     }
 
     const url = new URL(request.url)
@@ -350,7 +352,11 @@ export default {
 
       return errorResponse('Not found', 404)
     } catch (err: any) {
-      return errorResponse(err.message || 'Internal error', 500)
+      // Sanitize error messages — don't leak internal details
+      const safeMessage = typeof err.message === 'string' && err.message.length < 200
+        ? err.message
+        : 'Internal server error'
+      return errorResponse(safeMessage, 500)
     }
   }
 }

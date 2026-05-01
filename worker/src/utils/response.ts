@@ -1,6 +1,14 @@
-export function corsHeaders(): HeadersInit {
+const ALLOWED_ORIGINS = [
+  'https://finnote-f4n.pages.dev',
+  'http://localhost:5173', // dev
+]
+
+export function corsHeaders(requestOrigin?: string | null): HeadersInit {
+  const origin = requestOrigin && ALLOWED_ORIGINS.includes(requestOrigin)
+    ? requestOrigin
+    : ALLOWED_ORIGINS[0]
   return {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': origin,
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Webhook-Secret',
     'Content-Type': 'application/json'

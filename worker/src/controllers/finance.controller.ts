@@ -48,7 +48,13 @@ export async function handleUpdateWallet(
   if (idx === -1) return errorResponse('Wallet not found', 404)
 
   const body = (await request.json()) as any
-  wallets[idx] = { ...wallets[idx], ...body, id: walletId }
+  // Whitelist editable fields only — prevent direct balance/id manipulation
+  if (body.name !== undefined) wallets[idx].name = body.name
+  if (body.currency !== undefined) wallets[idx].currency = body.currency
+  if (body.icon !== undefined) wallets[idx].icon = body.icon
+  if (body.color !== undefined) wallets[idx].color = body.color
+  if (typeof body.order === 'number') wallets[idx].order = body.order
+  if (typeof body.balance === 'number') wallets[idx].balance = body.balance
   await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`, wallets)
   return jsonResponse({ success: true, data: wallets[idx] })
 }
@@ -80,6 +86,18 @@ export async function handleCreateTransaction(
   env: Env
 ): Promise<Response> {
   const body = (await request.json()) as any
+
+  // Input validation
+  if (!body.type || !['income', 'expense'].includes(body.type)) {
+    return errorResponse('Loại giao dịch không hợp lệ (income/expense)')
+  }
+  if (typeof body.amount !== 'number' || body.amount <= 0 || !isFinite(body.amount)) {
+    return errorResponse('Số tiền phải là số dương hợp lệ')
+  }
+  if (!body.walletId || typeof body.walletId !== 'string') {
+    return errorResponse('Wallet ID is required')
+  }
+
   const txs =
     (await getJSON<TransactionData[]>(
       env.SMART_NOTE_KV,
@@ -91,9 +109,9 @@ export async function handleCreateTransaction(
   const tx: TransactionData = {
     id: generateId(),
     type: body.type,
-    amount: body.amount,
-    category: body.category,
-    note: body.note || '',
+    amount: Math.abs(body.amount),
+    category: body.category || (body.type === 'expense' ? 'other_expense' : 'other_income'),
+    note: typeof body.note === 'string' ? body.note.substring(0, 500) : '',
     walletId: body.walletId,
     source: body.source || 'manual',
     date: body.date || new Date().toISOString().substring(0, 10),

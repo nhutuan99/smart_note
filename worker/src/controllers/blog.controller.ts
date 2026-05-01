@@ -145,10 +145,17 @@ export async function handleUpdateBlog(userId: string, slug: string, request: Re
   if (!existing) return errorResponse('Blog not found', 404)
 
   const body = (await request.json()) as any
+  // Whitelist editable fields only — prevent id/author/createdAt overwrite
   const updated: BlogData = {
     ...existing,
-    ...body,
-    slug, // dont allow slug change for simplicity right now
+    title: body.title !== undefined ? body.title : existing.title,
+    content: body.content !== undefined ? body.content : existing.content,
+    excerpt: body.excerpt !== undefined ? body.excerpt : existing.excerpt,
+    tags: Array.isArray(body.tags) ? body.tags : existing.tags,
+    imageUrl: body.imageUrl !== undefined ? body.imageUrl : existing.imageUrl,
+    seoMeta: body.seoMeta !== undefined ? body.seoMeta : existing.seoMeta,
+    published: typeof body.published === 'boolean' ? body.published : existing.published,
+    slug, // don't allow slug change
     updatedAt: new Date().toISOString()
   }
 
