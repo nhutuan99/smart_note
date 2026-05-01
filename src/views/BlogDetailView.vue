@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
+import { useSeoMeta, useHead } from '@unhead/vue'
 import { ArrowLeft, Calendar, Hash, User as UserIcon, Clock, BookOpen, ArrowRight, Zap, BrainCircuit, LayoutDashboard } from 'lucide-vue-next'
 
 const { t, locale } = useI18n()
@@ -35,78 +36,50 @@ onMounted(async () => {
       const seoDesc = blog.seoMeta?.description || blog.excerpt
       const blogUrl = `https://finnote-f4n.pages.dev/blog/${blog.slug}`
       
-      // Update document title for SEO
-      document.title = `${seoTitle} | FinNote Blog`
-      
-      // Helper to set meta tag
-      const setMeta = (attr: string, key: string, content: string) => {
-        let el = document.querySelector(`meta[${attr}="${key}"]`) as HTMLMetaElement
-        if (!el) {
-          el = document.createElement('meta')
-          el.setAttribute(attr, key)
-          document.head.appendChild(el)
-        }
-        el.setAttribute('content', content)
-      }
-      
-      // Description
-      setMeta('name', 'description', seoDesc)
-      setMeta('name', 'keywords', (blog.seoMeta?.keywords || '') + ',' + (blog.tags || []).join(','))
-      
-      // Open Graph
-      setMeta('property', 'og:type', 'article')
-      setMeta('property', 'og:url', blogUrl)
-      setMeta('property', 'og:title', seoTitle)
-      setMeta('property', 'og:description', seoDesc)
-      if (blog.imageUrl) setMeta('property', 'og:image', blog.imageUrl)
-      setMeta('property', 'og:site_name', 'FinNote Blog')
-      
-      // Article tags
-      setMeta('property', 'article:published_time', blog.createdAt)
-      setMeta('property', 'article:author', blog.author?.name || 'FinNote')
-      blog.tags?.forEach(tag => {
-        const el = document.createElement('meta')
-        el.setAttribute('property', 'article:tag')
-        el.setAttribute('content', tag)
-        document.head.appendChild(el)
-      })
-      
-      // Twitter Card
-      setMeta('name', 'twitter:card', 'summary_large_image')
-      setMeta('name', 'twitter:title', seoTitle)
-      setMeta('name', 'twitter:description', seoDesc)
-      if (blog.imageUrl) setMeta('name', 'twitter:image', blog.imageUrl)
-      
-      // Canonical
-      let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement
-      if (!canonical) {
-        canonical = document.createElement('link')
-        canonical.setAttribute('rel', 'canonical')
-        document.head.appendChild(canonical)
-      }
-      canonical.setAttribute('href', blogUrl)
-      
-      // JSON-LD Article
-      const jsonLd = {
-        '@context': 'https://schema.org',
-        '@type': 'Article',
-        headline: seoTitle,
+      // Standard Vue 3 way to handle SEO meta tags via @unhead/vue
+      useSeoMeta({
+        title: `${seoTitle} | FinNote Blog`,
         description: seoDesc,
-        image: blog.imageUrl || '',
-        author: { '@type': 'Person', name: blog.author?.name || 'FinNote' },
-        publisher: { '@type': 'Organization', name: 'FinNote', logo: { '@type': 'ImageObject', url: 'https://finnote-f4n.pages.dev/images/logo-512.png' } },
-        datePublished: blog.createdAt,
-        dateModified: blog.updatedAt || blog.createdAt,
-        mainEntityOfPage: { '@type': 'WebPage', '@id': blogUrl },
-        keywords: (blog.tags || []).join(', ')
-      }
-      const ldScript = document.createElement('script')
-      ldScript.type = 'application/ld+json'
-      ldScript.textContent = JSON.stringify(jsonLd)
-      ldScript.id = 'blog-jsonld'
-      // Remove old one if exists
-      document.getElementById('blog-jsonld')?.remove()
-      document.head.appendChild(ldScript)
+        keywords: (blog.seoMeta?.keywords || '') + ',' + (blog.tags || []).join(','),
+        ogType: 'article',
+        ogUrl: blogUrl,
+        ogTitle: seoTitle,
+        ogDescription: seoDesc,
+        ogImage: blog.imageUrl || '',
+        ogSiteName: 'FinNote Blog',
+        articlePublishedTime: blog.createdAt,
+        articleAuthor: [blog.author?.name || 'FinNote'],
+        articleTag: blog.tags || [],
+        twitterCard: 'summary_large_image',
+        twitterTitle: seoTitle,
+        twitterDescription: seoDesc,
+        twitterImage: blog.imageUrl || ''
+      })
+
+      // JSON-LD and Canonical link
+      useHead({
+        link: [
+          { rel: 'canonical', href: blogUrl }
+        ],
+        script: [
+          {
+            type: 'application/ld+json',
+            innerHTML: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'Article',
+              headline: seoTitle,
+              description: seoDesc,
+              image: blog.imageUrl || '',
+              author: { '@type': 'Person', name: blog.author?.name || 'FinNote' },
+              publisher: { '@type': 'Organization', name: 'FinNote', logo: { '@type': 'ImageObject', url: 'https://finnote-f4n.pages.dev/images/logo-512.png' } },
+              datePublished: blog.createdAt,
+              dateModified: blog.updatedAt || blog.createdAt,
+              mainEntityOfPage: { '@type': 'WebPage', '@id': blogUrl },
+              keywords: (blog.tags || []).join(', ')
+            })
+          }
+        ]
+      })
     } else {
       router.replace('/blog')
     }
