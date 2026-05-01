@@ -7,16 +7,35 @@ import { useI18n } from 'vue-i18n'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import { useSeoMeta, useHead } from '@unhead/vue'
-import { ArrowLeft, Calendar, Hash, User as UserIcon, Clock, BookOpen, ArrowRight, Zap, BrainCircuit, LayoutDashboard } from 'lucide-vue-next'
+import { ArrowLeft, Calendar, Hash, User as UserIcon, Clock, BookOpen, ArrowRight, Zap, BrainCircuit, LayoutDashboard, Share2 } from 'lucide-vue-next'
+import { useUiStore } from '@/stores/ui'
 
 const { t, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const blogStore = useBlogStore()
 const authStore = useAuthStore()
+const uiStore = useUiStore()
 
 const contentHtml = ref('')
 const showTooltip = ref(false)
+
+const shareBlog = async () => {
+  const url = `https://finnote-f4n.pages.dev/blog/${blogStore.currentBlog?.slug}`
+  const title = blogStore.currentBlog?.title || 'FinNote Blog'
+  const text = blogStore.currentBlog?.excerpt || ''
+  
+  if (navigator.share) {
+    try {
+      await navigator.share({ title, text, url })
+    } catch (err) {
+      console.log('Error sharing', err)
+    }
+  } else {
+    navigator.clipboard.writeText(url)
+    uiStore.addToast({ message: t('common.copied') || 'Copied link to clipboard!', type: 'success' })
+  }
+}
 
 // Estimate reading time
 const readingTime = computed(() => {
@@ -195,6 +214,12 @@ const formatDate = (dateStr: string) => {
           <div class="blog-meta__item">
             <Clock :size="14" />
             <span>{{ readingTime }} {{ t('blog.minRead') }}</span>
+          </div>
+          <div class="ml-auto">
+            <button @click="shareBlog" class="flex items-center gap-1.5 text-text-secondary hover:text-accent transition-colors px-2.5 py-1.5 rounded-lg hover:bg-accent/10 font-medium">
+              <Share2 :size="14" />
+              <span class="hidden sm:inline">Share</span>
+            </button>
           </div>
         </div>
       </div>
