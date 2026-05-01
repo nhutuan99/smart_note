@@ -7,6 +7,7 @@ import { useAi } from '@/composables/useGemini'
 import { formatMoneyShort } from '@/composables/useCurrency'
 import { Target, AlertTriangle, CheckCircle2, Bot, Sparkles, TrendingDown } from 'lucide-vue-next'
 import type { BudgetGoal, CategoryBudget } from '@/types'
+import CurrencyInput from '@/components/ui/CurrencyInput.vue'
 
 const { t } = useI18n()
 const finance = useFinanceStore()
@@ -22,7 +23,7 @@ function saveBudget(b: BudgetGoal) { localStorage.setItem(STORAGE_KEY, JSON.stri
 
 const budget = ref<BudgetGoal | null>(loadBudget())
 const showSetup = ref(!budget.value)
-const budgetInput = ref('')
+const budgetInput = ref<number>(0)
 const aiPlanGenerated = ref(false)
 
 // Computed stats
@@ -49,7 +50,7 @@ const alerts = computed(() => {
 })
 
 async function setupBudget() {
-  const amt = parseInt(budgetInput.value.replace(/\D/g, '') || '0')
+  const amt = budgetInput.value
   if (amt <= 0) return
 
   // Create budget with AI-generated category allocation
@@ -91,8 +92,8 @@ function resetBudget() { budget.value = null; showSetup.value = true; localStora
         <div class="bg-accent/10 flex h-10 w-10 items-center justify-center rounded-xl"><Target :size="20" class="text-accent" /></div>
         <div><h3 class="font-semibold">{{ t('budget.setupTitle') }}</h3><p class="text-text-tertiary text-sm">{{ t('budget.setupHint') }}</p></div>
       </div>
-      <input v-model="budgetInput" type="tel" inputmode="numeric" :placeholder="t('budget.inputPlaceholder')" class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-3 text-center text-2xl font-bold transition-all focus:ring-2 focus:outline-none mb-4 tracking-wide" />
-      <button @click="setupBudget" :disabled="parseInt(budgetInput.replace(/\D/g,'') || '0') <= 0 || aiLoading" class="btn-primary w-full justify-center py-3 disabled:opacity-40">
+      <CurrencyInput v-model="budgetInput" :placeholder="t('budget.inputPlaceholder')" className="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-3 text-center text-2xl font-bold transition-all focus:ring-2 focus:outline-none mb-4 tracking-wide" />
+      <button @click="setupBudget" :disabled="budgetInput <= 0 || aiLoading" class="btn-primary w-full justify-center py-3 disabled:opacity-40">
         <Sparkles :size="16" /> {{ aiLoading ? t('dashboard.aiAnalyzing') : t('budget.saveAndAnalyze') }}
       </button>
     </div>

@@ -5,6 +5,7 @@ import { useUiStore } from '@/stores/ui'
 import { formatVND } from '@/constants/finance'
 import type { SavingsGoal } from '@/types'
 import { Plus, Trash2, Target, ArrowUpRight, ArrowDownRight, PartyPopper, X } from 'lucide-vue-next'
+import CurrencyInput from '@/components/ui/CurrencyInput.vue'
 
 const { t } = useI18n()
 const ui = useUiStore()
@@ -16,35 +17,35 @@ function persist(g: SavingsGoal[]) { localStorage.setItem(STORAGE_KEY, JSON.stri
 const goals = ref<SavingsGoal[]>(load())
 const showAdd = ref(false)
 const showDeposit = ref<string | null>(null)
-const depositAmount = ref('')
+const depositAmount = ref<number>(0)
 
 const ICONS = ['🏖️','💻','🏠','🚗','🎓','💍','🏥','🎮','📱','✈️','🎯','💰']
 const COLORS = ['#10b981','#3b82f6','#f59e0b','#8b5cf6','#ec4899','#ef4444','#14b8a6','#6366f1']
 
-const form = ref({ name: '', icon: '🎯', color: '#10b981', targetAmount: '', deadline: '' })
+const form = ref({ name: '', icon: '🎯', color: '#10b981', targetAmount: 0, deadline: '' })
 
 function addGoal() {
-  const amt = parseInt(form.value.targetAmount.replace(/\D/g, '') || '0')
+  const amt = form.value.targetAmount
   if (!form.value.name.trim() || amt <= 0) return
   goals.value.push({ id: crypto.randomUUID(), name: form.value.name.trim(), icon: form.value.icon, color: form.value.color, targetAmount: amt, currentAmount: 0, deadline: form.value.deadline || undefined, createdAt: new Date().toISOString() })
   persist(goals.value); showAdd.value = false
-  form.value = { name: '', icon: '🎯', color: '#10b981', targetAmount: '', deadline: '' }
+  form.value = { name: '', icon: '🎯', color: '#10b981', targetAmount: 0, deadline: '' }
 }
 
 function deposit(id: string) {
-  const amt = parseInt(depositAmount.value.replace(/\D/g, '') || '0')
+  const amt = depositAmount.value
   if (amt <= 0) return
   const g = goals.value.find(x => x.id === id)
   if (g) { g.currentAmount = Math.min(g.currentAmount + amt, g.targetAmount) }
-  persist(goals.value); showDeposit.value = null; depositAmount.value = ''
+  persist(goals.value); showDeposit.value = null; depositAmount.value = 0
 }
 
 function withdraw(id: string) {
-  const amt = parseInt(depositAmount.value.replace(/\D/g, '') || '0')
+  const amt = depositAmount.value
   if (amt <= 0) return
   const g = goals.value.find(x => x.id === id)
   if (g) { g.currentAmount = Math.max(g.currentAmount - amt, 0) }
-  persist(goals.value); showDeposit.value = null; depositAmount.value = ''
+  persist(goals.value); showDeposit.value = null; depositAmount.value = 0
 }
 
 async function deleteGoal(id: string) {
@@ -108,14 +109,14 @@ const totalTarget = computed(() => goals.value.reduce((s, g) => s + g.targetAmou
               <button v-for="c in COLORS" :key="c" @click="form.color = c" class="h-7 w-7 rounded-full border-2 transition-all" :class="form.color === c ? 'scale-110 border-white' : 'border-transparent'" :style="{ backgroundColor: c }"></button>
             </div>
           </div>
-          <input v-model="form.targetAmount" type="tel" inputmode="numeric" :placeholder="t('savings.targetPlaceholder')" class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border px-4 py-2.5 text-sm transition-all focus:ring-2 focus:outline-none" />
+          <CurrencyInput v-model="form.targetAmount" :placeholder="t('savings.targetPlaceholder')" className="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border px-4 py-2.5 text-sm transition-all focus:ring-2 focus:outline-none" />
           <div>
             <label class="text-text-secondary mb-2 block text-sm font-medium">{{ t('savings.deadline') }}</label>
             <input v-model="form.deadline" type="date" class="border-border-default bg-bg-elevated text-text-primary focus:border-accent focus:ring-accent-subtle w-full rounded-lg border px-4 py-2.5 text-sm transition-all focus:ring-2 focus:outline-none" />
           </div>
           <div class="flex gap-2">
             <button @click="showAdd = false" class="border-border-default text-text-secondary hover:bg-bg-hover flex-1 rounded-lg border py-2 text-sm transition-all">{{ t('common.cancel') }}</button>
-            <button @click="addGoal" :disabled="!form.name.trim() || parseInt(form.targetAmount.replace(/\D/g,'') || '0') <= 0" class="btn-primary flex-1 justify-center py-2 disabled:opacity-40">{{ t('common.add') }}</button>
+            <button @click="addGoal" :disabled="!form.name.trim() || form.targetAmount <= 0" class="btn-primary flex-1 justify-center py-2 disabled:opacity-40">{{ t('common.add') }}</button>
           </div>
         </div>
       </div>
@@ -160,10 +161,10 @@ const totalTarget = computed(() => goals.value.reduce((s, g) => s + g.targetAmou
 
         <!-- Deposit/Withdraw -->
         <div v-if="showDeposit === g.id" class="flex gap-2 mt-3">
-          <input v-model="depositAmount" type="tel" inputmode="numeric" placeholder="0" class="border-border-default bg-bg-elevated text-text-primary focus:border-accent w-full rounded-lg border px-3 py-1.5 text-sm focus:ring-1 focus:ring-accent-subtle focus:outline-none flex-1" autofocus />
+          <CurrencyInput v-model="depositAmount" placeholder="0" className="border-border-default bg-bg-elevated text-text-primary focus:border-accent w-full rounded-lg border px-3 py-1.5 text-sm focus:ring-1 focus:ring-accent-subtle focus:outline-none flex-1" />
           <button @click="deposit(g.id)" class="bg-success/15 text-success hover:bg-success/25 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all"><ArrowUpRight :size="14" /></button>
           <button @click="withdraw(g.id)" class="bg-error/15 text-error hover:bg-error/25 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all"><ArrowDownRight :size="14" /></button>
-          <button @click="showDeposit = null; depositAmount = ''" class="text-text-tertiary hover:text-text-primary p-1"><X :size="14" /></button>
+          <button @click="showDeposit = null; depositAmount = 0" class="text-text-tertiary hover:text-text-primary p-1"><X :size="14" /></button>
         </div>
         <button v-else @click="showDeposit = g.id" class="mt-3 w-full border-border-default text-text-secondary hover:bg-bg-hover hover:text-text-primary rounded-lg border py-2 text-xs font-medium transition-all">{{ t('savings.addMoney') }}</button>
       </div>

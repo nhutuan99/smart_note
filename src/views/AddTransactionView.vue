@@ -13,6 +13,7 @@ import { getWalletBrand } from '@/constants/walletBrands'
 import { useI18n } from 'vue-i18n'
 import type { TransactionType } from '@/types'
 import { ArrowLeft, Check, ChevronDown, ArrowUpRight, ArrowDownRight, Calendar, Plus } from 'lucide-vue-next'
+import CurrencyInput from '@/components/ui/CurrencyInput.vue'
 
 const { t, tm } = useI18n()
 const router = useRouter()
@@ -22,7 +23,7 @@ const { currencySymbol } = useCurrency()
 onMounted(() => finance.fetchWallets())
 
 const type = ref<TransactionType>('expense')
-const amount = ref('')
+const amount = ref<number>(0)
 const category = ref('food')
 const walletId = ref(finance.wallets[0]?.id || '')
 const note = ref('')
@@ -55,35 +56,10 @@ const availableCategories = computed(() => {
 const selectedCategory = computed(() => getCategoryConfig(category.value))
 
 const isValid = computed(() => {
-  const amt = parseFloat(amount.value.replace(/[,.]/g, ''))
-  return amt > 0 && walletId.value && category.value
+  return amount.value > 0 && walletId.value && category.value
 })
 
-function handleAmountInput(e: Event) {
-  const input = e.target as HTMLInputElement
-  // Only allow numbers
-  const raw = input.value.replace(/[^0-9]/g, '')
-  amount.value = raw
-}
 
-/** Block non-numeric keys at the keydown level to prevent text from appearing. */
-function blockNonNumeric(e: KeyboardEvent) {
-  // Allow control keys: Backspace, Delete, Tab, Escape, Enter, arrows
-  const allowed = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter',
-    'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End']
-  if (allowed.includes(e.key)) return
-  // Allow Ctrl/Cmd shortcuts (copy, paste, select all)
-  if (e.ctrlKey || e.metaKey) return
-  // Block anything that's not a digit
-  if (!/^\d$/.test(e.key)) {
-    e.preventDefault()
-  }
-}
-
-function formattedAmount() {
-  const num = parseInt(amount.value || '0')
-  return num > 0 ? new Intl.NumberFormat('vi-VN').format(num) : ''
-}
 
 // --- Date Picker Logic ---
 const showDatePicker = ref(false)
@@ -145,12 +121,11 @@ const isSubmitting = ref(false)
 async function submit() {
   if (!isValid.value || isSubmitting.value) return
   isSubmitting.value = true
-  const amt = parseInt(amount.value.replace(/[,.]/g, ''))
 
   try {
     await finance.addTransaction({
       type: type.value,
-      amount: amt,
+      amount: amount.value,
       category: category.value,
       note: note.value,
       walletId: walletId.value,
@@ -211,15 +186,10 @@ async function submit() {
     <div class="mb-6">
       <label class="text-text-secondary mb-2 block text-sm font-medium">{{ t('addTx.amount') }}</label>
       <div class="relative">
-        <input
-          :value="formattedAmount()"
-          @input="handleAmountInput"
-          @keydown="blockNonNumeric"
-          type="tel"
-          inputmode="numeric"
-          pattern="[0-9]*"
+        <CurrencyInput
+          v-model="amount"
           placeholder="0"
-          class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-4 text-center text-3xl font-bold transition-all duration-150 focus:ring-2 focus:outline-none tracking-wide"
+          className="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-4 text-center text-3xl font-bold transition-all duration-150 focus:ring-2 focus:outline-none tracking-wide"
         />
       </div>
     </div>

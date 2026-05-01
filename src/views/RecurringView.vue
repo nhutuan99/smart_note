@@ -7,6 +7,7 @@ import { useUiStore } from '@/stores/ui'
 import { useI18n } from 'vue-i18n'
 import type { RecurringTransaction, RecurringFrequency } from '@/types'
 import { Plus, Trash2, Repeat, ToggleLeft, ToggleRight, ArrowUpRight, ArrowDownRight, Clock } from 'lucide-vue-next'
+import CurrencyInput from '@/components/ui/CurrencyInput.vue'
 
 const { t } = useI18n()
 const finance = useFinanceStore()
@@ -19,20 +20,20 @@ function persist(items: RecurringTransaction[]) { localStorage.setItem(STORAGE_K
 
 const items = ref<RecurringTransaction[]>(loadData())
 const showAdd = ref(false)
-const form = ref({ type: 'expense' as 'income'|'expense', amount: '', category: 'food', walletId: '', note: '', frequency: 'monthly' as RecurringFrequency, nextDate: new Date().toISOString().substring(0, 10) })
+const form = ref({ type: 'expense' as 'income'|'expense', amount: 0, category: 'food', walletId: '', note: '', frequency: 'monthly' as RecurringFrequency, nextDate: new Date().toISOString().substring(0, 10) })
 onMounted(() => { if (finance.wallets.length && !form.value.walletId) form.value.walletId = finance.wallets[0].id })
 
 const freqOpts: { key: RecurringFrequency; icon: string }[] = [
   { key: 'daily', icon: '📅' }, { key: 'weekly', icon: '📆' }, { key: 'monthly', icon: '🗓️' }, { key: 'yearly', icon: '🎯' }
 ]
 const cats = computed(() => form.value.type === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES)
-const valid = computed(() => parseInt(form.value.amount.replace(/\D/g,'') || '0') > 0 && form.value.walletId && form.value.nextDate)
+const valid = computed(() => form.value.amount > 0 && form.value.walletId && form.value.nextDate)
 
 function add() {
   if (!valid.value) return
-  items.value.push({ id: crypto.randomUUID(), type: form.value.type, amount: parseInt(form.value.amount.replace(/\D/g,'')), category: form.value.category, walletId: form.value.walletId, note: form.value.note, frequency: form.value.frequency, nextDate: form.value.nextDate, enabled: true, createdAt: new Date().toISOString() })
+  items.value.push({ id: crypto.randomUUID(), type: form.value.type, amount: form.value.amount, category: form.value.category, walletId: form.value.walletId, note: form.value.note, frequency: form.value.frequency, nextDate: form.value.nextDate, enabled: true, createdAt: new Date().toISOString() })
   persist(items.value); showAdd.value = false
-  form.value = { type: 'expense', amount: '', category: 'food', walletId: finance.wallets[0]?.id || '', note: '', frequency: 'monthly', nextDate: new Date().toISOString().substring(0, 10) }
+  form.value = { type: 'expense', amount: 0, category: 'food', walletId: finance.wallets[0]?.id || '', note: '', frequency: 'monthly', nextDate: new Date().toISOString().substring(0, 10) }
 }
 function toggle(id: string) { const i = items.value.find(r => r.id === id); if (i) i.enabled = !i.enabled; persist(items.value) }
 async function del(id: string) {
@@ -76,7 +77,7 @@ const monthlyEst = computed(() => {
             <button class="flex flex-1 items-center justify-center gap-2 py-2.5 text-sm font-medium transition-all" :class="form.type === 'expense' ? 'bg-error/10 text-error' : 'bg-bg-surface text-text-tertiary hover:bg-bg-hover'" @click="form.type = 'expense'; form.category = 'food'"><ArrowDownRight :size="14" /> {{ t('addTx.expense') }}</button>
             <button class="flex flex-1 items-center justify-center gap-2 py-2.5 text-sm font-medium transition-all" :class="form.type === 'income' ? 'bg-success/10 text-success' : 'bg-bg-surface text-text-tertiary hover:bg-bg-hover'" @click="form.type = 'income'; form.category = 'salary'"><ArrowUpRight :size="14" /> {{ t('addTx.income') }}</button>
           </div>
-          <input v-model="form.amount" type="tel" inputmode="numeric" :placeholder="t('addTx.amount')" class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border px-4 py-2.5 text-sm transition-all focus:ring-2 focus:outline-none" />
+          <CurrencyInput v-model="form.amount" :placeholder="t('addTx.amount')" className="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border px-4 py-2.5 text-sm transition-all focus:ring-2 focus:outline-none" />
           <div>
             <label class="text-text-secondary mb-2 block text-sm font-medium">{{ t('recurring.frequency') }}</label>
             <div class="grid grid-cols-4 gap-2">

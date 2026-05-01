@@ -68,7 +68,13 @@ export default {
     recurring: 'Recurring',
     budget: 'Budget',
     savings: 'Savings',
-    subscriptions: 'Subscriptions'
+    subscriptions: 'Subscriptions',
+    planning: 'Financial Hub'
+  },
+
+  // ── Planning Hub ──
+  planning: {
+    description: 'Advanced financial control center. Plan, track goals, and master your cash flow.'
   },
 
   // ── Notifications ──

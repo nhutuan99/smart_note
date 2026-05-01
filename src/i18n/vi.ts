@@ -68,7 +68,13 @@ export default {
     recurring: 'Định kỳ',
     budget: 'Ngân sách',
     savings: 'Tiết kiệm',
-    subscriptions: 'Đăng ký DV'
+    subscriptions: 'Đăng ký DV',
+    planning: 'Kế hoạch tài chính'
+  },
+
+  // ── Planning Hub ──
+  planning: {
+    description: 'Trung tâm kiểm soát tài chính nâng cao. Lên kế hoạch, theo dõi mục tiêu và làm chủ dòng tiền của bạn.'
   },
 
   // ── Notifications ──
