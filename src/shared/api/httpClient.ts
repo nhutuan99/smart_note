@@ -121,13 +121,16 @@ function getToken(): string | null {
   return localStorage.getItem(AUTH_TOKEN_KEY)
 }
 
-function buildHeaders(hasBody: boolean): HeadersInit {
+function buildHeaders(hasBody: boolean, isExternal: boolean = false): HeadersInit {
   const headers: Record<string, string> = {}
-  const token = getToken()
-
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`
+  
+  if (!isExternal) {
+    const token = getToken()
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
   }
+
   if (hasBody) {
     headers['Content-Type'] = 'application/json'
   }
@@ -164,6 +167,12 @@ async function handleResponse<T>(response: Response, retryFn?: () => Promise<T>)
     throw new Error(errorMsg)
   }
 
+  // If it's an external URL, the response is likely raw JSON, not our { success, data } wrapper
+  if (response.url && !response.url.includes(API_BASE) && response.url.startsWith('http')) {
+    const rawJson = await response.json()
+    return rawJson as T
+  }
+
   const json: ApiResponse<T> = await response.json()
 
   if (!json.success) {
@@ -179,71 +188,83 @@ async function handleResponse<T>(response: Response, retryFn?: () => Promise<T>)
 }
 
 async function get<T>(url: string): Promise<T> {
+  const isExternal = url.startsWith('http')
+  const fullUrl = isExternal ? url : `${API_BASE}${url}`
+
   const doRequest = async (): Promise<T> => {
-    const response = await fetch(`${API_BASE}${url}`, {
+    const response = await fetch(fullUrl, {
       method: 'GET',
-      headers: buildHeaders(false),
+      headers: buildHeaders(false, isExternal),
       cache: 'no-store'
     })
     return handleResponse<T>(response)
   }
 
-  const response = await fetch(`${API_BASE}${url}`, {
+  const response = await fetch(fullUrl, {
     method: 'GET',
-    headers: buildHeaders(false),
+    headers: buildHeaders(false, isExternal),
     cache: 'no-store'
   })
   return handleResponse<T>(response, doRequest)
 }
 
 async function post<T>(url: string, body?: unknown): Promise<T> {
+  const isExternal = url.startsWith('http')
+  const fullUrl = isExternal ? url : `${API_BASE}${url}`
+
   const doRequest = async (): Promise<T> => {
-    const response = await fetch(`${API_BASE}${url}`, {
+    const response = await fetch(fullUrl, {
       method: 'POST',
-      headers: buildHeaders(true),
+      headers: buildHeaders(true, isExternal),
       body: body ? JSON.stringify(body) : undefined
     })
     return handleResponse<T>(response)
   }
 
-  const response = await fetch(`${API_BASE}${url}`, {
+  const response = await fetch(fullUrl, {
     method: 'POST',
-    headers: buildHeaders(true),
+    headers: buildHeaders(true, isExternal),
     body: body ? JSON.stringify(body) : undefined
   })
   return handleResponse<T>(response, doRequest)
 }
 
 async function put<T>(url: string, body?: unknown): Promise<T> {
+  const isExternal = url.startsWith('http')
+  const fullUrl = isExternal ? url : `${API_BASE}${url}`
+
   const doRequest = async (): Promise<T> => {
-    const response = await fetch(`${API_BASE}${url}`, {
+    const response = await fetch(fullUrl, {
       method: 'PUT',
-      headers: buildHeaders(true),
+      headers: buildHeaders(true, isExternal),
       body: body ? JSON.stringify(body) : undefined
     })
     return handleResponse<T>(response)
   }
 
-  const response = await fetch(`${API_BASE}${url}`, {
+  const response = await fetch(fullUrl, {
     method: 'PUT',
-    headers: buildHeaders(true),
+    headers: buildHeaders(true, isExternal),
     body: body ? JSON.stringify(body) : undefined
   })
   return handleResponse<T>(response, doRequest)
 }
 
 async function del(url: string): Promise<void> {
+  const isExternal = url.startsWith('http')
+  const fullUrl = isExternal ? url : `${API_BASE}${url}`
+
   const doRequest = async (): Promise<void> => {
-    const response = await fetch(`${API_BASE}${url}`, {
+    const response = await fetch(fullUrl, {
       method: 'DELETE',
-      headers: buildHeaders(false)
+      headers: buildHeaders(false, isExternal)
     })
     await handleResponse<void>(response)
   }
 
-  const response = await fetch(`${API_BASE}${url}`, {
+  const response = await fetch(fullUrl, {
     method: 'DELETE',
-    headers: buildHeaders(false)
+    headers: buildHeaders(false, isExternal)
   })
   await handleResponse<void>(response, doRequest)
 }
