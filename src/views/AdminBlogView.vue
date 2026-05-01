@@ -45,11 +45,15 @@ const genStepStart = ref(0)
 let genTimer: ReturnType<typeof setInterval> | null = null
 
 const GEN_STEPS_CONFIG = [
-  { key: 'analyzing' as GenStep, icon: Search, label: 'Phân tích chủ đề & keyword...' },
-  { key: 'drafting' as GenStep, icon: Brain, label: 'AI đang sáng tạo nội dung bài viết...' },
+  { key: 'analyzing' as GenStep, icon: Search, label: 'Tìm kiếm & nghiên cứu từ Internet...' },
+  { key: 'drafting' as GenStep, icon: Brain, label: 'AI sáng tạo nội dung bài viết...' },
   { key: 'refining' as GenStep, icon: Sparkles, label: 'Review & tinh chỉnh chuẩn SEO...' },
   { key: 'images' as GenStep, icon: ImageIcon, label: 'Tạo hình ảnh minh họa...' }
 ]
+
+// Grounding sources from web research
+const groundingSources = ref<{ title: string; url: string }[]>([])
+const genImageCount = ref(0)
 
 function startGenTimer() {
   genElapsed.value = 0
@@ -229,15 +233,19 @@ async function handleGenerate() {
         hasPreview.value = true
       }
     } else {
-      // Mode AI: Full multi-step generation
-      // STEP 1: Analyze & Draft
+      // Mode AI: Full multi-step generation with research
+      // STEP 1: Research + Draft (backend does Gemini Grounding)
       setStep('analyzing')
-      await new Promise(r => setTimeout(r, 800)) // Brief pause for UX
+      await new Promise(r => setTimeout(r, 500))
 
       setStep('drafting')
       const draftData = await blogStore.generateContent(inputContent.value, aiImageBase64.value)
 
       if (draftData) {
+        // Store grounding sources from research phase
+        groundingSources.value = draftData.groundingSources || []
+        const imagePrompts: string[] = draftData.imagePrompts || []
+
         // STEP 2: Refine / Editor Review
         setStep('refining')
         const data = await blogStore.refineContent(draftData) || draftData
@@ -247,18 +255,65 @@ async function handleGenerate() {
         form.value.content = data.content || ''
         form.value.tags = data.tags || []
 
-        // STEP 3: Generate images
+        // STEP 3: Generate multiple images
         setStep('images')
+        genImageCount.value = 0
+
+        // Cover image
         try {
-          const imagePrompt = data.seoKeywords || inputContent.value
-          const imageUrl = await blogStore.generateImage(imagePrompt)
-          if (imageUrl) form.value.imageUrl = imageUrl
-        } catch { /* cover image is optional */ }
+          const coverPrompt = data.seoKeywords || inputContent.value
+          const coverUrl = await blogStore.generateImage(coverPrompt)
+          if (coverUrl) {
+            form.value.imageUrl = coverUrl
+            genImageCount.value++
+          }
+        } catch { /* cover is optional */ }
+
+        // Inline images from AI-suggested prompts
+        if (imagePrompts.length > 0) {
+          const maxInline = Math.min(imagePrompts.length, 2) // Max 2 inline images
+          for (let i = 0; i < maxInline; i++) {
+            try {
+              const inlineUrl = await blogStore.generateImage(imagePrompts[i])
+              if (inlineUrl && form.value.content) {
+                // Find the (i+1)th H2 heading and insert image after it
+                const h2Regex = /^## .+$/gm
+                let matchIdx = 0
+                let insertPos = -1
+                let match: RegExpExecArray | null
+                while ((match = h2Regex.exec(form.value.content)) !== null) {
+                  matchIdx++
+                  if (matchIdx === i + 1) {
+                    // Insert after the next paragraph break
+                    const nextNewline = form.value.content.indexOf('\n\n', match.index + match[0].length)
+                    insertPos = nextNewline !== -1 ? nextNewline + 2 : match.index + match[0].length + 1
+                    break
+                  }
+                }
+                if (insertPos !== -1) {
+                  form.value.content =
+                    form.value.content.slice(0, insertPos) +
+                    `\n![minh họa](${inlineUrl})\n\n` +
+                    form.value.content.slice(insertPos)
+                }
+                genImageCount.value++
+              }
+            } catch { /* inline image is optional */ }
+          }
+        }
+
+        // Append sources section if available
+        if (groundingSources.value.length > 0) {
+          form.value.content += '\n\n---\n\n## 📚 Nguồn tham khảo\n\n'
+          for (const src of groundingSources.value) {
+            form.value.content += `- [${src.title}](${src.url})\n`
+          }
+        }
 
         previewHtml.value = await marked(form.value.content || '', { async: true })
         setStep('done')
         hasPreview.value = true
-        uiStore.showToast('success', `Bài viết hoàn tất trong ${formatTimer(genElapsed.value)}!`)
+        uiStore.showToast('success', `Bài viết hoàn tất trong ${formatTimer(genElapsed.value)}! (${genImageCount.value} ảnh, ${groundingSources.value.length} nguồn)`)
       }
     }
   } catch (err: any) {
@@ -266,7 +321,6 @@ async function handleGenerate() {
   } finally {
     stopGenTimer()
     isGenerating.value = false
-    // Keep genStep for UI display until modal closes or new gen starts
   }
 }
 
@@ -583,6 +637,19 @@ const formatDate = (dateStr: string) => {
                       class="text-[0.6875rem] font-mono text-accent/70"
                     >
                       {{ formatTimer(genElapsed - genStepStart) }}
+                    </span>
+                    <!-- Detail badge for completed steps -->
+                    <span
+                      v-if="stepStatus(step.key) === 'done' && step.key === 'analyzing' && groundingSources.length > 0"
+                      class="text-[0.6875rem] text-success/70 font-medium"
+                    >
+                      {{ groundingSources.length }} nguồn
+                    </span>
+                    <span
+                      v-else-if="stepStatus(step.key) === 'done' && step.key === 'images' && genImageCount > 0"
+                      class="text-[0.6875rem] text-success/70 font-medium"
+                    >
+                      {{ genImageCount }} ảnh
                     </span>
                     <CheckCircle2 v-if="stepStatus(step.key) === 'done'" :size="12" class="text-success/50" />
                   </div>

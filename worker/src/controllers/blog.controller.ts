@@ -202,27 +202,114 @@ export async function handleGenerateBlogContent(userId: string, request: Request
   const { topic, imageBase64 } = (await request.json()) as { topic: string; imageBase64?: string }
   if (!topic && !imageBase64) return errorResponse('Missing topic or image', 400)
 
-  // Helper: strip leading H1 from markdown to prevent duplicate title with hero section
   function stripLeadingH1(md: string): string {
     return md.replace(/^\s*#\s+[^\n]+\n*/m, '').trim()
   }
 
-  const systemPrompt = `Bạn là một chuyên gia viết blog về quản lý tài chính cá nhân.
-Nhiệm vụ: Viết một bài blog chuẩn SEO về chủ đề được yêu cầu để giúp người dùng biết cách quản lý tiền bạc và giới thiệu khéo léo về ứng dụng "FinNote".
+  try {
+    let useGemini = !!env.GEMINI_API_KEY
+
+    // ═══════════════════════════════════════════════════
+    // PHASE 1: Research with Gemini Grounding (Google Search)
+    // Gemini searches the web automatically for related content
+    // ═══════════════════════════════════════════════════
+    let researchContext = ''
+    let groundingSources: { title: string; url: string }[] = []
+
+    if (useGemini) {
+      try {
+        console.log('[BlogGen] Phase 1: Researching with Gemini Grounding...')
+        const researchPrompt = `Tìm kiếm và tổng hợp thông tin từ internet về chủ đề: "${topic}".
+Hãy đọc các bài viết liên quan và tóm tắt:
+1. Các điểm chính mà các bài viết hiện có đang đề cập
+2. Số liệu thống kê hoặc dữ liệu thực tế nếu có
+3. Các tips/mẹo phổ biến nhất
+4. Những góc nhìn hoặc quan điểm đáng chú ý
+
+Trả về bản tóm tắt nghiên cứu chi tiết bằng tiếng Việt.`
+
+        const researchResponse = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${env.GEMINI_API_KEY}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: researchPrompt }] }],
+              tools: [{ google_search: {} }],
+              generationConfig: { temperature: 0.3 }
+            })
+          }
+        )
+
+        if (researchResponse.ok) {
+          const researchData: any = await researchResponse.json()
+          researchContext = researchData?.candidates?.[0]?.content?.parts?.[0]?.text || ''
+
+          // Extract grounding sources from metadata
+          const groundingMeta = researchData?.candidates?.[0]?.groundingMetadata
+          if (groundingMeta?.groundingChunks) {
+            for (const chunk of groundingMeta.groundingChunks) {
+              if (chunk?.web?.uri && chunk?.web?.title) {
+                groundingSources.push({
+                  title: chunk.web.title,
+                  url: chunk.web.uri
+                })
+              }
+            }
+          }
+          // Deduplicate sources
+          const seen = new Set<string>()
+          groundingSources = groundingSources.filter(s => {
+            if (seen.has(s.url)) return false
+            seen.add(s.url)
+            return true
+          }).slice(0, 5) // Max 5 sources
+
+          console.log(`[BlogGen] Research done: ${researchContext.length} chars, ${groundingSources.length} sources`)
+        } else {
+          console.warn('[BlogGen] Grounding research failed, proceeding without research')
+        }
+      } catch (err: any) {
+        console.warn('[BlogGen] Grounding error:', err.message)
+      }
+    }
+
+    // ═══════════════════════════════════════════════════
+    // PHASE 2: Generate blog content using research context
+    // AI creates original content enriched with research data
+    // ═══════════════════════════════════════════════════
+    const systemPrompt = `Bạn là một chuyên gia viết blog cấp cao về quản lý tài chính cá nhân.
+
+${researchContext ? `## DỮ LIỆU NGHIÊN CỨU TỪ INTERNET
+Dưới đây là thông tin đã được tổng hợp từ các bài viết thực tế trên internet. Sử dụng dữ liệu này để làm giàu bài viết, nhưng PHẢI viết lại bằng giọng văn riêng (KHÔNG copy nguyên văn):
+
+${researchContext}
+
+---` : ''}
+
+## NHIỆM VỤ
+Viết một bài blog CHẤT LƯỢNG CAO, chuẩn SEO về chủ đề được yêu cầu.
+
+## YÊU CẦU CHẤT LƯỢNG
+1. **Human-like**: Viết tự nhiên, có cảm xúc, như một blogger chuyên nghiệp thực thụ
+2. **Data-driven**: Sử dụng số liệu thực tế từ nghiên cứu (nếu có)
+3. **Actionable**: Mỗi mục phải có lời khuyên cụ thể, có thể áp dụng ngay
+4. **SEO**: Đan xen keyword tự nhiên, heading structure rõ ràng (H2/H3)
+5. **FinNote**: Giới thiệu khéo léo app FinNote như một giải pháp trong bài
+6. **Dài tối thiểu 1500 từ**: Bài viết phải đủ sâu và chi tiết
+
 Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải thích nào khác ngoài JSON:
 {
   "title": "Tiêu đề hấp dẫn (dưới 60 ký tự)",
   "excerpt": "Đoạn mô tả ngắn (dưới 160 ký tự) cho SEO meta description",
-  "tags": ["tag1", "tag2", "tag3"],
-  "seoKeywords": "keyword1, keyword2",
-  "content": "Nội dung bài viết chi tiết được format bằng Markdown. QUAN TRỌNG: KHÔNG bao gồm tiêu đề H1 (# Tiêu đề) trong content vì title đã được hiển thị riêng ở hero section. Bắt đầu trực tiếp với đoạn mở bài, sau đó thân bài chia thành nhiều mục (H2, H3) sử dụng bullet points/bold text hợp lý, và kết bài có Call to Action kêu gọi tải/sử dụng app FinNote."
+  "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
+  "seoKeywords": "keyword1, keyword2, keyword3",
+  "content": "Nội dung chi tiết bằng Markdown. KHÔNG bao gồm H1. Bắt đầu với đoạn mở bài hấp dẫn, thân bài chia H2/H3 rõ ràng, bullet points, bold text, blockquotes cho số liệu nổi bật, kết bài CTA giới thiệu FinNote.",
+  "imagePrompts": ["Mô tả ngắn cho ảnh minh họa section 1", "Mô tả cho ảnh section 2"]
 }`
 
-  try {
     let text = ''
 
-    // Try Gemini first, fallback to Cloudflare AI
-    let useGemini = !!env.GEMINI_API_KEY
     if (useGemini) {
       try {
         let inlineData = undefined
@@ -240,18 +327,15 @@ Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải th
         if (inlineData) promptParts.push({ inline_data: inlineData })
         if (promptParts.length === 0) promptParts.push({ text: "Hãy viết 1 bài blog về quản lý tài chính cá nhân." })
 
+        console.log('[BlogGen] Phase 2: Generating content with Gemini...')
         const response = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${env.GEMINI_API_KEY}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              system_instruction: {
-                parts: [{ text: systemPrompt }]
-              },
-              contents: [{
-                parts: promptParts
-              }],
+              system_instruction: { parts: [{ text: systemPrompt }] },
+              contents: [{ parts: promptParts }],
               generationConfig: {
                 temperature: 0.7,
                 response_mime_type: "application/json"
@@ -262,25 +346,24 @@ Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải th
 
         if (!response.ok) {
           const errObj: any = await response.json().catch(() => ({}))
-          console.warn('Gemini failed, falling back to CF AI:', errObj?.error?.message)
-          useGemini = false // trigger fallback
+          console.warn('Gemini gen failed, falling back to CF AI:', errObj?.error?.message)
+          useGemini = false
         } else {
           const data: any = await response.json()
           text = data?.candidates?.[0]?.content?.parts?.[0]?.text || ''
         }
       } catch (geminiErr: any) {
         console.warn('Gemini error, falling back to CF AI:', geminiErr.message)
-        useGemini = false // trigger fallback
+        useGemini = false
       }
     }
 
-    // Fallback: Cloudflare Workers AI (2-step to avoid truncation)
+    // Fallback: Cloudflare Workers AI
     if (!useGemini || !text) {
       if (!env.AI) return errorResponse('AI binding not configured', 503)
 
-      // Step 1: Generate metadata only (small JSON)
       const metaPrompt = `Bạn là chuyên gia SEO blog tài chính. Trả về ĐÚNG JSON (không có text thêm):
-{"title":"Tiêu đề hấp dẫn dưới 60 ký tự","excerpt":"Mô tả SEO dưới 160 ký tự","tags":["tag1","tag2","tag3"],"seoKeywords":"keyword1, keyword2"}`
+{"title":"Tiêu đề hấp dẫn dưới 60 ký tự","excerpt":"Mô tả SEO dưới 160 ký tự","tags":["tag1","tag2","tag3"],"seoKeywords":"keyword1, keyword2","imagePrompts":["mô tả ảnh 1","mô tả ảnh 2"]}`
       const metaResponse = await env.AI.run('@cf/meta/llama-3.1-8b-instruct' as any, {
         messages: [
           { role: 'system', content: metaPrompt },
@@ -295,18 +378,19 @@ Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải th
       if (metaMatch) metaText = metaMatch[0]
 
       let meta: any = {}
-      try { meta = JSON.parse(metaText) } catch { meta = { title: topic, excerpt: '', tags: [], seoKeywords: '' } }
+      try { meta = JSON.parse(metaText) } catch { meta = { title: topic, excerpt: '', tags: [], seoKeywords: '', imagePrompts: [] } }
 
-      // Step 2: Generate full blog content as Markdown (no JSON wrapper)
       const contentPrompt = `Bạn là chuyên gia viết blog tài chính cá nhân. Viết bài blog bằng Markdown cho chủ đề dưới đây.
-Yêu cầu: KHÔNG bao gồm tiêu đề H1 (# Tiêu đề) vì title đã hiển thị riêng. Bắt đầu trực tiếp với đoạn mở bài, thân bài chia H2/H3, bullet points, bold text, kết bài Call to Action giới thiệu FinNote.
+${researchContext ? `Thông tin nghiên cứu: ${researchContext.substring(0, 1500)}` : ''}
+Yêu cầu: KHÔNG bao gồm tiêu đề H1. Bắt đầu trực tiếp với đoạn mở bài, thân bài chia H2/H3, bullet points, bold text, kết bài CTA giới thiệu FinNote.
+Viết tối thiểu 1500 từ, chi tiết và chuyên sâu.
 Chỉ trả về nội dung Markdown, không bọc trong JSON hay code block.`
       const contentResponse = await env.AI.run('@cf/meta/llama-3.1-8b-instruct' as any, {
         messages: [
           { role: 'system', content: contentPrompt },
           { role: 'user', content: `Tiêu đề: ${meta.title || topic}\nChủ đề: ${topic}` }
         ],
-        max_tokens: 2048,
+        max_tokens: 4096,
         temperature: 0.7
       }) as any
 
@@ -319,17 +403,17 @@ Chỉ trả về nội dung Markdown, không bọc trong JSON hay code block.`
           excerpt: meta.excerpt || '',
           tags: meta.tags || [],
           seoKeywords: meta.seoKeywords || '',
-          content: blogContent
+          content: blogContent,
+          imagePrompts: meta.imagePrompts || [],
+          groundingSources
         }
       })
     }
 
-    // Parse Gemini response (single JSON)
+    // Parse Gemini response
     const jsonMatch = text.match(/\{[\s\S]*\}/)
-    if (jsonMatch) {
-      text = jsonMatch[0]
-    }
-    
+    if (jsonMatch) text = jsonMatch[0]
+
     let result
     try {
       result = JSON.parse(text)
@@ -337,10 +421,14 @@ Chỉ trả về nội dung Markdown, không bọc trong JSON hay code block.`
       return errorResponse('Failed to parse AI response', 500)
     }
 
-    // Strip H1 from content as safety net
     if (result.content) {
       result.content = stripLeadingH1(result.content)
     }
+
+    // Attach grounding sources
+    result.groundingSources = groundingSources
+
+    console.log(`[BlogGen] Done: "${result.title}", ${result.content?.length || 0} chars, ${groundingSources.length} sources, ${result.imagePrompts?.length || 0} image prompts`)
 
     return jsonResponse({ success: true, data: result })
   } catch (err: any) {
