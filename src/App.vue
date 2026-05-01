@@ -100,6 +100,8 @@ onMounted(() => {
           </router-link>
         </div>
       </header>
+      <!-- Safe area spacer for authenticated users (no public-header shown) -->
+      <div v-else class="public-safe-spacer"></div>
 
       <div class="public-layout__content custom-scrollbar">
         <router-view />
@@ -137,6 +139,8 @@ onMounted(() => {
   position: sticky;
   top: 0;
   z-index: 50;
+  /* iOS PWA: push below system status bar */
+  padding-top: env(safe-area-inset-top, 0px);
 }
 .public-header__container {
   max-width: 52rem;
@@ -173,14 +177,26 @@ onMounted(() => {
   box-shadow: 0 6px 20px rgba(124, 111, 247, 0.23);
 }
 .public-layout__content {
+  flex: 1;
   max-width: 100%;
   padding: 2rem 1.5rem;
+  padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
 @media (min-width: 768px) {
   .public-layout__content {
     padding: 3rem 2rem;
+    padding-bottom: calc(3rem + env(safe-area-inset-bottom, 0px));
   }
+}
+
+/* Spacer for authenticated users on public pages (replaces hidden public-header) */
+.public-safe-spacer {
+  height: env(safe-area-inset-top, 0px);
+  flex-shrink: 0;
+  background: var(--color-bg-primary);
 }
 
 /* ── iOS PWA Standalone Mode ─────────────────────────────────────────────────── */
@@ -259,6 +275,35 @@ onMounted(() => {
   /* Modal/dialog bottom padding (buttons at bottom of modals) */
   .pwa-modal-safe {
     padding-bottom: max(env(safe-area-inset-bottom), 16px) !important;
+  }
+
+  /* ── Safe Area: Public Layout (Blog pages) ── */
+  .public-layout {
+    height: 100%;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .public-header {
+    padding-top: max(env(safe-area-inset-top), 24px) !important;
+    flex-shrink: 0;
+  }
+
+  .public-layout__content {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    padding-bottom: max(env(safe-area-inset-bottom), 20px) !important;
+  }
+
+  .public-safe-spacer {
+    height: max(env(safe-area-inset-top), 24px) !important;
+  }
+
+  /* Blog CTA floating button — push above home indicator */
+  .cta-float {
+    bottom: calc(1.5rem + max(env(safe-area-inset-bottom), 16px)) !important;
   }
 }
 
