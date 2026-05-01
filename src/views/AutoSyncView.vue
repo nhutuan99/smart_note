@@ -92,8 +92,11 @@ onMounted(() => {
       <div class="card-premium p-6">
         <p class="mb-4 text-sm text-text-secondary">{{ t('autoSync.step1Desc') }}</p>
         <div class="bg-bg-elevated border-border-default flex flex-col gap-3 rounded-xl border p-3 sm:flex-row sm:items-center">
-          <code class="text-accent flex-1 break-all text-[0.8125rem] leading-relaxed">
-            {{ isUrlRevealed ? webhookUrl : t('autoSync.hiddenUrl') }}
+          <code 
+            class="text-accent flex-1 break-all text-[0.8125rem] leading-relaxed transition-all duration-300"
+            :class="!isUrlRevealed ? 'blur-[5px] select-none opacity-70' : ''"
+          >
+            {{ webhookUrl }}
           </code>
           <div class="flex gap-2">
             <button
