@@ -105,15 +105,17 @@ onMounted(() => {
           </router-link>
         </div>
       </header>
-      <!-- In-App Header for Authenticated Users with Back Button -->
-      <header v-else class="public-header">
-        <div class="public-header__container">
-          <router-link to="/" class="flex items-center gap-2 text-text-secondary hover:text-text-primary transition-colors">
+      <!-- In-App Floating Back Button for Authenticated Users -->
+      <template v-else>
+        <!-- Floating Button -->
+        <div class="fixed left-4 z-50 flex items-center" style="top: max(env(safe-area-inset-top, 0px), 1rem)">
+          <router-link to="/" class="p-2 rounded-lg text-text-tertiary hover:text-text-primary hover:bg-bg-hover transition-colors flex items-center justify-center">
             <ArrowLeft :size="20" />
-            <span class="font-medium">Quay lại Dashboard</span>
           </router-link>
         </div>
-      </header>
+        <!-- Spacer to push content down -->
+        <div class="public-safe-spacer"></div>
+      </template>
 
       <div class="public-layout__content custom-scrollbar">
         <router-view />
@@ -207,9 +209,9 @@ onMounted(() => {
 
 /* Spacer for authenticated users on public pages (replaces hidden public-header) */
 .public-safe-spacer {
-  height: env(safe-area-inset-top, 0px);
+  height: max(env(safe-area-inset-top, 0px), 1rem);
   flex-shrink: 0;
-  background: var(--color-bg-primary);
+  background: transparent;
 }
 
 /* ── iOS PWA Standalone Mode ─────────────────────────────────────────────────── */

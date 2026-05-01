@@ -6,6 +6,7 @@ import { formatVND } from '@/constants/finance'
 import type { SavingsGoal } from '@/types'
 import { Plus, Trash2, Target, ArrowUpRight, ArrowDownRight, PartyPopper, X } from 'lucide-vue-next'
 import CurrencyInput from '@/components/ui/CurrencyInput.vue'
+import CustomDatePicker from '@/components/ui/CustomDatePicker.vue'
 
 const { t } = useI18n()
 const ui = useUiStore()
@@ -110,10 +111,11 @@ const totalTarget = computed(() => goals.value.reduce((s, g) => s + g.targetAmou
             </div>
           </div>
           <CurrencyInput v-model="form.targetAmount" :placeholder="t('savings.targetPlaceholder')" className="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border px-4 py-2.5 text-sm transition-all focus:ring-2 focus:outline-none" />
-          <div>
-            <label class="text-text-secondary mb-2 block text-sm font-medium">{{ t('savings.deadline') }}</label>
-            <input v-model="form.deadline" type="date" class="border-border-default bg-bg-elevated text-text-primary focus:border-accent focus:ring-accent-subtle w-full rounded-lg border px-4 py-2.5 text-sm transition-all focus:ring-2 focus:outline-none" />
-          </div>
+          <CustomDatePicker
+            v-model="form.deadline"
+            :label="t('savings.deadline')"
+            :placeholder="t('savings.deadline')"
+          />
           <div class="flex gap-2">
             <button @click="showAdd = false" class="border-border-default text-text-secondary hover:bg-bg-hover flex-1 rounded-lg border py-2 text-sm transition-all">{{ t('common.cancel') }}</button>
             <button @click="addGoal" :disabled="!form.name.trim() || form.targetAmount <= 0" class="btn-primary flex-1 justify-center py-2 disabled:opacity-40">{{ t('common.add') }}</button>

@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 const ONBOARDING_KEY = 'finnote_onboarding_completed'
 const TOTAL_STEPS = 4
@@ -38,6 +39,11 @@ export function useOnboarding() {
 
   function completeOnboarding() {
     localStorage.setItem(ONBOARDING_KEY, 'true')
+    
+    // Notify auth store to update the backend
+    const auth = useAuthStore()
+    auth.completeOnboarding()
+    
     router.push('/')
   }
 
