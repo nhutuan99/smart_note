@@ -207,28 +207,16 @@ export function useWeather() {
       }
     }
 
-    // 2. IP-based fallback (using ipinfo.io which is highly reliable and CORS-friendly)
+    // 2. IP-based fallback (using our own proxy to avoid adblockers)
     try {
-      const data = await httpClient.get<any>('https://ipinfo.io/json')
-      if (data && data.loc) {
-        const [lat, lon] = data.loc.split(',')
-        let city = data.city || 'Vị trí của bạn'
-        if (city.includes('Ho Chi Minh') || city === 'Thành phố Hồ Chí Minh' || city === 'TP.HCM' || city.includes('TP. HCM')) city = 'Ho Chi Minh City'
-        if (city.includes('Ha Noi') || city === 'Hanoi') city = 'Hà Nội'
-        if (city.includes('Da Nang') || city === 'Danang') city = 'Đà Nẵng'
-        return { lat: parseFloat(lat), lon: parseFloat(lon), city, country: data.country || '' }
-      }
-    } catch { /* ignore */ }
-
-    // 2.5 IP-based fallback alternative (freeipapi)
-    try {
-      const data = await httpClient.get<any>('https://freeipapi.com/api/json')
-      if (data && data.latitude && data.longitude) {
-        let city = data.cityName || 'Vị trí của bạn'
-        if (city.includes('Ho Chi Minh') || city === 'Thành phố Hồ Chí Minh' || city === 'TP.HCM' || city.includes('TP. HCM')) city = 'Ho Chi Minh City'
-        if (city.includes('Ha Noi') || city === 'Hanoi') city = 'Hà Nội'
-        if (city.includes('Da Nang') || city === 'Danang') city = 'Đà Nẵng'
-        return { lat: data.latitude, lon: data.longitude, city, country: data.countryName || '' }
+      const data = await httpClient.get<any>('/api/proxy/location')
+      if (data && data.lat) {
+        return {
+          lat: data.lat,
+          lon: data.lon,
+          city: data.city,
+          country: data.country || ''
+        }
       }
     } catch { /* ignore */ }
 
@@ -245,28 +233,13 @@ export function useWeather() {
     try {
       const loc = await detectLocation()
 
-      const [weatherRes, aqiRes] = await Promise.allSettled([
-        httpClient.get<any>(
-          `https://api.open-meteo.com/v1/forecast` +
-          `?latitude=${loc.lat}&longitude=${loc.lon}` +
-          `&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code,uv_index` +
-          `&timezone=auto`
-        ),
-        httpClient.get<any>(
-          `https://air-quality-api.open-meteo.com/v1/air-quality` +
-          `?latitude=${loc.lat}&longitude=${loc.lon}` +
-          `&current=us_aqi,pm2_5` +
-          `&timezone=auto`
-        )
-      ])
+      const proxyData = await httpClient.get<any>(`/api/proxy/weather?lat=${loc.lat}&lon=${loc.lon}`)
 
-      if (weatherRes.status === 'rejected') {
-        throw new Error(weatherRes.reason?.message || 'Network Error / Blocked by Adblocker')
-      }
+      const wData = proxyData.weather
+      const aqiData = proxyData.aqi
 
-      if (weatherRes.status === 'fulfilled' && weatherRes.value) {
-        const wData = weatherRes.value
-        const cur   = wData.current
+      if (wData && wData.current) {
+        const cur = wData.current
         weather.value = {
           temperature: Math.round(cur.temperature_2m),
           feelsLike:   Math.round(cur.apparent_temperature),
@@ -283,9 +256,8 @@ export function useWeather() {
         throw new Error('No weather data received')
       }
 
-      if (aqiRes.status === 'fulfilled' && aqiRes.value) {
-        const aData = aqiRes.value
-        const cur   = aData.current
+      if (aqiData && aqiData.current) {
+        const cur = aqiData.current
         airQuality.value = {
           aqi:  Math.round(cur.us_aqi ?? 0),
           pm25: Math.round(cur.pm2_5  ?? 0),
