@@ -125,11 +125,11 @@ export async function handleProxyWeather(request: Request): Promise<Response> {
 
 /**
  * Handle /api/proxy/exchange-rate
- * Proxies request to fawazahmed0/currency-api
+ * Proxies request to exchangerate-api.com for real-time USD/VND data
  */
 export async function handleProxyExchangeRate(request: Request): Promise<Response> {
   try {
-    const res = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/vnd.json', {
+    const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD', {
       headers: {
         'User-Agent': 'Cloudflare-Worker'
       }
@@ -139,10 +139,21 @@ export async function handleProxyExchangeRate(request: Request): Promise<Respons
       return errorResponse(`Exchange rate API HTTP ${res.status}`, 502)
     }
 
-    const data = await res.json()
+    const data = await res.json() as any
+    const vndRate = data?.rates?.VND
+    
+    if (!vndRate) {
+      return errorResponse('Failed to parse exchange rate', 500)
+    }
+
+    // Convert from (1 USD = X VND) to (1 VND = X USD)
+    const usdPerVnd = 1 / vndRate
+
     return jsonResponse({
       success: true,
-      data
+      data: {
+        vnd: { usd: usdPerVnd }
+      }
     })
   } catch (err: any) {
     return errorResponse(err.message, 500)

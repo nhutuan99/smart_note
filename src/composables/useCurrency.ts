@@ -11,7 +11,7 @@ import { httpClient } from '@/shared/api/httpClient'
 
 // ── State (singleton — shared across all imports) ──
 const CACHE_KEY = 'sn_currency'
-const RATE_CACHE_KEY = 'sn_fx_rate'
+const RATE_CACHE_KEY = 'sn_currency_rate_v2'
 const RATE_CACHE_TTL = 4 * 60 * 60 * 1000 // 4 hours
 
 export type CurrencyCode = 'VND' | 'USD'
