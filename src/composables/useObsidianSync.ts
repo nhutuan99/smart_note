@@ -17,8 +17,8 @@ export function useObsidianSync() {
   /**
    * Request permission for an existing handle
    */
-  async function verifyPermission(handle: FileSystemDirectoryHandle, withWrite: boolean = true): Promise<boolean> {
-    const opts: FileSystemHandlePermissionDescriptor = { mode: withWrite ? 'readwrite' : 'read' }
+  async function verifyPermission(handle: any, withWrite: boolean = true): Promise<boolean> {
+    const opts = { mode: withWrite ? 'readwrite' : 'read' }
     if ((await handle.queryPermission(opts)) === 'granted') {
       return true
     }
@@ -33,7 +33,7 @@ export function useObsidianSync() {
    */
   async function init(): Promise<void> {
     try {
-      const handle = await get<FileSystemDirectoryHandle>(VAULT_HANDLE_KEY)
+      const handle = await get<any>(VAULT_HANDLE_KEY)
       if (handle) {
         if (await verifyPermission(handle)) {
           directoryHandle = handle
@@ -53,7 +53,8 @@ export function useObsidianSync() {
       if (!('showDirectoryPicker' in window)) {
         throw new Error('File System Access API is not supported in this browser (Safari/iOS).')
       }
-      const handle = await window.showDirectoryPicker({ mode: 'readwrite' })
+      const showPicker = (window as any).showDirectoryPicker.bind(window)
+      const handle = await showPicker({ mode: 'readwrite' })
       await set(VAULT_HANDLE_KEY, handle)
       directoryHandle = handle
       isConnected.value = true

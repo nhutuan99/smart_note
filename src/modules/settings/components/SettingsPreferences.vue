@@ -124,7 +124,7 @@ function changeCurrency(code: CurrencyCode) {
           <div>
             <h4 class="mb-0.5 text-sm font-semibold">Local Vault Connection</h4>
             <p class="text-text-tertiary text-sm">Directly sync your notes to a local Obsidian vault.</p>
-            <p v-if="!notesStore.obsidian.isConnected.value" class="text-warning mt-1 text-xs">
+            <p v-if="!notesStore.obsidian.isConnected" class="text-warning mt-1 text-xs">
               ⚠️ Not connected. Works on Chrome/Edge (Desktop) only.
             </p>
             <p v-else class="text-success mt-1 text-xs font-medium">
@@ -133,7 +133,7 @@ function changeCurrency(code: CurrencyCode) {
           </div>
           <div>
             <button
-              v-if="!notesStore.obsidian.isConnected.value"
+              v-if="!notesStore.obsidian.isConnected"
               @click="notesStore.obsidian.connectVault()"
               class="btn-secondary whitespace-nowrap"
             >
