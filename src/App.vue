@@ -125,8 +125,8 @@ onMounted(() => {
 
 /* ── Public Layout (Blog pages — no sidebar) ── */
 .public-layout {
-  min-height: 100vh;
-  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
   background: var(--color-bg-primary);
   display: flex;
   flex-direction: column;

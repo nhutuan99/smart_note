@@ -22,7 +22,7 @@ import { RefreshCw, MapPin, Wind, Droplets, Zap, Car, Leaf, ChevronDown } from '
 // ── State ──────────────────────────────────────────────────────────────────────
 
 const auth    = useAuthStore()
-const { weather, airQuality, loading, fetchWeather } = useWeather()
+const { weather, airQuality, loading, error, fetchWeather } = useWeather()
 
 const COLLAPSED_KEY = 'weather_widget_collapsed'
 const isCollapsed   = ref(localStorage.getItem(COLLAPSED_KEY) === 'true')
@@ -198,8 +198,8 @@ const trafficBg = computed(() => {
 
         <!-- Error -->
         <template v-else>
-          <div class="flex items-center justify-between text-[0.8125rem] text-text-tertiary relative z-10">
-            <span>⚡ {{ $t('weather.error') }}</span>
+          <div class="flex items-center justify-between text-[0.8125rem] text-text-tertiary relative z-10 w-full">
+            <span class="truncate pr-4" :title="error || $t('weather.error')">⚡ {{ error || $t('weather.error') }}</span>
             <button
               class="text-accent border border-accent rounded-lg px-2.5 py-1 text-[0.75rem] font-semibold bg-transparent cursor-pointer hover:bg-accent-subtle transition-colors duration-150"
               @click="fetchWeather"

@@ -261,6 +261,13 @@ export function useWeather() {
         )
       ])
 
+      if (weatherRes.status === 'rejected') {
+        throw new Error(weatherRes.reason?.message || 'Network Error / Blocked by Adblocker')
+      }
+      if (weatherRes.status === 'fulfilled' && !weatherRes.value.ok) {
+        throw new Error(`Open-Meteo HTTP ${weatherRes.value.status}`)
+      }
+
       if (weatherRes.status === 'fulfilled' && weatherRes.value.ok) {
         const wData = await weatherRes.value.json() as any
         const cur   = wData.current
