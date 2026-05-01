@@ -64,7 +64,11 @@ export default {
     walletSection: 'WALLETS',
     totalBalance: 'Total Balance',
     autoSync: 'Auto Sync',
-    recentNotes: 'Recent Notes'
+    recentNotes: 'Recent Notes',
+    recurring: 'Recurring',
+    budget: 'Budget',
+    savings: 'Savings',
+    subscriptions: 'Subscriptions'
   },
 
   // ── Notifications ──
@@ -599,5 +603,77 @@ export default {
     appIntroFeature3: 'Intuitive dashboard, easy to use',
     appIntroCta: 'Try for free',
     appIntroNote: 'No download needed — runs directly in your browser'
+  },
+
+  // ── Recurring ──
+  recurring: {
+    title: 'Recurring Transactions',
+    count: '{n} items',
+    add: 'Add',
+    addNew: 'Add Recurring Transaction',
+    frequency: 'Frequency',
+    daily: 'Daily',
+    weekly: 'Weekly',
+    monthly: 'Monthly',
+    yearly: 'Yearly',
+    startDate: 'Start Date',
+    next: 'Next',
+    monthlyEstimate: 'Monthly Estimate',
+    activeCount: '{n} active',
+    empty: 'No recurring transactions',
+    emptyHint: 'Add rent, Netflix, salary... to get automatic reminders',
+    deleteTitle: 'Delete Recurring Transaction',
+    deleteMessage: 'This recurring transaction will be removed.'
+  },
+
+  // ── Budget ──
+  budget: {
+    title: 'Monthly Budget',
+    setupTitle: 'Set a spending goal',
+    setupHint: 'Enter amount → AI auto-allocates by category',
+    inputPlaceholder: '0',
+    saveAndAnalyze: 'Save & AI Analyze',
+    monthlyBudget: 'Monthly Budget',
+    remaining: 'Remaining',
+    spent: 'Spent',
+    ofBudget: 'of budget',
+    byCategory: 'Spending by Category',
+    aiAnalysis: 'AI Analysis',
+    reset: 'Reset'
+  },
+
+  // ── Savings ──
+  savings: {
+    title: 'Savings Goals',
+    count: '{n} goals',
+    add: 'Add',
+    addNew: 'Add Savings Goal',
+    namePlaceholder: 'e.g. Japan Trip, New Laptop...',
+    icon: 'Icon',
+    color: 'Color',
+    targetPlaceholder: 'Target amount',
+    deadline: 'Deadline',
+    totalSaved: 'Total Saved',
+    totalTarget: 'Total Target',
+    daysLeft: '{n} days left',
+    perDay: 'day',
+    addMoney: 'Deposit / Withdraw',
+    empty: 'No savings goals',
+    emptyHint: 'Create money pots for your goals',
+    deleteTitle: 'Delete Goal',
+    deleteMessage: 'This savings goal will be removed.'
+  },
+
+  // ── Subscriptions ──
+  subs: {
+    title: 'Subscriptions',
+    desc: 'Auto-detect recurring expenses from your transaction history',
+    monthlyTotal: 'Monthly Total',
+    upcoming: '{n} upcoming',
+    nextBill: 'Next bill',
+    detected: 'detected',
+    soon: 'Soon',
+    empty: 'No subscriptions detected',
+    emptyHint: 'Add transactions so the system can auto-detect recurring charges (Netflix, Spotify, gym...)'
   }
 }

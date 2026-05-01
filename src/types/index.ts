@@ -127,3 +127,8 @@ export interface Blog {
   createdAt: string
   updatedAt: string
 }
+
+// ── Re-exports ──
+export type { RecurringTransaction, RecurringFrequency } from './recurring'
+export type { BudgetGoal, CategoryBudget } from './budget'
+export type { SavingsGoal } from './savings'

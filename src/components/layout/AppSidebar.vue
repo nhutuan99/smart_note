@@ -20,7 +20,11 @@ import {
   ChevronLeft,
   Bug,
   Newspaper,
-  PenLine
+  PenLine,
+  Repeat,
+  Target,
+  PiggyBank,
+  CreditCard
 } from 'lucide-vue-next'
 
 const { t } = useI18n()
@@ -36,6 +40,10 @@ const navItems = [
   { key: 'nav.dashboard', icon: LayoutDashboard, route: '/' },
   { key: 'nav.transactions', icon: ArrowLeftRight, route: '/transactions' },
   { key: 'nav.wallets', icon: Wallet, route: '/wallets' },
+  { key: 'nav.recurring', icon: Repeat, route: '/recurring' },
+  { key: 'nav.budget', icon: Target, route: '/budget' },
+  { key: 'nav.savings', icon: PiggyBank, route: '/savings' },
+  { key: 'nav.subscriptions', icon: CreditCard, route: '/subscriptions' },
   { key: 'nav.notes', icon: FileText, route: '/notes' },
   { key: 'nav.blog', icon: Newspaper, route: '/blog' },
   { key: 'nav.settings', icon: Settings, route: '/settings' }

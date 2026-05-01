@@ -64,7 +64,11 @@ export default {
     walletSection: 'VÍ',
     totalBalance: 'Tổng ví',
     autoSync: 'Đồng bộ tự động',
-    recentNotes: 'Ghi chú gần đây'
+    recentNotes: 'Ghi chú gần đây',
+    recurring: 'Định kỳ',
+    budget: 'Ngân sách',
+    savings: 'Tiết kiệm',
+    subscriptions: 'Đăng ký DV'
   },
 
   // ── Notifications ──
@@ -599,5 +603,77 @@ export default {
     appIntroFeature3: 'Dashboard trực quan, dễ sử dụng',
     appIntroCta: 'Dùng thử miễn phí',
     appIntroNote: 'Không cần tải app — chạy trực tiếp trên trình duyệt'
+  },
+
+  // ── Recurring ──
+  recurring: {
+    title: 'Giao dịch định kỳ',
+    count: '{n} mục',
+    add: 'Thêm',
+    addNew: 'Thêm giao dịch định kỳ',
+    frequency: 'Tần suất',
+    daily: 'Hàng ngày',
+    weekly: 'Hàng tuần',
+    monthly: 'Hàng tháng',
+    yearly: 'Hàng năm',
+    startDate: 'Ngày bắt đầu',
+    next: 'Tiếp theo',
+    monthlyEstimate: 'Ước tính hàng tháng',
+    activeCount: '{n} đang hoạt động',
+    empty: 'Chưa có giao dịch định kỳ',
+    emptyHint: 'Thêm tiền nhà, Netflix, lương... để tự động nhắc nhở',
+    deleteTitle: 'Xóa giao dịch định kỳ',
+    deleteMessage: 'Giao dịch định kỳ này sẽ bị xóa.'
+  },
+
+  // ── Budget ──
+  budget: {
+    title: 'Ngân sách tháng',
+    setupTitle: 'Đặt mục tiêu chi tiêu',
+    setupHint: 'Nhập số tiền → AI tự phân bổ theo danh mục',
+    inputPlaceholder: '0',
+    saveAndAnalyze: 'Lưu & Phân tích AI',
+    monthlyBudget: 'Ngân sách tháng',
+    remaining: 'Còn lại',
+    spent: 'Đã chi',
+    ofBudget: 'ngân sách',
+    byCategory: 'Chi tiêu theo danh mục',
+    aiAnalysis: 'Phân tích AI',
+    reset: 'Đặt lại'
+  },
+
+  // ── Savings ──
+  savings: {
+    title: 'Mục tiêu tiết kiệm',
+    count: '{n} mục tiêu',
+    add: 'Thêm',
+    addNew: 'Thêm mục tiêu tiết kiệm',
+    namePlaceholder: 'VD: Du lịch Nhật, Mua laptop...',
+    icon: 'Biểu tượng',
+    color: 'Màu sắc',
+    targetPlaceholder: 'Số tiền mục tiêu',
+    deadline: 'Hạn chót',
+    totalSaved: 'Tổng đã tiết kiệm',
+    totalTarget: 'Tổng mục tiêu',
+    daysLeft: 'Còn {n} ngày',
+    perDay: 'ngày',
+    addMoney: 'Nạp / Rút tiền',
+    empty: 'Chưa có mục tiêu',
+    emptyHint: 'Tạo hũ tiết kiệm cho các mục tiêu của bạn',
+    deleteTitle: 'Xóa mục tiêu',
+    deleteMessage: 'Mục tiêu tiết kiệm này sẽ bị xóa.'
+  },
+
+  // ── Subscriptions ──
+  subs: {
+    title: 'Đăng ký dịch vụ',
+    desc: 'Tự động phát hiện các khoản chi định kỳ từ lịch sử giao dịch',
+    monthlyTotal: 'Tổng chi hàng tháng',
+    upcoming: '{n} sắp đến hạn',
+    nextBill: 'Tiếp theo',
+    detected: 'lần phát hiện',
+    soon: 'Sắp tới',
+    empty: 'Chưa phát hiện đăng ký',
+    emptyHint: 'Thêm giao dịch để hệ thống tự động phát hiện các khoản chi định kỳ (Netflix, Spotify, gym...)'
   }
 }
