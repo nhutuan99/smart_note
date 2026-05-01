@@ -40,7 +40,6 @@ onMounted(async () => {
       useSeoMeta({
         title: `${seoTitle} | FinNote Blog`,
         description: seoDesc,
-        keywords: (blog.seoMeta?.keywords || '') + ',' + (blog.tags || []).join(','),
         ogType: 'article',
         ogUrl: blogUrl,
         ogTitle: seoTitle,
@@ -56,8 +55,11 @@ onMounted(async () => {
         twitterImage: blog.imageUrl || ''
       })
 
-      // JSON-LD and Canonical link
+      // JSON-LD, Canonical link, and keywords
       useHead({
+        meta: [
+          { name: 'keywords', content: (blog.seoMeta?.keywords || '') + ',' + (blog.tags || []).join(',') }
+        ],
         link: [
           { rel: 'canonical', href: blogUrl }
         ],

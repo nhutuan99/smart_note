@@ -191,7 +191,7 @@ export function useWeather() {
             `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=vi`,
             { headers: { 'Accept-Language': 'vi' } }
           )
-          const data = await res.json()
+          const data = await res.json() as any
           const addr = data.address || {}
           let city =
             addr.city || addr.town || addr.village || addr.county ||
@@ -209,7 +209,7 @@ export function useWeather() {
     // 2. IP-based fallback (using ipinfo.io which is highly reliable and CORS-friendly)
     try {
       const res  = await fetch('https://ipinfo.io/json')
-      const data = await res.json()
+      const data = await res.json() as any
       if (data && data.loc) {
         const [lat, lon] = data.loc.split(',')
         let city = data.city || 'Vị trí của bạn'
@@ -223,7 +223,7 @@ export function useWeather() {
     // 2.5 IP-based fallback alternative (freeipapi)
     try {
       const res = await fetch('https://freeipapi.com/api/json')
-      const data = await res.json()
+      const data = await res.json() as any
       if (data && data.latitude && data.longitude) {
         let city = data.cityName || 'Vị trí của bạn'
         if (city.includes('Ho Chi Minh') || city === 'Thành phố Hồ Chí Minh' || city === 'TP.HCM' || city.includes('TP. HCM')) city = 'Ho Chi Minh City'
@@ -262,7 +262,7 @@ export function useWeather() {
       ])
 
       if (weatherRes.status === 'fulfilled' && weatherRes.value.ok) {
-        const wData = await weatherRes.value.json()
+        const wData = await weatherRes.value.json() as any
         const cur   = wData.current
         weather.value = {
           temperature: Math.round(cur.temperature_2m),
@@ -279,7 +279,7 @@ export function useWeather() {
       }
 
       if (aqiRes.status === 'fulfilled' && aqiRes.value.ok) {
-        const aData = await aqiRes.value.json()
+        const aData = await aqiRes.value.json() as any
         const cur   = aData.current
         airQuality.value = {
           aqi:  Math.round(cur.us_aqi ?? 0),

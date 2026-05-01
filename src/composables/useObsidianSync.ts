@@ -54,7 +54,7 @@ export function useObsidianSync() {
 
     try {
       const res = await fetch('/obsidian/notes')
-      const data = await res.json()
+      const data = await res.json() as any
       return data.success ? data.data : []
     } catch (err) {
       console.warn('[Obsidian Sync] Failed to list notes:', err)

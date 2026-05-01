@@ -61,7 +61,7 @@ async function fetchExchangeRate(): Promise<void> {
     // Using @fawazahmed0/currency-api (Free, no key, heavily cached via jsDelivr, supports VND)
     const res = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/vnd.json')
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    const data = await res.json()
+    const data = await res.json() as any
     const rate = data?.vnd?.usd
     if (rate && typeof rate === 'number') {
       exchangeRate.value = rate
