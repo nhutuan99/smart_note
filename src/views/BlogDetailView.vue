@@ -122,10 +122,10 @@ const formatDate = (dateStr: string) => {
     </div>
 
     <!-- Back Button -->
-    <div class="mb-6">
+    <div class="mb-5">
       <button
         @click="router.push('/blog')"
-        class="flex items-center gap-2 text-text-tertiary hover:text-accent transition-colors text-sm font-medium whitespace-nowrap group w-fit"
+        class="blog-detail__back-btn group"
       >
         <ArrowLeft :size="16" class="transition-transform group-hover:-translate-x-1" />
         {{ t('blog.backToList') }}
@@ -284,7 +284,7 @@ const formatDate = (dateStr: string) => {
   background: var(--color-bg-surface);
   border: none;
   border-radius: 0;
-  overflow: visible; /* Allow content to participate in parent scroll */
+  overflow: visible;
   box-shadow: none;
   margin-left: -1rem;
   margin-right: -1rem;
@@ -299,6 +299,27 @@ const formatDate = (dateStr: string) => {
       0 0 0 1px rgba(124, 111, 247, 0.04),
       0 8px 40px -12px rgba(0, 0, 0, 0.4);
   }
+}
+
+/* ── Back Button ── */
+.blog-detail__back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+  white-space: nowrap;
+  padding: 0.5rem 1rem;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+}
+.blog-detail__back-btn:hover {
+  color: var(--color-accent);
+  border-color: rgba(124, 111, 247, 0.3);
+  background: rgba(124, 111, 247, 0.06);
 }
 
 /* ── Hero Section ── */
@@ -632,7 +653,7 @@ const formatDate = (dateStr: string) => {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 1rem;
-  padding: 1.5rem 2rem;
+  padding: 1.25rem;
   border-top: 1px solid var(--color-border-subtle);
   background: var(--color-bg-elevated);
 }
@@ -650,16 +671,16 @@ const formatDate = (dateStr: string) => {
   align-items: center;
   gap: 0.375rem;
   font-size: 0.8125rem;
-  font-weight: 500;
-  color: var(--color-text-tertiary);
+  font-weight: 600;
+  color: var(--color-accent);
   white-space: nowrap;
-  padding: 0.375rem 0.75rem;
-  border-radius: 0.5rem;
-  transition: all 0.15s ease;
+  padding: 0.5rem 1rem;
+  background: rgba(124, 111, 247, 0.08);
+  border-radius: 9999px;
+  transition: all 0.2s ease;
 }
 .blog-footer__back:hover {
-  color: var(--color-accent);
-  background: rgba(124, 111, 247, 0.08);
+  background: rgba(124, 111, 247, 0.15);
 }
 
 /* ── Tags ── */

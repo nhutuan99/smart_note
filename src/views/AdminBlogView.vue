@@ -285,19 +285,19 @@ const formatDate = (dateStr: string) => {
 <template>
   <div class="admin-blog max-w-[64rem] mx-auto pb-12">
     <!-- Header -->
-    <div class="flex items-center justify-between mb-8">
-      <div>
-        <h1 class="text-2xl font-bold tracking-tight mb-1">{{ t('blog.manageTitle') }}</h1>
+    <div class="admin-blog__header">
+      <div class="min-w-0">
+        <h1 class="text-xl sm:text-2xl font-bold tracking-tight mb-1">{{ t('blog.manageTitle') }}</h1>
         <p class="text-text-tertiary text-sm">{{ t('blog.manageDesc') }}</p>
       </div>
-      <button id="btn-new-blog" class="btn-primary blog-btn" @click="openModal">
+      <button id="btn-new-blog" class="btn-primary blog-btn blog-btn--new" @click="openModal">
         <Plus :size="16" />
         <span>{{ t('blog.newPost') }}</span>
       </button>
     </div>
 
-    <!-- Blog List Table -->
-    <div class="card-premium overflow-hidden">
+    <!-- Blog List — Desktop Table -->
+    <div class="card-premium overflow-hidden hidden md:block">
       <table class="w-full text-left text-sm">
         <thead class="bg-bg-elevated text-text-tertiary whitespace-nowrap">
           <tr>
@@ -333,29 +333,37 @@ const formatDate = (dateStr: string) => {
             </td>
             <td class="px-6 py-4 text-right" @click.stop>
               <div class="flex items-center justify-end gap-1">
-                <button
-                  class="text-text-tertiary hover:text-accent transition-colors p-1.5 rounded-md hover:bg-accent/10"
-                  title="Chỉnh sửa"
-                  @click="openEditModal(blog)"
-                >
-                  <Pencil :size="15" />
-                </button>
-                <a
-                  :href="`/blog/${blog.slug}`"
-                  target="_blank"
-                  class="text-text-tertiary hover:text-accent transition-colors p-1.5 rounded-md hover:bg-accent/10"
-                  title="Xem bài viết"
-                >
-                  <ExternalLink :size="15" />
-                </a>
-                <button class="text-text-tertiary hover:text-error transition-colors p-1.5 rounded-md hover:bg-error/10" @click="handleDelete(blog.slug)">
-                  <Trash2 :size="15" />
-                </button>
+                <button class="blog-action-btn" title="Chỉnh sửa" @click="openEditModal(blog)"><Pencil :size="15" /></button>
+                <a :href="`/blog/${blog.slug}`" target="_blank" class="blog-action-btn" title="Xem bài viết"><ExternalLink :size="15" /></a>
+                <button class="blog-action-btn blog-action-btn--danger" @click="handleDelete(blog.slug)"><Trash2 :size="15" /></button>
               </div>
             </td>
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- Blog List — Mobile Cards -->
+    <div class="md:hidden space-y-3">
+      <div v-if="blogStore.isLoading && !blogStore.blogs.length" class="text-center py-8 text-text-disabled card-premium">{{ t('common.loading') }}</div>
+      <div v-else-if="!blogStore.blogs.length" class="text-center py-8 text-text-disabled card-premium">{{ t('blog.empty') }}</div>
+      <div v-for="blog in blogStore.blogs" :key="blog.id" class="blog-mobile-card" @click="openEditModal(blog)">
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0 flex-1">
+            <div class="font-medium text-sm line-clamp-2 text-text-primary mb-1">{{ blog.title }}</div>
+            <div class="text-[0.6875rem] text-text-disabled">/blog/{{ blog.slug }}</div>
+          </div>
+          <div class="flex items-center gap-0.5" @click.stop>
+            <a :href="`/blog/${blog.slug}`" target="_blank" class="blog-action-btn"><ExternalLink :size="15" /></a>
+            <button class="blog-action-btn blog-action-btn--danger" @click="handleDelete(blog.slug)"><Trash2 :size="15" /></button>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 mt-3">
+          <span v-if="blog.published" class="blog-badge blog-badge--published"><CheckCircle2 :size="12" /><span>{{ t('blog.statusPublished') }}</span></span>
+          <span v-else class="blog-badge blog-badge--draft">{{ t('blog.statusDraft') }}</span>
+          <span class="text-text-disabled text-[0.75rem] ml-auto">{{ formatDate(blog.createdAt) }}</span>
+        </div>
+      </div>
     </div>
 
     <!-- ══════════════════════════════════════ -->
@@ -490,7 +498,7 @@ const formatDate = (dateStr: string) => {
             </div>
 
             <!-- Modal Footer -->
-            <div class="blog-modal__footer">
+            <div class="blog-modal__footer pwa-modal-safe">
               <button class="btn-secondary blog-btn" @click="isModalOpen = false">
                 {{ t('common.cancel') }}
               </button>
@@ -515,9 +523,40 @@ const formatDate = (dateStr: string) => {
    Blog Admin — All button/badge styles
    ═══════════════════════════════════════════ */
 
+/* ── Responsive Header ── */
+.admin-blog__header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+@media (min-width: 640px) {
+  .admin-blog__header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+  }
+}
+
 /* All blog buttons: always nowrap */
 .blog-btn {
   white-space: nowrap;
+}
+
+/* New Post button — prominent on mobile */
+.blog-btn--new {
+  width: 100%;
+  justify-content: center;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  border-radius: 0.5rem;
+}
+@media (min-width: 640px) {
+  .blog-btn--new {
+    width: auto;
+    padding: 0.5rem 1rem;
+  }
 }
 
 .blog-btn--generate {
@@ -542,6 +581,43 @@ const formatDate = (dateStr: string) => {
   background: var(--color-bg-hover);
 }
 
+/* ── Action Buttons (touch-friendly) ── */
+.blog-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  min-width: 2.25rem;
+  border-radius: 0.5rem;
+  color: var(--color-text-tertiary);
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+.blog-action-btn:hover {
+  color: var(--color-accent);
+  background: rgba(124, 111, 247, 0.1);
+}
+.blog-action-btn--danger:hover {
+  color: var(--color-error);
+  background: rgba(251, 113, 133, 0.1);
+}
+
+/* ── Mobile Card Layout ── */
+.blog-mobile-card {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+.blog-mobile-card:active {
+  border-color: var(--color-accent);
+}
+
 /* ── Status Badges ── */
 .blog-badge {
   display: inline-flex;
@@ -549,17 +625,17 @@ const formatDate = (dateStr: string) => {
   gap: 0.25rem;
   font-size: 0.6875rem;
   font-weight: 600;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
   white-space: nowrap;
 }
 .blog-badge--published {
   color: var(--color-success);
-  background: rgba(52, 211, 153, 0.1);
+  background: rgba(52, 211, 153, 0.12);
 }
 .blog-badge--draft {
   color: var(--color-warning);
-  background: rgba(251, 191, 36, 0.1);
+  background: rgba(251, 191, 36, 0.12);
 }
 
 /* ── Modal Overlay ── */
@@ -568,25 +644,38 @@ const formatDate = (dateStr: string) => {
   inset: 0;
   z-index: 50;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
   background: rgba(0, 0, 0, 0.65);
   backdrop-filter: blur(4px);
-  padding: 1rem;
+  padding: 0;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+@media (min-width: 640px) {
+  .blog-modal-overlay {
+    align-items: center;
+    padding: 1rem;
+  }
 }
 
 /* ── Modal Container ── */
 .blog-modal {
   background: var(--color-bg-surface);
   border: 1px solid var(--color-border-default);
-  border-radius: 1rem;
+  border-radius: 1rem 1rem 0 0;
   width: 100%;
   max-width: 52rem;
   max-height: 90vh;
+  max-height: 90dvh;
   display: flex;
   flex-direction: column;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   overflow: hidden;
+}
+@media (min-width: 640px) {
+  .blog-modal {
+    border-radius: 1rem;
+  }
 }
 
 .blog-modal__header {

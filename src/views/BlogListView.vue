@@ -121,7 +121,7 @@ const formatDate = (dateStr: string) => {
             <span class="flex items-center gap-1.5"><Calendar :size="14" /> {{ formatDate(blog.createdAt) }}</span>
           </div>
           
-          <h2 class="text-xl font-bold mb-2 group-hover:text-accent transition-colors line-clamp-2">
+          <h2 class="text-lg md:text-xl font-bold mb-2 group-hover:text-accent transition-colors line-clamp-2">
             {{ blog.title }}
           </h2>
           
@@ -129,15 +129,17 @@ const formatDate = (dateStr: string) => {
             {{ blog.excerpt }}
           </p>
           
-          <div class="flex flex-wrap items-center gap-2 mt-auto">
-            <span
-              v-for="tag in blog.tags" :key="tag"
-              class="blog-list-tag cursor-pointer hover:text-accent hover:border-accent/40 transition-colors"
-              @click.stop="setTag(tag)"
-            >
-              <Hash :size="10" /> {{ tag }}
-            </span>
-            <span class="ml-auto text-[0.75rem] font-semibold text-accent flex items-center gap-1 group-hover:gap-2 transition-all whitespace-nowrap">
+          <div class="blog-list__footer">
+            <div class="flex flex-wrap items-center gap-1.5">
+              <span
+                v-for="tag in blog.tags" :key="tag"
+                class="blog-list-tag cursor-pointer hover:text-accent hover:border-accent/40 transition-colors"
+                @click.stop="setTag(tag)"
+              >
+                <Hash :size="10" /> {{ tag }}
+              </span>
+            </div>
+            <span class="blog-list__read-more">
               {{ t('blog.readMore') }} <ChevronRight :size="14" />
             </span>
           </div>
@@ -225,6 +227,41 @@ const formatDate = (dateStr: string) => {
   border-radius: 0.375rem;
   white-space: nowrap;
   border: 1px solid transparent;
+}
+
+/* ── Blog List Footer (tags + read more) ── */
+.blog-list__footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: auto;
+}
+@media (min-width: 640px) {
+  .blog-list__footer {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+/* Read More link — prominent, always visible */
+.blog-list__read-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-accent);
+  white-space: nowrap;
+  padding: 0.375rem 0.75rem;
+  background: rgba(124, 111, 247, 0.08);
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+.blog-list__read-more:hover,
+.group:hover .blog-list__read-more {
+  background: rgba(124, 111, 247, 0.15);
+  gap: 0.5rem;
 }
 
 /* ── Tag Filter Bar ── */

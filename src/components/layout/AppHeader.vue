@@ -304,7 +304,7 @@ function handleLogout() {
           />
           <LogOut
             :size="14"
-            class="text-text-tertiary opacity-100 md:opacity-0 transition-opacity duration-150 group-hover:opacity-100"
+            class="text-text-tertiary opacity-100 lg:opacity-0 transition-opacity duration-150 group-hover:opacity-100"
           />
         </button>
       </template>
