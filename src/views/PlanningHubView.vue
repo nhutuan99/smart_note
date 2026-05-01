@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
-import { Target, Waypoints, Repeat, CreditCard, PiggyBank, ArrowRight, HandCoins } from 'lucide-vue-next'
+import { Target, PieChart, Repeat, CreditCard, PiggyBank, ArrowRight, HandCoins } from 'lucide-vue-next'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -11,7 +11,7 @@ const features = [
     id: 'budget',
     key: 'nav.budget',
     desc: 'budget.setupHint',
-    icon: Target,
+    icon: PieChart,
     color: '#3b82f6',
     route: '/budget'
   },
@@ -60,7 +60,7 @@ const features = [
       <div class="relative z-10 flex items-start justify-between">
         <div>
           <h1 class="text-3xl font-bold tracking-tight mb-3 flex items-center gap-3">
-            <Waypoints :size="28" class="text-accent" />
+            <Target :size="28" class="text-accent" />
             {{ t('nav.planning') }}
           </h1>
           <p class="text-text-secondary text-base max-w-xl">

@@ -12,13 +12,15 @@ const route = useRoute()
 const blogStore = useBlogStore()
 const authStore = useAuthStore()
 const showTooltip = ref(false)
-const activeTag = ref<string | null>(null)
+const activeTags = ref<string[]>([])
 
 onMounted(() => {
   blogStore.fetchBlogs()
-  // Read ?tag= from URL
-  const tagParam = route.query.tag as string | undefined
-  if (tagParam) activeTag.value = tagParam
+  // Read ?tags= from URL
+  const tagsParam = route.query.tags as string | undefined
+  if (tagsParam) {
+    activeTags.value = tagsParam.split(',').filter(Boolean)
+  }
 })
 
 // All unique tags from all blogs
@@ -28,15 +30,26 @@ const allTags = computed(() => {
   return Array.from(tagSet).sort()
 })
 
-// Filtered blogs based on active tag
+// Filtered blogs based on active tags (must contain ALL selected tags)
 const filteredBlogs = computed(() => {
-  if (!activeTag.value) return blogStore.blogs
-  return blogStore.blogs.filter(b => b.tags?.includes(activeTag.value!))
+  if (activeTags.value.length === 0) return blogStore.blogs
+  return blogStore.blogs.filter(b => {
+    if (!b.tags) return false
+    return activeTags.value.every(tag => b.tags!.includes(tag))
+  })
 })
 
-function setTag(tag: string | null) {
-  activeTag.value = tag
-  router.replace({ query: tag ? { tag } : {} })
+function toggleTag(tag: string) {
+  const idx = activeTags.value.indexOf(tag)
+  if (idx > -1) {
+    activeTags.value.splice(idx, 1)
+  } else {
+    activeTags.value.push(tag)
+  }
+  
+  // Update URL
+  const query = activeTags.value.length > 0 ? { tags: activeTags.value.join(',') } : {}
+  router.replace({ query })
 }
 
 const formatDate = (dateStr: string) => {
@@ -77,18 +90,26 @@ const formatDate = (dateStr: string) => {
     </div>
     <p class="text-text-tertiary text-sm mb-6">{{ t('blog.listDesc') }}</p>
 
-    <!-- Tag Filter Bar -->
-    <div v-if="allTags.length > 0" class="flex flex-wrap items-center gap-2 mb-8">
-      <button
-        v-for="tag in allTags"
-        :key="tag"
-        class="blog-filter-tag"
-        :class="{ 'blog-filter-tag--active': activeTag === tag }"
-        @click="setTag(activeTag === tag ? null : tag)"
-      >
-        <Hash :size="10" /> {{ tag }}
-        <X v-if="activeTag === tag" :size="10" class="ml-0.5" />
-      </button>
+    <!-- Tag Filter Bar (Scrollable & Compact) -->
+    <div v-if="allTags.length > 0" class="mb-8">
+      <div class="flex items-center overflow-x-auto hide-scrollbar gap-2 pb-2 -mx-4 px-4 md:mx-0 md:px-0">
+        <button
+          class="blog-filter-tag shrink-0"
+          :class="{ 'blog-filter-tag--active': activeTags.length === 0 }"
+          @click="activeTags = []; router.replace({ query: {} })"
+        >
+          Tất cả
+        </button>
+        <button
+          v-for="tag in allTags"
+          :key="tag"
+          class="blog-filter-tag shrink-0"
+          :class="{ 'blog-filter-tag--active': activeTags.includes(tag) }"
+          @click="toggleTag(tag)"
+        >
+          <span class="text-[0.625rem] opacity-60 mr-0.5">#</span>{{ tag }}
+        </button>
+      </div>
     </div>
 
     <!-- Loading State -->
@@ -134,9 +155,9 @@ const formatDate = (dateStr: string) => {
               <span
                 v-for="tag in blog.tags" :key="tag"
                 class="blog-list-tag cursor-pointer hover:text-accent hover:border-accent/40 transition-colors"
-                @click.stop="setTag(tag)"
+                @click.stop="!activeTags.includes(tag) && toggleTag(tag)"
               >
-                <Hash :size="10" /> {{ tag }}
+                <span class="text-[0.625rem] opacity-60">#</span> {{ tag }}
               </span>
             </div>
             <span class="blog-list__read-more">
@@ -152,9 +173,9 @@ const formatDate = (dateStr: string) => {
       <div class="text-text-disabled mb-4">
         <Calendar :size="48" class="mx-auto opacity-50" />
       </div>
-      <h3 class="text-lg font-medium mb-1">{{ activeTag ? `Không có bài viết với tag "${activeTag}"` : t('blog.emptyPublic') }}</h3>
-      <p class="text-text-tertiary text-sm">{{ activeTag ? '' : t('blog.emptyPublicHint') }}</p>
-      <button v-if="activeTag" class="mt-4 text-accent text-sm font-medium" @click="setTag(null)">← Xem tất cả</button>
+      <h3 class="text-lg font-medium mb-1">{{ activeTags.length > 0 ? `Không có bài viết phù hợp với các tag đã chọn` : t('blog.emptyPublic') }}</h3>
+      <p class="text-text-tertiary text-sm">{{ activeTags.length > 0 ? '' : t('blog.emptyPublicHint') }}</p>
+      <button v-if="activeTags.length > 0" class="mt-4 text-accent text-sm font-medium" @click="activeTags = []; router.replace({ query: {} })">← Xem tất cả</button>
     </div>
 
     <!-- Floating CTA — Icon Only -->

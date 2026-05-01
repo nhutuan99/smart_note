@@ -20,7 +20,7 @@ import {
   Bug,
   Newspaper,
   PenLine,
-  Waypoints
+  Target
 } from 'lucide-vue-next'
 
 const { t } = useI18n()
@@ -36,7 +36,7 @@ const navItems = [
   { key: 'nav.dashboard', icon: LayoutDashboard, route: '/' },
   { key: 'nav.transactions', icon: ArrowLeftRight, route: '/transactions' },
   { key: 'nav.wallets', icon: Wallet, route: '/wallets' },
-  { key: 'nav.planning', icon: Waypoints, route: '/planning' },
+  { key: 'nav.planning', icon: Target, route: '/planning' },
   { key: 'nav.notes', icon: FileText, route: '/notes' },
   { key: 'nav.blog', icon: Newspaper, route: '/blog' },
   { key: 'nav.settings', icon: Settings, route: '/settings' }
