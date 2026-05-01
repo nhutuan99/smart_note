@@ -30,7 +30,10 @@ export const useFinanceStore = defineStore('finance', () => {
   const loading = ref(false)
   const filter = ref<TransactionFilter>({ type: 'all' })
   const selectedMonth = ref(
-    new Date().toISOString().substring(0, 7) // "2026-04"
+    (() => {
+      const d = new Date()
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    })()
   )
 
   // ── Sync state (module-level, not reactive) ──

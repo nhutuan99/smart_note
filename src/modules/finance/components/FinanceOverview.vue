@@ -45,19 +45,31 @@ function timeSince(dateStr: string) {
 
 function prevMonth() {
   const [y, m] = finance.selectedMonth.split('-').map(Number)
-  const d = new Date(y, m - 2, 1)
-  finance.selectedMonth = d.toISOString().substring(0, 7)
+  let newM = m - 1
+  let newY = y
+  if (newM < 1) {
+    newM = 12
+    newY--
+  }
+  finance.selectedMonth = `${newY}-${String(newM).padStart(2, '0')}`
 }
 
 function nextMonth() {
   const [y, m] = finance.selectedMonth.split('-').map(Number)
-  const d = new Date(y, m, 1)
-  finance.selectedMonth = d.toISOString().substring(0, 7)
+  let newM = m + 1
+  let newY = y
+  if (newM > 12) {
+    newM = 1
+    newY++
+  }
+  finance.selectedMonth = `${newY}-${String(newM).padStart(2, '0')}`
 }
 
-const isCurrentMonth = computed(() =>
-  finance.selectedMonth === new Date().toISOString().substring(0, 7)
-)
+const isCurrentMonth = computed(() => {
+  const d = new Date()
+  const currentMonthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+  return finance.selectedMonth === currentMonthStr
+})
 
 </script>
 <template>
