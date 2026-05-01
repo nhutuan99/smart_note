@@ -7,7 +7,7 @@ import { useI18n } from 'vue-i18n'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import { useSeoMeta, useHead } from '@unhead/vue'
-import { ArrowLeft, Calendar, Hash, User as UserIcon, Clock, BookOpen, ArrowRight, Zap, BrainCircuit, LayoutDashboard, Share2, Facebook, Twitter, Linkedin, Link } from 'lucide-vue-next'
+import { ArrowLeft, Calendar, Hash, User as UserIcon, Clock, BookOpen, ArrowRight, Zap, BrainCircuit, LayoutDashboard, Share2, Facebook, Twitter, Linkedin, Link, MessageCircle, Send } from 'lucide-vue-next'
 import { useUiStore } from '@/stores/ui'
 
 const { t, locale } = useI18n()
@@ -37,7 +37,7 @@ const shareBlog = async () => {
   }
 }
 
-const shareSocial = (platform: 'facebook' | 'twitter' | 'linkedin') => {
+const shareSocial = (platform: 'facebook' | 'twitter' | 'linkedin' | 'zalo' | 'messenger' | 'telegram') => {
   const url = encodeURIComponent(`https://finnote-f4n.pages.dev/blog/${blogStore.currentBlog?.slug}`)
   const title = encodeURIComponent(blogStore.currentBlog?.title || 'FinNote Blog')
   let shareUrl = ''
@@ -48,6 +48,16 @@ const shareSocial = (platform: 'facebook' | 'twitter' | 'linkedin') => {
     shareUrl = `https://twitter.com/intent/tweet?url=${url}&text=${title}`
   } else if (platform === 'linkedin') {
     shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${url}`
+  } else if (platform === 'zalo') {
+    shareUrl = `https://zalo.me/share?url=${url}`
+  } else if (platform === 'messenger') {
+    // Messenger mobile scheme fallback to facebook dialog
+    shareUrl = `fb-messenger://share/?link=${url}`
+    if (window.innerWidth > 768) {
+      shareUrl = `https://www.facebook.com/dialog/send?link=${url}&app_id=1405866226742651&redirect_uri=${url}` // Using a placeholder/dummy app_id for web fallback
+    }
+  } else if (platform === 'telegram') {
+    shareUrl = `https://t.me/share/url?url=${url}&text=${title}`
   }
   
   window.open(shareUrl, '_blank', 'width=600,height=400')
@@ -235,13 +245,16 @@ const formatDate = (dateStr: string) => {
             <button @click="shareSocial('facebook')" class="text-text-tertiary hover:text-[#1877F2] transition-colors p-1.5 rounded-md hover:bg-bg-hover" title="Share on Facebook">
               <Facebook :size="14" />
             </button>
-            <button @click="shareSocial('twitter')" class="text-text-tertiary hover:text-[#1DA1F2] transition-colors p-1.5 rounded-md hover:bg-bg-hover" title="Share on Twitter">
-              <Twitter :size="14" />
+            <button @click="shareSocial('messenger')" class="text-text-tertiary hover:text-[#0084FF] transition-colors p-1.5 rounded-md hover:bg-bg-hover" title="Share on Messenger">
+              <MessageCircle :size="14" />
             </button>
-            <button @click="shareSocial('linkedin')" class="text-text-tertiary hover:text-[#0A66C2] transition-colors p-1.5 rounded-md hover:bg-bg-hover" title="Share on LinkedIn">
-              <Linkedin :size="14" />
+            <button @click="shareSocial('zalo')" class="text-text-tertiary hover:text-[#0068FF] transition-colors p-1.5 rounded-md hover:bg-bg-hover" title="Share on Zalo">
+              <div class="font-bold text-[10px] leading-none tracking-tighter w-[14px] text-center flex items-center justify-center">Zalo</div>
             </button>
-            <div class="w-px h-4 bg-border-default mx-1"></div>
+            <button @click="shareSocial('telegram')" class="text-text-tertiary hover:text-[#0088cc] transition-colors p-1.5 rounded-md hover:bg-bg-hover hidden sm:block" title="Share on Telegram">
+              <Send :size="14" />
+            </button>
+            <div class="w-px h-4 bg-border-default mx-0.5 sm:mx-1"></div>
             <button @click="shareBlog" class="flex items-center gap-1.5 text-text-secondary hover:text-accent transition-colors px-2.5 py-1.5 rounded-lg hover:bg-accent/10 font-medium">
               <Share2 :size="14" />
               <span class="hidden sm:inline">Share</span>
