@@ -10,6 +10,7 @@
 
 import { ref, onMounted } from 'vue'
 import { useEventListener } from '@/composables/useEventListener'
+import { httpClient } from '@/shared/api/httpClient'
 
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -208,14 +209,13 @@ export function useWeather() {
 
     // 2. IP-based fallback (using our own proxy to avoid adblockers)
     try {
-      const res  = await fetch('/api/proxy/location')
-      const data = await res.json() as any
-      if (data && data.success && data.data && data.data.lat) {
+      const data = await httpClient.get<any>('/api/proxy/location')
+      if (data && data.lat) {
         return {
-          lat: data.data.lat,
-          lon: data.data.lon,
-          city: data.data.city,
-          country: data.data.country || ''
+          lat: data.lat,
+          lon: data.lon,
+          city: data.city,
+          country: data.country || ''
         }
       }
     } catch { /* ignore */ }
@@ -233,19 +233,10 @@ export function useWeather() {
     try {
       const loc = await detectLocation()
 
-      const weatherRes = await fetch(`/api/proxy/weather?lat=${loc.lat}&lon=${loc.lon}`)
+      const proxyData = await httpClient.get<any>(`/api/proxy/weather?lat=${loc.lat}&lon=${loc.lon}`)
 
-      if (!weatherRes.ok) {
-        throw new Error(`Proxy returned HTTP ${weatherRes.status}`)
-      }
-
-      const proxyData = await weatherRes.json() as any
-      if (!proxyData.success) {
-        throw new Error(proxyData.error || 'Proxy weather failed')
-      }
-
-      const wData = proxyData.data.weather
-      const aqiData = proxyData.data.aqi
+      const wData = proxyData.weather
+      const aqiData = proxyData.aqi
 
       if (wData && wData.current) {
         const cur = wData.current

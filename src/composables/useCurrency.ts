@@ -7,6 +7,7 @@
  * - Provides formatMoney() / formatMoneyShort() that respect the selected currency
  */
 import { ref, computed, watch } from 'vue'
+import { httpClient } from '@/shared/api/httpClient'
 
 // ── State (singleton — shared across all imports) ──
 const CACHE_KEY = 'sn_currency'
@@ -59,10 +60,8 @@ async function fetchExchangeRate(): Promise<void> {
   rateError.value = ''
   try {
     // Using our backend proxy to avoid adblocker/CORS issues
-    const res = await fetch('/api/proxy/exchange-rate')
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    const data = await res.json() as any
-    const rate = data?.data?.vnd?.usd
+    const data = await httpClient.get<any>('/api/proxy/exchange-rate')
+    const rate = data?.vnd?.usd
     if (rate && typeof rate === 'number') {
       exchangeRate.value = rate
       localStorage.setItem(RATE_CACHE_KEY, JSON.stringify({
