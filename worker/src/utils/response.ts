@@ -6,8 +6,13 @@ const ALLOWED_ORIGINS = [
 ]
 
 export function corsHeaders(requestOrigin?: string | null): HeadersInit {
-  const origin =
-    requestOrigin && ALLOWED_ORIGINS.includes(requestOrigin) ? requestOrigin : ALLOWED_ORIGINS[0]
+  let origin = ALLOWED_ORIGINS[0]
+  if (requestOrigin) {
+    if (ALLOWED_ORIGINS.includes(requestOrigin) || requestOrigin.startsWith('app://') || requestOrigin.startsWith('capacitor://') || requestOrigin.startsWith('http://127.0.0.1:')) {
+      origin = requestOrigin
+    }
+  }
+
   return {
     'Access-Control-Allow-Origin': origin,
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',

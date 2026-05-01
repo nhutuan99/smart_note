@@ -7,6 +7,7 @@ import { AUTH_TOKEN_KEY } from '@/constants/auth'
 
 export const useNotesStore = defineStore('notes', () => {
   const obsidian = useObsidianSync()
+  obsidian.init()
 
   const notes = ref<NoteListItem[]>([])
   const currentNote = ref<Note | null>(null)
@@ -164,6 +165,7 @@ export const useNotesStore = defineStore('notes', () => {
     createNote,
     updateNote,
     deleteNote,
-    togglePin
+    togglePin,
+    obsidian
   }
 })

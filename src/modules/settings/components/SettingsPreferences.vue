@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Globe, DollarSign } from 'lucide-vue-next'
+import { Globe, DollarSign, FolderSync, Link, Unlink } from 'lucide-vue-next'
 import { setLocale, currentLocale } from '@/i18n'
 import { useCurrency, type CurrencyCode } from '@/composables/useCurrency'
+import { useNotesStore } from '@/stores/notes'
 
 const { t } = useI18n()
+const notesStore = useNotesStore()
 
 // Language
 const selectedLocale = ref(currentLocale())
@@ -106,6 +108,45 @@ function changeCurrency(code: CurrencyCode) {
             >
               <span v-if="rateLoading" class="border-text-disabled border-l-accent mr-1 inline-block h-3 w-3 animate-spin rounded-full border-2"></span>
               🇺🇸 USD ($)
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Obsidian Sync -->
+    <div>
+      <div class="text-text-secondary mb-3 flex items-center gap-2">
+        <FolderSync :size="18" />
+        <h3 class="text-sm font-semibold">Obsidian Sync (Desktop)</h3>
+      </div>
+      <div class="card-premium p-5">
+        <div class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+          <div>
+            <h4 class="mb-0.5 text-sm font-semibold">Local Vault Connection</h4>
+            <p class="text-text-tertiary text-sm">Directly sync your notes to a local Obsidian vault.</p>
+            <p v-if="!notesStore.obsidian.isConnected.value" class="text-warning mt-1 text-xs">
+              ⚠️ Not connected. Works on Chrome/Edge (Desktop) only.
+            </p>
+            <p v-else class="text-success mt-1 text-xs font-medium">
+              ✅ Connected to local vault
+            </p>
+          </div>
+          <div>
+            <button
+              v-if="!notesStore.obsidian.isConnected.value"
+              @click="notesStore.obsidian.connectVault()"
+              class="btn-secondary whitespace-nowrap"
+            >
+              <Link :size="16" />
+              Connect Vault
+            </button>
+            <button
+              v-else
+              @click="notesStore.obsidian.disconnectVault()"
+              class="btn-danger whitespace-nowrap"
+            >
+              <Unlink :size="16" />
+              Disconnect
             </button>
           </div>
         </div>
