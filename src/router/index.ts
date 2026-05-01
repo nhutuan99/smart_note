@@ -134,9 +134,15 @@ router.beforeEach((to) => {
   }
 
   // Onboarding: redirect first-time authenticated users
-  const onboardingDone = localStorage.getItem('finnote_onboarding_completed') === 'true'
+  const onboardingDone = auth.user?.hasCompletedOnboarding === true || localStorage.getItem('finnote_onboarding_completed') === 'true'
+  
   if (auth.isAuthenticated && !onboardingDone && to.path !== '/onboarding' && to.path !== '/login') {
     return { path: '/onboarding', replace: true }
+  }
+
+  // Prevent accessing onboarding if already done
+  if (auth.isAuthenticated && onboardingDone && to.path === '/onboarding') {
+    return { path: '/', replace: true }
   }
 })
 

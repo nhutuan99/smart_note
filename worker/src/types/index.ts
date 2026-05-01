@@ -19,6 +19,7 @@ export interface UserData {
   passwordHash: string
   createdAt: string
   pinHash?: string
+  hasCompletedOnboarding?: boolean
 }
 
 export interface NoteData {

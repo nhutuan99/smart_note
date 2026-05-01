@@ -123,6 +123,27 @@ export const useAuthStore = defineStore('auth', () => {
     return false
   }
 
+  async function completeOnboarding() {
+    if (!user.value) return
+    try {
+      const { httpClient } = await import('@/shared/api/httpClient')
+      
+      // We don't await the API call so the UI feels instant.
+      // httpClient automatically unwraps { success, data } responses.
+      httpClient.put<User>('/api/auth/profile', { hasCompletedOnboarding: true })
+        .then(updatedUser => {
+          if (updatedUser) updateUser(updatedUser)
+        })
+        .catch(err => console.error('Failed to save onboarding state:', err))
+
+      // Optimistic local update
+      updateUser({ ...user.value, hasCompletedOnboarding: true })
+    } catch (error) {
+      console.error('Failed to save onboarding state:', error)
+      updateUser({ ...user.value, hasCompletedOnboarding: true })
+    }
+  }
+
   return {
     token,
     refreshToken,
@@ -135,6 +156,7 @@ export const useAuthStore = defineStore('auth', () => {
     getToken,
     getRefreshToken,
     updateUser,
-    guardAuth
+    guardAuth,
+    completeOnboarding
   }
 })

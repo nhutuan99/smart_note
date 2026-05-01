@@ -53,7 +53,8 @@ export async function handleRegister(request: Request, env: Env): Promise<Respon
         email,
         name: user.name,
         avatarUrl: user.avatarUrl,
-        createdAt: user.createdAt
+        createdAt: user.createdAt,
+        hasCompletedOnboarding: user.hasCompletedOnboarding
       }
     }
   })
@@ -86,14 +87,15 @@ export async function handleLogin(request: Request, env: Env): Promise<Response>
         email: user.email,
         name: user.name,
         avatarUrl: user.avatarUrl,
-        createdAt: user.createdAt
+        createdAt: user.createdAt,
+        hasCompletedOnboarding: user.hasCompletedOnboarding
       }
     }
   })
 }
 
 export async function handleUpdateProfile(userId: string, request: Request, env: Env): Promise<Response> {
-  const { name, avatarUrl } = (await request.json()) as any
+  const { name, avatarUrl, hasCompletedOnboarding } = (await request.json()) as any
   const user = await getJSON<UserData>(env.SMART_NOTE_KV, `users/${userId}/profile`)
   if (!user) return errorResponse('User not found', 404)
 
@@ -105,6 +107,9 @@ export async function handleUpdateProfile(userId: string, request: Request, env:
       user.avatarUrl = avatarUrl.trim()
     }
   }
+  if (hasCompletedOnboarding !== undefined) {
+    user.hasCompletedOnboarding = hasCompletedOnboarding
+  }
 
   await putJSON(env.SMART_NOTE_KV, `users/${userId}/profile`, user)
 
@@ -115,7 +120,8 @@ export async function handleUpdateProfile(userId: string, request: Request, env:
       email: user.email,
       name: user.name,
       avatarUrl: user.avatarUrl || '',
-      createdAt: user.createdAt
+      createdAt: user.createdAt,
+      hasCompletedOnboarding: user.hasCompletedOnboarding
     }
   })
 }
@@ -312,7 +318,7 @@ export async function handleGoogleSignIn(request: Request, env: Env): Promise<Re
     const user = await getJSON<UserData>(env.SMART_NOTE_KV, `users/${userId}/profile`)
     if (!user) return errorResponse('User not found', 404)
 
-    if (!user.avatarUrl && googleUser.picture) {
+    if (googleUser.picture && user.avatarUrl !== googleUser.picture) {
       user.avatarUrl = googleUser.picture
       await putJSON(env.SMART_NOTE_KV, `users/${userId}/profile`, user)
     }
@@ -324,7 +330,7 @@ export async function handleGoogleSignIn(request: Request, env: Env): Promise<Re
       data: {
         token,
         refreshToken,
-        user: { id: user.id, email: user.email, name: user.name, avatarUrl: user.avatarUrl, createdAt: user.createdAt },
+        user: { id: user.id, email: user.email, name: user.name, avatarUrl: user.avatarUrl, createdAt: user.createdAt, hasCompletedOnboarding: user.hasCompletedOnboarding },
         isNewUser: false
       }
     })
@@ -357,7 +363,7 @@ export async function handleGoogleSignIn(request: Request, env: Env): Promise<Re
       data: {
         token,
         refreshToken,
-        user: { id: user.id, email: user.email, name: user.name, avatarUrl: user.avatarUrl, createdAt: user.createdAt },
+        user: { id: user.id, email: user.email, name: user.name, avatarUrl: user.avatarUrl, createdAt: user.createdAt, hasCompletedOnboarding: user.hasCompletedOnboarding },
         isNewUser: true
       }
     })
@@ -428,7 +434,8 @@ export async function handleRefreshToken(request: Request, env: Env): Promise<Re
         email: user.email,
         name: user.name,
         avatarUrl: user.avatarUrl,
-        createdAt: user.createdAt
+        createdAt: user.createdAt,
+        hasCompletedOnboarding: user.hasCompletedOnboarding
       }
     }
   })
