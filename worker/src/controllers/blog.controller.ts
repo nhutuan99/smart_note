@@ -211,15 +211,31 @@ export async function handleGenerateBlogContent(userId: string, request: Request
 
     // ═══════════════════════════════════════════════════
     // PHASE 1: Research with Gemini Grounding (Google Search)
-    // Gemini searches the web automatically for related content
+    // Rate-limited: max 400 queries/day to stay within free tier
     // ═══════════════════════════════════════════════════
     let researchContext = ''
     let groundingSources: { title: string; url: string }[] = []
+    const GROUNDING_DAILY_LIMIT = 400
+    const today = new Date().toISOString().substring(0, 10) // YYYY-MM-DD
+    const groundingKey = `system/grounding_usage/${today}`
 
     if (useGemini) {
+      // Check daily grounding quota
+      let groundingCount = 0
       try {
-        console.log('[BlogGen] Phase 1: Researching with Gemini Grounding...')
-        const researchPrompt = `Tìm kiếm và tổng hợp thông tin từ internet về chủ đề: "${topic}".
+        const stored = await env.SMART_NOTE_KV.get(groundingKey)
+        groundingCount = stored ? parseInt(stored, 10) : 0
+      } catch { groundingCount = 0 }
+
+      const quotaRemaining = GROUNDING_DAILY_LIMIT - groundingCount
+      const canUseGrounding = quotaRemaining > 0
+
+      console.log(`[BlogGen] Grounding quota: ${groundingCount}/${GROUNDING_DAILY_LIMIT} used today (${quotaRemaining} remaining)`)
+
+      if (canUseGrounding) {
+        try {
+          console.log('[BlogGen] Phase 1: Researching with Gemini Grounding...')
+          const researchPrompt = `Tìm kiếm và tổng hợp thông tin từ internet về chủ đề: "${topic}".
 Hãy đọc các bài viết liên quan và tóm tắt:
 1. Các điểm chính mà các bài viết hiện có đang đề cập
 2. Số liệu thống kê hoặc dữ liệu thực tế nếu có
@@ -228,49 +244,57 @@ Hãy đọc các bài viết liên quan và tóm tắt:
 
 Trả về bản tóm tắt nghiên cứu chi tiết bằng tiếng Việt.`
 
-        const researchResponse = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${env.GEMINI_API_KEY}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: researchPrompt }] }],
-              tools: [{ google_search: {} }],
-              generationConfig: { temperature: 0.3 }
+          const researchResponse = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${env.GEMINI_API_KEY}`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: researchPrompt }] }],
+                tools: [{ google_search: {} }],
+                generationConfig: { temperature: 0.3 }
+              })
+            }
+          )
+
+          if (researchResponse.ok) {
+            // Increment counter AFTER successful call (TTL 2 days = 172800s)
+            await env.SMART_NOTE_KV.put(groundingKey, String(groundingCount + 1), {
+              expirationTtl: 172800
             })
-          }
-        )
 
-        if (researchResponse.ok) {
-          const researchData: any = await researchResponse.json()
-          researchContext = researchData?.candidates?.[0]?.content?.parts?.[0]?.text || ''
+            const researchData: any = await researchResponse.json()
+            researchContext = researchData?.candidates?.[0]?.content?.parts?.[0]?.text || ''
 
-          // Extract grounding sources from metadata
-          const groundingMeta = researchData?.candidates?.[0]?.groundingMetadata
-          if (groundingMeta?.groundingChunks) {
-            for (const chunk of groundingMeta.groundingChunks) {
-              if (chunk?.web?.uri && chunk?.web?.title) {
-                groundingSources.push({
-                  title: chunk.web.title,
-                  url: chunk.web.uri
-                })
+            // Extract grounding sources from metadata
+            const groundingMeta = researchData?.candidates?.[0]?.groundingMetadata
+            if (groundingMeta?.groundingChunks) {
+              for (const chunk of groundingMeta.groundingChunks) {
+                if (chunk?.web?.uri && chunk?.web?.title) {
+                  groundingSources.push({
+                    title: chunk.web.title,
+                    url: chunk.web.uri
+                  })
+                }
               }
             }
-          }
-          // Deduplicate sources
-          const seen = new Set<string>()
-          groundingSources = groundingSources.filter(s => {
-            if (seen.has(s.url)) return false
-            seen.add(s.url)
-            return true
-          }).slice(0, 5) // Max 5 sources
+            // Deduplicate sources
+            const seen = new Set<string>()
+            groundingSources = groundingSources.filter(s => {
+              if (seen.has(s.url)) return false
+              seen.add(s.url)
+              return true
+            }).slice(0, 5)
 
-          console.log(`[BlogGen] Research done: ${researchContext.length} chars, ${groundingSources.length} sources`)
-        } else {
-          console.warn('[BlogGen] Grounding research failed, proceeding without research')
+            console.log(`[BlogGen] Research done: ${researchContext.length} chars, ${groundingSources.length} sources (quota: ${groundingCount + 1}/${GROUNDING_DAILY_LIMIT})`)
+          } else {
+            console.warn('[BlogGen] Grounding research failed, proceeding without research')
+          }
+        } catch (err: any) {
+          console.warn('[BlogGen] Grounding error:', err.message)
         }
-      } catch (err: any) {
-        console.warn('[BlogGen] Grounding error:', err.message)
+      } else {
+        console.warn(`[BlogGen] ⚠️ Grounding daily limit reached (${groundingCount}/${GROUNDING_DAILY_LIMIT}). Skipping web research to avoid charges.`)
       }
     }
 
