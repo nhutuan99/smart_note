@@ -107,6 +107,22 @@ function toggleView() {
   yearPage.value = currentYear.value
 }
 
+function handlePrev() {
+  if (viewMode.value === 'days') {
+    prevMonth()
+  } else {
+    yearPage.value--
+  }
+}
+
+function handleNext() {
+  if (viewMode.value === 'days') {
+    nextMonth()
+  } else {
+    yearPage.value++
+  }
+}
+
 // ─── Selection ────────────────────────────────────
 function isSameDate(day: number) {
   if (!props.modelValue) return false
@@ -150,7 +166,22 @@ useEventListener(document, 'click', (e: MouseEvent) => {
 
 function togglePicker() {
   showPicker.value = !showPicker.value
-  if (!showPicker.value) viewMode.value = 'days'
+  if (!showPicker.value) {
+    viewMode.value = 'days'
+  } else {
+    // Reset to selected date or today when opening
+    if (props.modelValue) {
+      const [y, m] = props.modelValue.split('-').map(Number)
+      currentYear.value = y
+      currentMonth.value = m - 1
+      yearPage.value = y
+    } else {
+      const d = new Date()
+      currentYear.value = d.getFullYear()
+      currentMonth.value = d.getMonth()
+      yearPage.value = d.getFullYear()
+    }
+  }
 }
 </script>
 
@@ -197,7 +228,7 @@ function togglePicker() {
           <button
             type="button"
             class="flex h-7 w-7 items-center justify-center rounded-lg text-text-secondary hover:bg-bg-hover hover:text-text-primary transition-colors"
-            @click.stop="viewMode === 'days' ? prevMonth() : yearPage--"
+            @click.stop="handlePrev"
           >
             <ChevronLeft :size="16" />
           </button>
@@ -223,7 +254,7 @@ function togglePicker() {
           <button
             type="button"
             class="flex h-7 w-7 items-center justify-center rounded-lg text-text-secondary hover:bg-bg-hover hover:text-text-primary transition-colors"
-            @click.stop="viewMode === 'days' ? nextMonth() : yearPage++"
+            @click.stop="handleNext"
           >
             <ChevronRight :size="16" />
           </button>
