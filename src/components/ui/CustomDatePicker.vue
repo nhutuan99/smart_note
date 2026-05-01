@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ChevronLeft, ChevronRight, ChevronDown, Calendar, X } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, Calendar } from 'lucide-vue-next'
+import { useEventListener } from '@/composables/useEventListener'
 
 const props = defineProps<{
-  modelValue: string   // ISO date: 'YYYY-MM-DD'
+  modelValue: string // 'YYYY-MM-DD'
   label?: string
   placeholder?: string
 }>()
@@ -15,39 +16,40 @@ const emit = defineEmits<{
 
 const { t, tm } = useI18n()
 
-// ─── State ──────────────────────────────────────────────────────────────────
+// ─── State ────────────────────────────────────────
 const showPicker = ref(false)
-const showMonthYearPanel = ref(false)   // header click → month+year selector
 const pickerRef = ref<HTMLElement | null>(null)
+
+// View mode: 'days' (default) | 'months' (pick month+year)
+const viewMode = ref<'days' | 'months'>('days')
 
 const today = new Date()
 const currentMonth = ref(today.getMonth())
-const currentYear  = ref(today.getFullYear())
+const currentYear = ref(today.getFullYear())
+// For year page navigation in month view
+const yearPage = ref(today.getFullYear())
 
-// Year panel navigation: show a range of years
-const yearRangeStart = ref(Math.floor(today.getFullYear() / 12) * 12)
-
-// ─── Sync view to selected value ─────────────────────────────────────────────
+// ─── Sync view to selected value ──────────────────
 watch(() => props.modelValue, (val) => {
   if (val) {
     const [y, m] = val.split('-').map(Number)
-    currentYear.value  = y
+    currentYear.value = y
     currentMonth.value = m - 1
+    yearPage.value = y
   }
 }, { immediate: true })
 
-// ─── Calendar grid ───────────────────────────────────────────────────────────
+// ─── Calendar grid ────────────────────────────────
 const blankDays = computed(() => {
   const firstDay = new Date(currentYear.value, currentMonth.value, 1).getDay()
-  // Start on Monday: Sun=0→6, Mon=1→0, Tue=2→1 …
-  return firstDay === 0 ? 6 : firstDay - 1
+  return firstDay === 0 ? 6 : firstDay - 1 // Mon-start
 })
 
 const daysInMonth = computed(() =>
   new Date(currentYear.value, currentMonth.value + 1, 0).getDate()
 )
 
-// ─── Display ─────────────────────────────────────────────────────────────────
+// ─── Display helpers ──────────────────────────────
 function getDisplayDate(iso: string) {
   if (!iso) return ''
   const [y, m, d] = iso.split('-')
@@ -55,44 +57,57 @@ function getDisplayDate(iso: string) {
 }
 
 const monthNames = computed(() => tm('months') as string[])
-const shortDays  = computed(() => tm('days.short') as string[])
 
-// Start week on Monday: reorder Su→end
+// Short month labels that actually work for Vietnamese
+// "Tháng 1" → "T1", "January" → "Jan"
+const shortMonths = computed(() => {
+  const full = monthNames.value
+  return full.map((name, idx) => {
+    // Vietnamese: "Tháng X" → "T" + number
+    if (name.startsWith('Tháng')) return `T${idx + 1}`
+    // English/other: take first 3 chars
+    return name.substring(0, 3)
+  })
+})
+
+// Week days (Mon-start)
 const weekDays = computed(() => {
-  const d = [...shortDays.value]  // Sun Mon Tue … Sat
-  d.push(d.shift()!)              // Mon Tue … Sat Sun
+  const d = [...(tm('days.short') as string[])] // Sun Mon Tue … Sat
+  d.push(d.shift()!) // Mon Tue … Sat Sun
   return d
 })
 
-// ─── Navigation ──────────────────────────────────────────────────────────────
-function changeMonth(step: number) {
-  let m = currentMonth.value + step
-  let y = currentYear.value
-  if (m > 11) { m = 0; y++ }
-  else if (m < 0) { m = 11; y-- }
+// ─── Navigation ───────────────────────────────────
+function prevMonth() {
+  if (currentMonth.value === 0) {
+    currentMonth.value = 11
+    currentYear.value--
+  } else {
+    currentMonth.value--
+  }
+}
+
+function nextMonth() {
+  if (currentMonth.value === 11) {
+    currentMonth.value = 0
+    currentYear.value++
+  } else {
+    currentMonth.value++
+  }
+}
+
+function pickMonth(m: number) {
   currentMonth.value = m
-  currentYear.value  = y
+  currentYear.value = yearPage.value
+  viewMode.value = 'days'
 }
 
-function selectMonth(m: number) {
-  currentMonth.value = m
-  showMonthYearPanel.value = false
+function toggleView() {
+  viewMode.value = viewMode.value === 'days' ? 'months' : 'days'
+  yearPage.value = currentYear.value
 }
 
-function selectYear(y: number) {
-  currentYear.value = y
-  // After picking year, fall back to month grid (don't close MonthYear panel)
-  // Keep panel open so user can then pick month
-}
-
-function prevYearRange() { yearRangeStart.value -= 12 }
-function nextYearRange() { yearRangeStart.value += 12 }
-
-const yearRange = computed(() => {
-  return Array.from({ length: 12 }, (_, i) => yearRangeStart.value + i)
-})
-
-// ─── Selection ───────────────────────────────────────────────────────────────
+// ─── Selection ────────────────────────────────────
 function isSameDate(day: number) {
   if (!props.modelValue) return false
   const [y, m, d] = props.modelValue.split('-').map(Number)
@@ -102,7 +117,7 @@ function isSameDate(day: number) {
 function isToday(day: number) {
   return day === today.getDate() &&
     currentMonth.value === today.getMonth() &&
-    currentYear.value  === today.getFullYear()
+    currentYear.value === today.getFullYear()
 }
 
 function selectDate(day: number) {
@@ -111,7 +126,7 @@ function selectDate(day: number) {
   const d = String(day).padStart(2, '0')
   emit('update:modelValue', `${y}-${m}-${d}`)
   showPicker.value = false
-  showMonthYearPanel.value = false
+  viewMode.value = 'days'
 }
 
 function selectToday() {
@@ -120,161 +135,167 @@ function selectToday() {
     .toISOString().substring(0, 10)
   emit('update:modelValue', iso)
   currentMonth.value = d.getMonth()
-  currentYear.value  = d.getFullYear()
+  currentYear.value = d.getFullYear()
   showPicker.value = false
-  showMonthYearPanel.value = false
+  viewMode.value = 'days'
 }
 
-function clearDate() {
-  emit('update:modelValue', '')
-  showPicker.value = false
-}
-
-// ─── Outside-click close ─────────────────────────────────────────────────────
-import { useEventListener } from '@/composables/useEventListener'
+// ─── Outside-click close ──────────────────────────
 useEventListener(document, 'click', (e: MouseEvent) => {
   if (pickerRef.value && !pickerRef.value.contains(e.target as Node)) {
     showPicker.value = false
-    showMonthYearPanel.value = false
+    viewMode.value = 'days'
   }
 })
 
 function togglePicker() {
   showPicker.value = !showPicker.value
-  if (!showPicker.value) showMonthYearPanel.value = false
-}
-
-function toggleMonthYear() {
-  showMonthYearPanel.value = !showMonthYearPanel.value
-  // sync year range to current view
-  yearRangeStart.value = Math.floor(currentYear.value / 12) * 12
+  if (!showPicker.value) viewMode.value = 'days'
 }
 </script>
 
 <template>
-  <div class="cdp-wrapper" ref="pickerRef">
+  <div class="relative" ref="pickerRef">
     <!-- Label -->
-    <label v-if="label" class="cdp-label">{{ label }}</label>
+    <label v-if="label" class="block text-sm font-medium text-text-secondary mb-2">
+      {{ label }}
+    </label>
 
-    <!-- Trigger button -->
+    <!-- Trigger -->
     <button
       type="button"
-      class="cdp-trigger"
-      :class="{ 'cdp-trigger--active': showPicker }"
+      class="flex w-full items-center justify-between rounded-xl border px-4 py-2.5 text-sm font-medium text-left transition-all duration-150
+             border-border-default bg-bg-surface text-text-primary
+             hover:border-border-strong
+             focus:border-accent focus:ring-2 focus:ring-accent-subtle focus:outline-none"
+      :class="showPicker ? 'border-accent ring-2 ring-accent-subtle' : ''"
       @click="togglePicker"
     >
-      <span class="cdp-trigger__text" :class="{ 'cdp-trigger__text--placeholder': !modelValue }">
+      <span :class="modelValue ? '' : 'text-text-disabled font-normal'">
         {{ modelValue ? getDisplayDate(modelValue) : (placeholder || t('addTx.date')) }}
       </span>
-      <Calendar :size="16" class="cdp-trigger__icon" />
+      <Calendar :size="16" class="text-text-tertiary shrink-0" />
     </button>
 
-    <!-- Dropdown Panel -->
-    <Transition name="cdp-slide">
-      <div v-if="showPicker" class="cdp-panel" @click.stop>
-
-        <!-- ── Month/Year Header ── -->
-        <div class="cdp-nav">
-          <button type="button" class="cdp-nav__arrow" @click.stop="changeMonth(-1)">
-            <ChevronLeft :size="15" />
-          </button>
-
-          <!-- Clickable Month+Year badge → opens panel -->
+    <!-- Dropdown -->
+    <Transition
+      enter-active-class="transition duration-150 ease-out"
+      enter-from-class="opacity-0 translate-y-1.5 scale-[0.97]"
+      enter-to-class="opacity-100 translate-y-0 scale-100"
+      leave-active-class="transition duration-100 ease-in"
+      leave-from-class="opacity-100 translate-y-0 scale-100"
+      leave-to-class="opacity-0 translate-y-1 scale-[0.98]"
+    >
+      <div
+        v-if="showPicker"
+        class="absolute bottom-full left-0 z-[999] mb-2 w-[17.5rem] rounded-xl border border-border-default bg-bg-elevated p-3.5 shadow-2xl"
+        @click.stop
+      >
+        <!-- ════════ HEADER ════════ -->
+        <div class="flex items-center justify-between mb-3">
+          <!-- Prev -->
           <button
             type="button"
-            class="cdp-nav__title"
-            :class="{ 'cdp-nav__title--active': showMonthYearPanel }"
-            @click.stop="toggleMonthYear"
+            class="flex h-7 w-7 items-center justify-center rounded-lg text-text-secondary hover:bg-bg-hover hover:text-text-primary transition-colors"
+            @click.stop="viewMode === 'days' ? prevMonth() : yearPage--"
           >
-            {{ monthNames[currentMonth] }} {{ currentYear }}
-            <ChevronDown :size="13" class="cdp-nav__caret" :class="{ 'rotate-180': showMonthYearPanel }" />
+            <ChevronLeft :size="16" />
           </button>
 
-          <button type="button" class="cdp-nav__arrow" @click.stop="changeMonth(1)">
-            <ChevronRight :size="15" />
+          <!-- Title (clickable → toggle month/year view) -->
+          <button
+            type="button"
+            class="flex items-center gap-1 px-3 py-1 rounded-lg text-sm font-bold transition-colors"
+            :class="viewMode === 'months'
+              ? 'bg-accent/15 text-accent'
+              : 'text-text-primary hover:bg-bg-hover'"
+            @click.stop="toggleView"
+          >
+            <template v-if="viewMode === 'days'">
+              {{ monthNames[currentMonth] }} {{ currentYear }}
+            </template>
+            <template v-else>
+              {{ yearPage }}
+            </template>
+          </button>
+
+          <!-- Next -->
+          <button
+            type="button"
+            class="flex h-7 w-7 items-center justify-center rounded-lg text-text-secondary hover:bg-bg-hover hover:text-text-primary transition-colors"
+            @click.stop="viewMode === 'days' ? nextMonth() : yearPage++"
+          >
+            <ChevronRight :size="16" />
           </button>
         </div>
 
-        <!-- ── Month+Year Picker Panel (fast jump) ── -->
-        <Transition name="cdp-fade">
-          <div v-if="showMonthYearPanel" class="cdp-my-panel">
-            <!-- Year navigation -->
-            <div class="cdp-my-panel__year-nav">
-              <button type="button" class="cdp-nav__arrow cdp-nav__arrow--sm" @click.stop="prevYearRange">
-                <ChevronLeft :size="13" />
-              </button>
-              <span class="cdp-my-panel__year-range">
-                {{ yearRange[0] }} – {{ yearRange[yearRange.length - 1] }}
-              </span>
-              <button type="button" class="cdp-nav__arrow cdp-nav__arrow--sm" @click.stop="nextYearRange">
-                <ChevronRight :size="13" />
-              </button>
-            </div>
-            <!-- Year grid -->
-            <div class="cdp-my-panel__year-grid">
-              <button
-                v-for="y in yearRange"
-                :key="y"
-                type="button"
-                class="cdp-my-panel__year-btn"
-                :class="{
-                  'cdp-my-panel__year-btn--active': y === currentYear,
-                  'cdp-my-panel__year-btn--today': y === today.getFullYear()
-                }"
-                @click.stop="selectYear(y)"
-              >{{ y }}</button>
-            </div>
-            <!-- Divider -->
-            <div class="cdp-my-panel__divider" />
-            <!-- Month grid -->
-            <div class="cdp-my-panel__month-grid">
-              <button
-                v-for="(m, idx) in monthNames"
-                :key="idx"
-                type="button"
-                class="cdp-my-panel__month-btn"
-                :class="{
-                  'cdp-my-panel__month-btn--active': idx === currentMonth,
-                  'cdp-my-panel__month-btn--today': idx === today.getMonth() && currentYear === today.getFullYear()
-                }"
-                @click.stop="selectMonth(idx)"
-              >{{ m.substring(0, 3) }}</button>
-            </div>
-          </div>
-        </Transition>
+        <!-- ════════ MONTH PICKER VIEW ════════ -->
+        <div v-if="viewMode === 'months'" class="grid grid-cols-4 gap-1.5">
+          <button
+            v-for="(label, idx) in shortMonths"
+            :key="idx"
+            type="button"
+            class="py-2 rounded-lg text-xs font-semibold transition-all duration-100"
+            :class="[
+              idx === currentMonth && yearPage === currentYear
+                ? 'bg-accent text-white shadow-md shadow-accent/30'
+                : idx === today.getMonth() && yearPage === today.getFullYear()
+                  ? 'text-accent font-bold hover:bg-bg-hover'
+                  : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary'
+            ]"
+            @click.stop="pickMonth(idx)"
+          >
+            {{ label }}
+          </button>
+        </div>
 
-        <!-- ── Day Grid (shown when month/year panel is closed) ── -->
-        <Transition name="cdp-fade">
-          <div v-if="!showMonthYearPanel">
-            <!-- Weekday headers -->
-            <div class="cdp-days-header">
-              <span v-for="d in weekDays" :key="d">{{ d }}</span>
-            </div>
-            <!-- Day buttons -->
-            <div class="cdp-days-grid">
-              <div v-for="b in blankDays" :key="'b' + b" />
-              <button
-                v-for="day in daysInMonth"
-                :key="day"
-                type="button"
-                class="cdp-day"
-                :class="{
-                  'cdp-day--selected': isSameDate(day),
-                  'cdp-day--today': !isSameDate(day) && isToday(day)
-                }"
-                @click.stop="selectDate(day)"
-              >{{ day }}</button>
-            </div>
+        <!-- ════════ DAY PICKER VIEW ════════ -->
+        <template v-else>
+          <!-- Weekday headers -->
+          <div class="grid grid-cols-7 gap-0.5 mb-1.5">
+            <span
+              v-for="d in weekDays"
+              :key="d"
+              class="text-center text-[0.625rem] font-bold text-text-disabled tracking-wider"
+            >{{ d }}</span>
           </div>
-        </Transition>
 
-        <!-- ── Footer Actions ── -->
-        <div class="cdp-footer">
-          <button type="button" class="cdp-footer__btn cdp-footer__btn--today" @click.stop="selectToday">
+          <!-- Day grid -->
+          <div class="grid grid-cols-7 gap-0.5">
+            <!-- Blanks -->
+            <div v-for="b in blankDays" :key="'b' + b" class="aspect-square" />
+            <!-- Days -->
+            <button
+              v-for="day in daysInMonth"
+              :key="day"
+              type="button"
+              class="aspect-square flex items-center justify-center rounded-lg text-[0.8125rem] font-medium transition-all duration-100"
+              :class="[
+                isSameDate(day)
+                  ? 'bg-accent text-white font-bold shadow-md shadow-accent/30'
+                  : isToday(day)
+                    ? 'text-accent font-bold ring-1 ring-accent/30'
+                    : 'text-text-primary hover:bg-bg-hover'
+              ]"
+              @click.stop="selectDate(day)"
+            >{{ day }}</button>
+          </div>
+        </template>
+
+        <!-- ════════ FOOTER ════════ -->
+        <div class="flex gap-2 mt-3 pt-3 border-t border-border-subtle">
+          <button
+            type="button"
+            class="flex-1 py-1.5 rounded-lg text-xs font-semibold bg-accent/10 text-accent hover:bg-accent/20 transition-colors"
+            @click.stop="selectToday"
+          >
             {{ t('common.today') }}
           </button>
-          <button type="button" class="cdp-footer__btn cdp-footer__btn--clear" @click.stop="clearDate">
-            <X :size="11" />
+          <button
+            type="button"
+            class="flex-1 py-1.5 rounded-lg text-xs font-semibold bg-bg-hover text-text-secondary hover:text-text-primary transition-colors"
+            @click.stop="showPicker = false; viewMode = 'days'"
+          >
             {{ t('common.close') }}
           </button>
         </div>
@@ -282,294 +303,3 @@ function toggleMonthYear() {
     </Transition>
   </div>
 </template>
-
-<style scoped>
-/* ─── Wrapper ─────────────────────────────────────────────────────────── */
-.cdp-wrapper {
-  position: relative;
-}
-
-.cdp-label {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--color-text-secondary);
-  margin-bottom: 0.5rem;
-}
-
-/* ─── Trigger button ──────────────────────────────────────────────────── */
-.cdp-trigger {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 0.625rem 1rem;
-  border-radius: 0.75rem;
-  border: 1px solid var(--color-border-default);
-  background: var(--color-bg-surface);
-  color: var(--color-text-primary);
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-  text-align: left;
-}
-.cdp-trigger:hover { border-color: var(--color-border-strong); }
-.cdp-trigger--active {
-  border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px rgba(124, 111, 247, 0.12);
-}
-.cdp-trigger__text--placeholder { color: var(--color-text-disabled); font-weight: 400; }
-.cdp-trigger__icon { color: var(--color-text-tertiary); flex-shrink: 0; }
-
-/* ─── Panel ───────────────────────────────────────────────────────────── */
-.cdp-panel {
-  position: absolute;
-  bottom: calc(100% + 0.5rem);
-  left: 0;
-  z-index: 999;
-  width: 19rem;
-  max-width: calc(100vw - 2rem);
-  padding: 1rem;
-  border-radius: 1rem;
-  border: 1px solid var(--color-border-default);
-  background: var(--color-bg-elevated);
-  box-shadow:
-    0 20px 60px -15px rgba(0, 0, 0, 0.45),
-    0 4px 20px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255,255,255,0.04);
-  backdrop-filter: blur(16px);
-}
-
-/* ─── Navigation ──────────────────────────────────────────────────────── */
-.cdp-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.875rem;
-  gap: 0.25rem;
-}
-
-.cdp-nav__arrow {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 0.5rem;
-  border: none;
-  background: transparent;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
-  flex-shrink: 0;
-}
-.cdp-nav__arrow:hover { background: var(--color-bg-hover); color: var(--color-text-primary); }
-.cdp-nav__arrow--sm { width: 1.625rem; height: 1.625rem; }
-
-.cdp-nav__title {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  flex: 1;
-  justify-content: center;
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: var(--color-text-primary);
-  padding: 0.375rem 0.625rem;
-  border-radius: 0.5rem;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
-  white-space: nowrap;
-}
-.cdp-nav__title:hover { background: var(--color-bg-hover); }
-.cdp-nav__title--active { background: var(--color-accent-subtle); color: var(--color-accent); }
-.cdp-nav__caret {
-  color: var(--color-text-tertiary);
-  transition: transform 0.2s ease;
-  flex-shrink: 0;
-}
-
-/* ─── Month+Year panel ────────────────────────────────────────────────── */
-.cdp-my-panel {
-  margin-bottom: 0.5rem;
-}
-.cdp-my-panel__year-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.5rem;
-  gap: 0.25rem;
-}
-.cdp-my-panel__year-range {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--color-text-tertiary);
-  letter-spacing: 0.03em;
-}
-
-.cdp-my-panel__year-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.25rem;
-  margin-bottom: 0.625rem;
-}
-.cdp-my-panel__year-btn {
-  padding: 0.3rem 0;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: var(--color-text-secondary);
-  border-radius: 0.5rem;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  text-align: center;
-}
-.cdp-my-panel__year-btn:hover { background: var(--color-bg-hover); color: var(--color-text-primary); }
-.cdp-my-panel__year-btn--active {
-  background: var(--color-accent) !important;
-  color: #fff !important;
-  font-weight: 700;
-  box-shadow: 0 2px 8px rgba(124,111,247,0.35);
-}
-.cdp-my-panel__year-btn--today {
-  color: var(--color-accent);
-  font-weight: 700;
-}
-
-.cdp-my-panel__divider {
-  height: 1px;
-  background: var(--color-border-subtle);
-  margin: 0.5rem 0;
-}
-
-.cdp-my-panel__month-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.25rem;
-}
-.cdp-my-panel__month-btn {
-  padding: 0.35rem 0;
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--color-text-secondary);
-  border-radius: 0.5rem;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  text-align: center;
-}
-.cdp-my-panel__month-btn:hover { background: var(--color-bg-hover); color: var(--color-text-primary); }
-.cdp-my-panel__month-btn--active {
-  background: var(--color-accent) !important;
-  color: #fff !important;
-  font-weight: 700;
-  box-shadow: 0 2px 8px rgba(124,111,247,0.3);
-}
-.cdp-my-panel__month-btn--today {
-  color: var(--color-accent);
-  font-weight: 700;
-}
-
-/* ─── Weekday headers ─────────────────────────────────────────────────── */
-.cdp-days-header {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 0.125rem;
-  margin-bottom: 0.375rem;
-}
-.cdp-days-header span {
-  text-align: center;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  color: var(--color-text-disabled);
-  letter-spacing: 0.03em;
-}
-
-/* ─── Day grid ────────────────────────────────────────────────────────── */
-.cdp-days-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 0.125rem;
-}
-
-.cdp-day {
-  aspect-ratio: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0.5rem;
-  border: none;
-  background: transparent;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: var(--color-text-primary);
-  cursor: pointer;
-  transition: all 0.12s ease;
-  line-height: 1;
-}
-.cdp-day:hover { background: var(--color-bg-hover); }
-.cdp-day--today {
-  color: var(--color-accent);
-  font-weight: 700;
-  border: 1px solid rgba(124,111,247,0.3);
-}
-.cdp-day--selected {
-  background: var(--color-accent) !important;
-  color: #fff !important;
-  font-weight: 700;
-  box-shadow: 0 2px 10px rgba(124,111,247,0.4);
-}
-
-/* ─── Footer ──────────────────────────────────────────────────────────── */
-.cdp-footer {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--color-border-subtle);
-}
-.cdp-footer__btn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.3rem;
-  padding: 0.4rem 0;
-  border-radius: 0.5rem;
-  border: none;
-  font-size: 0.75rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-.cdp-footer__btn--today {
-  background: var(--color-accent-subtle);
-  color: var(--color-accent);
-}
-.cdp-footer__btn--today:hover {
-  background: rgba(124,111,247,0.2);
-}
-.cdp-footer__btn--clear {
-  background: var(--color-bg-hover);
-  color: var(--color-text-secondary);
-}
-.cdp-footer__btn--clear:hover {
-  background: var(--color-bg-tertiary);
-  color: var(--color-text-primary);
-}
-
-/* ─── Transitions ─────────────────────────────────────────────────────── */
-.cdp-slide-enter-active { transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1); }
-.cdp-slide-leave-active { transition: opacity 0.12s ease, transform 0.12s ease; }
-.cdp-slide-enter-from { opacity: 0; transform: translateY(6px) scale(0.97); }
-.cdp-slide-leave-to  { opacity: 0; transform: translateY(4px) scale(0.98); }
-
-.cdp-fade-enter-active { transition: opacity 0.15s ease; }
-.cdp-fade-leave-active { transition: opacity 0.1s ease; }
-.cdp-fade-enter-from, .cdp-fade-leave-to { opacity: 0; }
-</style>
