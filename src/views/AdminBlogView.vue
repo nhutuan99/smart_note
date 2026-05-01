@@ -96,12 +96,31 @@ async function openEditModal(blog: Blog) {
 
 function switchTab(tab: 'paste' | 'ai') {
   activeTab.value = tab
-  // Reset state when switching
-  inputContent.value = ''
-  aiImageBase64.value = ''
-  hasPreview.value = false
-  previewHtml.value = ''
-  form.value = { title: '', slug: '', excerpt: '', content: '', tags: [], imageUrl: '', published: true }
+  // Only reset state when NOT editing an existing blog
+  if (!editingSlug.value) {
+    inputContent.value = ''
+    aiImageBase64.value = ''
+    hasPreview.value = false
+    previewHtml.value = ''
+    form.value = { title: '', slug: '', excerpt: '', content: '', tags: [], imageUrl: '', published: true }
+  }
+}
+
+// ── Edit content mode toggle ──
+const isEditingContent = ref(false)
+const editMarkdown = ref('')
+
+async function toggleContentEdit() {
+  if (isEditingContent.value) {
+    // Save: update form.content + re-render preview
+    form.value.content = editMarkdown.value
+    previewHtml.value = await marked(editMarkdown.value || '', { async: true })
+    isEditingContent.value = false
+  } else {
+    // Enter edit mode
+    editMarkdown.value = form.value.content || ''
+    isEditingContent.value = true
+  }
 }
 
 function handlePaste(e: ClipboardEvent) {
@@ -455,7 +474,7 @@ const formatDate = (dateStr: string) => {
                   </div>
                   <button
                     class="blog-btn--back"
-                    @click="hasPreview = false"
+                    @click="hasPreview = false; isEditingContent = false"
                   >
                     <ArrowLeft :size="14" />
                     <span>{{ t('blog.editInput') }}</span>
@@ -474,26 +493,72 @@ const formatDate = (dateStr: string) => {
                   </label>
                 </div>
 
-                <!-- Title -->
-                <h2 class="text-xl md:text-2xl font-bold tracking-tight mb-3 text-text-primary">
-                  {{ form.title }}
-                </h2>
+                <!-- Editable Title -->
+                <input
+                  v-model="form.title"
+                  type="text"
+                  class="w-full text-xl md:text-2xl font-bold tracking-tight mb-3 text-text-primary bg-transparent border-b border-transparent hover:border-border-default focus:border-accent focus:outline-none transition-colors py-1"
+                  placeholder="Tiêu đề bài viết..."
+                />
 
-                <!-- Excerpt -->
-                <p v-if="form.excerpt" class="text-sm text-text-secondary leading-relaxed mb-4 italic border-l-2 border-accent/40 pl-3">
-                  {{ form.excerpt }}
-                </p>
+                <!-- Editable Excerpt -->
+                <textarea
+                  v-model="form.excerpt"
+                  rows="2"
+                  class="w-full text-sm text-text-secondary leading-relaxed mb-4 italic border-l-2 border-accent/40 pl-3 bg-transparent resize-none focus:outline-none hover:bg-bg-elevated/50 focus:bg-bg-elevated/50 rounded-r-lg transition-colors py-1"
+                  placeholder="Mô tả ngắn..."
+                />
 
-                <!-- Tags -->
-                <div v-if="form.tags?.length" class="flex flex-wrap gap-1.5 mb-6">
-                  <span v-for="tag in form.tags" :key="tag" class="blog-tag">
+                <!-- Editable Tags -->
+                <div class="flex flex-wrap items-center gap-1.5 mb-6">
+                  <span v-for="(tag, idx) in form.tags" :key="idx" class="blog-tag group relative">
                     <Hash :size="10" />
                     {{ tag }}
+                    <button
+                      @click="form.tags?.splice(idx, 1)"
+                      class="ml-1 text-text-disabled hover:text-error transition-colors"
+                    >
+                      <X :size="10" />
+                    </button>
                   </span>
+                  <input
+                    type="text"
+                    class="text-[0.6875rem] bg-transparent border-none focus:outline-none text-text-secondary w-20 placeholder:text-text-disabled"
+                    placeholder="+ tag"
+                    @keydown.enter.prevent="(e: KeyboardEvent) => {
+                      const val = (e.target as HTMLInputElement).value.trim()
+                      if (val && !form.tags?.includes(val)) {
+                        form.tags?.push(val);
+                        (e.target as HTMLInputElement).value = ''
+                      }
+                    }"
+                  />
                 </div>
 
+                <!-- Content: Toggle between preview and editor -->
+                <div class="mb-3 flex items-center justify-between">
+                  <span class="text-[0.6875rem] font-medium text-text-tertiary">Nội dung</span>
+                  <button
+                    @click="toggleContentEdit"
+                    class="inline-flex items-center gap-1 text-[0.6875rem] font-medium px-2 py-1 rounded-lg transition-colors"
+                    :class="isEditingContent ? 'bg-accent/10 text-accent' : 'text-text-tertiary hover:bg-bg-hover hover:text-text-primary'"
+                  >
+                    <Pencil :size="12" />
+                    {{ isEditingContent ? 'Lưu & Xem trước' : 'Sửa Markdown' }}
+                  </button>
+                </div>
+
+                <!-- Markdown editor -->
+                <textarea
+                  v-if="isEditingContent"
+                  v-model="editMarkdown"
+                  rows="20"
+                  class="blog-textarea font-mono text-[0.8125rem] leading-relaxed"
+                  placeholder="Nội dung markdown..."
+                />
+
                 <!-- Rendered Markdown Content -->
-                <div class="blog-preview__content" v-html="previewHtml"></div>
+                <div v-else class="blog-preview__content" v-html="previewHtml"></div>
               </div>
             </div>
 
