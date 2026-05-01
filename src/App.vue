@@ -178,6 +178,7 @@ onMounted(() => {
 }
 .public-layout__content {
   flex: 1;
+  min-height: 0; /* Critical: allows flex child to shrink below content height → enables overflow scroll */
   max-width: 100%;
   padding: 2rem 1.5rem;
   padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
@@ -291,6 +292,7 @@ onMounted(() => {
 
   .public-layout__content {
     flex: 1;
+    min-height: 0; /* Allow flex child to shrink → enables scroll */
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
@@ -299,6 +301,7 @@ onMounted(() => {
 
   .public-safe-spacer {
     height: max(env(safe-area-inset-top), 24px) !important;
+    flex-shrink: 0;
   }
 
   /* Blog CTA floating button — push above home indicator */

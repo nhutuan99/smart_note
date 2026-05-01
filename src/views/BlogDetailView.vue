@@ -124,7 +124,7 @@ const formatDate = (dateStr: string) => {
 </script>
 
 <template>
-  <div class="max-w-[52rem] mx-auto pb-16">
+  <div class="blog-detail-page max-w-[52rem] mx-auto pb-16">
     
     <!-- Language Switcher (Fixed top-right like LoginView) -->
     <div 
@@ -309,7 +309,7 @@ const formatDate = (dateStr: string) => {
   background: var(--color-bg-surface);
   border: none;
   border-radius: 0;
-  overflow: hidden;
+  overflow: visible; /* Allow content to participate in parent scroll */
   box-shadow: none;
   margin-left: -1rem;
   margin-right: -1rem;
@@ -906,5 +906,11 @@ const formatDate = (dateStr: string) => {
 .tooltip-leave-to {
   opacity: 0;
   transform: translateY(4px) scale(0.98);
+}
+
+/* ── Blog Reading: allow text selection on mobile ── */
+.blog-detail-page .blog-content {
+  -webkit-user-select: text !important;
+  user-select: text !important;
 }
 </style>
