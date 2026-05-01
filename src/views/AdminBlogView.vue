@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useBlogStore } from '@/stores/blog'
 import { useUiStore } from '@/stores/ui'
@@ -18,7 +18,11 @@ import {
   Loader2,
   ImageUp,
   Pencil,
-  ExternalLink
+  ExternalLink,
+  Timer,
+  Brain,
+  Search,
+  Image as ImageIcon
 } from 'lucide-vue-next'
 import type { Blog } from '@/types'
 
@@ -32,6 +36,53 @@ const isModalOpen = ref(false)
 const isGenerating = ref(false)
 const activeTab = ref<'paste' | 'ai'>('ai')
 const editingSlug = ref<string | null>(null)
+
+// ── Generation Progress ──
+type GenStep = 'idle' | 'analyzing' | 'drafting' | 'refining' | 'images' | 'done'
+const genStep = ref<GenStep>('idle')
+const genElapsed = ref(0)
+const genStepStart = ref(0)
+let genTimer: ReturnType<typeof setInterval> | null = null
+
+const GEN_STEPS_CONFIG = [
+  { key: 'analyzing' as GenStep, icon: Search, label: 'Phân tích chủ đề & keyword...' },
+  { key: 'drafting' as GenStep, icon: Brain, label: 'AI đang sáng tạo nội dung bài viết...' },
+  { key: 'refining' as GenStep, icon: Sparkles, label: 'Review & tinh chỉnh chuẩn SEO...' },
+  { key: 'images' as GenStep, icon: ImageIcon, label: 'Tạo hình ảnh minh họa...' }
+]
+
+function startGenTimer() {
+  genElapsed.value = 0
+  genStepStart.value = 0
+  genTimer = setInterval(() => { genElapsed.value++ }, 1000)
+}
+
+function stopGenTimer() {
+  if (genTimer) { clearInterval(genTimer); genTimer = null }
+}
+
+function setStep(step: GenStep) {
+  genStep.value = step
+  genStepStart.value = genElapsed.value
+}
+
+function stepStatus(stepKey: GenStep): 'done' | 'active' | 'pending' {
+  const order: GenStep[] = ['analyzing', 'drafting', 'refining', 'images']
+  const currentIdx = order.indexOf(genStep.value)
+  const stepIdx = order.indexOf(stepKey)
+  if (genStep.value === 'done') return 'done'
+  if (stepIdx < currentIdx) return 'done'
+  if (stepIdx === currentIdx) return 'active'
+  return 'pending'
+}
+
+function formatTimer(secs: number): string {
+  const m = Math.floor(secs / 60)
+  const s = secs % 60
+  return m > 0 ? `${m}:${s.toString().padStart(2, '0')}` : `${s}s`
+}
+
+onUnmounted(() => stopGenTimer())
 
 // ── Input State ──
 const inputContent = ref('')
@@ -148,11 +199,12 @@ function removeUploadedImage() {
 async function handleGenerate() {
   if (!canGenerate.value) return
   isGenerating.value = true
+  startGenTimer()
 
   try {
     if (activeTab.value === 'paste') {
       // Mode Paste: Send markdown to AI to extract metadata
-      uiStore.showToast('info', t('blog.analyzing'))
+      setStep('analyzing')
       const data = await blogStore.generateContent(
         `Phân tích bài viết markdown sau và trả về JSON. Nội dung:\n\n${inputContent.value}`,
         ''
@@ -160,56 +212,61 @@ async function handleGenerate() {
       if (data) {
         form.value.title = data.title || ''
         form.value.excerpt = data.excerpt || ''
-        form.value.content = inputContent.value // Keep original markdown
+        form.value.content = inputContent.value
         form.value.tags = data.tags || []
 
-        // Generate cover image (non-blocking)
+        setStep('images')
         try {
           const imagePrompt = data.seoKeywords || data.title || ''
           if (imagePrompt) {
-            uiStore.showToast('info', t('blog.generatingCover'))
             const imageUrl = await blogStore.generateImage(imagePrompt)
             if (imageUrl) form.value.imageUrl = imageUrl
           }
         } catch { /* cover image is optional */ }
 
         previewHtml.value = await marked(form.value.content || '', { async: true })
+        setStep('done')
         hasPreview.value = true
-        uiStore.showToast('success', t('blog.generateSuccess'))
       }
     } else {
-      // Mode AI: Full generation from topic/image
-      // STEP 1: Draft
-      uiStore.showToast('info', 'Đang viết bài (Bản nháp)...')
+      // Mode AI: Full multi-step generation
+      // STEP 1: Analyze & Draft
+      setStep('analyzing')
+      await new Promise(r => setTimeout(r, 800)) // Brief pause for UX
+
+      setStep('drafting')
       const draftData = await blogStore.generateContent(inputContent.value, aiImageBase64.value)
-      
+
       if (draftData) {
         // STEP 2: Refine / Editor Review
-        uiStore.showToast('info', 'Đang review và tinh chỉnh nội dung (AI Editor)...')
-        const data = await blogStore.refineContent(draftData) || draftData // Fallback to draft if refine fails
+        setStep('refining')
+        const data = await blogStore.refineContent(draftData) || draftData
 
         form.value.title = data.title || ''
         form.value.excerpt = data.excerpt || ''
         form.value.content = data.content || ''
         form.value.tags = data.tags || []
 
-        // Generate cover image (non-blocking)
+        // STEP 3: Generate images
+        setStep('images')
         try {
           const imagePrompt = data.seoKeywords || inputContent.value
-          uiStore.showToast('info', t('blog.generatingCover'))
           const imageUrl = await blogStore.generateImage(imagePrompt)
           if (imageUrl) form.value.imageUrl = imageUrl
         } catch { /* cover image is optional */ }
 
         previewHtml.value = await marked(form.value.content || '', { async: true })
+        setStep('done')
         hasPreview.value = true
-        uiStore.showToast('success', t('blog.generateSuccess'))
+        uiStore.showToast('success', `Bài viết hoàn tất trong ${formatTimer(genElapsed.value)}!`)
       }
     }
   } catch (err: any) {
     uiStore.showToast('error', err.message || t('blog.generateFailed'))
   } finally {
+    stopGenTimer()
     isGenerating.value = false
+    // Keep genStep for UI display until modal closes or new gen starts
   }
 }
 
@@ -426,7 +483,7 @@ const formatDate = (dateStr: string) => {
             <!-- Modal Body -->
             <div class="blog-modal__body custom-scrollbar">
               <!-- Input Area (both modes share this) -->
-              <div v-if="!hasPreview" class="blog-input-area">
+              <div v-if="!hasPreview && !isGenerating" class="blog-input-area">
                 <!-- Mode description -->
                 <p class="text-[0.8125rem] text-text-tertiary mb-3">
                   {{ activeTab === 'paste' ? t('blog.pasteHint') : t('blog.aiHint') }}
@@ -458,10 +515,77 @@ const formatDate = (dateStr: string) => {
                     @click="handleGenerate"
                     :disabled="isGenerating || !canGenerate"
                   >
-                    <Loader2 v-if="isGenerating" :size="16" class="animate-spin" />
-                    <Sparkles v-else :size="16" />
-                    <span>{{ isGenerating ? t('blog.generating') : t('blog.generateBtn') }}</span>
+                    <Sparkles :size="16" />
+                    <span>{{ t('blog.generateBtn') }}</span>
                   </button>
+                </div>
+              </div>
+
+              <!-- ═══ Generation Progress Panel ═══ -->
+              <div v-else-if="isGenerating" class="blog-input-area">
+                <div class="flex flex-col items-center py-4 mb-6">
+                  <!-- Animated brain icon -->
+                  <div class="relative mb-4">
+                    <div class="flex h-20 w-20 items-center justify-center rounded-3xl bg-accent/15 text-accent">
+                      <Brain :size="36" class="animate-pulse" />
+                    </div>
+                    <div class="absolute -right-1 -bottom-1 flex h-8 w-8 items-center justify-center rounded-full bg-bg-surface border-2 border-accent/30 text-accent">
+                      <Timer :size="14" />
+                    </div>
+                  </div>
+                  <h3 class="text-lg font-bold text-text-primary mb-1">AI đang sáng tạo...</h3>
+                  <div class="flex items-center gap-2 text-accent font-mono text-2xl font-bold tracking-wider">
+                    <Timer :size="18" />
+                    {{ formatTimer(genElapsed) }}
+                  </div>
+                  <p class="text-[0.6875rem] text-text-disabled mt-2">Chất lượng cần thời gian — AI đang suy nghĩ thật kỹ...</p>
+                </div>
+
+                <!-- Step Checklist -->
+                <div class="space-y-2">
+                  <div
+                    v-for="step in GEN_STEPS_CONFIG"
+                    :key="step.key"
+                    class="flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-300"
+                    :class="{
+                      'bg-success/10 border border-success/20': stepStatus(step.key) === 'done',
+                      'bg-accent/10 border border-accent/30': stepStatus(step.key) === 'active',
+                      'bg-bg-elevated border border-border-default opacity-50': stepStatus(step.key) === 'pending'
+                    }"
+                  >
+                    <!-- Icon -->
+                    <div
+                      class="flex h-8 w-8 items-center justify-center rounded-lg shrink-0 transition-colors"
+                      :class="{
+                        'bg-success/20 text-success': stepStatus(step.key) === 'done',
+                        'bg-accent/20 text-accent': stepStatus(step.key) === 'active',
+                        'bg-bg-surface text-text-disabled': stepStatus(step.key) === 'pending'
+                      }"
+                    >
+                      <CheckCircle2 v-if="stepStatus(step.key) === 'done'" :size="16" />
+                      <Loader2 v-else-if="stepStatus(step.key) === 'active'" :size="16" class="animate-spin" />
+                      <component :is="step.icon" v-else :size="16" />
+                    </div>
+                    <!-- Label -->
+                    <span
+                      class="text-sm flex-1 font-medium"
+                      :class="{
+                        'text-success': stepStatus(step.key) === 'done',
+                        'text-accent': stepStatus(step.key) === 'active',
+                        'text-text-disabled': stepStatus(step.key) === 'pending'
+                      }"
+                    >
+                      {{ step.label }}
+                    </span>
+                    <!-- Step timer for active/done -->
+                    <span
+                      v-if="stepStatus(step.key) === 'active'"
+                      class="text-[0.6875rem] font-mono text-accent/70"
+                    >
+                      {{ formatTimer(genElapsed - genStepStart) }}
+                    </span>
+                    <CheckCircle2 v-if="stepStatus(step.key) === 'done'" :size="12" class="text-success/50" />
+                  </div>
                 </div>
               </div>
 
