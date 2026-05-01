@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
-import { Target, Sparkles, Repeat, CreditCard, PiggyBank, ArrowRight } from 'lucide-vue-next'
+import { Target, Compass, Repeat, CreditCard, PiggyBank, ArrowRight } from 'lucide-vue-next'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -52,7 +52,7 @@ const features = [
       <div class="relative z-10 flex items-start justify-between">
         <div>
           <h1 class="text-3xl font-bold tracking-tight mb-3 flex items-center gap-3">
-            <Sparkles :size="28" class="text-accent" />
+            <Compass :size="28" class="text-accent" />
             {{ t('nav.planning') }}
           </h1>
           <p class="text-text-secondary text-base max-w-md">

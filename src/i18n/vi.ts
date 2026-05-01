@@ -68,7 +68,7 @@ export default {
     recurring: 'Định kỳ',
     budget: 'Ngân sách',
     savings: 'Tiết kiệm',
-    subscriptions: 'Đăng ký DV',
+    subscriptions: 'Đăng ký dịch vụ',
     planning: 'Kế hoạch tài chính'
   },
 
@@ -526,7 +526,7 @@ export default {
     gift: 'Quà tặng',
     bank_transfer: 'Chuyển khoản',
     bank_fee: 'Phí ngân hàng',
-    subscription: 'Đăng ký DV',
+    subscription: 'Đăng ký dịch vụ',
     other_expense: 'Khác',
     salary: 'Lương',
     freelance: 'Freelance',
