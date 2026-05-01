@@ -326,6 +326,14 @@ export default {
     pushSubscribeFailed: 'Failed to enable notifications',
     pushUnsubscribeSuccess: 'Push notifications disabled',
     pushUnsubscribeFailed: 'Failed to disable notifications',
+    // Obsidian Sync
+    obsidianSync: 'Obsidian Sync (Desktop)',
+    obsidianSyncDesc: 'Directly sync your notes to a local Obsidian vault.',
+    localVaultConnection: 'Local Vault Connection',
+    notConnected: 'Not connected. Works on Chrome/Edge (Desktop) only.',
+    connected: 'Connected to local vault',
+    connectVault: 'Connect Vault',
+    disconnectVault: 'Disconnect',
   },
 
   // ── Login ──
@@ -415,7 +423,9 @@ export default {
     s4Li4: 'For Value: select <strong>Shortcut Input</strong>.',
     s4Done: 'Tap <strong>Done</strong> to save. From now on, every bank SMS will be automatically recorded as a transaction!',
     copySuccess: 'URL copied to clipboard!',
-    copyFailed: 'Failed to copy. Please try again.'
+    copyFailed: 'Failed to copy. Please try again.',
+    revealUrl: 'Reveal URL',
+    hiddenUrl: '••••••••••••••••••••••••••••••••••••••••••••••••••••••••'
   },
 
   // ── PinDialog ──

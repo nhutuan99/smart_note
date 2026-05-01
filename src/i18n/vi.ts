@@ -326,6 +326,14 @@ export default {
     pushSubscribeFailed: 'Không thể bật thông báo',
     pushUnsubscribeSuccess: 'Đã tắt thông báo',
     pushUnsubscribeFailed: 'Không thể tắt thông báo',
+    // Obsidian Sync
+    obsidianSync: 'Đồng bộ Obsidian (Desktop)',
+    obsidianSyncDesc: 'Đồng bộ trực tiếp ghi chú vào thư mục Obsidian trên máy tính.',
+    localVaultConnection: 'Kết nối Vault',
+    notConnected: 'Chưa kết nối. Chỉ hỗ trợ trên Chrome/Edge (Desktop).',
+    connected: 'Đã kết nối với thư mục vault',
+    connectVault: 'Kết nối Vault',
+    disconnectVault: 'Ngắt kết nối',
   },
 
   // ── Login ──
@@ -415,7 +423,9 @@ export default {
     s4Li4: 'Phần Giá trị (Value): chọn <strong>Đầu vào phím tắt (Shortcut Input)</strong>.',
     s4Done: 'Bấm <strong>Xong</strong> để lưu. Từ giờ mỗi khi nhận SMS biến động số dư từ ngân hàng, giao dịch sẽ tự động được ghi nhận!',
     copySuccess: 'Đã copy đường dẫn thành công!',
-    copyFailed: 'Không thể copy, vui lòng thử lại.'
+    copyFailed: 'Không thể copy, vui lòng thử lại.',
+    revealUrl: 'Hiển thị URL',
+    hiddenUrl: '••••••••••••••••••••••••••••••••••••••••••••••••••••••••'
   },
 
   // ── PinDialog ──

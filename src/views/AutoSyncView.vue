@@ -13,14 +13,29 @@ const ui = useUiStore()
 const { t } = useI18n()
 const financeStore = useFinanceStore()
 
+const isUrlRevealed = ref(false)
+
 const webhookUrl = computed(() => {
   const baseUrl = import.meta.env.VITE_API_BASE_URL || window.location.origin
   const userId = auth.user?.id || 'YOUR_USER_ID'
   return `${baseUrl}/api/webhook/sms?userId=${userId}`
 })
-function copyWebhookUrl() {
-  const url = `${import.meta.env.VITE_API_BASE_URL}/api/webhook/sms?userId=${auth.user?.id}`
-  navigator.clipboard.writeText(url).then(() => {
+
+async function revealUrl() {
+  const success = await ui.requestPinValidation()
+  if (success) {
+    isUrlRevealed.value = true
+  }
+}
+
+async function copyWebhookUrl() {
+  if (!isUrlRevealed.value) {
+    const success = await ui.requestPinValidation()
+    if (!success) return
+    isUrlRevealed.value = true
+  }
+  
+  navigator.clipboard.writeText(webhookUrl.value).then(() => {
     ui.showToast('success', t('autoSync.copySuccess'))
   }).catch(() => {
     ui.showToast('error', t('autoSync.copyFailed'))
@@ -78,15 +93,24 @@ onMounted(() => {
         <p class="mb-4 text-sm text-text-secondary">{{ t('autoSync.step1Desc') }}</p>
         <div class="bg-bg-elevated border-border-default flex flex-col gap-3 rounded-xl border p-3 sm:flex-row sm:items-center">
           <code class="text-accent flex-1 break-all text-[0.8125rem] leading-relaxed">
-            {{ webhookUrl }}
+            {{ isUrlRevealed ? webhookUrl : t('autoSync.hiddenUrl') }}
           </code>
-          <button
-            class="bg-accent text-bg-primary hover:bg-accent-hover shrink-0 rounded-lg px-4 py-2 text-sm font-semibold transition-colors flex items-center justify-center gap-2"
-            @click="copyWebhookUrl"
-          >
-            <Copy :size="16" />
-            {{ t('common.copyLink') }}
-          </button>
+          <div class="flex gap-2">
+            <button
+              v-if="!isUrlRevealed"
+              class="bg-bg-surface text-text-secondary hover:bg-bg-hover hover:text-text-primary shrink-0 rounded-lg px-4 py-2 text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+              @click="revealUrl"
+            >
+              {{ t('autoSync.revealUrl') }}
+            </button>
+            <button
+              class="bg-accent text-bg-primary hover:bg-accent-hover shrink-0 rounded-lg px-4 py-2 text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+              @click="copyWebhookUrl"
+            >
+              <Copy :size="16" />
+              {{ t('common.copyLink') }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
