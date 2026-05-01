@@ -139,8 +139,18 @@ onBeforeUnmount(() => {
 // Sync when user switches back to the app
 useEventListener(document, 'visibilitychange', syncOnVisible)
 
-function handleRefresh() {
-  window.location.reload()
+async function handleRefresh(done: () => void) {
+  try {
+    await Promise.all([
+      notificationStore.fetch(true),
+      financeStore.silentRefresh(),
+      notesStore.fetchNotes()
+    ])
+  } catch (error) {
+    console.error('Failed to refresh data:', error)
+  } finally {
+    done()
+  }
 }
 </script>
 

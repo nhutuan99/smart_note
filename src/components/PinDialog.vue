@@ -39,6 +39,11 @@ function handleInput(index: number, event: Event) {
   if (value && index < pinLength.value - 1) {
     nextTick(() => inputRefs.value[index + 1]?.focus())
   }
+
+  // Auto-submit when fully filled
+  if (filledPin().length === pinLength.value) {
+    setTimeout(() => verifyPin(), 250) // Small delay for UX so user sees the last digit
+  }
 }
 
 function handleKeydown(index: number, event: KeyboardEvent) {
@@ -58,11 +63,18 @@ function handlePaste(event: ClipboardEvent) {
   }
   const focusIdx = Math.min(pasted.length, pinLength.value - 1)
   nextTick(() => inputRefs.value[focusIdx]?.focus())
+
+  // Auto-submit when fully pasted
+  if (filledPin().length === pinLength.value) {
+    setTimeout(() => verifyPin(), 250)
+  }
 }
 
 const filledPin = () => pin.value.slice(0, pinLength.value).join('')
 
 async function verifyPin() {
+  if (loading.value) return
+
   const pinStr = filledPin()
   if (pinStr.length < pinLength.value) {
     error.value = t('pin.fillAll')

@@ -3,7 +3,7 @@ import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { Loader2 } from 'lucide-vue-next'
 
 const emit = defineEmits<{
-  (e: 'refresh'): void
+  (e: 'refresh', done: () => void): void
 }>()
 
 const props = defineProps<{
@@ -61,14 +61,12 @@ function onTouchEnd() {
   if (distance.value >= THRESHOLD) {
     refreshing.value = true
     distance.value = THRESHOLD // snap back to loading position
-    emit('refresh')
     
-    // In this specific implementation, the parent will do window.location.reload()
-    // so we don't strictly need to reset it, but just in case:
-    setTimeout(() => {
+    // Call the parent handler and pass a done callback
+    emit('refresh', () => {
       refreshing.value = false
       distance.value = 0
-    }, 10000)
+    })
   } else {
     distance.value = 0
   }
