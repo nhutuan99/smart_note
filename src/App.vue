@@ -15,6 +15,7 @@ import { useSwipeNavigation } from '@/composables/useSwipeNavigation'
 
 // 5. Components
 import AppLayout from '@/components/layout/AppLayout.vue'
+import { ArrowLeft } from 'lucide-vue-next'
 
 const route  = useRoute()
 const auth   = useAuthStore()
@@ -104,8 +105,15 @@ onMounted(() => {
           </router-link>
         </div>
       </header>
-      <!-- Safe area spacer for authenticated users (no public-header shown) -->
-      <div v-else class="public-safe-spacer"></div>
+      <!-- In-App Header for Authenticated Users with Back Button -->
+      <header v-else class="public-header">
+        <div class="public-header__container">
+          <router-link to="/" class="flex items-center gap-2 text-text-secondary hover:text-text-primary transition-colors">
+            <ArrowLeft :size="20" />
+            <span class="font-medium">Quay lại Dashboard</span>
+          </router-link>
+        </div>
+      </header>
 
       <div class="public-layout__content custom-scrollbar">
         <router-view />
