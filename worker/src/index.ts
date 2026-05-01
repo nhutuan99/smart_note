@@ -87,19 +87,29 @@ import {
   handleUploadImage,
 } from './controllers/blog.controller'
 
-export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    const requestOrigin = request.headers.get('Origin')
+import {
+  handleProxyLocation,
+  handleProxyWeather,
+  handleProxyExchangeRate
+} from './controllers/proxy.controller'
 
-    if (request.method === 'OPTIONS') {
-      return new Response(null, { headers: corsHeaders(requestOrigin) })
+async function handleRequest(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url)
+  const path = url.pathname
+
+  try {
+    // ── Public Proxy Routes ──
+    if (path === '/api/proxy/location' && request.method === 'GET') {
+      return handleProxyLocation(request)
+    }
+    if (path === '/api/proxy/weather' && request.method === 'GET') {
+      return handleProxyWeather(request)
+    }
+    if (path === '/api/proxy/exchange-rate' && request.method === 'GET') {
+      return handleProxyExchangeRate(request)
     }
 
-    const url = new URL(request.url)
-    const path = url.pathname
-
-    try {
-      // Auth routes (no token needed)
+    // Auth routes (no token needed)
       if (path === '/api/auth/register' && request.method === 'POST') {
         return handleRegister(request, env)
       }
@@ -356,11 +366,34 @@ export default {
 
       return errorResponse('Not found', 404)
     } catch (err: any) {
-      // Sanitize error messages — don't leak internal details
-      const safeMessage = typeof err.message === 'string' && err.message.length < 200
-        ? err.message
-        : 'Internal server error'
-      return errorResponse(safeMessage, 500)
+    console.error('[Worker Error]', err)
+    return errorResponse(err.message || 'Internal server error', 500)
+  }
+}
+
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    const requestOrigin = request.headers.get('Origin')
+
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { headers: corsHeaders(requestOrigin) })
     }
+
+    const response = await handleRequest(request, env)
+
+    // ── Global CORS Wrapper ──
+    // Ensures every response from the worker gets the correct dynamic CORS header
+    // rather than the default ALLOWED_ORIGINS[0] that jsonResponse provides.
+    const finalHeaders = new Headers(response.headers)
+    const cors = corsHeaders(requestOrigin)
+    for (const [key, value] of Object.entries(cors)) {
+      finalHeaders.set(key, value as string)
+    }
+
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: finalHeaders
+    })
   }
 }

@@ -58,11 +58,11 @@ async function fetchExchangeRate(): Promise<void> {
   rateLoading.value = true
   rateError.value = ''
   try {
-    // Using @fawazahmed0/currency-api (Free, no key, heavily cached via jsDelivr, supports VND)
-    const res = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/vnd.json')
+    // Using our backend proxy to avoid adblocker/CORS issues
+    const res = await fetch('/api/proxy/exchange-rate')
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const data = await res.json() as any
-    const rate = data?.vnd?.usd
+    const rate = data?.data?.vnd?.usd
     if (rate && typeof rate === 'number') {
       exchangeRate.value = rate
       localStorage.setItem(RATE_CACHE_KEY, JSON.stringify({

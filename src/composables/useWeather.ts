@@ -206,30 +206,17 @@ export function useWeather() {
       }
     }
 
-    // 2. IP-based fallback (using ipinfo.io which is highly reliable and CORS-friendly)
+    // 2. IP-based fallback (using our own proxy to avoid adblockers)
     try {
-      const res  = await fetch('https://ipinfo.io/json')
+      const res  = await fetch('/api/proxy/location')
       const data = await res.json() as any
-      if (data && data.loc) {
-        const [lat, lon] = data.loc.split(',')
-        let city = data.city || 'Vị trí của bạn'
-        if (city.includes('Ho Chi Minh') || city === 'Thành phố Hồ Chí Minh' || city === 'TP.HCM' || city.includes('TP. HCM')) city = 'Ho Chi Minh City'
-        if (city.includes('Ha Noi') || city === 'Hanoi') city = 'Hà Nội'
-        if (city.includes('Da Nang') || city === 'Danang') city = 'Đà Nẵng'
-        return { lat: parseFloat(lat), lon: parseFloat(lon), city, country: data.country || '' }
-      }
-    } catch { /* ignore */ }
-
-    // 2.5 IP-based fallback alternative (freeipapi)
-    try {
-      const res = await fetch('https://freeipapi.com/api/json')
-      const data = await res.json() as any
-      if (data && data.latitude && data.longitude) {
-        let city = data.cityName || 'Vị trí của bạn'
-        if (city.includes('Ho Chi Minh') || city === 'Thành phố Hồ Chí Minh' || city === 'TP.HCM' || city.includes('TP. HCM')) city = 'Ho Chi Minh City'
-        if (city.includes('Ha Noi') || city === 'Hanoi') city = 'Hà Nội'
-        if (city.includes('Da Nang') || city === 'Danang') city = 'Đà Nẵng'
-        return { lat: data.latitude, lon: data.longitude, city, country: data.countryName || '' }
+      if (data && data.success && data.data && data.data.lat) {
+        return {
+          lat: data.data.lat,
+          lon: data.data.lon,
+          city: data.data.city,
+          country: data.data.country || ''
+        }
       }
     } catch { /* ignore */ }
 
@@ -246,31 +233,22 @@ export function useWeather() {
     try {
       const loc = await detectLocation()
 
-      const [weatherRes, aqiRes] = await Promise.allSettled([
-        fetch(
-          `https://api.open-meteo.com/v1/forecast` +
-          `?latitude=${loc.lat}&longitude=${loc.lon}` +
-          `&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code,uv_index` +
-          `&timezone=auto`
-        ),
-        fetch(
-          `https://air-quality-api.open-meteo.com/v1/air-quality` +
-          `?latitude=${loc.lat}&longitude=${loc.lon}` +
-          `&current=us_aqi,pm2_5` +
-          `&timezone=auto`
-        )
-      ])
+      const weatherRes = await fetch(`/api/proxy/weather?lat=${loc.lat}&lon=${loc.lon}`)
 
-      if (weatherRes.status === 'rejected') {
-        throw new Error(weatherRes.reason?.message || 'Network Error / Blocked by Adblocker')
-      }
-      if (weatherRes.status === 'fulfilled' && !weatherRes.value.ok) {
-        throw new Error(`Open-Meteo HTTP ${weatherRes.value.status}`)
+      if (!weatherRes.ok) {
+        throw new Error(`Proxy returned HTTP ${weatherRes.status}`)
       }
 
-      if (weatherRes.status === 'fulfilled' && weatherRes.value.ok) {
-        const wData = await weatherRes.value.json() as any
-        const cur   = wData.current
+      const proxyData = await weatherRes.json() as any
+      if (!proxyData.success) {
+        throw new Error(proxyData.error || 'Proxy weather failed')
+      }
+
+      const wData = proxyData.data.weather
+      const aqiData = proxyData.data.aqi
+
+      if (wData && wData.current) {
+        const cur = wData.current
         weather.value = {
           temperature: Math.round(cur.temperature_2m),
           feelsLike:   Math.round(cur.apparent_temperature),
@@ -283,11 +261,12 @@ export function useWeather() {
           lat:         loc.lat,
           lon:         loc.lon,
         }
+      } else {
+        throw new Error('No weather data received')
       }
 
-      if (aqiRes.status === 'fulfilled' && aqiRes.value.ok) {
-        const aData = await aqiRes.value.json() as any
-        const cur   = aData.current
+      if (aqiData && aqiData.current) {
+        const cur = aqiData.current
         airQuality.value = {
           aqi:  Math.round(cur.us_aqi ?? 0),
           pm25: Math.round(cur.pm2_5  ?? 0),

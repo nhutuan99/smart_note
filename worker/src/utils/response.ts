@@ -1,12 +1,13 @@
 const ALLOWED_ORIGINS = [
   'https://finnote-f4n.pages.dev',
+  'https://smart-note.pages.dev',
   'http://localhost:5173', // dev
+  'http://localhost:3000' // vite proxy dev
 ]
 
 export function corsHeaders(requestOrigin?: string | null): HeadersInit {
-  const origin = requestOrigin && ALLOWED_ORIGINS.includes(requestOrigin)
-    ? requestOrigin
-    : ALLOWED_ORIGINS[0]
+  const origin =
+    requestOrigin && ALLOWED_ORIGINS.includes(requestOrigin) ? requestOrigin : ALLOWED_ORIGINS[0]
   return {
     'Access-Control-Allow-Origin': origin,
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
