@@ -49,9 +49,9 @@ async function handleSubmit() {
   error.value = ''
   try {
     const endpoint = isLogin.value ? '/api/auth/login' : '/api/auth/register'
-    const result = await httpClient.post<{ token: string; user: any }>(endpoint, form.value)
+    const result = await httpClient.post<{ token: string; refreshToken?: string; user: any }>(endpoint, form.value)
     if (result) {
-      auth.setAuth(result.token, result.user)
+      auth.setAuth(result.token, result.user, result.refreshToken)
       ui.showToast('success', `${t(isLogin.value ? 'login.welcomeBack' : 'common.confirm')}, ${result.user.name}!`)
       router.push('/')
     }
@@ -120,12 +120,12 @@ async function handleGoogleSignInCallback(code: string) {
   googleLoading.value = true
   googleError.value = ''
   try {
-    const res = await httpClient.post<{ token: string; user: any; isNewUser?: boolean }>('/api/auth/google-signin', {
+    const res = await httpClient.post<{ token: string; refreshToken?: string; user: any; isNewUser?: boolean }>('/api/auth/google-signin', {
       code,
       redirectUri: `${window.location.origin}/login`
     })
     if (res?.token && res?.user) {
-      auth.setAuth(res.token, res.user)
+      auth.setAuth(res.token, res.user, res.refreshToken)
       const welcomeMsg = res.isNewUser
         ? `${t('login.createAccount')} ${t('common.confirm')}! ${t('login.welcomeBack')}, ${res.user.name}!`
         : `${t('login.welcomeBack')}, ${res.user.name}!`

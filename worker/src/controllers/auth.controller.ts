@@ -1,7 +1,7 @@
 import { Env, UserData, WalletData } from '../types'
 import { errorResponse, jsonResponse } from '../utils/response'
 import { generateId, hashPassword } from '../utils/crypto'
-import { createJWT } from '../utils/jwt'
+import { createJWT, createRefreshToken, verifyJWT } from '../utils/jwt'
 import { getJSON, putJSON } from '../services/kv.service'
 
 const DEFAULT_WALLETS: Omit<WalletData, 'id'>[] = [
@@ -42,10 +42,12 @@ export async function handleRegister(request: Request, env: Env): Promise<Respon
   await putJSON(env.SMART_NOTE_KV, `users/${id}/finance/transactions`, [])
 
   const token = await createJWT({ userId: id }, env.JWT_SECRET)
+  const refreshToken = await createRefreshToken({ userId: id }, env.JWT_SECRET)
   return jsonResponse({
     success: true,
     data: {
       token,
+      refreshToken,
       user: {
         id,
         email,
@@ -73,10 +75,12 @@ export async function handleLogin(request: Request, env: Env): Promise<Response>
   if (hash !== user.passwordHash) return errorResponse('Invalid credentials', 401)
 
   const token = await createJWT({ userId: user.id }, env.JWT_SECRET)
+  const refreshToken = await createRefreshToken({ userId: user.id }, env.JWT_SECRET)
   return jsonResponse({
     success: true,
     data: {
       token,
+      refreshToken,
       user: {
         id: user.id,
         email: user.email,
@@ -314,10 +318,12 @@ export async function handleGoogleSignIn(request: Request, env: Env): Promise<Re
     }
 
     const token = await createJWT({ userId: user.id }, env.JWT_SECRET)
+    const refreshToken = await createRefreshToken({ userId: user.id }, env.JWT_SECRET)
     return jsonResponse({
       success: true,
       data: {
         token,
+        refreshToken,
         user: { id: user.id, email: user.email, name: user.name, avatarUrl: user.avatarUrl, createdAt: user.createdAt },
         isNewUser: false
       }
@@ -345,10 +351,12 @@ export async function handleGoogleSignIn(request: Request, env: Env): Promise<Re
     await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/transactions`, [])
 
     const token = await createJWT({ userId }, env.JWT_SECRET)
+    const refreshToken = await createRefreshToken({ userId }, env.JWT_SECRET)
     return jsonResponse({
       success: true,
       data: {
         token,
+        refreshToken,
         user: { id: user.id, email: user.email, name: user.name, avatarUrl: user.avatarUrl, createdAt: user.createdAt },
         isNewUser: true
       }
@@ -389,4 +397,39 @@ export async function handleResetPin(userId: string, request: Request, env: Env)
   await env.SMART_NOTE_KV.delete(`users/${userId}/otp/pin_reset_token`)
 
   return jsonResponse({ success: true, message: 'Đặt lại PIN thành công' })
+}
+
+// ====== Refresh Token ======
+
+export async function handleRefreshToken(request: Request, env: Env): Promise<Response> {
+  const { refreshToken } = (await request.json()) as any
+  if (!refreshToken) return errorResponse('Refresh token is required', 400)
+
+  const payload = await verifyJWT(refreshToken, env.JWT_SECRET)
+  if (!payload || payload.type !== 'refresh') {
+    return errorResponse('Invalid or expired refresh token', 401)
+  }
+
+  // Verify user still exists
+  const user = await getJSON<UserData>(env.SMART_NOTE_KV, `users/${payload.userId}/profile`)
+  if (!user) return errorResponse('User not found', 401)
+
+  // Issue new token pair
+  const newToken = await createJWT({ userId: payload.userId }, env.JWT_SECRET)
+  const newRefreshToken = await createRefreshToken({ userId: payload.userId }, env.JWT_SECRET)
+
+  return jsonResponse({
+    success: true,
+    data: {
+      token: newToken,
+      refreshToken: newRefreshToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        avatarUrl: user.avatarUrl,
+        createdAt: user.createdAt
+      }
+    }
+  })
 }

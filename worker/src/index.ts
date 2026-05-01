@@ -13,6 +13,7 @@ import {
   handleDeleteAccount,
   handleForgotPin,
   handleResetPin,
+  handleRefreshToken,
 } from './controllers/auth.controller'
 
 import {
@@ -116,6 +117,9 @@ export default {
       }
       if (path === '/api/auth/google-signin' && request.method === 'POST') {
         return handleGoogleSignIn(request, env)
+      }
+      if (path === '/api/auth/refresh' && request.method === 'POST') {
+        return handleRefreshToken(request, env)
       }
 
       // Webhooks

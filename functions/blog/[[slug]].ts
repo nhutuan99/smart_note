@@ -131,27 +131,30 @@ function buildBlogMeta(blog: BlogData): string {
     keywords: (blog.tags || []).join(', '),
   })
 
+  // Sanitize jsonLd: prevent </script> injection inside the LD+JSON block
+  const safeJsonLd = jsonLd.replace(/<\//g, '<\\/')
+
   return `
     <title>${escHtml(title)} | FinNote Blog</title>
     <meta name="description" content="${escHtml(desc)}" />
     <meta name="keywords" content="${escHtml(keywords)}" />
     <meta name="author" content="${escHtml(blog.author?.name || 'FinNote')}" />
-    <link rel="canonical" href="${blogUrl}" />
+    <link rel="canonical" href="${escHtml(blogUrl)}" />
     <meta property="og:type" content="article" />
-    <meta property="og:url" content="${blogUrl}" />
+    <meta property="og:url" content="${escHtml(blogUrl)}" />
     <meta property="og:title" content="${escHtml(title)}" />
     <meta property="og:description" content="${escHtml(desc)}" />
-    <meta property="og:image" content="${image}" />
+    <meta property="og:image" content="${escHtml(image)}" />
     <meta property="og:site_name" content="FinNote Blog" />
     <meta property="og:locale" content="vi_VN" />
-    <meta property="article:published_time" content="${blog.createdAt}" />
+    <meta property="article:published_time" content="${escHtml(blog.createdAt)}" />
     <meta property="article:author" content="${escHtml(blog.author?.name || 'FinNote')}" />
     ${articleTags}
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${escHtml(title)}" />
     <meta name="twitter:description" content="${escHtml(desc)}" />
-    <meta name="twitter:image" content="${image}" />
-    <script type="application/ld+json">${jsonLd}</script>
+    <meta name="twitter:image" content="${escHtml(image)}" />
+    <script type="application/ld+json">${safeJsonLd}</script>
   `
 }
 
@@ -197,6 +200,7 @@ function escHtml(str: string): string {
   return str
     .replace(/&/g, '&amp;')
     .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
 }

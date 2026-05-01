@@ -4,7 +4,8 @@
  * Features:
  * - Auto-inject JWT token from auth store
  * - Unwrap { success, data, error } response format
- * - 401 → cancel all in-flight requests, then navigate to /login via Vue Router
+ * - 401 → attempt silent refresh via refresh token, then retry original request
+ * - If refresh fails → logout + navigate to /login via Vue Router
  * - Configurable base URL (dev proxy vs production worker)
  *
  * @see vue-expert.md §5 Repository Pattern
@@ -13,7 +14,7 @@
 import type { ApiResponse } from '@/types'
 import type { Router } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { AUTH_TOKEN_KEY, AUTH_USER_KEY } from '@/constants/auth'
+import { AUTH_TOKEN_KEY, AUTH_USER_KEY, AUTH_REFRESH_TOKEN_KEY } from '@/constants/auth'
 
 // In dev, Vite proxy handles /api → localhost:8787
 // In production, use the full worker URL
@@ -23,18 +24,69 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
 
 let _router: Router | null = null
 let _isHandling401 = false
+let _isRefreshing = false
+let _refreshPromise: Promise<boolean> | null = null
 
 /** Call once from main.ts after router is created. */
 export function setHttpClientRouter(router: Router) {
   _router = router
 }
 
-// Removed AbortController to prevent AbortError from bubbling up and causing unhandled rejections that might crash Vue
+/**
+ * Attempt to silently refresh the access token using the stored refresh token.
+ * Returns true if refresh succeeded, false if it failed (→ must logout).
+ */
+async function tryRefreshToken(): Promise<boolean> {
+  // Dedup: if already refreshing, wait for the same promise
+  if (_isRefreshing && _refreshPromise) return _refreshPromise
+
+  _isRefreshing = true
+  _refreshPromise = (async () => {
+    try {
+      const refreshToken = localStorage.getItem(AUTH_REFRESH_TOKEN_KEY)
+      if (!refreshToken) return false
+
+      const response = await fetch(`${API_BASE}/api/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken })
+      })
+
+      if (!response.ok) return false
+
+      const json = await response.json() as ApiResponse<{
+        token: string
+        refreshToken: string
+        user: any
+      }>
+
+      if (!json.success || !json.data) return false
+
+      // Update tokens in auth store
+      try {
+        const auth = useAuthStore()
+        auth.setTokens(json.data.token, json.data.refreshToken)
+      } catch {
+        // Fallback: update localStorage directly
+        localStorage.setItem(AUTH_TOKEN_KEY, json.data.token)
+        localStorage.setItem(AUTH_REFRESH_TOKEN_KEY, json.data.refreshToken)
+      }
+
+      return true
+    } catch {
+      return false
+    } finally {
+      _isRefreshing = false
+      _refreshPromise = null
+    }
+  })()
+
+  return _refreshPromise
+}
 
 function handle401() {
   if (_isHandling401) return
   _isHandling401 = true
-
 
   // Clear auth: MUST call logout() to clear Pinia reactive state,
   // not just localStorage — otherwise router guard still sees isAuthenticated=true
@@ -46,6 +98,7 @@ function handle401() {
     // Fallback if Pinia not ready
     localStorage.removeItem(AUTH_TOKEN_KEY)
     localStorage.removeItem(AUTH_USER_KEY)
+    localStorage.removeItem(AUTH_REFRESH_TOKEN_KEY)
   }
 
   // Navigate via Vue Router (SPA-safe, no page reload)
@@ -82,7 +135,19 @@ function buildHeaders(hasBody: boolean): HeadersInit {
   return headers
 }
 
-async function handleResponse<T>(response: Response): Promise<T> {
+async function handleResponse<T>(response: Response, retryFn?: () => Promise<T>): Promise<T> {
+  if (response.status === 401 && retryFn) {
+    // Attempt silent refresh before giving up
+    const refreshed = await tryRefreshToken()
+    if (refreshed) {
+      // Retry the original request with the new token
+      return retryFn()
+    }
+    // Refresh failed → hard logout
+    handle401()
+    throw new Error('Session expired')
+  }
+
   if (response.status === 401) {
     handle401()
     throw new Error('Session expired')
@@ -114,38 +179,73 @@ async function handleResponse<T>(response: Response): Promise<T> {
 }
 
 async function get<T>(url: string): Promise<T> {
+  const doRequest = async (): Promise<T> => {
+    const response = await fetch(`${API_BASE}${url}`, {
+      method: 'GET',
+      headers: buildHeaders(false),
+      cache: 'no-store'
+    })
+    return handleResponse<T>(response)
+  }
+
   const response = await fetch(`${API_BASE}${url}`, {
     method: 'GET',
     headers: buildHeaders(false),
     cache: 'no-store'
   })
-  return handleResponse<T>(response)
+  return handleResponse<T>(response, doRequest)
 }
 
 async function post<T>(url: string, body?: unknown): Promise<T> {
+  const doRequest = async (): Promise<T> => {
+    const response = await fetch(`${API_BASE}${url}`, {
+      method: 'POST',
+      headers: buildHeaders(true),
+      body: body ? JSON.stringify(body) : undefined
+    })
+    return handleResponse<T>(response)
+  }
+
   const response = await fetch(`${API_BASE}${url}`, {
     method: 'POST',
     headers: buildHeaders(true),
     body: body ? JSON.stringify(body) : undefined
   })
-  return handleResponse<T>(response)
+  return handleResponse<T>(response, doRequest)
 }
 
 async function put<T>(url: string, body?: unknown): Promise<T> {
+  const doRequest = async (): Promise<T> => {
+    const response = await fetch(`${API_BASE}${url}`, {
+      method: 'PUT',
+      headers: buildHeaders(true),
+      body: body ? JSON.stringify(body) : undefined
+    })
+    return handleResponse<T>(response)
+  }
+
   const response = await fetch(`${API_BASE}${url}`, {
     method: 'PUT',
     headers: buildHeaders(true),
     body: body ? JSON.stringify(body) : undefined
   })
-  return handleResponse<T>(response)
+  return handleResponse<T>(response, doRequest)
 }
 
 async function del(url: string): Promise<void> {
+  const doRequest = async (): Promise<void> => {
+    const response = await fetch(`${API_BASE}${url}`, {
+      method: 'DELETE',
+      headers: buildHeaders(false)
+    })
+    await handleResponse<void>(response)
+  }
+
   const response = await fetch(`${API_BASE}${url}`, {
     method: 'DELETE',
     headers: buildHeaders(false)
   })
-  await handleResponse<void>(response)
+  await handleResponse<void>(response, doRequest)
 }
 
 export const httpClient = { get, post, put, del }
