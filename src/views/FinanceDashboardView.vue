@@ -3,7 +3,6 @@ import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
 import CatMascot from '@/components/ui/CatMascot.vue'
 import FinanceOverview from '@/modules/finance/components/FinanceOverview.vue'
-import FinanceAiAdvisor from '@/modules/finance/components/FinanceAiAdvisor.vue'
 import FinanceWallets from '@/modules/finance/components/FinanceWallets.vue'
 import FinanceCharts from '@/modules/finance/components/FinanceCharts.vue'
 
@@ -17,9 +16,6 @@ const { t } = useI18n()
 
     <!-- Balance + Income/Expense Cards -->
     <FinanceOverview />
-
-    <!-- AI Finance Advisor (collapsed bar) -->
-    <FinanceAiAdvisor />
 
     <!-- Wallets -->
     <FinanceWallets />

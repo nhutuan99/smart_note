@@ -9,6 +9,7 @@ import BugReportModal from '@/components/ui/BugReportModal.vue'
 import PwaInstallGuide from '@/components/ui/PwaInstallGuide.vue'
 import PullToRefresh from '@/components/ui/PullToRefresh.vue'
 import WeeklyEventModal from '@/components/ui/WeeklyEventModal.vue'
+import FinanceAiAdvisor from '@/modules/finance/components/FinanceAiAdvisor.vue'
 import CatStoryModal from '@/components/ui/CatStoryModal.vue'
 import { ArrowUp } from 'lucide-vue-next'
 import { useUiStore } from '@/stores/ui'
@@ -224,12 +225,15 @@ async function handleRefresh(done: () => void) {
       <button 
         v-if="showScrollTop"
         @click="scrollToTop"
-        class="pwa-fab-safe fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-bg-secondary text-text-primary shadow-lg ring-1 ring-border-default hover:bg-bg-tertiary transition-all active:scale-95"
+        class="pwa-fab-safe fixed bottom-[5.5rem] sm:bottom-[6.5rem] right-6 sm:right-8 z-40 flex h-11 w-11 items-center justify-center rounded-full bg-bg-surface text-text-secondary shadow-[0_4px_15px_rgba(0,0,0,0.1)] ring-1 ring-border-default hover:text-text-primary hover:bg-bg-hover transition-all active:scale-95"
         :title="t('common.scrollToTop')"
       >
         <ArrowUp class="h-5 w-5" />
       </button>
     </transition>
+    
+    <!-- Global AI Advisor -->
+    <FinanceAiAdvisor />
 
     <ToastContainer />
     <ConfirmDialog />

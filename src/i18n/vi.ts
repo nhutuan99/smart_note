@@ -205,7 +205,10 @@ export default {
     aiEmptyHint: 'Nhập kế hoạch chi tiêu của bạn → AI sẽ tư vấn dựa trên số dư thực tế',
     aiPlanTitle: '📊 Kế hoạch tài chính - {date}',
     aiPlanFooter: '*Tạo tự động bởi AI Finance Advisor*',
-    aiPlanDate: '*Ngày: {date}*'
+    aiPlanDate: '*Ngày: {date}*',
+    aiTooltip: 'Meow! Cần hỗ trợ không? 👋',
+    aiReadyToHelp: 'Sẵn sàng hỗ trợ tài chính',
+    aiGreeting: 'Chào bạn! 👋 Mình có thể giúp bạn phân tích chi tiêu, đưa ra lời khuyên hoặc giải đáp thắc mắc về tình hình tài chính tháng này. Bạn muốn hỏi gì nào?'
   },
 
   // ── Transactions ──

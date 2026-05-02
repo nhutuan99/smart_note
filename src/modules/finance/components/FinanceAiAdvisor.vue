@@ -127,7 +127,7 @@ function renderAiMarkdown(text: string): string {
             </div>
             <div>
               <h3 class="text-[0.9375rem] font-bold text-text-primary flex items-center gap-1.5">{{ t('dashboard.aiAdvisorTitle') }} <div class="w-2 h-2 bg-success rounded-full animate-pulse shadow-[0_0_8px_var(--success)]"></div></h3>
-              <p class="text-xs text-text-tertiary">Sẵn sàng hỗ trợ tài chính</p>
+              <p class="text-xs text-text-tertiary">{{ t('dashboard.aiReadyToHelp') }}</p>
             </div>
           </div>
           <button @click="isOpen = false" class="text-text-tertiary hover:text-text-primary p-2 hover:bg-bg-hover rounded-full transition-colors relative z-10">
@@ -141,7 +141,7 @@ function renderAiMarkdown(text: string): string {
           <!-- Initial Greet -->
           <div class="flex gap-3">
              <div class="bg-bg-elevated border border-border-subtle rounded-2xl rounded-tl-sm p-3.5 text-[0.875rem] text-text-secondary leading-relaxed shadow-sm">
-               Chào bạn! 👋 Mình có thể giúp bạn phân tích chi tiêu, đưa ra lời khuyên hoặc giải đáp thắc mắc về tình hình tài chính tháng này. Bạn muốn hỏi gì nào?
+               {{ t('dashboard.aiGreeting') }}
              </div>
           </div>
 
@@ -196,16 +196,16 @@ function renderAiMarkdown(text: string): string {
     <!-- Floating Mascot Button -->
     <button 
       @click="isOpen = !isOpen"
-      class="relative w-20 h-20 sm:w-24 sm:h-24 transition-all duration-500 pointer-events-auto filter outline-none z-50 will-change-transform"
+      class="relative w-16 h-16 sm:w-20 sm:h-20 transition-all duration-500 pointer-events-auto filter outline-none z-50 will-change-transform"
       :class="isOpen ? 'scale-0 opacity-0 pointer-events-none translate-y-10' : 'scale-100 opacity-100 hover:scale-110 drop-shadow-[0_10px_20px_rgba(0,0,0,0.3)] hover:drop-shadow-[0_15px_30px_rgba(142,125,250,0.4)]'"
       style="transform: translateZ(0);"
     >
-      <CatMascot type="orange" size="xl" animation="wave" />
+      <CatMascot type="orange" size="lg" animation="wave" />
       
       <!-- Chat Bubble Tooltip -->
       <transition name="fade">
         <div v-if="!isOpen" class="absolute top-2 right-[100%] mr-2 w-max bg-bg-surface/95 backdrop-blur-md border border-border-default shadow-[0_4px_20px_rgba(0,0,0,0.2)] rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm font-medium text-text-primary flex items-center gap-2 pointer-events-none origin-right hover:scale-105 transition-transform animate-float">
-          <span>Meow! Cần hỗ trợ không? 👋</span>
+          <span>{{ t('dashboard.aiTooltip') }}</span>
           <!-- Triangle pointer -->
           <div class="absolute top-2 -right-[6px] w-0 h-0 border-y-[6px] border-y-transparent border-l-[6px] border-l-border-default"></div>
           <div class="absolute top-[9px] -right-[5px] w-0 h-0 border-y-[5px] border-y-transparent border-l-[5px] border-l-bg-surface/95"></div>
