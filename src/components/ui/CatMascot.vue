@@ -37,11 +37,12 @@ const animationClass = computed(() => {
 
 <template>
   <div 
-    class="relative inline-flex items-center justify-center transition-all duration-500 cubic-bezier(0.34, 1.56, 0.64, 1)" 
+    class="relative inline-flex items-center justify-center transition-all duration-500 cubic-bezier(0.34, 1.56, 0.64, 1) will-change-transform" 
     :class="[sizeClass, animationClass]"
+    style="transform: translateZ(0);"
   >
-    <div class="absolute bottom-2 w-2/3 h-2 bg-black/10 dark:bg-black/30 blur-[4px] rounded-full scale-x-150 transition-opacity duration-300" :class="{'opacity-0': animation === 'hide'}"></div>
-    <img :src="imageSrc" alt="Mascot" class="w-full h-full object-contain relative z-10 filter drop-shadow-[0_0_2px_rgba(255,255,255,1)] drop-shadow-[0_4px_10px_rgba(0,0,0,0.4)]" />
+    <div class="absolute bottom-0 w-3/4 h-3 bg-black/20 dark:bg-black/40 blur-[6px] rounded-[100%] transition-opacity duration-300" :class="{'opacity-0': animation === 'hide'}"></div>
+    <img :src="imageSrc" alt="Mascot" class="w-full h-full object-contain relative z-10" loading="lazy" />
   </div>
 </template>
 

@@ -78,10 +78,10 @@ function skip() {
             </div>
             
             <!-- Mascots popping out -->
-            <div class="absolute -bottom-8 -right-8 w-32 h-32 md:w-40 md:h-40 animate-float drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)] z-20">
+            <div class="absolute -bottom-8 -right-8 w-32 h-32 md:w-40 md:h-40 z-20 will-change-transform" style="transform: translateZ(0);">
               <CatMascot type="orange" size="xl" animation="wave" />
             </div>
-            <div class="absolute -top-8 -left-8 w-24 h-24 md:w-28 md:h-28 animate-float drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)] z-0" style="animation-delay: 1.5s;">
+            <div class="absolute -top-8 -left-8 w-24 h-24 md:w-28 md:h-28 z-0 will-change-transform" style="transform: translateZ(0);">
               <CatMascot type="grey" size="lg" animation="float" />
             </div>
           </div>
