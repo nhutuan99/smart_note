@@ -352,11 +352,17 @@ watch(
     </div>
 
     <div class="relative z-10 w-full max-w-[25rem] px-6">
-      <!-- Mascot (replaces old static logo) -->
-      <div class="mb-2 text-center relative z-0">
-        <div class="flex justify-center -mb-8 relative z-0 drop-shadow-2xl">
+      <!-- Logo & Mascot -->
+      <div class="mb-8 text-center relative z-0 flex flex-col items-center">
+        <!-- Mascot peeking from top-right of the login box -->
+        <div class="absolute -top-12 -right-8 sm:-right-12 z-0 drop-shadow-2xl">
           <CatMascot type="grey" size="xl" :animation="mascotAnim" />
         </div>
+        <!-- Logo -->
+        <div class="relative z-10 flex h-20 w-20 items-center justify-center mb-3">
+          <img src="/images/logo-512.png" alt="FinNote Logo" class="h-full w-full rounded-2xl drop-shadow-[0_0_15px_rgba(124,111,247,0.5)] object-cover" />
+        </div>
+        <h1 class="text-3xl font-bold tracking-tight text-text-primary drop-shadow-sm">FinNote</h1>
       </div>
 
       <!-- ══ STEP: LOGIN / REGISTER ══ -->
