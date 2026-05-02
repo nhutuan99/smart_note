@@ -11,7 +11,7 @@ const props = withDefaults(defineProps<{
   size: 'md'
 })
 
-const imageSrc = computed(() => `/images/mascot_${props.type}_nobg.png`)
+const imageSrc = computed(() => `/images/mascot_${props.type}.png`)
 
 const sizeClass = computed(() => {
   switch (props.size) {
@@ -40,9 +40,10 @@ const animationClass = computed(() => {
     class="relative inline-flex items-center justify-center transition-all duration-500 cubic-bezier(0.34, 1.56, 0.64, 1)" 
     :class="[sizeClass, animationClass]"
   >
-    <!-- Simple ground shadow -->
-    <div class="absolute bottom-2 w-2/3 h-2 bg-black/10 dark:bg-black/30 blur-[4px] rounded-full scale-x-150 transition-opacity duration-300" :class="{'opacity-0': animation === 'hide'}"></div>
-    <img :src="imageSrc" alt="Mascot" class="w-full h-full object-contain relative z-10 filter drop-shadow-[0_0_2px_rgba(255,255,255,1)] drop-shadow-[0_4px_10px_rgba(0,0,0,0.4)]" />
+    <!-- Circular Sticker Badge Style -->
+    <div class="relative w-full h-full rounded-full overflow-hidden border-2 border-white/80 shadow-[0_4px_15px_rgba(255,255,255,0.2)] bg-white">
+      <img :src="imageSrc" alt="Mascot" class="w-full h-full object-cover transform scale-110" />
+    </div>
   </div>
 </template>
 
