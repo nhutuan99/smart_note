@@ -3,6 +3,8 @@ import { ref } from 'vue'
 import { httpClient } from '@/shared/api/httpClient'
 import type { Blog } from '@/types'
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
+
 export const useBlogStore = defineStore('blog', () => {
   const blogs = ref<Blog[]>([])
   const currentBlog = ref<Blog | null>(null)
@@ -94,6 +96,25 @@ export const useBlogStore = defineStore('blog', () => {
     return response?.imageUrl
   }
 
+  async function trackView(slug: string): Promise<number> {
+    try {
+      const response = await fetch(`${API_BASE}/api/blogs/${slug}/view`, { method: 'POST' })
+      if (response.ok) {
+        const json = await response.json() as { success: boolean; data: { views: number } }
+        if (json.success) {
+          // Update currentBlog viewCount if it matches
+          if (currentBlog.value?.slug === slug) {
+            currentBlog.value.viewCount = json.data.views
+          }
+          return json.data.views
+        }
+      }
+    } catch {
+      // Silently fail — view tracking is non-critical
+    }
+    return 0
+  }
+
   return {
     blogs,
     currentBlog,
@@ -107,7 +128,8 @@ export const useBlogStore = defineStore('blog', () => {
     generateContent,
     refineContent,
     generateImage,
-    uploadImage
+    uploadImage,
+    trackView
   }
 })
 

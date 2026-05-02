@@ -7,7 +7,7 @@ import { useI18n } from 'vue-i18n'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import { useSeoMeta, useHead } from '@unhead/vue'
-import { ArrowLeft, Calendar, Hash, User as UserIcon, Clock, BookOpen, ArrowRight, Zap, BrainCircuit, LayoutDashboard, Share2, Facebook, Twitter, Linkedin, Link, MessageCircle, Send } from 'lucide-vue-next'
+import { ArrowLeft, Calendar, Hash, User as UserIcon, Clock, BookOpen, ArrowRight, Zap, BrainCircuit, LayoutDashboard, Share2, Facebook, Twitter, Linkedin, Link, MessageCircle, Send, Eye } from 'lucide-vue-next'
 import { useUiStore } from '@/stores/ui'
 
 const { t, locale } = useI18n()
@@ -77,6 +77,9 @@ onMounted(async () => {
     if (blog) {
       contentHtml.value = DOMPurify.sanitize(await marked(blog.content, { async: true }))
       
+      // Track view (fire-and-forget)
+      blogStore.trackView(slug)
+
       const seoTitle = blog.seoMeta?.title || blog.title
       const seoDesc = blog.seoMeta?.description || blog.excerpt
       const blogUrl = `https://finnote-f4n.pages.dev/blog/${blog.slug}`
@@ -240,6 +243,11 @@ const formatDate = (dateStr: string) => {
           <div class="blog-meta__item">
             <Clock :size="14" />
             <span>{{ readingTime }} {{ t('blog.minRead') }}</span>
+          </div>
+          <div class="blog-meta__divider"></div>
+          <div class="blog-meta__item">
+            <Eye :size="14" />
+            <span>{{ blogStore.currentBlog.viewCount || 0 }}</span>
           </div>
           <div class="ml-auto flex items-center gap-1 sm:gap-2">
             <button @click="shareSocial('facebook')" class="text-text-tertiary hover:text-[#1877F2] transition-colors p-1.5 rounded-md hover:bg-bg-hover" title="Share on Facebook">

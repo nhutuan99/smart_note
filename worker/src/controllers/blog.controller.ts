@@ -30,14 +30,52 @@ export async function handleListBlogs(request: Request, env: Env): Promise<Respo
   const published = (index?.blogs || []).filter(b => b.published !== false)
   // Sort by date desc
   published.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-  
-  return jsonResponse({ success: true, data: published })
+
+  // Fetch view counts for all blogs in parallel
+  const withViews = await Promise.all(
+    published.map(async (blog) => {
+      const count = await env.SMART_NOTE_KV.get(`public/blogs/${blog.slug}/views`)
+      return { ...blog, viewCount: parseInt(count || '0') }
+    })
+  )
+
+  return jsonResponse({ success: true, data: withViews })
 }
 
 export async function handleGetBlog(slug: string, env: Env): Promise<Response> {
   const blog = await getJSON<BlogData>(env.SMART_NOTE_KV, `public/blogs/${slug}`)
   if (!blog) return errorResponse('Blog not found', 404)
   return jsonResponse({ success: true, data: blog })
+}
+
+export async function handleBlogView(slug: string, request: Request, env: Env): Promise<Response> {
+  // Verify blog exists
+  const blog = await getJSON<BlogData>(env.SMART_NOTE_KV, `public/blogs/${slug}`)
+  if (!blog) return errorResponse('Blog not found', 404)
+
+  // Hash IP for privacy-safe rate limiting
+  const ip = request.headers.get('cf-connecting-ip') || 'unknown'
+  const encoder = new TextEncoder()
+  const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(ip + slug))
+  const ipHash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 16)
+
+  const viewerKey = `public/blogs/${slug}/viewers/${ipHash}`
+  const countKey = `public/blogs/${slug}/views`
+
+  // Check if already viewed (24h window)
+  const alreadyViewed = await env.SMART_NOTE_KV.get(viewerKey)
+
+  if (!alreadyViewed) {
+    // Increment view count
+    const current = parseInt(await env.SMART_NOTE_KV.get(countKey) || '0')
+    await env.SMART_NOTE_KV.put(countKey, String(current + 1))
+    // Mark as viewed (TTL 24 hours)
+    await env.SMART_NOTE_KV.put(viewerKey, '1', { expirationTtl: 86400 })
+  }
+
+  // Return current count
+  const count = await env.SMART_NOTE_KV.get(countKey)
+  return jsonResponse({ success: true, data: { views: parseInt(count || '0') } })
 }
 
 export async function handleGetImage(id: string, env: Env): Promise<Response> {

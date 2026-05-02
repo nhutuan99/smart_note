@@ -2,6 +2,14 @@
 // This runs on the edge BEFORE the SPA loads, ensuring Google crawlers
 // see proper <title>, <meta>, Open Graph, and JSON-LD for each blog post
 
+// Type declaration for Cloudflare Pages Functions (globally available at runtime)
+type PagesFunction<Env = unknown> = (context: {
+  request: Request
+  next: () => Promise<Response>
+  params: Record<string, string>
+  env: Env
+}) => Promise<Response> | Response
+
 interface BlogData {
   id: string
   slug: string
@@ -33,7 +41,7 @@ export const onRequest: PagesFunction = async (context) => {
     const html = await response.text()
 
     const listMeta = buildListMeta()
-    const injectedHtml = injectMeta(html, listMeta)
+    const injectedHtml = injectMeta(html, listMeta, null)
 
     return new Response(injectedHtml, {
       headers: {
@@ -73,7 +81,9 @@ export const onRequest: PagesFunction = async (context) => {
 
   // Build SEO meta for this blog post
   const meta = buildBlogMeta(blog)
-  const injectedHtml = injectMeta(html, meta)
+  // Convert markdown to simple HTML for crawlers
+  const articleHtml = buildArticleHtml(blog)
+  const injectedHtml = injectMeta(html, meta, articleHtml)
 
   return new Response(injectedHtml, {
     headers: {
@@ -105,9 +115,13 @@ function buildListMeta(): string {
 function buildBlogMeta(blog: BlogData): string {
   const title = blog.seoMeta?.title || blog.title
   const desc = blog.seoMeta?.description || blog.excerpt
-  const keywords = (blog.seoMeta?.keywords || '') + ',' + (blog.tags || []).join(',')
+  const seoKeywords = (blog.seoMeta?.keywords || '').trim()
+  const tagKeywords = (blog.tags || []).join(',')
+  // Fix: avoid leading comma when seoKeywords is empty
+  const keywords = [seoKeywords, tagKeywords].filter(Boolean).join(',')
   const blogUrl = `${SITE_URL}/blog/${blog.slug}`
   const image = blog.imageUrl || `${SITE_URL}/images/og-cover.jpg`
+  const authorName = blog.author?.name || 'FinNote'
 
   const articleTags = (blog.tags || [])
     .map((tag) => `<meta property="article:tag" content="${escHtml(tag)}" />`)
@@ -119,7 +133,7 @@ function buildBlogMeta(blog: BlogData): string {
     headline: title,
     description: desc,
     image: image,
-    author: { '@type': 'Person', name: blog.author?.name || 'FinNote' },
+    author: { '@type': 'Person', name: authorName },
     publisher: {
       '@type': 'Organization',
       name: 'FinNote',
@@ -138,7 +152,7 @@ function buildBlogMeta(blog: BlogData): string {
     <title>${escHtml(title)} | FinNote Blog</title>
     <meta name="description" content="${escHtml(desc)}" />
     <meta name="keywords" content="${escHtml(keywords)}" />
-    <meta name="author" content="${escHtml(blog.author?.name || 'FinNote')}" />
+    <meta name="author" content="${escHtml(authorName)}" />
     <link rel="canonical" href="${escHtml(blogUrl)}" />
     <meta property="og:type" content="article" />
     <meta property="og:url" content="${escHtml(blogUrl)}" />
@@ -148,7 +162,7 @@ function buildBlogMeta(blog: BlogData): string {
     <meta property="og:site_name" content="FinNote Blog" />
     <meta property="og:locale" content="vi_VN" />
     <meta property="article:published_time" content="${escHtml(blog.createdAt)}" />
-    <meta property="article:author" content="${escHtml(blog.author?.name || 'FinNote')}" />
+    <meta property="article:author" content="${escHtml(authorName)}" />
     ${articleTags}
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${escHtml(title)}" />
@@ -158,7 +172,103 @@ function buildBlogMeta(blog: BlogData): string {
   `
 }
 
-function injectMeta(html: string, meta: string): string {
+// ──────────────────────────────────────────────────────
+// Lightweight Markdown → HTML converter for edge
+// Only needs to handle the basics for crawler readability
+// ──────────────────────────────────────────────────────
+function markdownToHtml(md: string): string {
+  let html = md
+
+  // Escape HTML entities in content first (but preserve markdown syntax)
+  // We'll handle this carefully per-element
+
+  // Headings: ## H2, ### H3, #### H4
+  html = html.replace(/^#### (.+)$/gm, '<h4>$1</h4>')
+  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>')
+  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>')
+  html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>')
+
+  // Bold: **text** or __text__
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+  html = html.replace(/__(.+?)__/g, '<strong>$1</strong>')
+
+  // Italic: *text* or _text_
+  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>')
+
+  // Links: [text](url)
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
+
+  // Images: ![alt](url)
+  html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" />')
+
+  // Blockquotes: > text
+  html = html.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
+
+  // Horizontal rules: --- or ***
+  html = html.replace(/^(---|\*\*\*)$/gm, '<hr />')
+
+  // Unordered lists: - item or * item
+  html = html.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>')
+
+  // Ordered lists: 1. item
+  html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
+
+  // Wrap consecutive <li> in <ul>
+  html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>')
+
+  // Code blocks: ```...```
+  html = html.replace(/```[\w]*\n([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+
+  // Inline code: `code`
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>')
+
+  // Paragraphs: wrap remaining text blocks
+  html = html
+    .split('\n\n')
+    .map((block) => {
+      const trimmed = block.trim()
+      if (!trimmed) return ''
+      // Don't wrap blocks that are already HTML elements
+      if (/^<(h[1-6]|ul|ol|li|blockquote|pre|hr|img|div|article|section|figure)/.test(trimmed)) {
+        return trimmed
+      }
+      return `<p>${trimmed}</p>`
+    })
+    .join('\n')
+
+  // Clean up: remove empty paragraphs
+  html = html.replace(/<p>\s*<\/p>/g, '')
+
+  return html
+}
+
+function buildArticleHtml(blog: BlogData): string {
+  const title = blog.seoMeta?.title || blog.title
+  const authorName = blog.author?.name || 'FinNote'
+  const contentHtml = markdownToHtml(blog.content || '')
+
+  // Build a complete semantic article for crawlers
+  // This will be placed inside <div id="app"> and replaced when Vue mounts
+  return `
+    <article itemscope itemtype="https://schema.org/Article">
+      <header>
+        <h1 itemprop="headline">${escHtml(title)}</h1>
+        <p itemprop="description">${escHtml(blog.excerpt || '')}</p>
+        <div>
+          <span itemprop="author" itemscope itemtype="https://schema.org/Person">
+            <span itemprop="name">${escHtml(authorName)}</span>
+          </span>
+          <time itemprop="datePublished" datetime="${escHtml(blog.createdAt)}">${escHtml(blog.createdAt.split('T')[0])}</time>
+        </div>
+        ${blog.tags?.length ? `<div>${blog.tags.map(t => `<span>${escHtml(t)}</span>`).join(' ')}</div>` : ''}
+      </header>
+      ${blog.imageUrl ? `<img itemprop="image" src="${escHtml(blog.imageUrl)}" alt="${escHtml(title)}" />` : ''}
+      <div itemprop="articleBody">${contentHtml}</div>
+    </article>
+  `
+}
+
+function injectMeta(html: string, meta: string, articleHtml: string | null): string {
   // Strategy: Replace the existing <title> and primary SEO block with blog-specific meta
   // The original index.html has:
   //   <!-- Primary SEO -->
@@ -178,6 +288,9 @@ function injectMeta(html: string, meta: string): string {
   // Replace existing canonical
   html = html.replace(/<link\s+rel="canonical"\s+href="[^"]*"\s*\/?>/i, '')
 
+  // Replace existing author (fix duplicate)
+  html = html.replace(/<meta\s+name="author"\s+content="[^"]*"\s*\/?>/gi, '')
+
   // Replace existing OG tags
   html = html.replace(/<meta\s+property="og:[^"]*"\s+content="[^"]*"\s*\/?>/gi, '')
 
@@ -192,6 +305,15 @@ function injectMeta(html: string, meta: string): string {
     /<meta\s+charset="UTF-8"\s*\/?>/i,
     `<meta charset="UTF-8" />\n    ${meta.trim()}`
   )
+
+  // Inject article content into <div id="app"> for crawlers
+  // Vue will replace this when it mounts, so visual users won't see it
+  if (articleHtml) {
+    html = html.replace(
+      '<div id="app"></div>',
+      `<div id="app">${articleHtml}</div>`
+    )
+  }
 
   return html
 }

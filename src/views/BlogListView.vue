@@ -4,7 +4,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useBlogStore } from '@/stores/blog'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
-import { Calendar, ChevronRight, Hash, Zap, BrainCircuit, LayoutDashboard, ArrowRight, Sparkles, X } from 'lucide-vue-next'
+import { Calendar, ChevronRight, Hash, Zap, BrainCircuit, LayoutDashboard, ArrowRight, Sparkles, X, Eye } from 'lucide-vue-next'
 
 const { t, locale } = useI18n()
 const router = useRouter()
@@ -154,6 +154,7 @@ const formatDate = (dateStr: string) => {
         <div class="flex-1 flex flex-col justify-center">
           <div class="flex items-center gap-3 text-[0.75rem] text-text-tertiary mb-3">
             <span class="flex items-center gap-1.5"><Calendar :size="14" /> {{ formatDate(blog.createdAt) }}</span>
+            <span v-if="blog.viewCount" class="flex items-center gap-1"><Eye :size="13" /> {{ blog.viewCount }}</span>
           </div>
           
           <h2 class="text-lg md:text-xl font-bold mb-2 group-hover:text-accent transition-colors line-clamp-2">

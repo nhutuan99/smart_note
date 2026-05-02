@@ -125,6 +125,7 @@ export interface Blog {
     keywords: string
   }
   published: boolean
+  viewCount?: number
   createdAt: string
   updatedAt: string
 }

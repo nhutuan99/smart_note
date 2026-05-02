@@ -77,6 +77,7 @@ import {
 import {
   handleListBlogs,
   handleGetBlog,
+  handleBlogView,
   handleCreateBlog,
   handleUpdateBlog,
   handleDeleteBlog,
@@ -150,6 +151,11 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
       const publicBlogMatch = path.match(/^\/api\/blogs\/([^\/]+)$/)
       if (publicBlogMatch && request.method === 'GET') {
         return handleGetBlog(publicBlogMatch[1], env)
+      }
+      // Blog view tracking (public, no auth needed)
+      const blogViewMatch = path.match(/^\/api\/blogs\/([^\/]+)\/view$/)
+      if (blogViewMatch && request.method === 'POST') {
+        return handleBlogView(blogViewMatch[1], request, env)
       }
       const imageMatch = path.match(/^\/api\/images\/([^\/]+)$/)
       if (imageMatch && request.method === 'GET') {
