@@ -29,7 +29,18 @@ Chủ đề ngẫu nhiên về tiền bạc, tiết kiệm, hoặc mua sắm.
 Yêu cầu bắt buộc:
 - TRẢ VỀ CHUẨN JSON ARRAY, KHÔNG ĐƯỢC CÓ BẤT KỲ TEXT NÀO KHÁC BÊN NGOÀI.
 - Cấu trúc JSON: [{"character": "orange" | "grey", "text": "nội dung thoại", "animation": "wave" | "peek" | "float" | "idle"}]
-- Thoại bằng tiếng Việt, vui nhộn.`
+- Thoại bằng tiếng Việt, vui nhộn.`,
+  weekly_event: `Bạn là một chuyên gia tài chính cá nhân siêu sáng tạo và hài hước. 
+Hãy tạo ra MỘT thử thách hoặc sự kiện tài chính ngẫu nhiên cho tuần này để khích lệ người dùng.
+Chủ đề có thể là: Tiết kiệm, Cắt giảm chi tiêu, Quản lý ngân sách, Đầu tư, hoặc Dọn dẹp tài chính.
+Yêu cầu bắt buộc:
+- TRẢ VỀ DUY NHẤT 1 CHUỖI JSON HỢP LỆ, KHÔNG CÓ BẤT KỲ TEXT NÀO BÊN NGOÀI.
+- Cấu trúc JSON:
+{
+  "title": "Tên thử thách ngắn gọn (tiếng Việt)",
+  "desc": "Mô tả chi tiết và khích lệ (tiếng Việt)",
+  "imagePrompt": "A single english keyword or short phrase describing the core subject for a 3d icon generation (e.g., 'piggy bank', 'stock chart', 'shopping receipt', 'wallet', 'coins', 'credit card'). Keep it simple."
+}`
 }
 
 export async function handleAi(request: Request, env: Env): Promise<Response> {
@@ -56,6 +67,8 @@ export async function handleAi(request: Request, env: Env): Promise<Response> {
     userMessage = `Title: ${body.title || ''}\nContent: ${content.substring(0, 600)}`
   } else if (action === 'cat_story') {
     userMessage = `Tạo một câu chuyện mới. Phải trả về mảng JSON hợp lệ.`
+  } else if (action === 'weekly_event') {
+    userMessage = `Tạo một sự kiện tài chính mới lạ cho tuần này. Phải trả về JSON hợp lệ.`
   } else {
     userMessage = content
   }
@@ -127,6 +140,29 @@ export async function handleAiStream(request: Request, env: Env): Promise<Respon
     })
   } catch (err: any) {
     return errorResponse(err.message || 'AI stream failed', 500)
+  }
+}
+
+export async function handleAiImage(request: Request, env: Env): Promise<Response> {
+  if (!env.AI) return errorResponse('AI binding not configured', 503)
+
+  const body = (await request.json().catch(() => ({}))) as any
+  const prompt = body.prompt || 'golden coin'
+
+  try {
+    const response = await (env.AI as any).run('@cf/stabilityai/stable-diffusion-xl-base-1.0', {
+      prompt: `A highly detailed 3d cute cartoon UI asset icon of ${prompt}, vibrant colors, neon accents, dark purple gradient background, high quality, 4k`
+    })
+
+    const cors = corsHeaders()
+    return new Response(response, {
+      headers: {
+        ...cors,
+        'Content-Type': 'image/png'
+      }
+    })
+  } catch (err: any) {
+    return errorResponse(err.message || 'AI image generation failed', 500)
   }
 }
 

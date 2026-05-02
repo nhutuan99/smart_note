@@ -1,54 +1,29 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
 import { useUiStore } from '@/stores/ui'
+import { useAuthStore } from '@/stores/auth'
 import CatMascot from '@/components/ui/CatMascot.vue'
-import { Sparkles, X, ChevronRight } from 'lucide-vue-next'
+import { Sparkles, X, ChevronRight, Loader2 } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
+import { httpClient } from '@/shared/api/httpClient'
 
 const ui = useUiStore()
+const auth = useAuthStore()
 const { t } = useI18n()
 const router = useRouter()
-
-// Generate topics from i18n
-const topics = computed(() => [
-  {
-    title: t('weeklyEvent.topics.t1_title'),
-    desc: t('weeklyEvent.topics.t1_desc'),
-    image: '/images/events/event1.png'
-  },
-  {
-    title: t('weeklyEvent.topics.t2_title'),
-    desc: t('weeklyEvent.topics.t2_desc'),
-    image: '/images/events/event2.png'
-  },
-  {
-    title: t('weeklyEvent.topics.t3_title'),
-    desc: t('weeklyEvent.topics.t3_desc'),
-    image: '/images/events/event3.png'
-  }
-])
-
-function getWeekNumber(d = new Date()) {
-  d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
-  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7))
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1))
-  return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1)/7)
-}
-
-const topic = ref(topics.value[0])
-const imageFailed = ref(false)
-
-onMounted(() => {
-  topic.value = topics.value[getWeekNumber() % topics.value.length]
-})
 
 const isAnimating = ref(false)
 const showModalContent = ref(false)
 const currentScene = ref(0)
 
+const generatedEvent = ref<{title: string, desc: string, imagePrompt: string} | null>(null)
+const generatedImageBlob = ref<string>('')
+const isGeneratingText = ref(false)
+const isGeneratingImage = ref(false)
+
 // Trigger the chase animation when the modal is opened
-watch(() => ui.showWeeklyEvent, (newVal) => {
+watch(() => ui.showWeeklyEvent, async (newVal) => {
   if (newVal) {
     // Determine the next scene to show based on localStorage (0, 1, 2)
     const lastIndex = parseInt(localStorage.getItem('lastSceneIndex') || '-1')
@@ -58,6 +33,48 @@ watch(() => ui.showWeeklyEvent, (newVal) => {
 
     isAnimating.value = true
     showModalContent.value = false
+    
+    isGeneratingText.value = true
+    isGeneratingImage.value = true
+    generatedEvent.value = null
+    generatedImageBlob.value = ''
+    
+    // Fire and forget the AI requests
+    ;(async () => {
+      try {
+        const textRes = await httpClient.post<{data: string}>('/api/ai', { action: 'weekly_event' })
+        const eventData = JSON.parse(textRes.data || '{}')
+        generatedEvent.value = eventData
+        isGeneratingText.value = false
+        
+        if (eventData.imagePrompt) {
+          const apiBase = import.meta.env.VITE_API_URL || ''
+          const imgRes = await fetch(`${apiBase}/api/ai/image`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${auth.token}`
+            },
+            body: JSON.stringify({ prompt: eventData.imagePrompt })
+          })
+          if (!imgRes.ok) throw new Error('Image generation failed')
+          const blob = await imgRes.blob()
+          generatedImageBlob.value = URL.createObjectURL(blob)
+          isGeneratingImage.value = false
+        }
+      } catch (err) {
+        console.error('AI Event Error:', err)
+        isGeneratingText.value = false
+        isGeneratingImage.value = false
+        // Fallback
+        generatedEvent.value = {
+          title: t('weeklyEvent.topics.t1_title'),
+          desc: t('weeklyEvent.topics.t1_desc'),
+          imagePrompt: ''
+        }
+        generatedImageBlob.value = '/images/events/event1.png'
+      }
+    })()
     
     // The boom happens at 1.375s (55% of 2.5s)
     setTimeout(() => {
@@ -99,12 +116,12 @@ function skip() {
       <!-- The 3 CSS Scenes Layer -->
       <div v-if="isAnimating && !showModalContent" class="absolute inset-0 z-50 flex items-center justify-center pointer-events-none overflow-hidden" :class="'scene-' + currentScene">
          <!-- Grey Cat (Mít) -->
-         <CatMascot type="grey" size="xl" class="absolute left-1/2 top-1/2 -mt-16 -ml-16 cat-grey drop-shadow-2xl" />
+         <CatMascot type="grey" size="xl" class="absolute left-1/2 top-1/2 -mt-16 -ml-16 cat-grey drop-shadow-2xl will-change-transform" />
          <!-- Orange Cat (Múp) -->
-         <CatMascot type="orange" size="xl" class="absolute left-1/2 top-1/2 -mt-16 -ml-16 cat-orange drop-shadow-2xl" />
+         <CatMascot type="orange" size="xl" class="absolute left-1/2 top-1/2 -mt-16 -ml-16 cat-orange drop-shadow-2xl will-change-transform" />
          <!-- Explosion Boom -->
-         <div class="absolute left-1/2 top-1/2 w-96 h-96 bg-gradient-to-tr from-accent via-pink-500 to-yellow-400 rounded-full blur-[40px] mix-blend-screen animate-boom"></div>
-         <Sparkles class="absolute left-1/2 top-1/2 text-white animate-boom-sparkles" />
+         <div class="absolute left-1/2 top-1/2 w-96 h-96 bg-gradient-to-tr from-accent via-pink-500 to-yellow-400 rounded-full blur-[40px] mix-blend-screen animate-boom will-change-transform"></div>
+         <Sparkles class="absolute left-1/2 top-1/2 text-white animate-boom-sparkles will-change-transform" />
       </div>
 
       <!-- Scrollable Container for Modal -->
@@ -130,11 +147,11 @@ function skip() {
           <!-- Image Section -->
           <div class="w-full md:w-1/2 relative group">
             <div class="absolute inset-0 bg-gradient-to-tr from-accent to-pink-500 rounded-3xl blur-xl opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
-            <div class="relative aspect-video sm:aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl border-2 border-white/10" :class="{'bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500': imageFailed}">
-              <img v-if="!imageFailed" :src="topic.image" @error="imageFailed = true" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" />
-              <div v-if="imageFailed" class="w-full h-full flex flex-col items-center justify-center text-white/50 px-4 text-center">
-                <Sparkles :size="48" class="mb-4 opacity-50 animate-pulse" />
-                <p class="font-medium">Chương trình đặc biệt tuần này</p>
+            <div class="relative aspect-video sm:aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl border-2 border-white/10" :class="{'bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500': isGeneratingImage}">
+              <img v-if="!isGeneratingImage && generatedImageBlob" :src="generatedImageBlob" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" />
+              <div v-if="isGeneratingImage" class="w-full h-full flex flex-col items-center justify-center text-white/50 px-4 text-center">
+                <Loader2 :size="48" class="mb-4 opacity-50 animate-spin" />
+                <p class="font-medium">AI đang vẽ ảnh minh họa...</p>
               </div>
               <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
             </div>
@@ -149,16 +166,24 @@ function skip() {
           </div>
 
           <!-- Text & Actions Section -->
-          <div class="w-full md:w-1/2 flex flex-col items-center md:items-start text-center md:text-left">
-            <h2 class="text-2xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-white/70 mb-3 sm:mb-4 leading-tight drop-shadow-sm">
-              {{ topic.title }}
-            </h2>
-            <p class="text-base sm:text-lg text-white/80 mb-6 sm:mb-8 leading-relaxed font-medium">
-              {{ topic.desc }}
-            </p>
+          <div class="w-full md:w-1/2 flex flex-col items-center md:items-start text-center md:text-left min-h-[160px]">
+            <template v-if="isGeneratingText">
+              <div class="w-3/4 h-10 bg-white/10 rounded-lg animate-pulse mb-4"></div>
+              <div class="w-full h-4 bg-white/5 rounded animate-pulse mb-2"></div>
+              <div class="w-5/6 h-4 bg-white/5 rounded animate-pulse mb-2"></div>
+              <div class="w-4/6 h-4 bg-white/5 rounded animate-pulse mb-8"></div>
+            </template>
+            <template v-else-if="generatedEvent">
+              <h2 class="text-2xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-white/70 mb-3 sm:mb-4 leading-tight drop-shadow-sm">
+                {{ generatedEvent.title }}
+              </h2>
+              <p class="text-base sm:text-lg text-white/80 mb-6 sm:mb-8 leading-relaxed font-medium">
+                {{ generatedEvent.desc }}
+              </p>
+            </template>
 
             <div class="flex flex-col w-full gap-4 mt-auto">
-              <button @click="interact" class="relative group w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-accent to-pink-500 text-white font-bold text-lg hover:shadow-[0_0_30px_rgba(142,125,250,0.6)] transition-all duration-300 flex justify-center items-center gap-2 overflow-hidden border border-white/20">
+              <button :disabled="isGeneratingText" @click="interact" class="relative group w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-accent to-pink-500 text-white font-bold text-lg hover:shadow-[0_0_30px_rgba(142,125,250,0.6)] transition-all duration-300 flex justify-center items-center gap-2 overflow-hidden border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed">
                 <div class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
                 <span class="relative z-10">{{ t('weeklyEvent.join') }}</span>
                 <ChevronRight :size="24" class="relative z-10 group-hover:translate-x-1 transition-transform" />
@@ -223,78 +248,78 @@ function skip() {
 
 /* Scene 0: Chase */
 @keyframes s0-orange {
-  0% { transform: translate(-100vw, 0) rotate(-15deg); opacity: 1; }
-  10% { transform: translate(-80vw, -80px) rotate(15deg); }
-  20% { transform: translate(-60vw, 0) rotate(-15deg); }
-  30% { transform: translate(-40vw, -80px) rotate(15deg); }
-  40% { transform: translate(-20vw, 0) rotate(-15deg); }
-  50% { transform: translate(-10vw, -40px) rotate(10deg); opacity: 1; }
-  55% { transform: translate(0, 0) rotate(0) scale(1.5); opacity: 0; filter: brightness(2); }
-  100% { transform: translate(0, 0) rotate(0) scale(2); opacity: 0; }
+  0% { transform: translate3d(-100vw, 0, 0) rotate(-15deg); opacity: 1; }
+  10% { transform: translate3d(-80vw, -80px, 0) rotate(15deg); }
+  20% { transform: translate3d(-60vw, 0, 0) rotate(-15deg); }
+  30% { transform: translate3d(-40vw, -80px, 0) rotate(15deg); }
+  40% { transform: translate3d(-20vw, 0, 0) rotate(-15deg); }
+  50% { transform: translate3d(-10vw, -40px, 0) rotate(10deg); opacity: 1; }
+  55% { transform: translate3d(0, 0, 0) rotate(0) scale(1.5); opacity: 0; filter: brightness(2); }
+  100% { transform: translate3d(0, 0, 0) rotate(0) scale(2); opacity: 0; }
 }
 @keyframes s0-grey {
-  0% { transform: translate(-130vw, 0) rotate(-15deg); opacity: 1; }
-  10% { transform: translate(-104vw, -80px) rotate(15deg); }
-  20% { transform: translate(-78vw, 0) rotate(-15deg); }
-  30% { transform: translate(-52vw, -80px) rotate(15deg); }
-  40% { transform: translate(-26vw, 0) rotate(-15deg); }
-  50% { transform: translate(-13vw, -40px) rotate(10deg); opacity: 1; }
-  55% { transform: translate(0, 0) rotate(0) scale(1.5); opacity: 0; filter: brightness(2); }
-  100% { transform: translate(0, 0) rotate(0) scale(2); opacity: 0; }
+  0% { transform: translate3d(-130vw, 0, 0) rotate(-15deg); opacity: 1; }
+  10% { transform: translate3d(-104vw, -80px, 0) rotate(15deg); }
+  20% { transform: translate3d(-78vw, 0, 0) rotate(-15deg); }
+  30% { transform: translate3d(-52vw, -80px, 0) rotate(15deg); }
+  40% { transform: translate3d(-26vw, 0, 0) rotate(-15deg); }
+  50% { transform: translate3d(-13vw, -40px, 0) rotate(10deg); opacity: 1; }
+  55% { transform: translate3d(0, 0, 0) rotate(0) scale(1.5); opacity: 0; filter: brightness(2); }
+  100% { transform: translate3d(0, 0, 0) rotate(0) scale(2); opacity: 0; }
 }
 
 /* Scene 1: Peekaboo Jump */
 @keyframes s1-orange {
-  0% { transform: translate(-50vw, 50vh) rotate(-45deg); opacity: 0; }
-  20% { transform: translate(-40vw, 20vh) rotate(-10deg); opacity: 1; }
-  30% { transform: translate(-40vw, 20vh) rotate(-10deg) scale(1.1); }
-  50% { transform: translate(-10vw, -10vh) rotate(15deg) scale(1); opacity: 1; }
-  55% { transform: translate(0, 0) rotate(0) scale(1.2); opacity: 0; filter: brightness(2); }
-  100% { transform: translate(0, 0) scale(2); opacity: 0; }
+  0% { transform: translate3d(-50vw, 50vh, 0) rotate(-45deg); opacity: 0; }
+  20% { transform: translate3d(-40vw, 20vh, 0) rotate(-10deg); opacity: 1; }
+  30% { transform: translate3d(-40vw, 20vh, 0) rotate(-10deg) scale(1.1); }
+  50% { transform: translate3d(-10vw, -10vh, 0) rotate(15deg) scale(1); opacity: 1; }
+  55% { transform: translate3d(0, 0, 0) rotate(0) scale(1.2); opacity: 0; filter: brightness(2); }
+  100% { transform: translate3d(0, 0, 0) scale(2); opacity: 0; }
 }
 @keyframes s1-grey {
-  0% { transform: translate(50vw, 50vh) rotate(45deg) scaleX(-1); opacity: 0; }
-  20% { transform: translate(40vw, 20vh) rotate(10deg) scaleX(-1); opacity: 1; }
-  30% { transform: translate(40vw, 20vh) rotate(10deg) scaleX(-1) scale(1.1); }
-  50% { transform: translate(10vw, -10vh) rotate(-15deg) scaleX(-1) scale(1); opacity: 1; }
-  55% { transform: translate(0, 0) rotate(0) scaleX(-1) scale(1.2); opacity: 0; filter: brightness(2); }
-  100% { transform: translate(0, 0) scaleX(-1) scale(2); opacity: 0; }
+  0% { transform: translate3d(50vw, 50vh, 0) rotate(45deg) scaleX(-1); opacity: 0; }
+  20% { transform: translate3d(40vw, 20vh, 0) rotate(10deg) scaleX(-1); opacity: 1; }
+  30% { transform: translate3d(40vw, 20vh, 0) rotate(10deg) scaleX(-1) scale(1.1); }
+  50% { transform: translate3d(10vw, -10vh, 0) rotate(-15deg) scaleX(-1) scale(1); opacity: 1; }
+  55% { transform: translate3d(0, 0, 0) rotate(0) scaleX(-1) scale(1.2); opacity: 0; filter: brightness(2); }
+  100% { transform: translate3d(0, 0, 0) scaleX(-1) scale(2); opacity: 0; }
 }
 
 /* Scene 2: Float Spin */
 @keyframes s2-orange {
-  0% { transform: translate(-80vw, -50vh) rotate(-360deg) scale(0.5); opacity: 0; }
-  20% { transform: translate(-40vw, -20vh) rotate(-180deg) scale(1); opacity: 1; }
-  50% { transform: translate(-10vw, -10px) rotate(-45deg) scale(1.2); opacity: 1; }
-  55% { transform: translate(0, 0) rotate(0) scale(1.5); opacity: 0; filter: brightness(2); }
-  100% { transform: translate(0, 0) scale(2); opacity: 0; }
+  0% { transform: translate3d(-80vw, -50vh, 0) rotate(-360deg) scale(0.5); opacity: 0; }
+  20% { transform: translate3d(-40vw, -20vh, 0) rotate(-180deg) scale(1); opacity: 1; }
+  50% { transform: translate3d(-10vw, -10px, 0) rotate(-45deg) scale(1.2); opacity: 1; }
+  55% { transform: translate3d(0, 0, 0) rotate(0) scale(1.5); opacity: 0; filter: brightness(2); }
+  100% { transform: translate3d(0, 0, 0) scale(2); opacity: 0; }
 }
 @keyframes s2-grey {
-  0% { transform: translate(80vw, -50vh) rotate(360deg) scaleX(-1) scale(0.5); opacity: 0; }
-  20% { transform: translate(40vw, -20vh) rotate(180deg) scaleX(-1) scale(1); opacity: 1; }
-  50% { transform: translate(10vw, -10px) rotate(45deg) scaleX(-1) scale(1.2); opacity: 1; }
-  55% { transform: translate(0, 0) rotate(0) scaleX(-1) scale(1.5); opacity: 0; filter: brightness(2); }
-  100% { transform: translate(0, 0) scaleX(-1) scale(2); opacity: 0; }
+  0% { transform: translate3d(80vw, -50vh, 0) rotate(360deg) scaleX(-1) scale(0.5); opacity: 0; }
+  20% { transform: translate3d(40vw, -20vh, 0) rotate(180deg) scaleX(-1) scale(1); opacity: 1; }
+  50% { transform: translate3d(10vw, -10px, 0) rotate(45deg) scaleX(-1) scale(1.2); opacity: 1; }
+  55% { transform: translate3d(0, 0, 0) rotate(0) scaleX(-1) scale(1.5); opacity: 0; filter: brightness(2); }
+  100% { transform: translate3d(0, 0, 0) scaleX(-1) scale(2); opacity: 0; }
 }
 
 .animate-boom {
   animation: boom 2.5s ease-out forwards;
 }
 @keyframes boom {
-  0%, 53% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
-  55% { transform: translate(-50%, -50%) scale(1.5); opacity: 1; }
-  70% { transform: translate(-50%, -50%) scale(4); opacity: 0; }
-  100% { transform: translate(-50%, -50%) scale(5); opacity: 0; }
+  0%, 53% { transform: translate3d(-50%, -50%, 0) scale(0); opacity: 0; }
+  55% { transform: translate3d(-50%, -50%, 0) scale(1.5); opacity: 1; }
+  70% { transform: translate3d(-50%, -50%, 0) scale(4); opacity: 0; }
+  100% { transform: translate3d(-50%, -50%, 0) scale(5); opacity: 0; }
 }
 
 .animate-boom-sparkles {
   animation: boom-sparkles 2.5s ease-out forwards;
 }
 @keyframes boom-sparkles {
-  0%, 53% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 0; }
-  55% { transform: translate(-50%, -50%) scale(4) rotate(45deg); opacity: 1; }
-  70% { transform: translate(-50%, -50%) scale(8) rotate(90deg); opacity: 0; }
-  100% { transform: translate(-50%, -50%) scale(8) rotate(90deg); opacity: 0; }
+  0%, 53% { transform: translate3d(-50%, -50%, 0) scale(0) rotate(0deg); opacity: 0; }
+  55% { transform: translate3d(-50%, -50%, 0) scale(4) rotate(45deg); opacity: 1; }
+  70% { transform: translate3d(-50%, -50%, 0) scale(8) rotate(90deg); opacity: 0; }
+  100% { transform: translate3d(-50%, -50%, 0) scale(8) rotate(90deg); opacity: 0; }
 }
 
 /* Modal Entry Animation */

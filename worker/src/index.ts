@@ -66,6 +66,7 @@ import {
 import {
   handleAiStream,
   handleAi,
+  handleAiImage
 } from './controllers/ai.controller'
 
 import {
@@ -368,6 +369,9 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
       }
       if (path === '/api/ai' && request.method === 'POST') {
         return handleAi(request, env)
+      }
+      if (path === '/api/ai/image' && request.method === 'POST') {
+        return handleAiImage(request, env)
       }
 
       return errorResponse('Not found', 404)
