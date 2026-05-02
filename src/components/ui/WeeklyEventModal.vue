@@ -246,57 +246,57 @@ function skip() {
 .scene-2 .cat-orange { animation: s2-orange 2.5s ease-out forwards; }
 .scene-2 .cat-grey   { animation: s2-grey 2.5s ease-out forwards; }
 
-/* Scene 0: Chase */
+/* Scene 0: Chase (Runs across the center) */
 @keyframes s0-orange {
   0% { transform: translate3d(-100vw, 0, 0) rotate(-15deg); opacity: 1; }
-  10% { transform: translate3d(-80vw, -80px, 0) rotate(15deg); }
+  10% { transform: translate3d(-80vw, -40px, 0) rotate(15deg); }
   20% { transform: translate3d(-60vw, 0, 0) rotate(-15deg); }
-  30% { transform: translate3d(-40vw, -80px, 0) rotate(15deg); }
+  30% { transform: translate3d(-40vw, -40px, 0) rotate(15deg); }
   40% { transform: translate3d(-20vw, 0, 0) rotate(-15deg); }
-  50% { transform: translate3d(-10vw, -40px, 0) rotate(10deg); opacity: 1; }
+  50% { transform: translate3d(-10vw, -20px, 0) rotate(10deg); opacity: 1; }
   55% { transform: translate3d(0, 0, 0) rotate(0) scale(1.5); opacity: 0; filter: brightness(2); }
   100% { transform: translate3d(0, 0, 0) rotate(0) scale(2); opacity: 0; }
 }
 @keyframes s0-grey {
   0% { transform: translate3d(-130vw, 0, 0) rotate(-15deg); opacity: 1; }
-  10% { transform: translate3d(-104vw, -80px, 0) rotate(15deg); }
+  10% { transform: translate3d(-104vw, -40px, 0) rotate(15deg); }
   20% { transform: translate3d(-78vw, 0, 0) rotate(-15deg); }
-  30% { transform: translate3d(-52vw, -80px, 0) rotate(15deg); }
+  30% { transform: translate3d(-52vw, -40px, 0) rotate(15deg); }
   40% { transform: translate3d(-26vw, 0, 0) rotate(-15deg); }
-  50% { transform: translate3d(-13vw, -40px, 0) rotate(10deg); opacity: 1; }
+  50% { transform: translate3d(-13vw, -20px, 0) rotate(10deg); opacity: 1; }
   55% { transform: translate3d(0, 0, 0) rotate(0) scale(1.5); opacity: 0; filter: brightness(2); }
   100% { transform: translate3d(0, 0, 0) rotate(0) scale(2); opacity: 0; }
 }
 
-/* Scene 1: Peekaboo Jump */
+/* Scene 1: Center Jump (Starts horizontally away, slightly low) */
 @keyframes s1-orange {
-  0% { transform: translate3d(-50vw, 50vh, 0) rotate(-45deg); opacity: 0; }
-  20% { transform: translate3d(-40vw, 20vh, 0) rotate(-10deg); opacity: 1; }
-  30% { transform: translate3d(-40vw, 20vh, 0) rotate(-10deg) scale(1.1); }
+  0% { transform: translate3d(-60vw, 15vh, 0) rotate(-45deg); opacity: 0; }
+  20% { transform: translate3d(-30vw, 0, 0) rotate(-10deg); opacity: 1; }
+  30% { transform: translate3d(-30vw, 0, 0) rotate(-10deg) scale(1.1); }
   50% { transform: translate3d(-10vw, -10vh, 0) rotate(15deg) scale(1); opacity: 1; }
   55% { transform: translate3d(0, 0, 0) rotate(0) scale(1.2); opacity: 0; filter: brightness(2); }
   100% { transform: translate3d(0, 0, 0) scale(2); opacity: 0; }
 }
 @keyframes s1-grey {
-  0% { transform: translate3d(50vw, 50vh, 0) rotate(45deg) scaleX(-1); opacity: 0; }
-  20% { transform: translate3d(40vw, 20vh, 0) rotate(10deg) scaleX(-1); opacity: 1; }
-  30% { transform: translate3d(40vw, 20vh, 0) rotate(10deg) scaleX(-1) scale(1.1); }
+  0% { transform: translate3d(60vw, 15vh, 0) rotate(45deg) scaleX(-1); opacity: 0; }
+  20% { transform: translate3d(30vw, 0, 0) rotate(10deg) scaleX(-1); opacity: 1; }
+  30% { transform: translate3d(30vw, 0, 0) rotate(10deg) scaleX(-1) scale(1.1); }
   50% { transform: translate3d(10vw, -10vh, 0) rotate(-15deg) scaleX(-1) scale(1); opacity: 1; }
   55% { transform: translate3d(0, 0, 0) rotate(0) scaleX(-1) scale(1.2); opacity: 0; filter: brightness(2); }
   100% { transform: translate3d(0, 0, 0) scaleX(-1) scale(2); opacity: 0; }
 }
 
-/* Scene 2: Float Spin */
+/* Scene 2: Float Spin (Horizontal spin into center) */
 @keyframes s2-orange {
-  0% { transform: translate3d(-80vw, -50vh, 0) rotate(-360deg) scale(0.5); opacity: 0; }
-  20% { transform: translate3d(-40vw, -20vh, 0) rotate(-180deg) scale(1); opacity: 1; }
+  0% { transform: translate3d(-70vw, -15vh, 0) rotate(-360deg) scale(0.5); opacity: 0; }
+  20% { transform: translate3d(-30vw, -5vh, 0) rotate(-180deg) scale(1); opacity: 1; }
   50% { transform: translate3d(-10vw, -10px, 0) rotate(-45deg) scale(1.2); opacity: 1; }
   55% { transform: translate3d(0, 0, 0) rotate(0) scale(1.5); opacity: 0; filter: brightness(2); }
   100% { transform: translate3d(0, 0, 0) scale(2); opacity: 0; }
 }
 @keyframes s2-grey {
-  0% { transform: translate3d(80vw, -50vh, 0) rotate(360deg) scaleX(-1) scale(0.5); opacity: 0; }
-  20% { transform: translate3d(40vw, -20vh, 0) rotate(180deg) scaleX(-1) scale(1); opacity: 1; }
+  0% { transform: translate3d(70vw, -15vh, 0) rotate(360deg) scaleX(-1) scale(0.5); opacity: 0; }
+  20% { transform: translate3d(30vw, -5vh, 0) rotate(180deg) scaleX(-1) scale(1); opacity: 1; }
   50% { transform: translate3d(10vw, -10px, 0) rotate(45deg) scaleX(-1) scale(1.2); opacity: 1; }
   55% { transform: translate3d(0, 0, 0) rotate(0) scaleX(-1) scale(1.5); opacity: 0; filter: brightness(2); }
   100% { transform: translate3d(0, 0, 0) scaleX(-1) scale(2); opacity: 0; }
