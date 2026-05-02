@@ -15,21 +15,19 @@ const topics = computed(() => [
   {
     title: t('weeklyEvent.topics.t1_title'),
     desc: t('weeklyEvent.topics.t1_desc'),
-    image: 'https://images.unsplash.com/photo-1579621970588-a35d0e7ab9b6?q=80&w=800&auto=format&fit=crop'
+    image: '/images/events/event1.png'
   },
   {
     title: t('weeklyEvent.topics.t2_title'),
     desc: t('weeklyEvent.topics.t2_desc'),
-    image: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?q=80&w=800&auto=format&fit=crop'
+    image: '/images/events/event2.png'
   },
   {
     title: t('weeklyEvent.topics.t3_title'),
     desc: t('weeklyEvent.topics.t3_desc'),
-    image: 'https://images.unsplash.com/photo-1616514197671-15d99ce7a6f8?q=80&w=800&auto=format&fit=crop'
+    image: '/images/events/event3.png'
   }
 ])
-
-
 
 function getWeekNumber(d = new Date()) {
   d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
@@ -47,10 +45,17 @@ onMounted(() => {
 
 const isAnimating = ref(false)
 const showModalContent = ref(false)
+const currentScene = ref(0)
 
 // Trigger the chase animation when the modal is opened
 watch(() => ui.showWeeklyEvent, (newVal) => {
   if (newVal) {
+    // Determine the next scene to show based on localStorage (0, 1, 2)
+    const lastIndex = parseInt(localStorage.getItem('lastSceneIndex') || '-1')
+    const nextIndex = (lastIndex + 1) % 3
+    currentScene.value = nextIndex
+    localStorage.setItem('lastSceneIndex', nextIndex.toString())
+
     isAnimating.value = true
     showModalContent.value = false
     
@@ -59,10 +64,10 @@ watch(() => ui.showWeeklyEvent, (newVal) => {
       showModalContent.value = true
     }, 1375)
     
-    // Clean up animation elements after 3s
+    // Clean up animation elements
     setTimeout(() => {
       isAnimating.value = false
-    }, 3000)
+    }, 3100)
   } else {
     isAnimating.value = false
     showModalContent.value = false
@@ -91,12 +96,12 @@ function skip() {
       <div class="absolute bottom-1/4 right-1/4 w-[25rem] h-[25rem] bg-pink-500/20 rounded-full blur-[100px] animate-pulse pointer-events-none" style="animation-delay: 1s;"></div>
       <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40rem] h-[40rem] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none"></div>
 
-      <!-- The Chase Animation Layer -->
-      <div v-if="isAnimating" class="absolute inset-0 flex items-center justify-center z-50 pointer-events-none overflow-hidden">
-         <!-- Grey Cat (Mít) chasing from behind -->
-         <CatMascot type="grey" size="xl" class="absolute left-1/2 top-1/2 -mt-16 -ml-16 animate-run-grey drop-shadow-2xl" />
-         <!-- Orange Cat (Múp) running in front -->
-         <CatMascot type="orange" size="xl" class="absolute left-1/2 top-1/2 -mt-16 -ml-16 animate-run-orange drop-shadow-2xl" />
+      <!-- The 3 CSS Scenes Layer -->
+      <div v-if="isAnimating && !showModalContent" class="absolute inset-0 z-50 flex items-center justify-center pointer-events-none overflow-hidden" :class="'scene-' + currentScene">
+         <!-- Grey Cat (Mít) -->
+         <CatMascot type="grey" size="xl" class="absolute left-1/2 top-1/2 -mt-16 -ml-16 cat-grey drop-shadow-2xl" />
+         <!-- Orange Cat (Múp) -->
+         <CatMascot type="orange" size="xl" class="absolute left-1/2 top-1/2 -mt-16 -ml-16 cat-orange drop-shadow-2xl" />
          <!-- Explosion Boom -->
          <div class="absolute left-1/2 top-1/2 w-96 h-96 bg-gradient-to-tr from-accent via-pink-500 to-yellow-400 rounded-full blur-[40px] mix-blend-screen animate-boom"></div>
          <Sparkles class="absolute left-1/2 top-1/2 text-white animate-boom-sparkles" />
@@ -206,11 +211,18 @@ function skip() {
   100% { transform: translateY(0px) rotate(0deg); }
 }
 
-/* --- Cat Chase Animations --- */
-.animate-run-orange {
-  animation: run-orange 2.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-}
-@keyframes run-orange {
+/* --- 3 Cat Scenes Animations --- */
+.scene-0 .cat-orange { animation: s0-orange 2.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+.scene-0 .cat-grey   { animation: s0-grey 2.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+
+.scene-1 .cat-orange { animation: s1-orange 2.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.scene-1 .cat-grey   { animation: s1-grey 2.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+.scene-2 .cat-orange { animation: s2-orange 2.5s ease-out forwards; }
+.scene-2 .cat-grey   { animation: s2-grey 2.5s ease-out forwards; }
+
+/* Scene 0: Chase */
+@keyframes s0-orange {
   0% { transform: translate(-100vw, 0) rotate(-15deg); opacity: 1; }
   10% { transform: translate(-80vw, -80px) rotate(15deg); }
   20% { transform: translate(-60vw, 0) rotate(-15deg); }
@@ -220,11 +232,7 @@ function skip() {
   55% { transform: translate(0, 0) rotate(0) scale(1.5); opacity: 0; filter: brightness(2); }
   100% { transform: translate(0, 0) rotate(0) scale(2); opacity: 0; }
 }
-
-.animate-run-grey {
-  animation: run-grey 2.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-}
-@keyframes run-grey {
+@keyframes s0-grey {
   0% { transform: translate(-130vw, 0) rotate(-15deg); opacity: 1; }
   10% { transform: translate(-104vw, -80px) rotate(15deg); }
   20% { transform: translate(-78vw, 0) rotate(-15deg); }
@@ -233,6 +241,40 @@ function skip() {
   50% { transform: translate(-13vw, -40px) rotate(10deg); opacity: 1; }
   55% { transform: translate(0, 0) rotate(0) scale(1.5); opacity: 0; filter: brightness(2); }
   100% { transform: translate(0, 0) rotate(0) scale(2); opacity: 0; }
+}
+
+/* Scene 1: Peekaboo Jump */
+@keyframes s1-orange {
+  0% { transform: translate(-50vw, 50vh) rotate(-45deg); opacity: 0; }
+  20% { transform: translate(-40vw, 20vh) rotate(-10deg); opacity: 1; }
+  30% { transform: translate(-40vw, 20vh) rotate(-10deg) scale(1.1); }
+  50% { transform: translate(-10vw, -10vh) rotate(15deg) scale(1); opacity: 1; }
+  55% { transform: translate(0, 0) rotate(0) scale(1.2); opacity: 0; filter: brightness(2); }
+  100% { transform: translate(0, 0) scale(2); opacity: 0; }
+}
+@keyframes s1-grey {
+  0% { transform: translate(50vw, 50vh) rotate(45deg) scaleX(-1); opacity: 0; }
+  20% { transform: translate(40vw, 20vh) rotate(10deg) scaleX(-1); opacity: 1; }
+  30% { transform: translate(40vw, 20vh) rotate(10deg) scaleX(-1) scale(1.1); }
+  50% { transform: translate(10vw, -10vh) rotate(-15deg) scaleX(-1) scale(1); opacity: 1; }
+  55% { transform: translate(0, 0) rotate(0) scaleX(-1) scale(1.2); opacity: 0; filter: brightness(2); }
+  100% { transform: translate(0, 0) scaleX(-1) scale(2); opacity: 0; }
+}
+
+/* Scene 2: Float Spin */
+@keyframes s2-orange {
+  0% { transform: translate(-80vw, -50vh) rotate(-360deg) scale(0.5); opacity: 0; }
+  20% { transform: translate(-40vw, -20vh) rotate(-180deg) scale(1); opacity: 1; }
+  50% { transform: translate(-10vw, -10px) rotate(-45deg) scale(1.2); opacity: 1; }
+  55% { transform: translate(0, 0) rotate(0) scale(1.5); opacity: 0; filter: brightness(2); }
+  100% { transform: translate(0, 0) scale(2); opacity: 0; }
+}
+@keyframes s2-grey {
+  0% { transform: translate(80vw, -50vh) rotate(360deg) scaleX(-1) scale(0.5); opacity: 0; }
+  20% { transform: translate(40vw, -20vh) rotate(180deg) scaleX(-1) scale(1); opacity: 1; }
+  50% { transform: translate(10vw, -10px) rotate(45deg) scaleX(-1) scale(1.2); opacity: 1; }
+  55% { transform: translate(0, 0) rotate(0) scaleX(-1) scale(1.5); opacity: 0; filter: brightness(2); }
+  100% { transform: translate(0, 0) scaleX(-1) scale(2); opacity: 0; }
 }
 
 .animate-boom {
