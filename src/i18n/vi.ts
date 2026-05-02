@@ -319,6 +319,11 @@ export default {
   // ── Settings ──
   settings: {
     title: 'Cài đặt',
+    // App Download
+    appDownload: 'Tải Ứng Dụng',
+    iosApp: 'App iOS Native (IPA)',
+    iosAppDesc: 'Tải file .ipa để cài đặt qua TestFlight hoặc Sideload.',
+    downloadApp: 'Tải Xuống',
     // Language
     language: 'Ngôn ngữ',
     languageDesc: 'Chọn ngôn ngữ hiển thị',
@@ -613,7 +618,9 @@ export default {
     installTitle: 'Cài FinNote lên iPhone',
     installDesc: 'Chạy như app native — toàn màn hình, không cần App Store',
     step1: 'Nhấn <strong>Share</strong> (🔲↑) ở thanh dưới Safari',
-    step2: 'Chọn <strong>"Thêm vào Màn hình chính"</strong>'
+    step2: 'Chọn <strong>"Thêm vào Màn hình chính"</strong>',
+    iosNativeOption: 'Hoặc cài đặt Native App:',
+    downloadIpa: 'Tải file .IPA'
   },
 
   // ── Blog ──

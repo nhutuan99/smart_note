@@ -319,6 +319,11 @@ export default {
   // ── Settings ──
   settings: {
     title: 'Settings',
+    // App Download
+    appDownload: 'App Download',
+    iosApp: 'iOS Native App (IPA)',
+    iosAppDesc: 'Download the .ipa file to install via TestFlight or Sideload.',
+    downloadApp: 'Download',
     // Language
     language: 'Language',
     languageDesc: 'Choose display language',
@@ -613,7 +618,9 @@ export default {
     installTitle: 'Install FinNote on iPhone',
     installDesc: 'Run as a native app — full screen, no App Store required',
     step1: 'Tap <strong>Share</strong> (🔲↑) at the bottom of Safari',
-    step2: 'Select <strong>"Add to Home Screen"</strong>'
+    step2: 'Select <strong>"Add to Home Screen"</strong>',
+    iosNativeOption: 'Or install Native App:',
+    downloadIpa: 'Download .IPA'
   },
 
   // ── Blog ──
