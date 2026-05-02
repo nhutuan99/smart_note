@@ -82,14 +82,14 @@ function skip() {
 
 <template>
   <transition name="bounce">
-    <div v-if="ui.showWeeklyEvent" class="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 overflow-hidden">
+    <div v-if="ui.showWeeklyEvent" class="fixed inset-0 z-[9999]">
       <!-- Backdrop with Heavy Blur -->
-      <div class="absolute inset-0 bg-black/40 backdrop-blur-xl"></div>
+      <div class="absolute inset-0 bg-black/40 backdrop-blur-xl pointer-events-none"></div>
       
       <!-- Glowing Orbs in Background -->
-      <div class="absolute top-1/4 left-1/4 w-[30rem] h-[30rem] bg-accent/30 rounded-full blur-[100px] animate-pulse"></div>
-      <div class="absolute bottom-1/4 right-1/4 w-[25rem] h-[25rem] bg-pink-500/20 rounded-full blur-[100px] animate-pulse" style="animation-delay: 1s;"></div>
-      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40rem] h-[40rem] bg-blue-500/10 rounded-full blur-[120px]"></div>
+      <div class="absolute top-1/4 left-1/4 w-[30rem] h-[30rem] bg-accent/30 rounded-full blur-[100px] animate-pulse pointer-events-none"></div>
+      <div class="absolute bottom-1/4 right-1/4 w-[25rem] h-[25rem] bg-pink-500/20 rounded-full blur-[100px] animate-pulse pointer-events-none" style="animation-delay: 1s;"></div>
+      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40rem] h-[40rem] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none"></div>
 
       <!-- The Chase Animation Layer -->
       <div v-if="isAnimating" class="absolute inset-0 flex items-center justify-center z-50 pointer-events-none overflow-hidden">
@@ -101,6 +101,10 @@ function skip() {
          <div class="absolute left-1/2 top-1/2 w-96 h-96 bg-gradient-to-tr from-accent via-pink-500 to-yellow-400 rounded-full blur-[40px] mix-blend-screen animate-boom"></div>
          <Sparkles class="absolute left-1/2 top-1/2 text-white animate-boom-sparkles" />
       </div>
+
+      <!-- Scrollable Container for Modal -->
+      <div class="absolute inset-0 overflow-y-auto overflow-x-hidden pointer-events-auto">
+        <div class="min-h-full flex items-center justify-center p-4 sm:p-6 pt-[max(env(safe-area-inset-top,2rem),3rem)] pb-[max(env(safe-area-inset-bottom,2rem),3rem)]">
 
       <!-- Main Event Card -->
       <transition name="scale-fade">
@@ -116,12 +120,12 @@ function skip() {
 
 
         <!-- Content Layout -->
-        <div class="flex flex-col md:flex-row relative z-10 pt-12 pb-8 px-6 sm:px-10 gap-8 items-center">
+        <div class="flex flex-col md:flex-row relative z-10 pt-10 sm:pt-12 pb-6 sm:pb-8 px-5 sm:px-10 gap-6 sm:gap-8 items-center">
           
           <!-- Image Section -->
           <div class="w-full md:w-1/2 relative group">
             <div class="absolute inset-0 bg-gradient-to-tr from-accent to-pink-500 rounded-3xl blur-xl opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
-            <div class="relative aspect-square sm:aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl border-2 border-white/10" :class="{'bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500': imageFailed}">
+            <div class="relative aspect-video sm:aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl border-2 border-white/10" :class="{'bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500': imageFailed}">
               <img v-if="!imageFailed" :src="topic.image" @error="imageFailed = true" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" />
               <div v-if="imageFailed" class="w-full h-full flex flex-col items-center justify-center text-white/50 px-4 text-center">
                 <Sparkles :size="48" class="mb-4 opacity-50 animate-pulse" />
@@ -131,20 +135,20 @@ function skip() {
             </div>
             
             <!-- Mascots popping out -->
-            <div class="absolute -bottom-8 -right-8 w-32 h-32 md:w-40 md:h-40 z-20 will-change-transform" style="transform: translateZ(0);">
+            <div class="absolute -bottom-6 -right-6 w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 z-20 will-change-transform" style="transform: translateZ(0);">
               <CatMascot type="orange" size="xl" animation="wave" />
             </div>
-            <div class="absolute -top-8 -left-8 w-24 h-24 md:w-28 md:h-28 z-0 will-change-transform" style="transform: translateZ(0);">
+            <div class="absolute -top-6 -left-6 w-16 h-16 sm:w-24 sm:h-24 md:w-28 md:h-28 z-0 will-change-transform" style="transform: translateZ(0);">
               <CatMascot type="grey" size="lg" animation="float" />
             </div>
           </div>
 
           <!-- Text & Actions Section -->
           <div class="w-full md:w-1/2 flex flex-col items-center md:items-start text-center md:text-left">
-            <h2 class="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-white/70 mb-4 leading-tight drop-shadow-sm">
+            <h2 class="text-2xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-white/70 mb-3 sm:mb-4 leading-tight drop-shadow-sm">
               {{ topic.title }}
             </h2>
-            <p class="text-lg text-white/80 mb-8 leading-relaxed font-medium">
+            <p class="text-base sm:text-lg text-white/80 mb-6 sm:mb-8 leading-relaxed font-medium">
               {{ topic.desc }}
             </p>
 
@@ -162,6 +166,8 @@ function skip() {
         </div>
         </div>
       </transition>
+        </div>
+      </div>
     </div>
   </transition>
 </template>
