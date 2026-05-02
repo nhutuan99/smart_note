@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useUiStore } from '@/stores/ui'
 import CatMascot from '@/components/ui/CatMascot.vue'
 import { Sparkles, X, ChevronRight } from 'lucide-vue-next'
@@ -45,6 +45,30 @@ onMounted(() => {
   topic.value = topics.value[getWeekNumber() % topics.value.length]
 })
 
+const isAnimating = ref(false)
+const showModalContent = ref(false)
+
+// Trigger the chase animation when the modal is opened
+watch(() => ui.showWeeklyEvent, (newVal) => {
+  if (newVal) {
+    isAnimating.value = true
+    showModalContent.value = false
+    
+    // The boom happens at 1.375s (55% of 2.5s)
+    setTimeout(() => {
+      showModalContent.value = true
+    }, 1375)
+    
+    // Clean up animation elements after 3s
+    setTimeout(() => {
+      isAnimating.value = false
+    }, 3000)
+  } else {
+    isAnimating.value = false
+    showModalContent.value = false
+  }
+})
+
 function interact() {
   ui.showToast('success', t('weeklyEvent.success'))
   ui.completeWeeklyEvent()
@@ -67,8 +91,20 @@ function skip() {
       <div class="absolute bottom-1/4 right-1/4 w-[25rem] h-[25rem] bg-pink-500/20 rounded-full blur-[100px] animate-pulse" style="animation-delay: 1s;"></div>
       <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40rem] h-[40rem] bg-blue-500/10 rounded-full blur-[120px]"></div>
 
+      <!-- The Chase Animation Layer -->
+      <div v-if="isAnimating" class="absolute inset-0 flex items-center justify-center z-50 pointer-events-none overflow-hidden">
+         <!-- Grey Cat (Mít) chasing from behind -->
+         <CatMascot type="grey" size="xl" class="absolute left-1/2 top-1/2 -mt-16 -ml-16 animate-run-grey drop-shadow-2xl" />
+         <!-- Orange Cat (Múp) running in front -->
+         <CatMascot type="orange" size="xl" class="absolute left-1/2 top-1/2 -mt-16 -ml-16 animate-run-orange drop-shadow-2xl" />
+         <!-- Explosion Boom -->
+         <div class="absolute left-1/2 top-1/2 w-96 h-96 bg-gradient-to-tr from-accent via-pink-500 to-yellow-400 rounded-full blur-[40px] mix-blend-screen animate-boom"></div>
+         <Sparkles class="absolute left-1/2 top-1/2 text-white animate-boom-sparkles" />
+      </div>
+
       <!-- Main Event Card -->
-      <div class="relative z-10 w-full max-w-3xl rounded-[2rem] bg-bg-surface/60 backdrop-blur-3xl border border-white/10 shadow-[0_0_50px_rgba(142,125,250,0.3)] overflow-visible">
+      <transition name="scale-fade">
+        <div v-if="showModalContent" class="relative z-10 w-full max-w-3xl rounded-[2rem] bg-bg-surface/60 backdrop-blur-3xl border border-white/10 shadow-[0_0_50px_rgba(142,125,250,0.3)] overflow-visible">
         
         <!-- Header -->
         <div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-gradient-to-r from-accent to-pink-500 text-white px-8 py-2 rounded-full font-bold shadow-[0_0_20px_rgba(236,72,153,0.5)] flex items-center gap-2 uppercase tracking-wider text-sm sm:text-base border border-white/20">
@@ -124,7 +160,8 @@ function skip() {
             </div>
           </div>
         </div>
-      </div>
+        </div>
+      </transition>
     </div>
   </transition>
 </template>
@@ -161,5 +198,70 @@ function skip() {
   0% { transform: translateY(0px) rotate(0deg); }
   50% { transform: translateY(-15px) rotate(2deg); }
   100% { transform: translateY(0px) rotate(0deg); }
+}
+
+/* --- Cat Chase Animations --- */
+.animate-run-orange {
+  animation: run-orange 2.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+@keyframes run-orange {
+  0% { transform: translate(-100vw, 0) rotate(-15deg); opacity: 1; }
+  10% { transform: translate(-80vw, -80px) rotate(15deg); }
+  20% { transform: translate(-60vw, 0) rotate(-15deg); }
+  30% { transform: translate(-40vw, -80px) rotate(15deg); }
+  40% { transform: translate(-20vw, 0) rotate(-15deg); }
+  50% { transform: translate(-10vw, -40px) rotate(10deg); opacity: 1; }
+  55% { transform: translate(0, 0) rotate(0) scale(1.5); opacity: 0; filter: brightness(2); }
+  100% { transform: translate(0, 0) rotate(0) scale(2); opacity: 0; }
+}
+
+.animate-run-grey {
+  animation: run-grey 2.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+@keyframes run-grey {
+  0% { transform: translate(-130vw, 0) rotate(-15deg); opacity: 1; }
+  10% { transform: translate(-104vw, -80px) rotate(15deg); }
+  20% { transform: translate(-78vw, 0) rotate(-15deg); }
+  30% { transform: translate(-52vw, -80px) rotate(15deg); }
+  40% { transform: translate(-26vw, 0) rotate(-15deg); }
+  50% { transform: translate(-13vw, -40px) rotate(10deg); opacity: 1; }
+  55% { transform: translate(0, 0) rotate(0) scale(1.5); opacity: 0; filter: brightness(2); }
+  100% { transform: translate(0, 0) rotate(0) scale(2); opacity: 0; }
+}
+
+.animate-boom {
+  animation: boom 2.5s ease-out forwards;
+}
+@keyframes boom {
+  0%, 53% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+  55% { transform: translate(-50%, -50%) scale(1.5); opacity: 1; }
+  70% { transform: translate(-50%, -50%) scale(4); opacity: 0; }
+  100% { transform: translate(-50%, -50%) scale(5); opacity: 0; }
+}
+
+.animate-boom-sparkles {
+  animation: boom-sparkles 2.5s ease-out forwards;
+}
+@keyframes boom-sparkles {
+  0%, 53% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 0; }
+  55% { transform: translate(-50%, -50%) scale(4) rotate(45deg); opacity: 1; }
+  70% { transform: translate(-50%, -50%) scale(8) rotate(90deg); opacity: 0; }
+  100% { transform: translate(-50%, -50%) scale(8) rotate(90deg); opacity: 0; }
+}
+
+/* Modal Entry Animation */
+.scale-fade-enter-active {
+  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.scale-fade-leave-active {
+  transition: all 0.3s ease-in;
+}
+.scale-fade-enter-from {
+  opacity: 0;
+  transform: scale(0.8) translateY(50px);
+}
+.scale-fade-leave-to {
+  opacity: 0;
+  transform: scale(0.9) translateY(20px);
 }
 </style>
