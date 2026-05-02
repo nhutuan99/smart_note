@@ -7,3 +7,7 @@ dist
 smart_note_obsidian
 worker/node_modules
 worker/.dev.vars
+.venv
+ios/App/Pods
+android/.gradle
+android/app/build

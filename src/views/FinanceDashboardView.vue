@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
-import CatMascot from '@/components/ui/CatMascot.vue'
 import FinanceOverview from '@/modules/finance/components/FinanceOverview.vue'
 import FinanceWallets from '@/modules/finance/components/FinanceWallets.vue'
 import FinanceCharts from '@/modules/finance/components/FinanceCharts.vue'

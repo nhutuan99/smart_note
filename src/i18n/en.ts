@@ -753,6 +753,7 @@ export default {
     skip: 'Skip for now',
     join: 'Join Now',
     success: 'Joined successfully! Have a great week!',
+    generatingImage: 'AI is generating illustration...',
     topics: {
       t1_title: 'Save $50 Challenge',
       t1_desc: 'This week, try to cut down on unnecessary expenses like milk tea or eating out to save $50!',

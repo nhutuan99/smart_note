@@ -753,6 +753,7 @@ export default {
     skip: 'Bỏ qua tuần này',
     join: 'Tham gia ngay',
     success: 'Đã tham gia! Chúc bạn một tuần vui vẻ!',
+    generatingImage: 'AI đang vẽ ảnh minh họa...',
     topics: {
       t1_title: 'Thử thách Tiết kiệm 500k',
       t1_desc: 'Tuần này, hãy thử cắt giảm những chi tiêu không cần thiết như trà sữa, cà phê ngoài để tiết kiệm 500k nhé!',
