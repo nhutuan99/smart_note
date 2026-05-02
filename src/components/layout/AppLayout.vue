@@ -8,6 +8,7 @@ import PinDialog from '@/components/PinDialog.vue'
 import BugReportModal from '@/components/ui/BugReportModal.vue'
 import PwaInstallGuide from '@/components/ui/PwaInstallGuide.vue'
 import PullToRefresh from '@/components/ui/PullToRefresh.vue'
+import WeeklyEventModal from '@/components/ui/WeeklyEventModal.vue'
 import { ArrowUp } from 'lucide-vue-next'
 import { useUiStore } from '@/stores/ui'
 import { useNotificationStore } from '@/stores/notifications'
@@ -125,6 +126,9 @@ onMounted(async () => {
   }
   _lastSyncTime = Date.now()
 
+  // Check Weekly AI Event
+  ui.checkWeeklyEvent()
+
   // Schedule sync guide after 5 minutes
   scheduleGuide()
 })
@@ -205,6 +209,7 @@ async function handleRefresh(done: () => void) {
       @close="ui.showBugReport = false" 
     />
     <PwaInstallGuide />
+    <WeeklyEventModal />
   </div>
 </template>
 

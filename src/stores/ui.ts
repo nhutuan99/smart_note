@@ -19,6 +19,7 @@ export const useUiStore = defineStore('ui', () => {
   const sidebarOpen = ref(window.innerWidth >= 768)
   const searchOpen = ref(false)
   const showBugReport = ref(false)
+  const showWeeklyEvent = ref(false)
   const toasts = ref<Toast[]>([])
   const theme = ref<'dark' | 'light'>(
     (localStorage.getItem('sn_theme') as 'dark' | 'light') || 'dark'
@@ -65,6 +66,20 @@ export const useUiStore = defineStore('ui', () => {
 
   function toggleHideBalances() {
     hideBalances.value = !hideBalances.value
+  }
+
+  function checkWeeklyEvent() {
+    const lastEvent = localStorage.getItem('sn_last_weekly_event')
+    const now = Date.now()
+    const ONE_WEEK = 7 * 24 * 60 * 60 * 1000
+    if (!lastEvent || (now - parseInt(lastEvent)) > ONE_WEEK) {
+      showWeeklyEvent.value = true
+    }
+  }
+
+  function completeWeeklyEvent() {
+    showWeeklyEvent.value = false
+    localStorage.setItem('sn_last_weekly_event', Date.now().toString())
   }
 
   function toggleSidebar() {
@@ -172,6 +187,9 @@ export const useUiStore = defineStore('ui', () => {
     resolveConfirm,
     requestPinValidation,
     resolvePin,
-    showBugReport
+    showBugReport,
+    showWeeklyEvent,
+    checkWeeklyEvent,
+    completeWeeklyEvent
   }
 })

@@ -8,6 +8,7 @@ import { Mail, Lock, User, Eye, EyeOff, ArrowRight, KeyRound, RotateCcw, CheckCi
 import { useI18n } from 'vue-i18n'
 import { setLocale, currentLocale } from '@/i18n'
 import { useEventListener } from '@/composables/useEventListener'
+import CatMascot from '@/components/ui/CatMascot.vue'
 
 // ── Interactive Mouse Glow ────────────────────────────────────────────────────
 const mouseX = ref(0)
@@ -28,6 +29,19 @@ const ui = useUiStore()
 const router = useRouter()
 const route = useRoute()
 const { t, locale } = useI18n()
+
+// ── Mascot Animation ─────────────────────────────────────────────────────────
+const mascotAnim = ref<'idle' | 'hide' | 'peek' | 'float' | 'wave'>('idle')
+
+function onEmailFocus() {
+  mascotAnim.value = 'peek'
+}
+function onPasswordFocus() {
+  mascotAnim.value = 'hide'
+}
+function onInputBlur() {
+  mascotAnim.value = 'idle'
+}
 
 // ── Login / Register ──────────────────────────────────────────────────────────
 const isLogin = ref(true)
@@ -338,16 +352,15 @@ watch(
     </div>
 
     <div class="relative z-10 w-full max-w-[25rem] px-6">
-      <!-- Logo -->
-      <div class="mb-8 text-center">
-        <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center">
-          <img src="/images/logo-512.png" alt="FinNote Logo" class="h-full w-full rounded-2xl drop-shadow-[0_0_12px_rgba(124,111,247,0.5)] object-cover" />
+      <!-- Mascot (replaces old static logo) -->
+      <div class="mb-2 text-center relative z-0">
+        <div class="flex justify-center -mb-8 relative z-0 drop-shadow-2xl">
+          <CatMascot type="grey" size="xl" :animation="mascotAnim" />
         </div>
-        <h1 class="text-2xl font-bold tracking-tight">FinNote</h1>
       </div>
 
       <!-- ══ STEP: LOGIN / REGISTER ══ -->
-      <div v-if="fpStep === 'login'" class="bg-bg-surface border-border-default rounded-2xl border p-6 shadow-lg md:p-8">
+      <div v-if="fpStep === 'login'" class="bg-bg-surface border-border-default rounded-2xl border p-6 shadow-lg md:p-8 relative z-10 backdrop-blur-xl bg-opacity-95 dark:bg-opacity-80">
         <div class="mb-6">
           <h2 class="mb-1 text-xl font-semibold">
             {{ isLogin ? t('login.welcomeBack') : t('login.createAccount') }}
@@ -370,6 +383,8 @@ watch(
                   type="text"
                   :placeholder="t('login.namePlaceholder')"
                   autocomplete="name"
+                  @focus="onEmailFocus"
+                  @blur="onInputBlur"
                   class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border py-2.5 pr-3 pl-[2.375rem] text-sm transition-all duration-150 focus:ring-2 focus:outline-none"
                 />
               </div>
@@ -388,6 +403,8 @@ watch(
                 placeholder="you@example.com"
                 autocomplete="email"
                 required
+                @focus="onEmailFocus"
+                @blur="onInputBlur"
                 class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border py-2.5 pr-3 pl-[2.375rem] text-sm transition-all duration-150 focus:ring-2 focus:outline-none"
               />
             </div>
@@ -415,9 +432,11 @@ watch(
                 placeholder="••••••••"
                 autocomplete="current-password"
                 required
+                @focus="onPasswordFocus"
+                @blur="onInputBlur"
                 class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border py-2.5 pr-10 pl-[2.375rem] text-sm transition-all duration-150 focus:ring-2 focus:outline-none"
               />
-              <button type="button" class="text-text-tertiary hover:text-text-primary absolute right-3 transition-colors duration-150" @click="showPassword = !showPassword">
+              <button type="button" class="text-text-tertiary hover:text-text-primary absolute right-3 transition-colors duration-150" @click="showPassword = !showPassword; if(showPassword) mascotAnim = 'peek'; else mascotAnim = 'hide';">
                 <component :is="showPassword ? EyeOff : Eye" :size="16" />
               </button>
             </div>
@@ -481,7 +500,7 @@ watch(
       </div>
 
       <!-- ══ STEP 1: Enter Email ══ -->
-      <div v-else-if="fpStep === 'email'" class="bg-bg-surface border-border-default rounded-2xl border p-6 shadow-lg md:p-8">
+      <div v-else-if="fpStep === 'email'" class="bg-bg-surface border-border-default rounded-2xl border p-6 shadow-lg md:p-8 relative z-10 backdrop-blur-xl bg-opacity-95 dark:bg-opacity-80">
         <button @click="goBack" class="text-text-tertiary hover:text-text-primary mb-4 flex items-center gap-1.5 text-sm transition-colors">
           <ChevronLeft :size="16" />
           {{ t('login.backToLogin') }}
@@ -508,6 +527,8 @@ watch(
                 :placeholder="t('forgot.emailPlaceholder')"
                 autocomplete="email"
                 required
+                @focus="onEmailFocus"
+                @blur="onInputBlur"
                 class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border py-2.5 pr-3 pl-[2.375rem] text-sm transition-all duration-150 focus:ring-2 focus:outline-none"
               />
             </div>
@@ -574,7 +595,7 @@ watch(
       </div>
 
       <!-- ══ STEP 3: New Password ══ -->
-      <div v-else-if="fpStep === 'newpass'" class="bg-bg-surface border-border-default rounded-2xl border p-6 shadow-lg md:p-8">
+      <div v-else-if="fpStep === 'newpass'" class="bg-bg-surface border-border-default rounded-2xl border p-6 shadow-lg md:p-8 relative z-10 backdrop-blur-xl bg-opacity-95 dark:bg-opacity-80">
         <div class="mb-6 flex items-start gap-3">
           <div class="bg-success/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
             <Lock :size="20" class="text-success" />
@@ -600,10 +621,12 @@ watch(
                 v-model="fpNewPass"
                 :type="fpShowNew ? 'text' : 'password'"
                 required
+                @focus="onPasswordFocus"
+                @blur="onInputBlur"
                 :placeholder="t('forgot.newPassPlaceholder')"
                 class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border py-2.5 pr-10 pl-[2.375rem] text-sm transition-all focus:ring-2 focus:outline-none"
               />
-              <button type="button" @click="fpShowNew = !fpShowNew" class="text-text-tertiary hover:text-text-primary absolute top-1/2 right-3 -translate-y-1/2">
+              <button type="button" @click="fpShowNew = !fpShowNew; if(fpShowNew) mascotAnim = 'peek'; else mascotAnim = 'hide';" class="text-text-tertiary hover:text-text-primary absolute top-1/2 right-3 -translate-y-1/2">
                 <component :is="fpShowNew ? EyeOff : Eye" :size="16" />
               </button>
             </div>
@@ -617,10 +640,12 @@ watch(
                 v-model="fpConfirmPass"
                 :type="fpShowConfirm ? 'text' : 'password'"
                 required
+                @focus="onPasswordFocus"
+                @blur="onInputBlur"
                 :placeholder="t('forgot.confirmPassPlaceholder')"
                 class="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border py-2.5 pr-10 pl-[2.375rem] text-sm transition-all focus:ring-2 focus:outline-none"
               />
-              <button type="button" @click="fpShowConfirm = !fpShowConfirm" class="text-text-tertiary hover:text-text-primary absolute top-1/2 right-3 -translate-y-1/2">
+              <button type="button" @click="fpShowConfirm = !fpShowConfirm; if(fpShowConfirm) mascotAnim = 'peek'; else mascotAnim = 'hide';" class="text-text-tertiary hover:text-text-primary absolute top-1/2 right-3 -translate-y-1/2">
                 <component :is="fpShowConfirm ? EyeOff : Eye" :size="16" />
               </button>
             </div>

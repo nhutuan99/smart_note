@@ -189,6 +189,8 @@ export default {
     greetingMorning: 'Good morning',
     greetingAfternoon: 'Good afternoon',
     greetingEvening: 'Good evening',
+    welcomeBack: 'Welcome back, {name}! 👋',
+    welcomeDesc: 'Have a great day managing your finances and saving money.',
     toggleBalance: 'Show/hide balance',
     aiAdvisorTitle: 'AI Finance Advisor',
     accountCount: '{n} accounts',
@@ -740,5 +742,21 @@ export default {
     soon: 'Soon',
     empty: 'No subscriptions detected',
     emptyHint: 'Add transactions so the system can auto-detect recurring charges (Netflix, Spotify, gym...)'
+  },
+
+  // ── Weekly Event ──
+  weeklyEvent: {
+    title: 'Weekly AI Event',
+    skip: 'Skip for now',
+    join: 'Join Now',
+    success: 'Joined successfully! Have a great week!',
+    topics: {
+      t1_title: 'Save $50 Challenge',
+      t1_desc: 'This week, try to cut down on unnecessary expenses like milk tea or eating out to save $50!',
+      t2_title: 'Financial Declutter',
+      t2_desc: 'Spend 15 minutes this week reviewing your small expenses. You might be surprised!',
+      t3_title: 'The 50/30/20 Rule',
+      t3_desc: 'Have you applied the 50/30/20 rule yet? Divide your income into Needs, Wants, and Savings.'
+    }
   }
 }
