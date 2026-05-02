@@ -44,7 +44,10 @@ const animationClass = computed(() => {
     style="transform: translateZ(0);"
   >
     <div class="absolute bottom-0 w-3/4 h-3 bg-black/20 dark:bg-black/40 blur-[6px] rounded-[100%] transition-opacity duration-300" :class="{'opacity-0': animation === 'hide'}"></div>
-    <img :src="imageSrc" @error="hasError = true" alt="Mascot" class="w-full h-full object-contain relative z-10" loading="lazy" />
+    <div 
+      class="w-full h-full relative z-10 bg-no-repeat bg-center bg-contain"
+      :style="{ backgroundImage: `url(${imageSrc})` }"
+    ></div>
   </div>
 </template>
 
