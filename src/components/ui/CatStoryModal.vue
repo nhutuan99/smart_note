@@ -8,6 +8,7 @@ const ui = useUiStore()
 
 const currentMessage = ref<string>('')
 const currentSpeaker = ref<'orange' | 'grey' | null>(null)
+const currentAnimation = ref<'idle' | 'hide' | 'peek' | 'float' | 'wave'>('idle')
 const stepIndex = ref(0)
 let timer: ReturnType<typeof setTimeout> | null = null
 
@@ -36,6 +37,7 @@ function showNextMessage() {
   const msg = ui.storyMessages[stepIndex.value]
   currentSpeaker.value = msg.character as 'orange' | 'grey'
   currentMessage.value = msg.text
+  currentAnimation.value = (msg.animation as any) || 'wave'
 
   stepIndex.value++
 
@@ -50,6 +52,7 @@ function reset() {
   if (timer) clearTimeout(timer)
   currentMessage.value = ''
   currentSpeaker.value = null
+  currentAnimation.value = 'idle'
   stepIndex.value = 0
 }
 
@@ -82,7 +85,7 @@ onUnmounted(() => {
               </div>
             </transition>
             <div class="w-20 h-20 relative z-10">
-              <CatMascot type="grey" size="md" :animation="currentSpeaker === 'grey' ? 'wave' : 'idle'" />
+              <CatMascot type="grey" size="md" :animation="currentSpeaker === 'grey' ? currentAnimation : 'idle'" />
             </div>
           </div>
 
@@ -95,7 +98,7 @@ onUnmounted(() => {
               </div>
             </transition>
             <div class="w-20 h-20 relative z-10">
-              <CatMascot type="orange" size="md" :animation="currentSpeaker === 'orange' ? 'wave' : 'idle'" />
+              <CatMascot type="orange" size="md" :animation="currentSpeaker === 'orange' ? currentAnimation : 'idle'" />
             </div>
           </div>
 

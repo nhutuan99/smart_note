@@ -21,7 +21,7 @@ export const useUiStore = defineStore('ui', () => {
   const showBugReport = ref(false)
   const showWeeklyEvent = ref(false)
   const showStoryModal = ref(false)
-  const storyMessages = ref<{character: string, text: string}[]>([])
+  const storyMessages = ref<{character: string, text: string, animation?: 'idle' | 'hide' | 'peek' | 'float' | 'wave'}[]>([])
   const toasts = ref<Toast[]>([])
   const theme = ref<'dark' | 'light'>(
     (localStorage.getItem('sn_theme') as 'dark' | 'light') || 'dark'

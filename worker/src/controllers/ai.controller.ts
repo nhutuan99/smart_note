@@ -28,7 +28,7 @@ Quy tắc quan trọng:
 Chủ đề ngẫu nhiên về tiền bạc, tiết kiệm, hoặc mua sắm.
 Yêu cầu bắt buộc:
 - TRẢ VỀ CHUẨN JSON ARRAY, KHÔNG ĐƯỢC CÓ BẤT KỲ TEXT NÀO KHÁC BÊN NGOÀI.
-- Cấu trúc JSON: [{"character": "orange" | "grey", "text": "nội dung thoại"}]
+- Cấu trúc JSON: [{"character": "orange" | "grey", "text": "nội dung thoại", "animation": "wave" | "peek" | "float" | "idle"}]
 - Thoại bằng tiếng Việt, vui nhộn.`
 }
 
