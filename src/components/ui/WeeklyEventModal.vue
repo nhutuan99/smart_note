@@ -29,16 +29,26 @@ const topics = computed(() => [
   }
 ])
 
+
+
+function getWeekNumber(d = new Date()) {
+  d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7))
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1))
+  return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1)/7)
+}
+
 const topic = ref(topics.value[0])
+const imageFailed = ref(false)
 
 onMounted(() => {
-  topic.value = topics.value[Math.floor(Math.random() * topics.value.length)]
+  topic.value = topics.value[getWeekNumber() % topics.value.length]
 })
 
 function interact() {
   ui.showToast('success', t('weeklyEvent.success'))
   ui.completeWeeklyEvent()
-  router.push('/budgets')
+  router.push('/budget')
 }
 
 function skip() {
@@ -75,8 +85,12 @@ function skip() {
           <!-- Image Section -->
           <div class="w-full md:w-1/2 relative group">
             <div class="absolute inset-0 bg-gradient-to-tr from-accent to-pink-500 rounded-3xl blur-xl opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
-            <div class="relative aspect-square sm:aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl border-2 border-white/10">
-              <img :src="topic.image" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" />
+            <div class="relative aspect-square sm:aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl border-2 border-white/10" :class="{'bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500': imageFailed}">
+              <img v-if="!imageFailed" :src="topic.image" @error="imageFailed = true" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" />
+              <div v-if="imageFailed" class="w-full h-full flex flex-col items-center justify-center text-white/50 px-4 text-center">
+                <Sparkles :size="48" class="mb-4 opacity-50 animate-pulse" />
+                <p class="font-medium">Chương trình đặc biệt tuần này</p>
+              </div>
               <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
             </div>
             

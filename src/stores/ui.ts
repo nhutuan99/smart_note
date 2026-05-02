@@ -20,6 +20,7 @@ export const useUiStore = defineStore('ui', () => {
   const searchOpen = ref(false)
   const showBugReport = ref(false)
   const showWeeklyEvent = ref(false)
+  const hasCompletedWeeklyEvent = ref(false)
   const showStoryModal = ref(false)
   const storyMessages = ref<{character: string, text: string, animation?: 'idle' | 'hide' | 'peek' | 'float' | 'wave'}[]>([])
   const toasts = ref<Toast[]>([])
@@ -79,11 +80,15 @@ export const useUiStore = defineStore('ui', () => {
     const ONE_WEEK = 7 * 24 * 60 * 60 * 1000
     if (!lastEvent || (now - parseInt(lastEvent)) > ONE_WEEK) {
       showWeeklyEvent.value = true
+      hasCompletedWeeklyEvent.value = false
+    } else {
+      hasCompletedWeeklyEvent.value = true
     }
   }
 
   async function completeWeeklyEvent() {
     showWeeklyEvent.value = false
+    hasCompletedWeeklyEvent.value = true
     const now = Date.now()
     localStorage.setItem('sn_last_weekly_event', now.toString())
     
@@ -210,6 +215,7 @@ export const useUiStore = defineStore('ui', () => {
     resolvePin,
     showBugReport,
     showWeeklyEvent,
+    hasCompletedWeeklyEvent,
     checkWeeklyEvent,
     completeWeeklyEvent,
     showStoryModal,

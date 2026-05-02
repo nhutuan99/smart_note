@@ -11,6 +11,7 @@ const { t } = useI18n()
 const finance = useFinancePolling()
 
 const isOpen = ref(false)
+const isDismissed = ref(false)
 
 const catType = ref<'orange' | 'grey'>('orange')
 const catName = computed(() => catType.value === 'orange' ? 'Múp' : 'Mít')
@@ -119,7 +120,7 @@ function renderAiMarkdown(text: string): string {
 </script>
 
 <template>
-  <div class="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-[100] flex flex-col items-end pointer-events-none">
+  <div v-if="!isDismissed" class="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-[100] flex flex-col items-end pointer-events-none">
     
     <!-- AI Response Popover -->
     <transition name="popover">
@@ -201,24 +202,34 @@ function renderAiMarkdown(text: string): string {
     </transition>
 
     <!-- Floating Mascot Button -->
-    <button 
-      @click="isOpen = !isOpen"
-      class="relative flex items-center justify-center transition-all duration-500 pointer-events-auto filter outline-none z-50 will-change-transform"
-      :class="isOpen ? 'scale-0 opacity-0 pointer-events-none translate-y-10' : 'scale-100 opacity-100 hover:scale-110 drop-shadow-[0_10px_20px_rgba(0,0,0,0.3)] hover:drop-shadow-[0_15px_30px_rgba(142,125,250,0.4)]'"
-      style="transform: translateZ(0);"
-    >
-      <CatMascot :type="catType" size="md" animation="wave" />
-      
-      <!-- Chat Bubble Tooltip -->
-      <transition name="fade">
-        <div v-if="!isOpen" class="absolute top-2 right-[100%] mr-2 w-max bg-bg-surface/95 backdrop-blur-md border border-border-default shadow-[0_4px_20px_rgba(0,0,0,0.2)] rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm font-medium text-text-primary flex items-center gap-2 pointer-events-none origin-right hover:scale-105 transition-transform animate-float">
-          <span>{{ t('dashboard.aiTooltip', { name: catName }) }}</span>
-          <!-- Triangle pointer -->
-          <div class="absolute top-2 -right-[6px] w-0 h-0 border-y-[6px] border-y-transparent border-l-[6px] border-l-border-default"></div>
-          <div class="absolute top-[9px] -right-[5px] w-0 h-0 border-y-[5px] border-y-transparent border-l-[5px] border-l-bg-surface/95"></div>
-        </div>
-      </transition>
-    </button>
+    <div class="relative pointer-events-auto" :class="isOpen ? 'scale-0 opacity-0 pointer-events-none translate-y-10' : 'scale-100 opacity-100 transition-all duration-500'">
+      <button 
+        @click="isOpen = !isOpen"
+        class="relative flex items-center justify-center filter outline-none z-50 will-change-transform hover:scale-110 drop-shadow-[0_10px_20px_rgba(0,0,0,0.3)] hover:drop-shadow-[0_15px_30px_rgba(142,125,250,0.4)] transition-all duration-300"
+        style="transform: translateZ(0);"
+      >
+        <CatMascot :type="catType" size="md" animation="wave" />
+        
+        <!-- Chat Bubble Tooltip -->
+        <transition name="fade">
+          <div v-if="!isOpen" class="absolute top-2 right-[100%] mr-2 w-max bg-bg-surface/95 backdrop-blur-md border border-border-default shadow-[0_4px_20px_rgba(0,0,0,0.2)] rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm font-medium text-text-primary flex items-center gap-2 pointer-events-none origin-right hover:scale-105 transition-transform animate-float">
+            <span>{{ t('dashboard.aiTooltip', { name: catName }) }}</span>
+            <!-- Triangle pointer -->
+            <div class="absolute top-2 -right-[6px] w-0 h-0 border-y-[6px] border-y-transparent border-l-[6px] border-l-border-default"></div>
+            <div class="absolute top-[9px] -right-[5px] w-0 h-0 border-y-[5px] border-y-transparent border-l-[5px] border-l-bg-surface/95"></div>
+          </div>
+        </transition>
+      </button>
+
+      <!-- Mini Close Button -->
+      <button 
+        @click.stop="isDismissed = true" 
+        class="absolute -top-1 -right-1 z-[60] bg-bg-surface text-text-tertiary hover:text-text-primary hover:bg-bg-hover rounded-full p-1 border border-border-default shadow-md transition-all opacity-0 hover:opacity-100 focus:opacity-100 group-hover:opacity-100"
+        style="opacity: 1;"
+      >
+        <X :size="12" />
+      </button>
+    </div>
   </div>
 </template>
 

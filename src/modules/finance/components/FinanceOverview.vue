@@ -78,6 +78,7 @@ const isCurrentMonth = computed(() => {
       <WeatherWidget>
         <template #actions>
           <button
+            v-if="!ui.hasCompletedWeeklyEvent"
             @click="ui.showWeeklyEvent = true"
             class="relative overflow-hidden group flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-accent to-pink-500 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-pink-500/20 transition-all hover:-translate-y-0.5 hover:shadow-pink-500/40 border border-white/20"
           >
