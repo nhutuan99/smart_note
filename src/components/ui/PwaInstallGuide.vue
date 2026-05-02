@@ -103,6 +103,18 @@ onMounted(() => {
                 <span v-html="t('pwa.step2')"></span>
               </div>
             </div>
+
+            <!-- Native App Option -->
+            <div class="mt-4 pt-3 border-t border-white/10 flex items-center justify-between">
+              <span class="text-xs text-white/60">Hoặc cài đặt Native App:</span>
+              <a 
+                href="/downloads/FinNote.ipa" 
+                download="FinNote.ipa"
+                class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-medium transition-colors"
+              >
+                Tải file .IPA
+              </a>
+            </div>
           </div>
         </div>
       </div>

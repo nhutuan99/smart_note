@@ -7,6 +7,7 @@ import SettingsSecurity from '@/modules/settings/components/SettingsSecurity.vue
 import SettingsNotifications from '@/modules/settings/components/SettingsNotifications.vue'
 import SettingsBugReport from '@/modules/settings/components/SettingsBugReport.vue'
 import SettingsAccount from '@/modules/settings/components/SettingsAccount.vue'
+import SettingsAppDownload from '@/modules/settings/components/SettingsAppDownload.vue'
 
 const { t } = useI18n()
 </script>
@@ -22,6 +23,7 @@ const { t } = useI18n()
     <SettingsNotifications />
     <SettingsBugReport />
     <SettingsAccount />
+    <SettingsAppDownload class="mt-6" />
 
     <!-- Footer -->
     <div class="mt-12 mb-8 text-center">

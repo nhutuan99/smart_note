@@ -1,0 +1,20 @@
+{
+  "name": "FinNote - Sổ Thu Chi AI",
+  "short_name": "FinNote",
+  "description": "Ứng dụng quản lý thu chi thông minh tích hợp AI tư vấn tài chính",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0a0f",
+  "theme_color": "#7c6ff7",
+  "lang": "vi",
+  "categories": ["finance", "productivity"],
+  "icons": [
+    {
+      "src": "/images/logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

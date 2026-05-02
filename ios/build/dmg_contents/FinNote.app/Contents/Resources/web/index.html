@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+
+    <!-- Favicon & Icons -->
+    <link rel="icon" type="image/png" href="/images/logo-512.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/logo-512.png" />
+    <link rel="shortcut icon" href="/images/logo-512.png" />
+    <link rel="manifest" href="/manifest.json" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#7c6ff7" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="FinNote" />
+    <meta name="application-name" content="FinNote" />
+
+    <!-- Primary SEO -->
+    <title>FinNote - Quản Lý Tài Chính Cá Nhân & Ghi Chép</title>
+    <meta name="description" content="FinNote: Ứng dụng quản lý thu chi thông minh tích hợp AI tư vấn tài chính. Giúp bạn theo dõi dòng tiền, ví điện tử và lập kế hoạch chi tiêu hiệu quả. Miễn phí sử dụng." />
+    <meta name="keywords" content="finnote, sổ thu chi, quản lý chi tiêu, quản lý tài chính cá nhân, tài chính cá nhân, app thu chi, AI tài chính, sổ thu chi AI" />
+    <meta name="author" content="FinNote" />
+    <meta name="robots" content="index, follow" />
+    <meta name="googlebot" content="index, follow" />
+    <link rel="canonical" href="https://finnote-f4n.pages.dev" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://finnote-f4n.pages.dev" />
+    <meta property="og:title" content="FinNote - Quản Lý Tài Chính Cá Nhân & Ghi Chép" />
+    <meta property="og:description" content="FinNote: Ứng dụng quản lý thu chi thông minh tích hợp AI tư vấn tài chính. Giúp bạn theo dõi dòng tiền, ví điện tử và lập kế hoạch chi tiêu hiệu quả. Miễn phí sử dụng." />
+    <meta property="og:image" content="https://finnote-f4n.pages.dev/images/og-cover.jpg" />
+    <meta property="og:image:width" content="1024" />
+    <meta property="og:image:height" content="1024" />
+    <meta property="og:image:alt" content="FinNote - Quản Lý Tài Chính Cá Nhân & Ghi Chép" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:locale" content="vi_VN" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta property="og:site_name" content="FinNote" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@finnote" />
+    <meta name="twitter:title" content="FinNote - Quản Lý Tài Chính Cá Nhân & Ghi Chép" />
+    <meta name="twitter:description" content="FinNote: Ứng dụng quản lý thu chi thông minh tích hợp AI tư vấn tài chính." />
+    <meta name="twitter:image" content="https://finnote-f4n.pages.dev/images/og-cover.jpg" />
+    <meta name="twitter:image:alt" content="FinNote app preview" />
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "FinNote",
+      "url": "https://finnote-f4n.pages.dev",
+      "description": "FinNote: Ứng dụng quản lý thu chi thông minh tích hợp AI tư vấn tài chính. Giúp bạn theo dõi dòng tiền, ví điện tử và lập kế hoạch chi tiêu hiệu quả. Miễn phí sử dụng.",
+      "applicationCategory": "FinanceApplication",
+      "operatingSystem": "Web, iOS, Android",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "image": "https://finnote-f4n.pages.dev/images/og-cover.jpg",
+      "creator": {
+        "@type": "Organization",
+        "name": "FinNote"
+      }
+    }
+    </script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script type="module" crossorigin src="/assets/index-0i0xWvkY.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/vue-vendor-BD9IMqZF.js">
+    <link rel="modulepreload" crossorigin href="/assets/i18n-DVKrnMqh.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-DWDHhgpz.css">
+  </head>
+  <body>
+    <!-- PWA Splash Screen (outside #app so Vue doesn't destroy it on mount) -->
+    <!-- Theme detection: apply before splash renders to avoid flash -->
+    <script>
+      (function() {
+        var theme = localStorage.getItem('sn_theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', theme);
+      })();
+    </script>
+    <div id="pwa-splash">
+      <!-- Animated background glow -->
+      <div class="splash-glow"></div>
+      <!-- Logo -->
+      <div class="splash-logo">
+        <img src="/images/logo-512.png" alt="FinNote" />
+        <div class="splash-shimmer"></div>
+      </div>
+      <!-- Brand -->
+      <div class="splash-title">FinNote</div>
+      <div class="splash-subtitle">Smart Finance Manager</div>
+      <!-- Progress bar -->
+      <div class="splash-progress">
+        <div class="splash-progress-bar"></div>
+      </div>
+    </div>
+
+    <style>
+      /* ── Splash Dark (default) ── */
+      #pwa-splash {
+        --splash-bg: #000;
+        --splash-title-color: #fff;
+        --splash-subtitle-color: #525252;
+        --splash-progress-bg: #1a1a1a;
+        --splash-glow-opacity: 0.2;
+      }
+      /* ── Splash Light ── */
+      [data-theme='light'] #pwa-splash {
+        --splash-bg: #f8fafc;
+        --splash-title-color: #0f172a;
+        --splash-subtitle-color: #64748b;
+        --splash-progress-bg: #e2e8f0;
+        --splash-glow-opacity: 0.12;
+      }
+
+      #pwa-splash {
+        position: fixed; inset: 0; z-index: 99999;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        background: var(--splash-bg);
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        padding-top: env(safe-area-inset-top, 0px);
+        transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      #pwa-splash.splash-hide {
+        opacity: 0;
+        pointer-events: none;
+      }
+      .splash-glow {
+        position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%);
+        width: 280px; height: 280px;
+        background: radial-gradient(circle, rgba(124,111,247,var(--splash-glow-opacity)) 0%, rgba(124,111,247,0.05) 40%, transparent 70%);
+        border-radius: 50%;
+        animation: splash-glow-pulse 3s ease-in-out infinite;
+      }
+      .splash-logo {
+        position: relative;
+        width: 80px; height: 80px; margin-bottom: 24px;
+        animation: splash-float 2.5s ease-in-out infinite;
+      }
+      .splash-logo img {
+        width: 100%; height: 100%; border-radius: 20px; object-fit: cover;
+        box-shadow: 0 8px 40px rgba(124,111,247,0.3), 0 0 0 1px rgba(124,111,247,0.15);
+      }
+      .splash-shimmer {
+        position: absolute; inset: -2px; border-radius: 22px; overflow: hidden;
+      }
+      .splash-shimmer::after {
+        content: '';
+        position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+        background: conic-gradient(from 0deg, transparent, rgba(124,111,247,0.3), transparent 30%);
+        animation: splash-shimmer-spin 2.5s linear infinite;
+      }
+      .splash-title {
+        font-size: 26px; font-weight: 800; color: var(--splash-title-color);
+        letter-spacing: -0.5px; margin-bottom: 6px;
+        position: relative; z-index: 1;
+      }
+      .splash-subtitle {
+        font-size: 13px; color: var(--splash-subtitle-color); letter-spacing: 0.5px;
+        margin-bottom: 40px; position: relative; z-index: 1;
+      }
+      .splash-progress {
+        width: 120px; height: 3px; background: var(--splash-progress-bg);
+        border-radius: 3px; overflow: hidden; position: relative; z-index: 1;
+      }
+      .splash-progress-bar {
+        height: 100%; width: 0; border-radius: 3px;
+        background: linear-gradient(90deg, #7c6ff7, #a78bfa);
+        animation: splash-load 1.5s ease-out forwards;
+      }
+
+      @keyframes splash-float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-6px); }
+      }
+      @keyframes splash-glow-pulse {
+        0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
+        50% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
+      }
+      @keyframes splash-shimmer-spin {
+        to { transform: rotate(360deg); }
+      }
+      @keyframes splash-load {
+        0% { width: 0; }
+        30% { width: 40%; }
+        60% { width: 70%; }
+        100% { width: 100%; }
+      }
+    </style>
+
+    <div id="app"></div>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {})
+        })
+      }
+      // Fade out splash after app is ready
+      window.__removeSplash = function() {
+        var s = document.getElementById('pwa-splash');
+        if (s) {
+          s.classList.add('splash-hide');
+          setTimeout(function() { s.remove(); }, 600);
+        }
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Allow: /blog
+Allow: /blog/*
+
+Disallow: /api/
+Disallow: /login
+Disallow: /settings
+
+Sitemap: https://smart-note-api.smart-note.workers.dev/api/sitemap.xml
