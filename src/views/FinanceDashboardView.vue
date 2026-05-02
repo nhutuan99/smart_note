@@ -14,7 +14,7 @@ const { t } = useI18n()
 <template>
   <div class="max-w-[75rem]">
     <!-- Welcome Header with Mascot -->
-    <div class="mb-6 flex items-center justify-between bg-bg-surface border border-border-default rounded-2xl p-5 sm:p-6 shadow-sm overflow-hidden relative">
+    <div class="mb-6 flex items-center justify-between bg-bg-surface border border-border-default rounded-2xl p-5 sm:p-6 shadow-sm relative">
       <div class="relative z-10 max-w-[65%]">
         <h2 class="text-xl sm:text-2xl font-bold text-text-primary mb-1">
           {{ t('dashboard.welcomeBack', { name: auth.user?.name?.split(' ')[0] || 'User' }) }}

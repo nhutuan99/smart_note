@@ -9,6 +9,7 @@ import BugReportModal from '@/components/ui/BugReportModal.vue'
 import PwaInstallGuide from '@/components/ui/PwaInstallGuide.vue'
 import PullToRefresh from '@/components/ui/PullToRefresh.vue'
 import WeeklyEventModal from '@/components/ui/WeeklyEventModal.vue'
+import CatStoryModal from '@/components/ui/CatStoryModal.vue'
 import { ArrowUp } from 'lucide-vue-next'
 import { useUiStore } from '@/stores/ui'
 import { useNotificationStore } from '@/stores/notifications'
@@ -110,6 +111,34 @@ function scheduleGuide() {
   }, GUIDE_DELAY_MS)
 }
 
+// ── AI Cat Story ──
+let storyTimer: ReturnType<typeof setInterval> | null = null
+
+async function triggerAiStory() {
+  if (document.visibilityState !== 'visible' || !auth.isAuthenticated) return
+  if (ui.showStoryModal || ui.showWeeklyEvent) return
+
+  try {
+    const { httpClient } = await import('@/shared/api/httpClient')
+    const res = await httpClient.post<{ data: string }>('/api/ai', { action: 'cat_story' })
+    if (res?.data) {
+      let text = res.data.trim()
+      // Llama might wrap json in markdown like ```json ... ```
+      if (text.startsWith('```json')) text = text.replace(/```json/g, '')
+      if (text.startsWith('```')) text = text.replace(/```/g, '')
+      text = text.trim()
+
+      const parsed = JSON.parse(text)
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        ui.storyMessages = parsed
+        ui.showStoryModal = true
+      }
+    }
+  } catch (error) {
+    console.error('Failed to trigger AI story:', error)
+  }
+}
+
 onMounted(async () => {
   // Initial data fetches (guarded by auth inside each store)
   await notificationStore.fetch(true)   // force fetch — always get latest on mount
@@ -131,12 +160,19 @@ onMounted(async () => {
 
   // Schedule sync guide after 5 minutes
   scheduleGuide()
+
+  // Start AI Story loop (every 5 mins)
+  storyTimer = setInterval(triggerAiStory, 5 * 60 * 1000)
 })
 
 onBeforeUnmount(() => {
   if (guideTimer) {
     clearTimeout(guideTimer)
     guideTimer = null
+  }
+  if (storyTimer) {
+    clearInterval(storyTimer)
+    storyTimer = null
   }
 })
 
@@ -210,6 +246,7 @@ async function handleRefresh(done: () => void) {
     />
     <PwaInstallGuide />
     <WeeklyEventModal />
+    <CatStoryModal />
   </div>
 </template>
 

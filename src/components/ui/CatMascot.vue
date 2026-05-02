@@ -11,7 +11,7 @@ const props = withDefaults(defineProps<{
   size: 'md'
 })
 
-const imageSrc = computed(() => `/images/mascot_${props.type}.png`)
+const imageSrc = computed(() => `/images/mascot_${props.type}_nobg.png`)
 
 const sizeClass = computed(() => {
   switch (props.size) {
@@ -42,7 +42,7 @@ const animationClass = computed(() => {
   >
     <!-- Simple ground shadow -->
     <div class="absolute bottom-2 w-2/3 h-2 bg-black/10 dark:bg-black/30 blur-[4px] rounded-full scale-x-150 transition-opacity duration-300" :class="{'opacity-0': animation === 'hide'}"></div>
-    <img :src="imageSrc" alt="Mascot" class="w-full h-full object-contain relative z-10 drop-shadow-xl" />
+    <img :src="imageSrc" alt="Mascot" class="w-full h-full object-contain relative z-10 filter drop-shadow-[0_0_2px_rgba(255,255,255,1)] drop-shadow-[0_4px_10px_rgba(0,0,0,0.4)]" />
   </div>
 </template>
 

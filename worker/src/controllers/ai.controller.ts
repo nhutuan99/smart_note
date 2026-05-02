@@ -21,7 +21,15 @@ Quy tắc quan trọng:
 - KHÔNG bịa đặt số liệu hay đưa ra con số không có trong dữ liệu
 - Trả lời bằng tiếng Việt, dùng Markdown và emoji
 - Ngắn gọn, tối đa 200 từ
-- Nếu câu hỏi không liên quan đến tài chính, lịch sự từ chối và nhắc lại vai trò`
+- Nếu câu hỏi không liên quan đến tài chính, lịch sự từ chối và nhắc lại vai trò`,
+  cat_story: `Bạn là một tác giả viết kịch bản. Hãy viết một đoạn hội thoại rất ngắn (1-2 câu mỗi người) giữa 2 nhân vật:
+- Mèo Xám: Thông thái, cẩn thận, giỏi tiết kiệm.
+- Mèo Cam: Năng động, ham ăn, hay tiêu xài.
+Chủ đề ngẫu nhiên về tiền bạc, tiết kiệm, hoặc mua sắm.
+Yêu cầu bắt buộc:
+- TRẢ VỀ CHUẨN JSON ARRAY, KHÔNG ĐƯỢC CÓ BẤT KỲ TEXT NÀO KHÁC BÊN NGOÀI.
+- Cấu trúc JSON: [{"character": "orange" | "grey", "text": "nội dung thoại"}]
+- Thoại bằng tiếng Việt, vui nhộn.`
 }
 
 export async function handleAi(request: Request, env: Env): Promise<Response> {
@@ -39,8 +47,6 @@ export async function handleAi(request: Request, env: Env): Promise<Response> {
 
   let userMessage: string
   if (action === 'finance') {
-    // Finance advisor: content already contains the full context + embedded question
-    // Do NOT wrap with "Note content:" — that confuses the model
     userMessage = content
   } else if (action === 'ask') {
     userMessage = content
@@ -48,6 +54,8 @@ export async function handleAi(request: Request, env: Env): Promise<Response> {
       : `Question: ${question}`
   } else if (action === 'tags') {
     userMessage = `Title: ${body.title || ''}\nContent: ${content.substring(0, 600)}`
+  } else if (action === 'cat_story') {
+    userMessage = `Tạo một câu chuyện mới. Phải trả về mảng JSON hợp lệ.`
   } else {
     userMessage = content
   }

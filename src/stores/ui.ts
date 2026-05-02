@@ -20,6 +20,8 @@ export const useUiStore = defineStore('ui', () => {
   const searchOpen = ref(false)
   const showBugReport = ref(false)
   const showWeeklyEvent = ref(false)
+  const showStoryModal = ref(false)
+  const storyMessages = ref<{character: string, text: string}[]>([])
   const toasts = ref<Toast[]>([])
   const theme = ref<'dark' | 'light'>(
     (localStorage.getItem('sn_theme') as 'dark' | 'light') || 'dark'
@@ -190,6 +192,8 @@ export const useUiStore = defineStore('ui', () => {
     showBugReport,
     showWeeklyEvent,
     checkWeeklyEvent,
-    completeWeeklyEvent
+    completeWeeklyEvent,
+    showStoryModal,
+    storyMessages
   }
 })
