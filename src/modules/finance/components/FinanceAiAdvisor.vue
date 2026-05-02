@@ -123,7 +123,7 @@ function renderAiMarkdown(text: string): string {
     
     <!-- AI Response Popover -->
     <transition name="popover">
-      <div v-if="isOpen" class="mb-4 w-[calc(100vw-2rem)] sm:w-[400px] bg-bg-surface/95 backdrop-blur-xl border border-border-default shadow-[0_10px_40px_rgba(0,0,0,0.3)] rounded-3xl overflow-hidden pointer-events-auto flex flex-col transform origin-bottom-right transition-all">
+      <div v-if="isOpen" class="absolute bottom-0 right-0 w-[calc(100vw-2rem)] sm:w-[400px] bg-bg-surface/95 backdrop-blur-xl border border-border-default shadow-[0_10px_40px_rgba(0,0,0,0.3)] rounded-3xl overflow-hidden pointer-events-auto flex flex-col transform origin-bottom-right transition-all">
         
         <!-- Header -->
         <div class="bg-gradient-to-r from-accent/20 to-pink-500/10 px-5 py-4 flex items-center justify-between border-b border-border-subtle relative overflow-hidden">
@@ -203,11 +203,11 @@ function renderAiMarkdown(text: string): string {
     <!-- Floating Mascot Button -->
     <button 
       @click="isOpen = !isOpen"
-      class="relative w-16 h-16 sm:w-20 sm:h-20 transition-all duration-500 pointer-events-auto filter outline-none z-50 will-change-transform"
+      class="relative flex items-center justify-center transition-all duration-500 pointer-events-auto filter outline-none z-50 will-change-transform"
       :class="isOpen ? 'scale-0 opacity-0 pointer-events-none translate-y-10' : 'scale-100 opacity-100 hover:scale-110 drop-shadow-[0_10px_20px_rgba(0,0,0,0.3)] hover:drop-shadow-[0_15px_30px_rgba(142,125,250,0.4)]'"
       style="transform: translateZ(0);"
     >
-      <CatMascot :type="catType" size="lg" animation="wave" />
+      <CatMascot :type="catType" size="md" animation="wave" />
       
       <!-- Chat Bubble Tooltip -->
       <transition name="fade">
