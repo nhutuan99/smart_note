@@ -64,9 +64,7 @@ function skip() {
           <Sparkles :size="18" class="animate-spin-slow" />
         </div>
 
-        <button @click="skip" class="absolute top-6 right-6 p-2 bg-black/20 hover:bg-white/10 rounded-full text-white/70 hover:text-white transition-colors backdrop-blur-md z-20">
-          <X :size="24" />
-        </button>
+
 
         <!-- Content Layout -->
         <div class="flex flex-col md:flex-row relative z-10 pt-12 pb-8 px-6 sm:px-10 gap-8 items-center">
