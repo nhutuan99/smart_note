@@ -7,7 +7,6 @@ import { useFinancePolling } from '@/composables/useFinancePolling'
 import { useUiStore } from '@/stores/ui'
 import { formatVND } from '@/constants/finance'
 import WeatherWidget from '@/components/WeatherWidget.vue'
-import CatMascot from '@/components/ui/CatMascot.vue'
 
 const { t, tm } = useI18n()
 const router = useRouter()
@@ -87,15 +86,6 @@ const isCurrentMonth = computed(() => {
           </button>
         </template>
       </WeatherWidget>
-      
-      <!-- Mascot overlay -->
-      <div class="hidden sm:block absolute right-4 -bottom-6 pointer-events-none z-30">
-        <CatMascot type="orange" size="lg" animation="float" />
-      </div>
-      <!-- Mobile mascot overlay -->
-      <div class="sm:hidden absolute -right-2 -bottom-6 pointer-events-none z-30">
-        <CatMascot type="orange" size="md" animation="float" />
-      </div>
     </div>
 
     <!-- Month Selector -->
