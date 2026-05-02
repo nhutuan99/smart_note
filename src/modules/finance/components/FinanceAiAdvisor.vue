@@ -202,11 +202,15 @@ function renderAiMarkdown(text: string): string {
     >
       <CatMascot type="orange" size="xl" animation="wave" />
       
-      <!-- Notification dot -->
-      <span v-if="!isOpen" class="absolute top-2 right-2 flex h-4 w-4">
-        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-500 opacity-80"></span>
-        <span class="relative inline-flex rounded-full h-4 w-4 bg-pink-500 border-[2.5px] border-bg-base shadow-sm"></span>
-      </span>
+      <!-- Chat Bubble Tooltip -->
+      <transition name="fade">
+        <div v-if="!isOpen" class="absolute top-2 right-[100%] mr-2 w-max bg-bg-surface/95 backdrop-blur-md border border-border-default shadow-[0_4px_20px_rgba(0,0,0,0.2)] rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm font-medium text-text-primary flex items-center gap-2 pointer-events-none origin-right hover:scale-105 transition-transform animate-float">
+          <span>Meow! Cần hỗ trợ không? 👋</span>
+          <!-- Triangle pointer -->
+          <div class="absolute top-2 -right-[6px] w-0 h-0 border-y-[6px] border-y-transparent border-l-[6px] border-l-border-default"></div>
+          <div class="absolute top-[9px] -right-[5px] w-0 h-0 border-y-[5px] border-y-transparent border-l-[5px] border-l-bg-surface/95"></div>
+        </div>
+      </transition>
     </button>
   </div>
 </template>
@@ -228,5 +232,15 @@ function renderAiMarkdown(text: string): string {
 .ai-rich-response strong {
   color: var(--color-text-primary);
   font-weight: 600;
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+  100% { transform: translateY(0px); }
 }
 </style>
