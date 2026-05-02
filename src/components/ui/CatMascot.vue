@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 const props = withDefaults(defineProps<{
   type?: 'grey' | 'orange'
@@ -12,6 +12,7 @@ const props = withDefaults(defineProps<{
 })
 
 const imageSrc = computed(() => `/images/mascot_${props.type}_nobg.png`)
+const hasError = ref(false)
 
 const sizeClass = computed(() => {
   switch (props.size) {
@@ -37,12 +38,13 @@ const animationClass = computed(() => {
 
 <template>
   <div 
+    v-if="!hasError"
     class="relative inline-flex items-center justify-center transition-all duration-500 cubic-bezier(0.34, 1.56, 0.64, 1) will-change-transform" 
     :class="[sizeClass, animationClass]"
     style="transform: translateZ(0);"
   >
     <div class="absolute bottom-0 w-3/4 h-3 bg-black/20 dark:bg-black/40 blur-[6px] rounded-[100%] transition-opacity duration-300" :class="{'opacity-0': animation === 'hide'}"></div>
-    <img :src="imageSrc" alt="Mascot" class="w-full h-full object-contain relative z-10" loading="lazy" />
+    <img :src="imageSrc" @error="hasError = true" alt="Mascot" class="w-full h-full object-contain relative z-10" loading="lazy" />
   </div>
 </template>
 
