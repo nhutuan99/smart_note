@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, nextTick } from 'vue'
+import { computed, ref, nextTick, onMounted } from 'vue'
 import { useFinancePolling } from '@/composables/useFinancePolling'
 import { formatMoneyShort } from '@/composables/useCurrency'
 import { useI18n } from 'vue-i18n'
@@ -11,6 +11,13 @@ const { t } = useI18n()
 const finance = useFinancePolling()
 
 const isOpen = ref(false)
+
+const catType = ref<'orange' | 'grey'>('orange')
+const catName = computed(() => catType.value === 'orange' ? 'Múp' : 'Mít')
+
+onMounted(() => {
+  catType.value = Math.random() > 0.5 ? 'orange' : 'grey'
+})
 
 const daysLeftInMonth = computed(() => {
   const now = new Date()
@@ -37,7 +44,7 @@ function buildFinanceContext() {
 
   const netFlow = finance.monthIncome - finance.monthExpense
 
-  return `Bạn là chuyên gia tài chính cá nhân thông minh, đang tư vấn cho người dùng với dữ liệu sau:
+  return `Bạn là ${catName.value}, trợ lý tài chính cá nhân thông minh hình chú mèo, đang tư vấn cho người dùng với dữ liệu sau:
 
 📊 TÀI CHÍNH THÁNG ${now.getMonth()+1}/${now.getFullYear()}
 Hôm nay ngày ${dayOfMonth}/${totalDays} | Còn ${daysLeft} ngày trong tháng
@@ -123,7 +130,7 @@ function renderAiMarkdown(text: string): string {
           <div class="absolute -right-4 -top-4 w-24 h-24 bg-accent/20 rounded-full blur-xl pointer-events-none"></div>
           <div class="flex items-center gap-3 relative z-10">
             <div class="w-12 h-12 rounded-full bg-bg-surface border-2 border-accent/30 flex items-center justify-center overflow-hidden shrink-0 shadow-inner">
-               <CatMascot type="orange" size="sm" animation="idle" />
+               <CatMascot :type="catType" size="sm" animation="idle" />
             </div>
             <div>
               <h3 class="text-[0.9375rem] font-bold text-text-primary flex items-center gap-1.5">{{ t('dashboard.aiAdvisorTitle') }} <div class="w-2 h-2 bg-success rounded-full animate-pulse shadow-[0_0_8px_var(--success)]"></div></h3>
@@ -141,7 +148,7 @@ function renderAiMarkdown(text: string): string {
           <!-- Initial Greet -->
           <div class="flex gap-3">
              <div class="bg-bg-elevated border border-border-subtle rounded-2xl rounded-tl-sm p-3.5 text-[0.875rem] text-text-secondary leading-relaxed shadow-sm">
-               {{ t('dashboard.aiGreeting') }}
+               {{ t('dashboard.aiGreeting', { name: catName }) }}
              </div>
           </div>
 
@@ -200,12 +207,12 @@ function renderAiMarkdown(text: string): string {
       :class="isOpen ? 'scale-0 opacity-0 pointer-events-none translate-y-10' : 'scale-100 opacity-100 hover:scale-110 drop-shadow-[0_10px_20px_rgba(0,0,0,0.3)] hover:drop-shadow-[0_15px_30px_rgba(142,125,250,0.4)]'"
       style="transform: translateZ(0);"
     >
-      <CatMascot type="orange" size="lg" animation="wave" />
+      <CatMascot :type="catType" size="lg" animation="wave" />
       
       <!-- Chat Bubble Tooltip -->
       <transition name="fade">
         <div v-if="!isOpen" class="absolute top-2 right-[100%] mr-2 w-max bg-bg-surface/95 backdrop-blur-md border border-border-default shadow-[0_4px_20px_rgba(0,0,0,0.2)] rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm font-medium text-text-primary flex items-center gap-2 pointer-events-none origin-right hover:scale-105 transition-transform animate-float">
-          <span>{{ t('dashboard.aiTooltip') }}</span>
+          <span>{{ t('dashboard.aiTooltip', { name: catName }) }}</span>
           <!-- Triangle pointer -->
           <div class="absolute top-2 -right-[6px] w-0 h-0 border-y-[6px] border-y-transparent border-l-[6px] border-l-border-default"></div>
           <div class="absolute top-[9px] -right-[5px] w-0 h-0 border-y-[5px] border-y-transparent border-l-[5px] border-l-bg-surface/95"></div>

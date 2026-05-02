@@ -206,9 +206,9 @@ export default {
     aiPlanTitle: '📊 Kế hoạch tài chính - {date}',
     aiPlanFooter: '*Tạo tự động bởi AI Finance Advisor*',
     aiPlanDate: '*Ngày: {date}*',
-    aiTooltip: 'Meow! Cần hỗ trợ không? 👋',
+    aiTooltip: 'Meow! {name} có thể giúp gì không? 👋',
     aiReadyToHelp: 'Sẵn sàng hỗ trợ tài chính',
-    aiGreeting: 'Chào bạn! 👋 Mình có thể giúp bạn phân tích chi tiêu, đưa ra lời khuyên hoặc giải đáp thắc mắc về tình hình tài chính tháng này. Bạn muốn hỏi gì nào?'
+    aiGreeting: 'Chào bạn! 👋 Mình là {name}. Mình có thể giúp bạn phân tích chi tiêu, đưa ra lời khuyên hoặc giải đáp thắc mắc về tài chính tháng này. Bạn muốn hỏi gì nào?'
   },
 
   // ── Transactions ──
