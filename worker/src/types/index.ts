@@ -20,6 +20,7 @@ export interface UserData {
   createdAt: string
   pinHash?: string
   hasCompletedOnboarding?: boolean
+  lastWeeklyEvent?: number
 }
 
 export interface NoteData {

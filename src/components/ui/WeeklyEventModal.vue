@@ -4,9 +4,11 @@ import { useUiStore } from '@/stores/ui'
 import CatMascot from '@/components/ui/CatMascot.vue'
 import { Sparkles, X, ChevronRight } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 
 const ui = useUiStore()
 const { t } = useI18n()
+const router = useRouter()
 
 // Generate topics from i18n
 const topics = computed(() => [
@@ -36,6 +38,7 @@ onMounted(() => {
 function interact() {
   ui.showToast('success', t('weeklyEvent.success'))
   ui.completeWeeklyEvent()
+  router.push('/budgets')
 }
 
 function skip() {

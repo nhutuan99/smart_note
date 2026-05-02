@@ -9,6 +9,7 @@ import { useI18n } from 'vue-i18n'
 import { setLocale, currentLocale } from '@/i18n'
 import { useEventListener } from '@/composables/useEventListener'
 import CatMascot from '@/components/ui/CatMascot.vue'
+import WanderingPet from '@/components/ui/WanderingPet.vue'
 
 // ── Interactive Mouse Glow ────────────────────────────────────────────────────
 const mouseX = ref(0)
@@ -354,10 +355,8 @@ watch(
     <div class="relative z-10 w-full max-w-[25rem] px-6">
       <!-- Logo & Mascot -->
       <div class="mb-8 text-center relative z-0 flex flex-col items-center">
-        <!-- Mascot peeking from top-right of the login box -->
-        <div class="absolute -top-12 -right-8 sm:-right-12 z-0 drop-shadow-2xl">
-          <CatMascot type="grey" size="xl" :animation="mascotAnim" />
-        </div>
+        <!-- Wandering Pet replacing the static Mascot -->
+        <WanderingPet type="grey" size="lg" :action-override="mascotAnim" />
         <!-- Logo -->
         <div class="relative z-10 flex h-20 w-20 items-center justify-center mb-3">
           <img src="/images/logo-512.png" alt="FinNote Logo" class="h-full w-full rounded-2xl drop-shadow-[0_0_15px_rgba(124,111,247,0.5)] object-cover" />

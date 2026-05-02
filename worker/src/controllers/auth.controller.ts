@@ -95,7 +95,7 @@ export async function handleLogin(request: Request, env: Env): Promise<Response>
 }
 
 export async function handleUpdateProfile(userId: string, request: Request, env: Env): Promise<Response> {
-  const { name, avatarUrl, hasCompletedOnboarding } = (await request.json()) as any
+  const { name, avatarUrl, hasCompletedOnboarding, lastWeeklyEvent } = (await request.json()) as any
   const user = await getJSON<UserData>(env.SMART_NOTE_KV, `users/${userId}/profile`)
   if (!user) return errorResponse('User not found', 404)
 
@@ -110,6 +110,9 @@ export async function handleUpdateProfile(userId: string, request: Request, env:
   if (hasCompletedOnboarding !== undefined) {
     user.hasCompletedOnboarding = hasCompletedOnboarding
   }
+  if (lastWeeklyEvent !== undefined) {
+    user.lastWeeklyEvent = lastWeeklyEvent
+  }
 
   await putJSON(env.SMART_NOTE_KV, `users/${userId}/profile`, user)
 
@@ -121,7 +124,8 @@ export async function handleUpdateProfile(userId: string, request: Request, env:
       name: user.name,
       avatarUrl: user.avatarUrl || '',
       createdAt: user.createdAt,
-      hasCompletedOnboarding: user.hasCompletedOnboarding
+      hasCompletedOnboarding: user.hasCompletedOnboarding,
+      lastWeeklyEvent: user.lastWeeklyEvent
     }
   })
 }

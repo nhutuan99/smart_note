@@ -72,6 +72,9 @@ export const useUiStore = defineStore('ui', () => {
 
   function checkWeeklyEvent() {
     const lastEvent = localStorage.getItem('sn_last_weekly_event')
+    // Fallback to local storage or backend auth state. If we have the backend flag, use it instead.
+    // Assuming we can sync it via auth store, but checking it here:
+    // If it's been more than a week since the last event shown
     const now = Date.now()
     const ONE_WEEK = 7 * 24 * 60 * 60 * 1000
     if (!lastEvent || (now - parseInt(lastEvent)) > ONE_WEEK) {
@@ -79,9 +82,25 @@ export const useUiStore = defineStore('ui', () => {
     }
   }
 
-  function completeWeeklyEvent() {
+  async function completeWeeklyEvent() {
     showWeeklyEvent.value = false
-    localStorage.setItem('sn_last_weekly_event', Date.now().toString())
+    const now = Date.now()
+    localStorage.setItem('sn_last_weekly_event', now.toString())
+    
+    // Cache at BE
+    try {
+      const { httpClient } = await import('@/shared/api/httpClient')
+      const { useAuthStore } = await import('@/stores/auth')
+      const auth = useAuthStore()
+      
+      httpClient.put('/api/auth/profile', { lastWeeklyEvent: now })
+        .then((updatedUser: any) => {
+          if (updatedUser) auth.updateUser(updatedUser)
+        })
+        .catch(err => console.error('Failed to sync weekly event to BE:', err))
+    } catch (e) {
+      console.error('Failed to import for weekly event sync', e)
+    }
   }
 
   function toggleSidebar() {

@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { Wallet, TrendingUp, TrendingDown, Plus, Eye, EyeOff, ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { Wallet, TrendingUp, TrendingDown, Plus, Eye, EyeOff, ChevronLeft, ChevronRight, Sparkles } from 'lucide-vue-next'
 import { useFinancePolling } from '@/composables/useFinancePolling'
 import { useUiStore } from '@/stores/ui'
 import { formatVND } from '@/constants/finance'
@@ -77,6 +77,15 @@ const isCurrentMonth = computed(() => {
     <div class="relative mb-6">
       <WeatherWidget>
         <template #actions>
+          <button
+            @click="ui.showWeeklyEvent = true"
+            class="relative overflow-hidden group flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-accent to-pink-500 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-pink-500/20 transition-all hover:-translate-y-0.5 hover:shadow-pink-500/40 border border-white/20"
+          >
+            <Sparkles :size="16" class="animate-spin-slow" />
+            <span class="hidden sm:inline">{{ t('weeklyEvent.title') }}</span>
+            <div class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
+          </button>
+          
           <button
             @click="router.push('/transactions/add')"
             class="btn-primary"
@@ -172,5 +181,10 @@ const isCurrentMonth = computed(() => {
         </div>
       </div>
     </div>
-
 </template>
+
+<style scoped>
+.animate-spin-slow {
+  animation: spin 4s linear infinite;
+}
+</style>
