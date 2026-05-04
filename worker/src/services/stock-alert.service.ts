@@ -106,10 +106,12 @@ export async function checkAllStockAlerts(env: Env): Promise<string> {
 
         for (const alert of pendingAlerts) {
           let shouldTrigger = false
-
-          if (alert.direction === 'above' && currentPrice >= alert.targetPrice) {
+          // Trigger early when price is within ±2% of the target
+          // This ensures the user gets notified if the price is "close enough" 
+          // because exact matches are difficult in a volatile market.
+          if (alert.direction === 'above' && currentPrice >= alert.targetPrice * 0.98) {
             shouldTrigger = true
-          } else if (alert.direction === 'below' && currentPrice <= alert.targetPrice) {
+          } else if (alert.direction === 'below' && currentPrice <= alert.targetPrice * 1.02) {
             shouldTrigger = true
           }
 
@@ -122,8 +124,8 @@ export async function checkAllStockAlerts(env: Env): Promise<string> {
             // Send push notification
             const isBuy = alert.direction === 'below'
             const action = isBuy ? '📉 MUA' : '📈 BÁN'
-            const title = `📊 ${stock.symbol} đã chạm mốc ${action}!`
-            const body = `${stock.symbol}: ${currentPrice} (mốc ${alert.targetPrice}) — ${alert.label || (isBuy ? 'Mua vào' : 'Bán ra')}`
+            const title = `📊 ${stock.symbol} đã vào vùng giá ${action}!`
+            const body = `Giá hiện tại: ${currentPrice} (Mốc ${alert.targetPrice}) — Đã tiệm cận biên độ ±2% để ${alert.label || (isBuy ? 'mua vào' : 'bán ra')}`
 
             await sendPushToUser(userId, env, {
               title,

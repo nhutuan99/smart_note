@@ -477,7 +477,7 @@ export default {
 
   // ── Cloudflare Cron Trigger ──
   // Cron 1: 0 2 * * * = AutoBlog at 9 AM VN (daily)
-  // Cron 2: */5 2-8 * * 1-5 = Stock alerts every 5 min during trading hours (9-15h VN, Mon-Fri)
+  // Cron 2: */30 2-8 * * 1-5 = Stock alerts every 30 min during trading hours (9-15h VN, Mon-Fri)
   async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
     // Always check stock alerts during trading hours
     ctx.waitUntil(
