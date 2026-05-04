@@ -237,6 +237,10 @@ export async function handleDeleteBlog(userId: string, slug: string, env: Env): 
 export async function handleGenerateBlogContent(userId: string, request: Request, env: Env): Promise<Response> {
   if (!(await isAdmin(userId, env))) return errorResponse('Forbidden', 403)
 
+  // ?model=cf to skip Gemini and force Cloudflare AI
+  const url = new URL(request.url)
+  const forceCloudflare = url.searchParams.get('model') === 'cf'
+
   const { topic, imageBase64 } = (await request.json()) as { topic: string; imageBase64?: string }
   if (!topic && !imageBase64) return errorResponse('Missing topic or image', 400)
 
@@ -245,7 +249,8 @@ export async function handleGenerateBlogContent(userId: string, request: Request
   }
 
   try {
-    let useGemini = !!env.GEMINI_API_KEY
+    let useGemini = !!env.GEMINI_API_KEY && !forceCloudflare
+    let geminiError: string | undefined
 
     // ═══════════════════════════════════════════════════
     // PHASE 1: Research with Gemini Grounding (Google Search)
@@ -408,14 +413,16 @@ Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải th
 
         if (!response.ok) {
           const errObj: any = await response.json().catch(() => ({}))
-          console.warn('Gemini gen failed, falling back to CF AI:', errObj?.error?.message)
+          geminiError = errObj?.error?.message || `HTTP ${response.status}`
+          console.warn('[BlogGen] Gemini gen failed, falling back to CF AI:', geminiError)
           useGemini = false
         } else {
           const data: any = await response.json()
           text = data?.candidates?.[0]?.content?.parts?.[0]?.text || ''
         }
       } catch (geminiErr: any) {
-        console.warn('Gemini error, falling back to CF AI:', geminiErr.message)
+        geminiError = geminiErr.message || 'Gemini request failed'
+        console.warn('[BlogGen] Gemini error, falling back to CF AI:', geminiError)
         useGemini = false
       }
     }
@@ -467,7 +474,9 @@ Chỉ trả về nội dung Markdown, không bọc trong JSON hay code block.`
           seoKeywords: meta.seoKeywords || '',
           content: blogContent,
           imagePrompts: meta.imagePrompts || [],
-          groundingSources
+          groundingSources,
+          modelUsed: 'cloudflare',
+          geminiError
         }
       })
     }
@@ -487,8 +496,9 @@ Chỉ trả về nội dung Markdown, không bọc trong JSON hay code block.`
       result.content = stripLeadingH1(result.content)
     }
 
-    // Attach grounding sources
+    // Attach grounding sources + model info
     result.groundingSources = groundingSources
+    result.modelUsed = 'gemini'
 
     console.log(`[BlogGen] Done: "${result.title}", ${result.content?.length || 0} chars, ${groundingSources.length} sources, ${result.imagePrompts?.length || 0} image prompts`)
 
@@ -500,6 +510,10 @@ Chỉ trả về nội dung Markdown, không bọc trong JSON hay code block.`
 
 export async function handleRefineBlogContent(userId: string, request: Request, env: Env): Promise<Response> {
   if (!(await isAdmin(userId, env))) return errorResponse('Forbidden', 403)
+
+  // ?model=cf to skip Gemini and force Cloudflare AI
+  const url = new URL(request.url)
+  const forceCloudflare = url.searchParams.get('model') === 'cf'
 
   const draftData = (await request.json()) as any
   if (!draftData || !draftData.content) return errorResponse('Missing draft content', 400)
@@ -522,7 +536,8 @@ Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải th
 
   try {
     let text = ''
-    let useGemini = !!env.GEMINI_API_KEY
+    let useGemini = !!env.GEMINI_API_KEY && !forceCloudflare
+    let geminiError: string | undefined
     if (useGemini) {
       try {
         const promptParts = [
@@ -550,12 +565,17 @@ Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải th
         )
 
         if (!response.ok) {
+          const errData: any = await response.json().catch(() => ({}))
+          geminiError = errData?.error?.message || `HTTP ${response.status}`
+          console.warn('[BlogRefine] Gemini failed, falling back to CF AI:', geminiError)
           useGemini = false
         } else {
           const data: any = await response.json()
           text = data?.candidates?.[0]?.content?.parts?.[0]?.text || ''
         }
-      } catch {
+      } catch (e: any) {
+        geminiError = e.message || 'Gemini request failed'
+        console.warn('[BlogRefine] Gemini error, falling back:', geminiError)
         useGemini = false
       }
     }
@@ -572,6 +592,7 @@ Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải th
         temperature: 0.5
       }) as any
       text = metaResponse?.response || ''
+      geminiError = geminiError // keep existing error if set
     }
 
     const jsonMatch = text.match(/\{[\s\S]*\}/)
@@ -590,6 +611,9 @@ Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải th
     if (result.content) {
       result.content = stripLeadingH1(result.content)
     }
+
+    result.modelUsed = !forceCloudflare && env.GEMINI_API_KEY && !geminiError ? 'gemini' : 'cloudflare'
+    if (geminiError) result.geminiError = geminiError
 
     return jsonResponse({ success: true, data: result })
   } catch (err: any) {

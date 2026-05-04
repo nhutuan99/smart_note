@@ -22,6 +22,9 @@ import {
   Timer,
   Brain,
   Search,
+  AlertTriangle,
+  Cpu,
+  Zap,
   Image as ImageIcon
 } from 'lucide-vue-next'
 import type { Blog } from '@/types'
@@ -87,6 +90,25 @@ function formatTimer(secs: number): string {
 }
 
 onUnmounted(() => stopGenTimer())
+
+// ── AI Model Switching ──
+const aiError = computed(() => blogStore.lastAiError)
+const aiModelLabel = computed(() => {
+  if (blogStore.useCloudflareAI) return 'Cloudflare AI (Llama 3.1)'
+  return blogStore.lastModelUsed === 'cloudflare' ? 'Cloudflare AI (auto fallback)' : 'Gemini 2.0 Flash'
+})
+
+function switchToCloudflare() {
+  blogStore.useCloudflareAI = true
+  blogStore.lastAiError = null
+  uiStore.showToast('info', 'Đã chuyển sang Cloudflare AI (Llama 3.1)')
+}
+
+function switchBackToGemini() {
+  blogStore.useCloudflareAI = false
+  blogStore.lastAiError = null
+  uiStore.showToast('info', 'Đã chuyển lại Gemini 2.0 Flash')
+}
 
 // ── Input State ──
 const inputContent = ref('')
@@ -204,6 +226,8 @@ async function handleGenerate() {
   if (!canGenerate.value) return
   isGenerating.value = true
   startGenTimer()
+  // Clear previous error state before new attempt
+  blogStore.lastAiError = null
 
   try {
     if (activeTab.value === 'paste') {
@@ -242,6 +266,15 @@ async function handleGenerate() {
       const draftData = await blogStore.generateContent(inputContent.value, aiImageBase64.value)
 
       if (draftData) {
+        // Auto-switch: if Gemini failed and CF AI was used, surface the error
+        if (draftData.modelUsed === 'cloudflare' && draftData.geminiError && !blogStore.useCloudflareAI) {
+          blogStore.useCloudflareAI = true
+          blogStore.lastAiError = draftData.geminiError
+          uiStore.showToast('warning', 'Gemini lỗi, đã tự động chuyển sang Cloudflare AI')
+        } else if (draftData.modelUsed === 'gemini') {
+          // Gemini OK — clear any stale error
+          blogStore.lastAiError = null
+        }
         // Store grounding sources from research phase
         groundingSources.value = draftData.groundingSources || []
         const imagePrompts: string[] = draftData.imagePrompts || []
@@ -536,12 +569,62 @@ const formatDate = (dateStr: string) => {
 
             <!-- Modal Body -->
             <div class="blog-modal__body custom-scrollbar">
-              <!-- Input Area (both modes share this) -->
               <div v-if="!hasPreview && !isGenerating" class="blog-input-area">
                 <!-- Mode description -->
                 <p class="text-[0.8125rem] text-text-tertiary mb-3">
                   {{ activeTab === 'paste' ? t('blog.pasteHint') : t('blog.aiHint') }}
                 </p>
+
+                <!-- ══ AI Error Banner ══ -->
+                <div v-if="aiError && activeTab === 'ai'" class="ai-error-banner">
+                  <div class="ai-error-banner__icon">
+                    <AlertTriangle :size="16" />
+                  </div>
+                  <div class="ai-error-banner__body">
+                    <p class="ai-error-banner__title">Gemini AI bị lỗi</p>
+                    <p class="ai-error-banner__msg">{{ aiError }}</p>
+                  </div>
+                  <div class="ai-error-banner__actions">
+                    <button
+                      v-if="!blogStore.useCloudflareAI"
+                      class="ai-switch-btn ai-switch-btn--cf"
+                      @click="switchToCloudflare"
+                    >
+                      <Cpu :size="13" />
+                      <span>Dùng model thường</span>
+                    </button>
+                    <button
+                      v-else
+                      class="ai-switch-btn ai-switch-btn--gemini"
+                      @click="switchBackToGemini"
+                    >
+                      <Zap :size="13" />
+                      <span>Thử lại Gemini</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- ══ Model Indicator (AI tab, no error) ══ -->
+                <div v-else-if="activeTab === 'ai'" class="ai-model-indicator">
+                  <div class="ai-model-indicator__dot" :class="blogStore.useCloudflareAI ? 'dot--cf' : 'dot--gemini'" />
+                  <span class="ai-model-indicator__label">{{ aiModelLabel }}</span>
+                  <button
+                    v-if="blogStore.useCloudflareAI"
+                    class="ai-model-indicator__reset"
+                    @click="switchBackToGemini"
+                  >
+                    <Zap :size="11" />
+                    <span>Thử lại Gemini</span>
+                  </button>
+                  <button
+                    v-else
+                    class="ai-model-indicator__reset ai-model-indicator__reset--switch"
+                    @click="switchToCloudflare"
+                  >
+                    <Cpu :size="11" />
+                    <span>Dùng model thường</span>
+                  </button>
+                </div>
 
                 <div class="relative">
                   <textarea
@@ -1284,5 +1367,140 @@ const formatDate = (dateStr: string) => {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── AI Error Banner ── */
+.ai-error-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  background: rgba(251, 113, 133, 0.08);
+  border: 1px solid rgba(251, 113, 133, 0.3);
+  border-radius: 0.75rem;
+  margin-bottom: 1rem;
+  animation: fadeIn 0.2s ease;
+}
+.ai-error-banner__icon {
+  color: var(--color-error, #fb7185);
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+.ai-error-banner__body {
+  flex: 1;
+  min-width: 0;
+}
+.ai-error-banner__title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--color-error, #fb7185);
+  margin-bottom: 0.125rem;
+}
+.ai-error-banner__msg {
+  font-size: 0.75rem;
+  color: var(--color-text-tertiary);
+  line-height: 1.4;
+  word-break: break-word;
+}
+.ai-error-banner__actions {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+/* ── Switch Model Buttons ── */
+.ai-switch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 0.375rem 0.625rem;
+  border-radius: 0.5rem;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+.ai-switch-btn--cf {
+  background: rgba(124, 111, 247, 0.12);
+  color: var(--color-accent);
+  border: 1px solid rgba(124, 111, 247, 0.3);
+}
+.ai-switch-btn--cf:hover {
+  background: rgba(124, 111, 247, 0.2);
+  border-color: var(--color-accent);
+}
+.ai-switch-btn--gemini {
+  background: rgba(52, 211, 153, 0.1);
+  color: var(--color-success, #34d399);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}
+.ai-switch-btn--gemini:hover {
+  background: rgba(52, 211, 153, 0.18);
+}
+
+/* ── Model Indicator (when no error) ── */
+.ai-model-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding: 0.375rem 0.625rem;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 0.5rem;
+  font-size: 0.6875rem;
+}
+.ai-model-indicator__dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+.dot--gemini {
+  background: #34d399;
+  box-shadow: 0 0 6px rgba(52, 211, 153, 0.5);
+  animation: pulse-dot 2s infinite;
+}
+.dot--cf {
+  background: #fb923c;
+  box-shadow: 0 0 6px rgba(251, 146, 60, 0.5);
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.ai-model-indicator__label {
+  flex: 1;
+  color: var(--color-text-tertiary);
+  font-weight: 500;
+}
+.ai-model-indicator__reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.625rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.375rem;
+  color: var(--color-text-disabled);
+  background: transparent;
+  border: 1px solid var(--color-border-subtle);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.ai-model-indicator__reset:hover {
+  color: var(--color-text-secondary);
+  background: var(--color-bg-hover);
+}
+.ai-model-indicator__reset--switch {
+  color: var(--color-accent);
+  border-color: rgba(124, 111, 247, 0.3);
+  background: rgba(124, 111, 247, 0.06);
+}
+.ai-model-indicator__reset--switch:hover {
+  background: rgba(124, 111, 247, 0.14);
 }
 </style>

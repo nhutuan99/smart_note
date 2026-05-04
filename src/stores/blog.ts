@@ -11,6 +11,11 @@ export const useBlogStore = defineStore('blog', () => {
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
+  // AI model preference: force Cloudflare AI (fallback) when Gemini fails
+  const useCloudflareAI = ref(false)
+  const lastAiError = ref<string | null>(null)   // last Gemini error message
+  const lastModelUsed = ref<'gemini' | 'cloudflare' | null>(null)
+
   async function fetchBlogs() {
     isLoading.value = true
     error.value = null
@@ -77,12 +82,26 @@ export const useBlogStore = defineStore('blog', () => {
   }
 
   async function generateContent(topic: string, imageBase64?: string) {
-    const response = await httpClient.post<any>('/api/blogs/generate-content', { topic, imageBase64 })
+    const model = useCloudflareAI.value ? '?model=cf' : ''
+    const response = await httpClient.post<any>(`/api/blogs/generate-content${model}`, { topic, imageBase64 })
+    if (response) {
+      lastModelUsed.value = response.modelUsed || null
+      if (response.geminiError) {
+        lastAiError.value = response.geminiError
+      }
+    }
     return response
   }
 
   async function refineContent(draftData: any) {
-    const response = await httpClient.post<any>('/api/blogs/refine-content', draftData)
+    const model = useCloudflareAI.value ? '?model=cf' : ''
+    const response = await httpClient.post<any>(`/api/blogs/refine-content${model}`, draftData)
+    if (response) {
+      lastModelUsed.value = response.modelUsed || null
+      if (response.geminiError) {
+        lastAiError.value = response.geminiError
+      }
+    }
     return response
   }
 
@@ -120,6 +139,9 @@ export const useBlogStore = defineStore('blog', () => {
     currentBlog,
     isLoading,
     error,
+    useCloudflareAI,
+    lastAiError,
+    lastModelUsed,
     fetchBlogs,
     fetchBlogBySlug,
     createBlog,

@@ -3,7 +3,7 @@ import { ref, watch } from 'vue'
 import { useUiStore } from '@/stores/ui'
 import { useAuthStore } from '@/stores/auth'
 import CatMascot from '@/components/ui/CatMascot.vue'
-import { Sparkles, ChevronRight, Loader2 } from 'lucide-vue-next'
+import { Sparkles, ChevronRight, Loader2, X } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { httpClient } from '@/shared/api/httpClient'
@@ -28,12 +28,8 @@ watch(() => ui.showWeeklyEvent, async (newVal) => {
     generatedEvent.value = null
     generatedImageBlob.value = ''
 
-    // Show modal content after a brief delay for smooth entrance
-    setTimeout(() => {
-      showModalContent.value = true
-    }, 100)
+    setTimeout(() => { showModalContent.value = true }, 80)
 
-    // Fire AI requests
     ;(async () => {
       try {
         const textRes = await httpClient.post<{data: string}>('/api/ai', { action: 'weekly_event' })
@@ -86,111 +82,383 @@ function skip() {
 
 <template>
   <transition name="modal-fade">
-    <div v-if="ui.showWeeklyEvent" class="fixed inset-0 z-[9999]">
-      <!-- Backdrop -->
-      <div class="absolute inset-0 bg-black/60 backdrop-blur-md" @click="skip"></div>
+    <div v-if="ui.showWeeklyEvent" class="event-fullscreen">
 
-      <!-- Scrollable Container -->
-      <div class="absolute inset-0 overflow-y-auto overflow-x-hidden">
-        <div class="min-h-full flex items-center justify-center p-4 sm:p-6 pt-[max(env(safe-area-inset-top,2rem),3rem)] pb-[max(env(safe-area-inset-bottom,2rem),3rem)]">
+      <!-- ── Backdrop (click to dismiss) ── -->
+      <div class="event-fullscreen__backdrop" @click="skip" />
 
-      <!-- Main Event Card -->
-      <transition name="scale-up">
-        <div v-if="showModalContent" class="relative z-10 w-full max-w-3xl rounded-[2rem] bg-bg-surface/80 backdrop-blur-2xl border border-border-default shadow-[0_8px_40px_rgba(0,0,0,0.4)] overflow-visible">
+      <!-- ── Card ── -->
+      <transition name="card-up">
+        <div v-if="showModalContent" class="event-card">
 
-        <!-- Header Badge -->
-        <div class="absolute -top-5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-accent to-pink-500 text-white px-6 py-1.5 rounded-full font-bold shadow-lg flex items-center gap-2 uppercase tracking-wider text-xs sm:text-sm border border-white/15">
-          <Sparkles :size="16" />
-          {{ t('weeklyEvent.title') }}
-          <Sparkles :size="16" />
-        </div>
+          <!-- ── HERO IMAGE (top 40%) ── -->
+          <div class="event-card__hero">
+            <!-- Gradient overlay bottom -->
+            <div class="event-card__hero-overlay" />
 
-        <!-- Content Layout -->
-        <div class="flex flex-col md:flex-row relative z-10 pt-10 sm:pt-12 pb-6 sm:pb-8 px-5 sm:px-10 gap-6 sm:gap-8 items-center">
+            <!-- Image / Skeleton -->
+            <img
+              v-if="!isGeneratingImage && generatedImageBlob"
+              :src="generatedImageBlob"
+              class="event-card__hero-img"
+              alt="event"
+            />
+            <div v-else class="event-card__hero-skeleton">
+              <Loader2 :size="32" class="animate-spin text-white/40" />
+            </div>
 
-          <!-- Image Section -->
-          <div class="w-full md:w-1/2 relative group">
-            <div class="absolute inset-0 bg-gradient-to-tr from-accent/20 to-pink-500/20 rounded-2xl blur-xl opacity-50 transition-opacity duration-500"></div>
-            <div class="relative aspect-video sm:aspect-[4/3] rounded-2xl overflow-hidden shadow-xl border border-white/10" :class="{'bg-gradient-to-br from-indigo-500/30 via-purple-500/30 to-pink-500/30': isGeneratingImage}">
-              <img v-if="!isGeneratingImage && generatedImageBlob" :src="generatedImageBlob" class="w-full h-full object-cover" />
-              <div v-if="isGeneratingImage" class="w-full h-full flex flex-col items-center justify-center text-white/50 px-4 text-center">
-                <Loader2 :size="40" class="mb-3 opacity-50 animate-spin" />
-                <p class="text-sm font-medium">{{ t('weeklyEvent.generatingImage') }}</p>
+            <!-- Top bar: badge left + close right -->
+            <div class="event-card__topbar">
+              <div class="event-badge">
+                <Sparkles :size="13" />
+                <span>{{ t('weeklyEvent.title') }}</span>
               </div>
-              <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+              <button class="event-close" @click="skip">
+                <X :size="18" />
+              </button>
             </div>
 
-            <!-- Static mascots (no animation to avoid jank) -->
-            <div class="absolute -bottom-4 -right-4 w-20 h-20 sm:w-24 sm:h-24 z-20">
-              <CatMascot type="orange" size="lg" animation="idle" />
-            </div>
-            <div class="absolute -top-4 -left-4 w-14 h-14 sm:w-20 sm:h-20 z-0">
-              <CatMascot type="grey" size="md" animation="idle" />
+            <!-- Mascots pinned to bottom-right of hero -->
+            <div class="event-card__mascots">
+              <div class="mascot-grey">
+                <CatMascot type="grey" size="sm" animation="idle" />
+              </div>
+              <div class="mascot-orange">
+                <CatMascot type="orange" size="md" animation="idle" />
+              </div>
             </div>
           </div>
 
-          <!-- Text & Actions Section -->
-          <div class="w-full md:w-1/2 flex flex-col items-center md:items-start text-center md:text-left min-h-[160px]">
+          <!-- ── CONTENT PANEL (bottom 60%) ── -->
+          <div class="event-card__body">
+
+            <!-- Skeleton while loading text -->
             <template v-if="isGeneratingText">
-              <div class="w-3/4 h-8 bg-white/10 rounded-lg animate-pulse mb-4"></div>
-              <div class="w-full h-4 bg-white/5 rounded animate-pulse mb-2"></div>
-              <div class="w-5/6 h-4 bg-white/5 rounded animate-pulse mb-2"></div>
-              <div class="w-4/6 h-4 bg-white/5 rounded animate-pulse mb-8"></div>
-            </template>
-            <template v-else-if="generatedEvent">
-              <h2 class="text-xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-white/70 mb-3 sm:mb-4 leading-tight">
-                {{ generatedEvent.title }}
-              </h2>
-              <p class="text-sm sm:text-base text-white/70 mb-6 sm:mb-8 leading-relaxed">
-                {{ generatedEvent.desc }}
-              </p>
+              <div class="skeleton-line skeleton-line--title" />
+              <div class="skeleton-line skeleton-line--md mt-3" />
+              <div class="skeleton-line skeleton-line--sm mt-2" />
             </template>
 
-            <div class="flex flex-col w-full gap-3 mt-auto">
-              <button :disabled="isGeneratingText" @click="interact" class="group w-full py-3.5 px-5 rounded-xl bg-gradient-to-r from-accent to-pink-500 text-white font-bold text-base hover:shadow-lg transition-all duration-200 flex justify-center items-center gap-2 border border-white/15 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]">
+            <!-- Actual content -->
+            <template v-else-if="generatedEvent">
+              <h2 class="event-card__title">{{ generatedEvent.title }}</h2>
+              <p class="event-card__desc">{{ generatedEvent.desc }}</p>
+            </template>
+
+            <!-- CTA buttons -->
+            <div class="event-card__actions">
+              <button
+                :disabled="isGeneratingText"
+                @click="interact"
+                class="btn-join"
+              >
                 <span>{{ t('weeklyEvent.join') }}</span>
-                <ChevronRight :size="20" class="group-hover:translate-x-0.5 transition-transform" />
+                <ChevronRight :size="18" />
               </button>
-              <button @click="skip" class="w-full py-3.5 px-5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 font-medium transition-colors text-center text-sm active:scale-[0.98]">
+              <button @click="skip" class="btn-skip">
                 {{ t('weeklyEvent.skip') }}
               </button>
             </div>
+
           </div>
         </div>
-        </div>
       </transition>
-        </div>
-      </div>
+
     </div>
   </transition>
 </template>
 
 <style scoped>
-/* Clean modal entrance — no heavy transforms */
-.modal-fade-enter-active {
-  transition: opacity 0.3s ease;
+/* ══════════════════════════════════════════════
+   Fullscreen overlay — safe-area aware
+   ══════════════════════════════════════════════ */
+.event-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: flex-end;     /* card slides up from bottom */
+  justify-content: center;
 }
-.modal-fade-leave-active {
-  transition: opacity 0.2s ease;
+
+.event-fullscreen__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
+
+/* ══════════════════════════════════════════════
+   Card — bottom sheet style on mobile,
+   centered card on tablet+
+   ══════════════════════════════════════════════ */
+.event-card {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 480px;
+  max-height: 92dvh;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  background: #0f0f1a;
+  border-radius: 1.5rem 1.5rem 0 0;
+  overflow: hidden;
+  box-shadow: 0 -8px 40px rgba(0,0,0,0.6);
+  /* bottom safe area */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@media (min-width: 600px) {
+  .event-fullscreen {
+    align-items: center;
+  }
+  .event-card {
+    border-radius: 1.5rem;
+    margin: 1rem;
+    max-height: 88dvh;
+  }
+}
+
+/* ══════════════════════════════════════════════
+   Hero — 42% of card height, fixed
+   ══════════════════════════════════════════════ */
+.event-card__hero {
+  position: relative;
+  flex-shrink: 0;
+  height: 220px;
+  background: linear-gradient(135deg, #1e1040 0%, #2d1b69 50%, #1a0a3d 100%);
+  overflow: hidden;
+}
+
+@media (min-height: 700px) {
+  .event-card__hero { height: 260px; }
+}
+
+.event-card__hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.event-card__hero-skeleton {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1e1040 0%, #2d1b69 60%, #4c1d95 100%);
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Gradient overlay at bottom of hero */
+.event-card__hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.1) 0%,
+    transparent 40%,
+    rgba(15,15,26,0.8) 100%
+  );
+  z-index: 1;
+}
+
+/* ── Top bar (badge + close) ── */
+.event-card__topbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1rem;
+  padding-top: calc(0.875rem + env(safe-area-inset-top, 0px));
+}
+
+.event-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  background: rgba(124, 111, 247, 0.85);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.375rem 0.75rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+
+.event-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 9999px;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(8px);
+  color: rgba(255,255,255,0.8);
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: background 0.15s ease, transform 0.15s ease;
+  flex-shrink: 0;
+}
+.event-close:hover, .event-close:active {
+  background: rgba(0,0,0,0.6);
+  transform: scale(0.95);
+}
+
+/* ── Mascots ── */
+.event-card__mascots {
+  position: absolute;
+  bottom: -4px;
+  right: 1rem;
+  z-index: 2;
+  display: flex;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.mascot-grey  { width: 3rem;  height: 3rem;  }
+.mascot-orange { width: 4rem;  height: 4rem;  }
+
+/* ══════════════════════════════════════════════
+   Content panel
+   ══════════════════════════════════════════════ */
+.event-card__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem 1.25rem 1rem;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.event-card__title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.625rem;
+}
+
+@media (min-height: 700px) {
+  .event-card__title { font-size: 1.375rem; }
+}
+
+.event-card__desc {
+  font-size: 0.875rem;
+  color: rgba(255,255,255,0.65);
+  line-height: 1.6;
+  flex: 1;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+}
+
+/* ── Skeleton ── */
+.skeleton-line {
+  border-radius: 0.5rem;
+  background: rgba(255,255,255,0.08);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+.skeleton-line--title { height: 1.5rem; width: 80%; }
+.skeleton-line--md    { height: 0.875rem; width: 100%; }
+.skeleton-line--sm    { height: 0.875rem; width: 70%; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ══════════════════════════════════════════════
+   Action buttons
+   ══════════════════════════════════════════════ */
+.event-card__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin-top: 1rem;
+  flex-shrink: 0;
+}
+
+.btn-join {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border-radius: 0.875rem;
+  background: linear-gradient(135deg, #7c6ff7, #ec4899);
+  color: #fff;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  border: 1px solid rgba(255,255,255,0.12);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  cursor: pointer;
+}
+.btn-join:hover { opacity: 0.92; }
+.btn-join:active { transform: scale(0.98); }
+.btn-join:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-skip {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 0.875rem;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.45);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background 0.15s ease, color 0.15s ease;
+  cursor: pointer;
+}
+.btn-skip:hover {
+  background: rgba(255,255,255,0.09);
+  color: rgba(255,255,255,0.65);
+}
+.btn-skip:active { transform: scale(0.99); }
+
+/* ══════════════════════════════════════════════
+   Transitions
+   ══════════════════════════════════════════════ */
+.modal-fade-enter-active { transition: opacity 0.25s ease; }
+.modal-fade-leave-active { transition: opacity 0.2s ease; }
 .modal-fade-enter-from,
-.modal-fade-leave-to {
+.modal-fade-leave-to { opacity: 0; }
+
+/* Card slides up from bottom */
+.card-up-enter-active { transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.28s ease; }
+.card-up-leave-active { transition: transform 0.2s ease-in, opacity 0.18s ease; }
+.card-up-enter-from {
+  transform: translateY(32px);
+  opacity: 0;
+}
+.card-up-leave-to {
+  transform: translateY(16px);
   opacity: 0;
 }
 
-/* Card scale-up */
-.scale-up-enter-active {
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.scale-up-leave-active {
-  transition: all 0.2s ease-in;
-}
-.scale-up-enter-from {
-  opacity: 0;
-  transform: scale(0.92) translateY(20px);
-}
-.scale-up-leave-to {
-  opacity: 0;
-  transform: scale(0.95) translateY(10px);
+@media (min-width: 600px) {
+  .card-up-enter-from { transform: scale(0.94) translateY(8px); }
+  .card-up-leave-to   { transform: scale(0.96) translateY(4px); }
 }
 </style>
