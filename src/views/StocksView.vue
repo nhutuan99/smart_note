@@ -250,9 +250,6 @@ function getChartData(symbol: string) {
       <div v-for="pos in stockStore.positions" :key="pos.id" class="card-premium p-5 flex flex-col relative group">
         <!-- Action buttons -->
         <div class="absolute top-4 right-4 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button @click="openAlertModal(pos)" class="p-1.5 text-text-disabled hover:text-warning hover:bg-warning/10 rounded-lg transition-colors" :title="t('stockAlert.addAlert')">
-            <Bell :size="16" />
-          </button>
           <button @click="removePos(pos.id)" class="p-1.5 text-text-disabled hover:text-error hover:bg-error/10 rounded-lg transition-colors">
             <Trash2 :size="16" />
           </button>
@@ -368,18 +365,22 @@ function getChartData(symbol: string) {
           </div>
         </div>
 
-        <!-- Mobile: Add alert button (always visible) -->
-        <button 
-          @click="openAlertModal(pos)" 
-          class="md:hidden flex items-center justify-center gap-1.5 text-xs text-warning bg-warning/10 hover:bg-warning/20 rounded-lg py-2 px-3 font-medium transition-colors mb-3"
-        >
-          <Bell :size="14" /> {{ t('stockAlert.addAlert') }}
-        </button>
+        <!-- Bottom Action Bar -->
+        <div class="mt-auto pt-4 border-t border-border-subtle flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <!-- Badges -->
+          <div class="flex gap-2 flex-wrap">
+            <span v-if="pos.targetProfit" class="text-[10px] px-2 py-1 rounded-md bg-success/10 text-success font-medium">{{ t('stockAlert.takeProfit') }}: {{ pos.targetProfit }}%</span>
+            <span v-if="pos.stopLoss" class="text-[10px] px-2 py-1 rounded-md bg-error/10 text-error font-medium">{{ t('stockAlert.stopLoss') }}: {{ pos.stopLoss }}%</span>
+          </div>
 
-        <!-- Original target/stopLoss badges -->
-        <div v-if="pos.targetProfit || pos.stopLoss" class="flex gap-2 mt-auto pt-4 border-t border-border-subtle">
-          <span v-if="pos.targetProfit" class="text-[10px] px-2 py-1 rounded-md bg-success/10 text-success font-medium">{{ t('stockAlert.takeProfit') }}: {{ pos.targetProfit }}%</span>
-          <span v-if="pos.stopLoss" class="text-[10px] px-2 py-1 rounded-md bg-error/10 text-error font-medium">{{ t('stockAlert.stopLoss') }}: {{ pos.stopLoss }}%</span>
+          <!-- Premium Add Alert Button -->
+          <button 
+            @click="openAlertModal(pos)" 
+            class="ml-auto flex-shrink-0 flex items-center justify-center gap-1.5 text-xs font-semibold text-warning bg-gradient-to-r from-warning/10 to-warning/5 hover:from-warning/20 hover:to-warning/10 border border-warning/20 hover:border-warning/40 rounded-lg py-1.5 px-3 transition-all duration-300 shadow-sm hover:shadow"
+          >
+            <BellRing :size="14" /> 
+            <span>{{ t('stockAlert.addAlert') }}</span>
+          </button>
         </div>
       </div>
     </div>
