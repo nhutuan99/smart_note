@@ -114,3 +114,14 @@ export interface BlogData {
   createdAt: string
   updatedAt: string
 }
+
+export interface StockData {
+  id: string
+  symbol: string
+  buyPrice: number
+  quantity: number
+  targetProfit?: number
+  stopLoss?: number
+  createdAt: string
+  updatedAt: string
+}

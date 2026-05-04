@@ -58,6 +58,7 @@ export default {
     dashboard: 'Dashboard',
     transactions: 'Giao dịch',
     wallets: 'Tài khoản',
+    stocks: 'Chứng khoán',
     notes: 'Ghi chú',
     blog: 'Blog',
     settings: 'Cài đặt',
@@ -327,6 +328,9 @@ export default {
     // Language
     language: 'Ngôn ngữ',
     languageDesc: 'Chọn ngôn ngữ hiển thị',
+    stocks: 'Chứng khoán',
+    enableStocks: 'Bật module Chứng khoán',
+    enableStocksDesc: 'Quản lý danh mục đầu tư và theo dõi giá cổ phiếu',
     // Currency
     currency: 'Tiền tệ',
     currencyDisplay: 'Đơn vị tiền tệ',

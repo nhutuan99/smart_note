@@ -5,9 +5,11 @@ import { Globe, DollarSign, FolderSync, Link, Unlink } from 'lucide-vue-next'
 import { setLocale, currentLocale } from '@/i18n'
 import { useCurrency, type CurrencyCode } from '@/composables/useCurrency'
 import { useNotesStore } from '@/stores/notes'
+import { useUiStore } from '@/stores/ui'
 
 const { t } = useI18n()
 const notesStore = useNotesStore()
+const ui = useUiStore()
 
 // Language
 const selectedLocale = ref(currentLocale())
@@ -148,6 +150,32 @@ function changeCurrency(code: CurrencyCode) {
               <Unlink :size="16" />
               {{ t('settings.disconnectVault') }}
             </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stock Management Module -->
+    <div>
+      <div class="text-text-secondary mb-3 flex items-center gap-2">
+        <DollarSign :size="18" />
+        <h3 class="text-sm font-semibold">{{ t('settings.stocks') }}</h3>
+      </div>
+      <div class="card-premium p-5">
+        <div class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+          <div>
+            <h4 class="mb-0.5 text-sm font-semibold">{{ t('settings.enableStocks') }}</h4>
+            <p class="text-text-tertiary text-sm">{{ t('settings.enableStocksDesc') }}</p>
+          </div>
+          <div>
+            <label class="relative inline-flex cursor-pointer items-center">
+              <input
+                type="checkbox"
+                v-model="ui.enableStocks"
+                class="peer sr-only"
+              />
+              <div class="peer h-6 w-11 rounded-full bg-border-default after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-white after:bg-white after:transition-all after:content-[''] peer-checked:bg-accent peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none"></div>
+            </label>
           </div>
         </div>
       </div>

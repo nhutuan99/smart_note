@@ -92,8 +92,16 @@ import {
 import {
   handleProxyLocation,
   handleProxyWeather,
-  handleProxyExchangeRate
+  handleProxyExchangeRate,
+  handleProxyStockPrice
 } from './controllers/proxy.controller'
+
+import {
+  handleListStocks,
+  handleCreateStock,
+  handleUpdateStock,
+  handleDeleteStock
+} from './controllers/stock.controller'
 
 import { runAutoBlog } from './services/auto-blog.service'
 
@@ -112,6 +120,9 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
     }
     if (path === '/api/proxy/exchange-rate' && request.method === 'GET') {
       return handleProxyExchangeRate(request)
+    }
+    if (path === '/api/proxy/stock-price' && request.method === 'GET') {
+      return handleProxyStockPrice(request, env)
     }
 
     // Auth routes (no token needed)
@@ -371,6 +382,20 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
       const pendingMatch = path.match(/^\/api\/pending\/(.+)\/resolve$/)
       if (pendingMatch && request.method === 'POST') {
         return handleResolvePending(userId, pendingMatch[1], env)
+      }
+
+      // Stocks
+      if (path === '/api/stocks' && request.method === 'GET') {
+        return handleListStocks(userId, env)
+      }
+      if (path === '/api/stocks' && request.method === 'POST') {
+        return handleCreateStock(userId, request, env)
+      }
+      const stockMatch = path.match(/^\/api\/stocks\/(.+)$/)
+      if (stockMatch) {
+        const stockId = stockMatch[1]
+        if (request.method === 'PUT') return handleUpdateStock(userId, stockId, request, env)
+        if (request.method === 'DELETE') return handleDeleteStock(userId, stockId, env)
       }
 
       // Push Notifications

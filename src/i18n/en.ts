@@ -58,6 +58,7 @@ export default {
     dashboard: 'Dashboard',
     transactions: 'Transactions',
     wallets: 'Wallets',
+    stocks: 'Stocks',
     notes: 'Notes',
     blog: 'Blog',
     settings: 'Settings',
@@ -327,6 +328,9 @@ export default {
     // Language
     language: 'Language',
     languageDesc: 'Choose display language',
+    stocks: 'Stocks',
+    enableStocks: 'Enable Stocks Module',
+    enableStocksDesc: 'Manage your stock portfolio and track real-time prices',
     // Currency
     currency: 'Currency',
     currencyDisplay: 'Display Currency',

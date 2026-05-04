@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
@@ -20,7 +20,8 @@ import {
   PenLine,
   Target,
   ChevronDown,
-  ChevronRight as ChevronRightIcon
+  ChevronRight as ChevronRightIcon,
+  LineChart
 } from 'lucide-vue-next'
 
 const { t } = useI18n()
@@ -32,15 +33,26 @@ const finance = useFinanceStore()
 const notesStore = useNotesStore()
 const { isMobileOrTablet } = useDevice()
 
-const navItems = [
-  { key: 'nav.dashboard',    icon: LayoutDashboard, route: '/' },
-  { key: 'nav.transactions', icon: ArrowLeftRight,  route: '/transactions' },
-  { key: 'nav.wallets',      icon: Wallet,          route: '/wallets' },
-  { key: 'nav.planning',     icon: Target,          route: '/planning' },
-  { key: 'nav.notes',        icon: FileText,        route: '/notes' },
-  { key: 'nav.blog',         icon: Newspaper,       route: '/blog' },
-  { key: 'nav.settings',     icon: Settings,        route: '/settings' },
-]
+const navItems = computed(() => {
+  const items = [
+    { key: 'nav.dashboard',    icon: LayoutDashboard, route: '/' },
+    { key: 'nav.transactions', icon: ArrowLeftRight,  route: '/transactions' },
+    { key: 'nav.wallets',      icon: Wallet,          route: '/wallets' },
+    { key: 'nav.planning',     icon: Target,          route: '/planning' }
+  ]
+  
+  if (ui.enableStocks) {
+    items.push({ key: 'nav.stocks', icon: LineChart, route: '/stocks' })
+  }
+  
+  items.push(
+    { key: 'nav.notes',        icon: FileText,        route: '/notes' },
+    { key: 'nav.blog',         icon: Newspaper,       route: '/blog' },
+    { key: 'nav.settings',     icon: Settings,        route: '/settings' }
+  )
+  
+  return items
+})
 
 // ── Collapsible Section State (persisted) ──
 const STORAGE_KEY = 'sb_sections'

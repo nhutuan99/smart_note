@@ -159,3 +159,56 @@ export async function handleProxyExchangeRate(request: Request): Promise<Respons
     return errorResponse(err.message, 500)
   }
 }
+
+/**
+ * Handle /api/proxy/stock-price
+ * Fetch from DNSE API and cache in KV to prevent rate limits
+ */
+export async function handleProxyStockPrice(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url)
+  const symbol = url.searchParams.get('symbol')?.toUpperCase()
+
+  if (!symbol) {
+    return errorResponse('Missing symbol query parameter', 400)
+  }
+
+  const cacheKey = `public/stocks/${symbol}`
+  const now = Date.now()
+
+  try {
+    // Try cache first (valid for 5 minutes)
+    const cachedStr = await env.SMART_NOTE_KV.get(cacheKey)
+    if (cachedStr) {
+      const cached = JSON.parse(cachedStr)
+      if (now - cached.timestamp < 5 * 60 * 1000) {
+        return jsonResponse({ success: true, data: { currentPrice: cached.price, symbol } })
+      }
+    }
+
+    // Fetch new price
+    const to = Math.floor(now / 1000)
+    const from = to - 86400 * 15 // Last 15 days to handle holidays
+    const res = await fetch(`https://services.entrade.com.vn/chart-api/v2/ohlcs/stock?from=${from}&to=${to}&symbol=${symbol}&resolution=1D`)
+
+    if (!res.ok) {
+      return errorResponse(`DNSE API HTTP ${res.status}`, 502)
+    }
+
+    const data = await res.json() as any
+    if (!data || !data.c || data.c.length === 0) {
+      return errorResponse('Symbol not found or no data', 404)
+    }
+
+    const currentPrice = data.c[data.c.length - 1]
+
+    // Cache the result
+    await env.SMART_NOTE_KV.put(cacheKey, JSON.stringify({ price: currentPrice, timestamp: now }), { expirationTtl: 3600 })
+
+    return jsonResponse({
+      success: true,
+      data: { currentPrice, symbol }
+    })
+  } catch (err: any) {
+    return errorResponse(err.message, 500)
+  }
+}

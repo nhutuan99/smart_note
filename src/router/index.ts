@@ -75,6 +75,12 @@ const router = createRouter({
       component: () => import('@/views/PlanningHubView.vue')
     },
     {
+      path: '/stocks',
+      name: 'stocks',
+      component: () => import('@/views/StocksView.vue'),
+      meta: { parentRoute: '/planning' }
+    },
+    {
       path: '/notes',
       name: 'notes',
       component: () => import('@/views/NotesView.vue')

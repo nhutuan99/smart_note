@@ -135,3 +135,14 @@ export type { RecurringTransaction, RecurringFrequency } from './recurring'
 export type { BudgetGoal, CategoryBudget } from './budget'
 export type { SavingsGoal } from './savings'
 export type { Debt, DebtType, DebtStatus } from './debt'
+
+export interface StockPosition {
+  id: string
+  symbol: string
+  buyPrice: number
+  quantity: number
+  targetProfit?: number
+  stopLoss?: number
+  createdAt: string
+  updatedAt: string
+}
