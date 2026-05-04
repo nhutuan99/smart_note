@@ -9,7 +9,7 @@ function generateId(): string {
 
 export async function handleListStocks(userId: string, env: Env): Promise<Response> {
   const stocks = await getJSON<StockData[]>(env.SMART_NOTE_KV, `users/${userId}/stocks`) || []
-  return jsonResponse(stocks)
+  return jsonResponse({ success: true, data: stocks })
 }
 
 export async function handleCreateStock(userId: string, request: Request, env: Env): Promise<Response> {
@@ -35,7 +35,7 @@ export async function handleCreateStock(userId: string, request: Request, env: E
   stocks.push(newStock)
   await putJSON(env.SMART_NOTE_KV, `users/${userId}/stocks`, stocks)
   
-  return jsonResponse(newStock)
+  return jsonResponse({ success: true, data: newStock }, 201)
 }
 
 export async function handleUpdateStock(userId: string, stockId: string, request: Request, env: Env): Promise<Response> {
@@ -56,7 +56,7 @@ export async function handleUpdateStock(userId: string, stockId: string, request
   stocks[index] = updatedStock
   await putJSON(env.SMART_NOTE_KV, `users/${userId}/stocks`, stocks)
   
-  return jsonResponse(updatedStock)
+  return jsonResponse({ success: true, data: updatedStock })
 }
 
 export async function handleDeleteStock(userId: string, stockId: string, env: Env): Promise<Response> {
@@ -106,7 +106,7 @@ export async function handleAddStockAlert(userId: string, stockId: string, reque
   // Register user for cron-based alert checking
   await registerAlertUser(userId, env)
 
-  return jsonResponse(newAlert)
+  return jsonResponse({ success: true, data: newAlert }, 201)
 }
 
 export async function handleDeleteStockAlert(userId: string, stockId: string, alertId: string, env: Env): Promise<Response> {
@@ -139,5 +139,5 @@ export async function handleResetStockAlert(userId: string, stockId: string, ale
   await putJSON(env.SMART_NOTE_KV, `users/${userId}/stocks`, stocks)
   await registerAlertUser(userId, env)
 
-  return jsonResponse(alert)
+  return jsonResponse({ success: true, data: alert })
 }
