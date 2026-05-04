@@ -25,7 +25,25 @@ const { t } = useI18n()
 const stockStore = useStockStore()
 const ui = useUiStore()
 
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || ''
+const getLogoUrls = (symbol: string) => [
+  `https://image.simplize.vn/logo/${symbol.toLowerCase()}.jpeg`,
+  `https://tcdn.tcbs.com.vn/avatar/a/${symbol.toLowerCase()}.png`,
+  `https://finance.vietstock.vn/image/${symbol.toUpperCase()}.png`,
+  `https://www.ssi.com.vn/api/files/logo/${symbol.toUpperCase()}.png`
+]
+
+function handleImageError(e: Event, symbol: string) {
+  const img = e.target as HTMLImageElement
+  const currentSrc = img.src
+  const urls = getLogoUrls(symbol)
+  const currentIndex = urls.indexOf(currentSrc)
+  
+  if (currentIndex !== -1 && currentIndex < urls.length - 1) {
+    img.src = urls[currentIndex + 1]
+  } else {
+    img.style.display = 'none'
+  }
+}
 
 const showAddModal = ref(false)
 const newPosition = ref({ symbol: '', buyPrice: '', quantity: '', targetProfit: '', stopLoss: '' })
@@ -299,7 +317,7 @@ function getChartData(symbol: string) {
           <div class="flex items-center gap-3">
             <div class="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent font-bold text-xs relative overflow-hidden border border-accent/20">
               <span class="absolute z-0">{{ pos.symbol }}</span>
-              <img :src="`${apiBaseUrl}/api/proxy/logo?symbol=${pos.symbol}`" :alt="pos.symbol" class="w-full h-full object-contain relative z-10 bg-white" @error="(e) => (e.target as HTMLImageElement).style.display = 'none'" />
+              <img :src="getLogoUrls(pos.symbol)[0]" :alt="pos.symbol" class="w-full h-full object-contain relative z-10 bg-white" @error="(e) => handleImageError(e, pos.symbol)" />
             </div>
             <div>
               <p class="font-semibold text-lg">{{ pos.symbol }}</p>
