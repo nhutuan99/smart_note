@@ -17,7 +17,7 @@ export default {
     preview: 'Preview',
     copyLink: 'Copy Link',
     export: 'Export',
-    version: 'FinNote v1.0.0',
+    version: 'FinNote v7.0.0',
     copy: 'Copy',
     copied: 'Copied!',
     login: 'Login',

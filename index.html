@@ -201,7 +201,12 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch(() => {})
+          navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' })
+            .then(reg => {
+              // Force check for SW update on every page load
+              reg.update().catch(() => {})
+            })
+            .catch(() => {})
         })
       }
       // Fade out splash after app is ready

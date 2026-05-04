@@ -17,7 +17,7 @@ export default {
     preview: 'Xem trước',
     copyLink: 'Copy Link',
     export: 'Xuất dữ liệu',
-    version: 'FinNote v1.0.0',
+    version: 'FinNote v7.0.0',
     copy: 'Copy',
     copied: 'Đã copy!',
     login: 'Đăng nhập',
