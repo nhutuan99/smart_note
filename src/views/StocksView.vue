@@ -103,10 +103,33 @@ async function handleAdd() {
   newPosition.value = { symbol: '', buyPrice: '', quantity: '', targetProfit: '', stopLoss: '' }
 }
 
-async function removePos(id: string) {
-  if (confirm(t('common.confirmDelete'))) {
+async function removePos(id: string, symbol: string) {
+  const isConfirmed = await ui.requestConfirm({
+    title: t('common.confirmDelete') || 'Xóa mã chứng khoán',
+    message: `Bạn có chắc chắn muốn xóa mã ${symbol} khỏi danh mục không?`,
+    confirmText: t('common.delete') || 'Xóa',
+    cancelText: t('common.cancel') || 'Hủy',
+    danger: true
+  })
+  
+  if (!isConfirmed) return
+
+  const isValidPin = await ui.requestPinValidation(
+    t('settings.pinLabel') || 'Xác nhận xóa', 
+    `Nhập mã PIN để xóa mã ${symbol}`
+  )
+  if (!isValidPin) return
+
+  try {
     await stockStore.deletePosition(id)
+    ui.showToast('success', `Đã xóa mã ${symbol}`)
+  } catch (e) {
+    // API client handles error toasts
   }
+}
+
+function handleSymbolBlur() {
+  setTimeout(() => isSymbolFocused.value = false, 200)
 }
 
 // ── Alert Functions ──
@@ -318,7 +341,7 @@ function getChartData(symbol: string) {
       <div v-for="pos in stockStore.positions" :key="pos.id" class="card-premium p-5 flex flex-col relative group">
         <!-- Action buttons -->
         <div class="absolute top-4 right-4 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button @click="removePos(pos.id)" class="p-1.5 text-text-disabled hover:text-error hover:bg-error/10 rounded-lg transition-colors">
+          <button @click="removePos(pos.id, pos.symbol)" class="p-1.5 text-text-disabled hover:text-error hover:bg-error/10 rounded-lg transition-colors">
             <Trash2 :size="16" />
           </button>
         </div>
@@ -469,7 +492,7 @@ function getChartData(symbol: string) {
                 class="uppercase border-border-default bg-bg-surface text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-2.5 text-sm transition-all duration-150 focus:ring-2 focus:outline-none" 
                 placeholder="FPT" 
                 @focus="isSymbolFocused = true"
-                @blur="setTimeout(() => isSymbolFocused = false, 200)"
+                @blur="handleSymbolBlur"
               />
               <!-- Autocomplete dropdown -->
               <div v-if="isSymbolFocused && searchResults.length > 0" class="absolute z-10 mt-1 w-full bg-bg-elevated border border-border-default rounded-xl shadow-lg overflow-hidden">
