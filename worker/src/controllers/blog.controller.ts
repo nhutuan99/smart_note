@@ -371,6 +371,7 @@ Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải th
   "excerpt": "Đoạn mô tả ngắn (dưới 160 ký tự) cho SEO meta description",
   "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
   "seoKeywords": "keyword1, keyword2, keyword3",
+  "youtubeQuery": "từ khóa tìm video YouTube liên quan (tiếng Việt, 3-5 từ)",
   "content": "Nội dung chi tiết bằng Markdown. KHÔNG bao gồm H1. Bắt đầu với đoạn mở bài hấp dẫn, thân bài chia H2/H3 rõ ràng, bullet points, bold text, blockquotes cho số liệu nổi bật, kết bài CTA giới thiệu FinNote.",
   "imagePrompts": ["Mô tả ngắn cho ảnh minh họa section 1", "Mô tả cho ảnh section 2"]
 }`

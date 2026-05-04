@@ -70,6 +70,101 @@ function parseRssItems(xml: string): { title: string; description: string; link:
   return items
 }
 
+// ── YouTube Video Search (no API key needed) ──
+
+interface YouTubeVideo {
+  videoId: string
+  title: string
+  channelName: string
+}
+
+/**
+ * Search YouTube for relevant videos using HTML scraping
+ * Falls back gracefully on any error
+ */
+async function searchYouTubeVideos(query: string, maxResults = 2): Promise<YouTubeVideo[]> {
+  try {
+    const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}&sp=EgIQAQ%253D%253D`
+    const res = await fetch(searchUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept-Language': 'vi-VN,vi;q=0.9,en;q=0.8'
+      }
+    })
+    if (!res.ok) return []
+    const html = await res.text()
+
+    // Extract ytInitialData JSON from HTML
+    const dataMatch = html.match(/var ytInitialData = (\{.+?\});\s*<\/script>/)
+    if (!dataMatch) {
+      // Fallback: try regex to extract video IDs directly from HTML
+      const videoIdRegex = /\/watch\?v=([a-zA-Z0-9_-]{11})/g
+      const ids = new Set<string>()
+      let m: RegExpExecArray | null
+      while ((m = videoIdRegex.exec(html)) !== null && ids.size < maxResults) {
+        ids.add(m[1])
+      }
+      return Array.from(ids).map(id => ({ videoId: id, title: '', channelName: '' }))
+    }
+
+    const ytData = JSON.parse(dataMatch[1])
+    const contents = ytData?.contents?.twoColumnSearchResultsRenderer?.primaryContents
+      ?.sectionListRenderer?.contents?.[0]?.itemSectionRenderer?.contents || []
+
+    const videos: YouTubeVideo[] = []
+    for (const item of contents) {
+      if (videos.length >= maxResults) break
+      const renderer = item?.videoRenderer
+      if (!renderer?.videoId) continue
+
+      videos.push({
+        videoId: renderer.videoId,
+        title: renderer.title?.runs?.[0]?.text || '',
+        channelName: renderer.ownerText?.runs?.[0]?.text || ''
+      })
+    }
+
+    return videos
+  } catch (err) {
+    console.warn('[AutoBlog] YouTube search failed:', err)
+    return []
+  }
+}
+
+/**
+ * Build markdown embed section for YouTube videos
+ */
+function buildVideoSection(videos: YouTubeVideo[], sourceQuery: string): string {
+  if (videos.length === 0) return ''
+
+  let section = `\n\n---\n\n## 🎬 Video liên quan\n\n`
+
+  for (const video of videos) {
+    // Use a special markdown pattern that frontend will render as iframe
+    // Format: [![title](thumbnail)](youtube-url) + raw HTML embed
+    section += `<div class="yt-embed">\n`
+    section += `<iframe src="https://www.youtube.com/embed/${video.videoId}" title="${video.title.replace(/"/g, '&quot;')}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>\n`
+    if (video.title) {
+      section += `<p class="yt-embed__title">${video.title}</p>\n`
+    }
+    if (video.channelName) {
+      section += `<p class="yt-embed__channel">📺 ${video.channelName}</p>\n`
+    }
+    section += `</div>\n\n`
+  }
+
+  // Source attribution
+  section += `<div class="blog-sources">\n`
+  section += `<p class="blog-sources__title">📌 Nguồn tham khảo</p>\n`
+  section += `<ul>\n`
+  section += `<li><a href="https://vnexpress.net" target="_blank" rel="noopener noreferrer">VnExpress.net</a> — Tin tức tài chính & công nghệ</li>\n`
+  section += `<li><a href="https://www.youtube.com/results?search_query=${encodeURIComponent(sourceQuery)}" target="_blank" rel="noopener noreferrer">YouTube</a> — Video liên quan</li>\n`
+  section += `</ul>\n`
+  section += `</div>\n`
+
+  return section
+}
+
 /**
  * Step 1: Fetch trending topics from VnExpress RSS
  */
@@ -184,6 +279,7 @@ Trả về ĐÚNG JSON format:
   "excerpt": "Mô tả SEO hấp dẫn (dưới 160 ký tự)",
   "tags": ["tag1", "tag2", "tag3"],
   "seoKeywords": "keyword1, keyword2, keyword3",
+  "youtubeQuery": "từ khóa tìm video YouTube liên quan (tiếng Việt, 3-5 từ)",
   "content": "Bài viết markdown đầy đủ (tối thiểu 1200 từ). KHÔNG bao gồm tiêu đề H1. Bắt đầu bằng đoạn mở bài, chia H2/H3, bullet points, bold text, kết bài CTA về FinNote."
 }`
 
@@ -194,7 +290,8 @@ Hãy viết 1 bài blog tài chính cá nhân chuyên sâu, sáng tạo, dễ hi
 - Liên hệ chủ đề hot với tài chính cá nhân (tiết kiệm, đầu tư, quản lý chi tiêu)
 - Có ví dụ thực tế và con số cụ thể
 - Có checklist hoặc hướng dẫn hành động (actionable advice)
-- Kết bài giới thiệu FinNote app`
+- Kết bài giới thiệu FinNote app
+- Đề xuất youtubeQuery để tìm video YouTube liên quan (bằng tiếng Việt)`
 
   // Try Gemini first
   if (env.GEMINI_API_KEY) {
@@ -388,6 +485,20 @@ export async function runAutoBlog(env: Env): Promise<string> {
   // 3. Generate full blog
   const blogContent = await generateBlogContent(picked.chosenTopic, picked.blogAngle, env)
   console.log(`[AutoBlog] ✍️ Generated: "${blogContent.title}" (${blogContent.content.length} chars, model: ${blogContent.modelUsed})`)
+
+  // 3.5 Search YouTube for related videos + append embed section
+  const ytQuery = (blogContent as any).youtubeQuery || picked.blogAngle
+  console.log(`[AutoBlog] 🎬 Searching YouTube: "${ytQuery}"`)
+  const videos = await searchYouTubeVideos(ytQuery, 2)
+  if (videos.length > 0) {
+    const videoSection = buildVideoSection(videos, ytQuery)
+    blogContent.content += videoSection
+    console.log(`[AutoBlog] 📹 Embedded ${videos.length} YouTube videos`)
+  } else {
+    console.log('[AutoBlog] ⚠️ No YouTube videos found, skipping embed')
+    // Still add source attribution without videos
+    blogContent.content += `\n\n---\n\n<div class="blog-sources">\n<p class="blog-sources__title">📌 Nguồn tham khảo</p>\n<ul>\n<li><a href="https://vnexpress.net" target="_blank" rel="noopener noreferrer">VnExpress.net</a> — Tin tức tài chính & công nghệ</li>\n</ul>\n</div>\n`
+  }
 
   // 4. Publish
   const published = await publishBlog(blogContent, env)
