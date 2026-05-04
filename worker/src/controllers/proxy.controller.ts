@@ -253,10 +253,18 @@ export async function handleProxyStockHistory(request: Request, env: Env): Promi
     }
 
     // Get last 'days' items
-    const prices = data.c.slice(-days)
+    const closes = data.c.slice(-days)
+    const opens = data.o?.slice(-days) || closes
+    const highs = data.h?.slice(-days) || closes
+    const lows = data.l?.slice(-days) || closes
+    const volumes = data.v?.slice(-days) || []
     const timestamps = data.t.slice(-days)
-    const history = prices.map((price: number, i: number) => ({
+    const history = closes.map((price: number, i: number) => ({
       price,
+      open: opens[i],
+      high: highs[i],
+      low: lows[i],
+      volume: volumes[i],
       time: timestamps[i] * 1000
     }))
 

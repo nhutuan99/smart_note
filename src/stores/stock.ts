@@ -7,7 +7,7 @@ export const useStockStore = defineStore('stock', () => {
   const positions = ref<StockPosition[]>([])
   const loading = ref(false)
   const prices = ref<Record<string, number>>({})
-  const histories = ref<Record<string, { price: number, time: number }[]>>({})
+  const histories = ref<Record<string, { price: number, open: number, high: number, low: number, volume: number, time: number }[]>>({})
 
   let pollTimer: ReturnType<typeof setInterval> | null = null
 

@@ -18,7 +18,7 @@ export const stockApi = {
     httpClient.get<{ currentPrice: number, symbol: string }>(`/api/proxy/stock-price?symbol=${symbol}`, { silent: true }),
 
   getStockHistory: (symbol: string, days: number = 7) =>
-    httpClient.get<{ history: { price: number, time: number }[], symbol: string }>(`/api/proxy/stock-history?symbol=${symbol}&days=${days}`, { silent: true }),
+    httpClient.get<{ history: { price: number, open: number, high: number, low: number, volume: number, time: number }[], symbol: string }>(`/api/proxy/stock-history?symbol=${symbol}&days=${days}`, { silent: true }),
 
   // ── Alert CRUD ──
   addAlert: (stockId: string, data: { targetPrice: number; direction: 'above' | 'below'; label?: string }) =>
