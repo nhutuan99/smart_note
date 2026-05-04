@@ -133,6 +133,70 @@ function priceToPercent(price: number, min: number, range: number) {
   return Math.max(0, Math.min(100, ((price - min) / range) * 100))
 }
 
+const externalTooltipHandler = (context: any) => {
+  const { chart, tooltip } = context
+  let tooltipEl = document.getElementById('chartjs-tooltip')
+
+  if (!tooltipEl) {
+    tooltipEl = document.createElement('div')
+    tooltipEl.id = 'chartjs-tooltip'
+    tooltipEl.style.background = 'rgba(15, 23, 42, 0.95)'
+    tooltipEl.style.borderRadius = '8px'
+    tooltipEl.style.color = 'white'
+    tooltipEl.style.opacity = '1'
+    tooltipEl.style.pointerEvents = 'none'
+    tooltipEl.style.position = 'absolute'
+    tooltipEl.style.transform = 'translate(-50%, 0)'
+    tooltipEl.style.transition = 'all .1s ease'
+    tooltipEl.style.zIndex = '9999' // Highest z-index
+    tooltipEl.style.border = '1px solid rgba(124, 111, 247, 0.2)'
+    tooltipEl.style.padding = '12px'
+    tooltipEl.style.fontSize = '12px'
+    tooltipEl.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
+    document.body.appendChild(tooltipEl)
+  }
+
+  if (tooltip.opacity === 0) {
+    tooltipEl.style.opacity = '0'
+    return
+  }
+
+  if (tooltip.body) {
+    const dataIndex = tooltip.dataPoints[0].dataIndex
+    const dataset = tooltip.dataPoints[0].dataset
+    const pt = dataset.customData?.[dataIndex]
+    
+    let innerHtml = ''
+    
+    if (!pt || pt.open === undefined) {
+      innerHtml = `<div style="font-weight: 600; margin-bottom: 4px; color: #fff;">${tooltip.title[0]}</div>
+                   <div style="color: #cbd5e1;">Kết phiên: <span style="color: #fff; font-weight: 500;">${pt ? pt.price : tooltip.dataPoints[0].raw}</span></div>`
+    } else {
+      innerHtml = `
+        <div style="font-weight: 600; margin-bottom: 6px; color: #fff;">${tooltip.title[0]}</div>
+        <div style="display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; color: #cbd5e1;">
+          <div>Mở cửa:</div><div style="text-align: right; color: #fff; font-weight: 500;">${pt.open}</div>
+          <div>Cao nhất:</div><div style="text-align: right; color: #34d399; font-weight: 500;">${pt.high}</div>
+          <div>Thấp nhất:</div><div style="text-align: right; color: #fb7185; font-weight: 500;">${pt.low}</div>
+          <div>Kết phiên:</div><div style="text-align: right; color: #60a5fa; font-weight: 500;">${pt.price}</div>
+          <div style="margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 4px;">Khối lượng:</div>
+          <div style="margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 4px; text-align: right; color: #fff; font-weight: 500;">${pt.volume ? pt.volume.toLocaleString() : '0'}</div>
+        </div>
+      `
+    }
+    tooltipEl.innerHTML = innerHtml
+  }
+
+  const canvasRect = chart.canvas.getBoundingClientRect()
+  tooltipEl.style.opacity = '1'
+  tooltipEl.style.left = canvasRect.left + window.scrollX + tooltip.caretX + 'px'
+  tooltipEl.style.top = canvasRect.top + window.scrollY + tooltip.caretY - tooltipEl.offsetHeight - 10 + 'px'
+  
+  if (parseInt(tooltipEl.style.top) < window.scrollY + 10) {
+     tooltipEl.style.top = canvasRect.top + window.scrollY + tooltip.caretY + 10 + 'px'
+  }
+}
+
 // ── Sparkline config ──
 const chartOptions = {
   responsive: true,
@@ -142,33 +206,8 @@ const chartOptions = {
   plugins: { 
     legend: { display: false }, 
     tooltip: { 
-      enabled: true,
-      backgroundColor: 'rgba(15, 23, 42, 0.95)',
-      titleColor: '#fff',
-      bodyColor: '#cbd5e1',
-      borderColor: 'rgba(124, 111, 247, 0.2)',
-      borderWidth: 1,
-      padding: 12,
-      displayColors: false,
-      callbacks: {
-        label: (context: any) => {
-          const ds = context.dataset
-          const pt = ds.customData?.[context.dataIndex]
-          
-          // Safety fallback for old cache data
-          if (!pt || pt.open === undefined) {
-             return `Kết phiên: ${context.raw}`
-          }
-
-          return [
-            `Mở cửa: ${pt.open}`,
-            `Cao nhất: ${pt.high}`,
-            `Thấp nhất: ${pt.low}`,
-            `Kết phiên: ${pt.price}`,
-            `KL: ${pt.volume ? pt.volume.toLocaleString() : '0'}`
-          ]
-        }
-      }
+      enabled: false,
+      external: externalTooltipHandler
     } 
   },
   scales: {
@@ -376,9 +415,9 @@ function getChartData(symbol: string) {
           <!-- Premium Add Alert Button -->
           <button 
             @click="openAlertModal(pos)" 
-            class="ml-auto flex-shrink-0 flex items-center justify-center gap-1.5 text-xs font-semibold text-warning bg-gradient-to-r from-warning/10 to-warning/5 hover:from-warning/20 hover:to-warning/10 border border-warning/20 hover:border-warning/40 rounded-lg py-1.5 px-3 transition-all duration-300 shadow-sm hover:shadow"
+            class="ml-auto flex-shrink-0 flex items-center justify-center gap-1.5 text-xs font-medium text-text-primary bg-bg-surface hover:bg-bg-hover border border-border-default hover:border-border-hover rounded-lg py-1.5 px-3 transition-all duration-200"
           >
-            <BellRing :size="14" /> 
+            <BellRing :size="14" class="text-warning" /> 
             <span>{{ t('stockAlert.addAlert') }}</span>
           </button>
         </div>
