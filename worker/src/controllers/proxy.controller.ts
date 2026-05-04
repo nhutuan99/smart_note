@@ -285,33 +285,39 @@ export async function handleProxyStockHistory(request: Request, env: Env): Promi
  */
 export async function handleProxyLogo(request: Request): Promise<Response> {
   const url = new URL(request.url)
-  const symbol = url.searchParams.get('symbol')?.toLowerCase()
+  const symbol = url.searchParams.get('symbol')?.toUpperCase()
 
   if (!symbol) {
     return new Response('Missing symbol', { status: 400 })
   }
 
-  try {
-    const res = await fetch(`https://tcdn.tcbs.com.vn/avatar/a/${symbol}.png`, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+  const urls = [
+    `https://tcdn.tcbs.com.vn/avatar/a/${symbol}.png`,
+    `https://fiin-fundamental.ssi.com.vn/StockTicker/GetTickerImage?code=${symbol}`,
+    `https://file.fireant.vn/symbols/${symbol}.png`,
+    `https://image.simplize.vn/logo/${symbol.toLowerCase()}.jpeg`
+  ]
+
+  for (const fetchUrl of urls) {
+    try {
+      const res = await fetch(fetchUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Referer': 'https://iboard.ssi.com.vn/',
+          'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8'
+        }
+      })
+      if (res.ok) {
+        const headers = new Headers()
+        headers.set('Content-Type', res.headers.get('content-type') || 'image/png')
+        headers.set('Cache-Control', 'public, max-age=864000') // 10 days cache
+        headers.set('Access-Control-Allow-Origin', '*')
+        return new Response(res.body, { status: 200, headers })
       }
-    })
-
-    if (!res.ok) {
-      return new Response('Not found', { status: 404 })
+    } catch (e) {
+      // ignore
     }
-
-    const headers = new Headers()
-    headers.set('Content-Type', res.headers.get('content-type') || 'image/png')
-    headers.set('Cache-Control', 'public, max-age=864000') // 10 days cache
-    headers.set('Access-Control-Allow-Origin', '*')
-
-    return new Response(res.body, {
-      status: res.status,
-      headers
-    })
-  } catch (err: any) {
-    return new Response('Proxy error', { status: 502 })
   }
+
+  return new Response('Not found', { status: 404 })
 }
