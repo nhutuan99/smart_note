@@ -115,7 +115,7 @@ async function removePos(id: string, symbol: string) {
   if (!isConfirmed) return
 
   const isValidPin = await ui.requestPinValidation(
-    t('settings.pinLabel') || 'Xác nhận xóa', 
+    'Xác nhận mã PIN', 
     `Nhập mã PIN để xóa mã ${symbol}`
   )
   if (!isValidPin) return
@@ -130,6 +130,31 @@ async function removePos(id: string, symbol: string) {
 
 function handleSymbolBlur() {
   setTimeout(() => isSymbolFocused.value = false, 200)
+}
+
+// ── Company Info Tooltip ──
+function getCompanyName(symbol: string) {
+  const stock = stocksList.find(s => s.symbol === symbol)
+  return stock ? stock.name : ''
+}
+
+const activeTooltip = ref<string | null>(null)
+const tooltipInfo = ref<any>(null)
+
+async function fetchCompanyInfo(symbol: string) {
+  activeTooltip.value = symbol
+  tooltipInfo.value = null
+  try {
+    const res = await fetch(`https://api-finfo.vndirect.com.vn/v4/stocks?q=code:${symbol}`)
+    const data = await res.json()
+    if (data && data.data && data.data[0]) {
+      tooltipInfo.value = data.data[0]
+    }
+  } catch (e) {}
+}
+
+function clearTooltip() {
+  activeTooltip.value = null
 }
 
 // ── Alert Functions ──
@@ -348,17 +373,35 @@ function getChartData(symbol: string) {
 
         <!-- Header -->
         <div class="flex items-center justify-between mb-4 pr-16">
-          <div class="flex items-center gap-3">
+          <div class="flex items-center gap-3 relative">
             <div class="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent font-bold text-xs relative overflow-hidden border border-accent/20">
               <span class="absolute z-0">{{ pos.symbol }}</span>
               <img :src="getLogoUrls(pos.symbol)[0]" :alt="pos.symbol" referrerpolicy="no-referrer" :data-fallback-index="0" class="w-full h-full object-contain relative z-10 bg-white" @error="(e) => handleImageError(e, pos.symbol)" />
             </div>
             <div>
-              <p class="font-semibold text-lg">{{ pos.symbol }}</p>
-              <p class="text-xs text-text-tertiary">{{ pos.quantity }} {{ t('common.shares') }}</p>
+              <p class="font-semibold text-lg cursor-help inline-block" @mouseenter="fetchCompanyInfo(pos.symbol)" @mouseleave="clearTooltip">{{ pos.symbol }}</p>
+              <p class="text-xs text-text-tertiary truncate max-w-[140px]" :title="getCompanyName(pos.symbol)">{{ getCompanyName(pos.symbol) }}</p>
+              <p class="text-[10px] text-text-disabled mt-0.5">{{ pos.quantity }} {{ t('common.shares') }}</p>
             </div>
+            
+            <!-- Company Info API Tooltip -->
+            <transition name="fade">
+              <div v-if="activeTooltip === pos.symbol" class="absolute top-full left-0 mt-2 p-3 w-64 bg-bg-elevated border border-border-default rounded-xl shadow-2xl z-50 text-xs pointer-events-none">
+                <div v-if="!tooltipInfo" class="flex items-center gap-2 text-text-tertiary">
+                  <div class="w-3 h-3 rounded-full border-2 border-accent border-t-transparent animate-spin"></div>
+                  Đang tải thông tin API...
+                </div>
+                <div v-else class="space-y-1.5">
+                  <div class="font-bold text-sm text-accent mb-2 leading-tight">{{ tooltipInfo.companyName }}</div>
+                  <div class="flex justify-between"><span class="text-text-tertiary">Mã niêm yết:</span> <span class="font-medium">{{ tooltipInfo.code }}</span></div>
+                  <div class="flex justify-between"><span class="text-text-tertiary">Sàn GDKC:</span> <span class="font-medium">{{ tooltipInfo.floor }}</span></div>
+                  <div class="flex justify-between"><span class="text-text-tertiary">Ngày niêm yết:</span> <span class="font-medium">{{ tooltipInfo.listedDate }}</span></div>
+                  <div class="flex justify-between"><span class="text-text-tertiary">Tên QT:</span> <span class="font-medium truncate max-w-[120px]" :title="tooltipInfo.companyNameEng">{{ tooltipInfo.companyNameEng || '---' }}</span></div>
+                </div>
+              </div>
+            </transition>
           </div>
-          <div class="text-right">
+          <div class="text-right flex-shrink-0">
             <p class="text-xs text-text-tertiary">{{ t('common.currentPrice') }}</p>
             <p class="font-semibold text-lg">{{ stockStore.prices[pos.symbol] || '---' }}</p>
           </div>
