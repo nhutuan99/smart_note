@@ -26,10 +26,10 @@ const stockStore = useStockStore()
 const ui = useUiStore()
 
 const getLogoUrls = (symbol: string) => [
+  `https://fiin-fundamental.ssi.com.vn/StockTicker/GetTickerImage?code=${symbol.toUpperCase()}`,
+  `https://tcdn.tcbs.com.vn/avatar/a/${symbol.toUpperCase()}.png`,
   `https://image.simplize.vn/logo/${symbol.toLowerCase()}.jpeg`,
-  `https://tcdn.tcbs.com.vn/avatar/a/${symbol.toLowerCase()}.png`,
-  `https://finance.vietstock.vn/image/${symbol.toUpperCase()}.png`,
-  `https://www.ssi.com.vn/api/files/logo/${symbol.toUpperCase()}.png`
+  `https://ui-avatars.com/api/?name=${symbol}&background=1e293b&color=cbd5e1&bold=true&font-size=0.4`
 ]
 
 function handleImageError(e: Event, symbol: string) {
