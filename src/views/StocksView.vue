@@ -351,7 +351,7 @@ function getChartData(symbol: string) {
           <div class="flex items-center gap-3">
             <div class="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent font-bold text-xs relative overflow-hidden border border-accent/20">
               <span class="absolute z-0">{{ pos.symbol }}</span>
-              <img :src="getLogoUrls(pos.symbol)[0]" :alt="pos.symbol" class="w-full h-full object-contain relative z-10 bg-white" @error="(e) => handleImageError(e, pos.symbol)" />
+              <img :src="getLogoUrls(pos.symbol)[0]" :alt="pos.symbol" referrerpolicy="no-referrer" :data-fallback-index="0" class="w-full h-full object-contain relative z-10 bg-white" @error="(e) => handleImageError(e, pos.symbol)" />
             </div>
             <div>
               <p class="font-semibold text-lg">{{ pos.symbol }}</p>
@@ -479,8 +479,8 @@ function getChartData(symbol: string) {
     <!-- ══════ Add Position Modal ══════ -->
     <transition name="fade">
       <div v-if="showAddModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-        <div class="card-premium w-full max-w-sm p-6 shadow-2xl relative overflow-hidden" @click.stop>
-          <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-accent to-accent-hover"></div>
+        <div class="card-premium w-full max-w-sm p-6 shadow-2xl relative overflow-visible" @click.stop>
+          <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-accent to-accent-hover rounded-t-2xl"></div>
           <h3 class="mb-5 text-lg font-bold">{{ t('common.add') }} {{ t('settings.stocks') }}</h3>
           
           <div class="space-y-4">
@@ -495,14 +495,14 @@ function getChartData(symbol: string) {
                 @blur="handleSymbolBlur"
               />
               <!-- Autocomplete dropdown -->
-              <div v-if="isSymbolFocused && searchResults.length > 0" class="absolute z-10 mt-1 w-full bg-bg-elevated border border-border-default rounded-xl shadow-lg overflow-hidden">
+              <div v-if="isSymbolFocused && searchResults.length > 0" class="absolute z-10 mt-1 w-full max-h-[240px] overflow-y-auto custom-scrollbar bg-bg-elevated border border-border-default rounded-xl shadow-lg">
                 <div 
                   v-for="stock in searchResults" 
                   :key="stock.symbol"
                   @click="newPosition.symbol = stock.symbol; isSymbolFocused = false"
                   class="flex items-center gap-3 p-3 hover:bg-bg-hover cursor-pointer transition-colors"
                 >
-                  <img :src="getLogoUrls(stock.symbol)[0]" :data-fallback-index="0" @error="handleImageError($event, stock.symbol)" class="w-8 h-8 rounded-full bg-bg-surface border border-border-subtle object-cover" />
+                  <img :src="getLogoUrls(stock.symbol)[0]" referrerpolicy="no-referrer" :data-fallback-index="0" @error="handleImageError($event, stock.symbol)" class="w-8 h-8 flex-shrink-0 rounded-full bg-bg-surface border border-border-subtle object-cover" />
                   <div class="overflow-hidden">
                     <div class="font-bold text-sm text-text-primary">{{ stock.symbol }}</div>
                     <div class="text-xs text-text-tertiary truncate">{{ stock.name }}</div>
