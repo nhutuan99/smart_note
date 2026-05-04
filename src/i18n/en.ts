@@ -40,6 +40,25 @@ export default {
     fillRequiredFields: 'Please fill in all required fields'
   },
 
+  // ── Stock Alerts ──
+  stockAlert: {
+    addAlert: 'Set Price Alert',
+    direction: 'Alert Type',
+    targetPrice: 'Target Price (x1000)',
+    buy: 'Buy (price drops)',
+    sell: 'Sell (price rises)',
+    label: 'Note',
+    optional: 'optional',
+    buyPlaceholder: 'Buy on dip',
+    sellPlaceholder: 'Take profit at target',
+    triggered: 'Alert triggered!',
+    added: 'Price alert added successfully',
+    reset: 'Reset',
+    resetDone: 'Price alert has been reset',
+    delete: 'Delete alert',
+    noAlerts: 'No price alerts set'
+  },
+
   // ── Time ──
   time: {
     minutesAgo: '{n} minutes ago',

@@ -40,6 +40,25 @@ export default {
     fillRequiredFields: 'Vui lòng điền đầy đủ thông tin bắt buộc'
   },
 
+  // ── Stock Alerts ──
+  stockAlert: {
+    addAlert: 'Đặt mốc giá',
+    direction: 'Loại cảnh báo',
+    targetPrice: 'Giá mục tiêu (x1000)',
+    buy: 'Mua (giá xuống)',
+    sell: 'Bán (giá lên)',
+    label: 'Ghi chú',
+    optional: 'không bắt buộc',
+    buyPlaceholder: 'Canh mua khi giá hồi',
+    sellPlaceholder: 'Chốt lời khi đạt mốc',
+    triggered: 'Đã chạm mốc!',
+    added: 'Đã thêm mốc giá thành công',
+    reset: 'Đặt lại',
+    resetDone: 'Đã đặt lại mốc giá',
+    delete: 'Xóa mốc',
+    noAlerts: 'Chưa có mốc giá'
+  },
+
   // ── Time ──
   time: {
     minutesAgo: '{n} phút trước',

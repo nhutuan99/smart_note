@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, onUnmounted, ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Plus, Trash2, LineChart, TrendingUp, TrendingDown } from 'lucide-vue-next'
+import { Plus, Trash2, LineChart, TrendingUp, TrendingDown, Bell, BellRing, RotateCcw, X } from 'lucide-vue-next'
 import { useStockStore } from '@/stores/stock'
 import { useUiStore } from '@/stores/ui'
 import { formatVNDShort } from '@/constants/finance'
+import type { StockPosition, StockAlert } from '@/types'
 
 // Chart.js
 import { Line } from 'vue-chartjs'
@@ -27,14 +28,24 @@ const ui = useUiStore()
 const showAddModal = ref(false)
 const newPosition = ref({ symbol: '', buyPrice: '', quantity: '', targetProfit: '', stopLoss: '' })
 
+// Alert modal state
+const showAlertModal = ref(false)
+const alertTargetStock = ref<StockPosition | null>(null)
+const alertForm = ref({ targetPrice: '', direction: 'below' as 'above' | 'below', label: '' })
+
 onMounted(() => {
   stockStore.fetchPositions()
+  stockStore.startPolling()
+})
+
+onUnmounted(() => {
+  stockStore.stopPolling()
 })
 
 const totalValue = computed(() => {
   return stockStore.positions.reduce((acc, pos) => {
     const currentPrice = stockStore.prices[pos.symbol] || pos.buyPrice
-    return acc + (currentPrice * pos.quantity * 1000) // Assuming prices are in 1000 VND
+    return acc + (currentPrice * pos.quantity * 1000)
   }, 0)
 })
 
@@ -67,7 +78,60 @@ async function removePos(id: string) {
   }
 }
 
-// Sparkline config
+// ── Alert Functions ──
+function openAlertModal(pos: StockPosition) {
+  alertTargetStock.value = pos
+  alertForm.value = { targetPrice: '', direction: 'below', label: '' }
+  showAlertModal.value = true
+}
+
+async function handleAddAlert() {
+  if (!alertTargetStock.value || !alertForm.value.targetPrice) {
+    ui.showToast('error', t('common.fillRequiredFields'))
+    return
+  }
+  try {
+    await stockStore.addAlert(alertTargetStock.value.id, {
+      targetPrice: Number(alertForm.value.targetPrice),
+      direction: alertForm.value.direction,
+      label: alertForm.value.label || undefined
+    })
+    showAlertModal.value = false
+    ui.showToast('success', t('stockAlert.added'))
+  } catch (e) {
+    // httpClient handles toast
+  }
+}
+
+async function handleDeleteAlert(stockId: string, alertId: string) {
+  try {
+    await stockStore.deleteAlert(stockId, alertId)
+  } catch (e) {}
+}
+
+async function handleResetAlert(stockId: string, alertId: string) {
+  try {
+    await stockStore.resetAlert(stockId, alertId)
+    ui.showToast('success', t('stockAlert.resetDone'))
+  } catch (e) {}
+}
+
+// ── Price bar helpers ──
+function getPriceRange(pos: StockPosition) {
+  const alerts = pos.alerts || []
+  const currentPrice = stockStore.prices[pos.symbol] || pos.buyPrice
+  const allPrices = [pos.buyPrice, currentPrice, ...alerts.map(a => a.targetPrice)]
+  const min = Math.min(...allPrices) * 0.95
+  const max = Math.max(...allPrices) * 1.05
+  return { min, max, range: max - min }
+}
+
+function priceToPercent(price: number, min: number, range: number) {
+  if (range === 0) return 50
+  return Math.max(0, Math.min(100, ((price - min) / range) * 100))
+}
+
+// ── Sparkline config ──
 const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
@@ -86,7 +150,7 @@ function getChartData(symbol: string) {
   
   const prices = history.map(h => h.price)
   const isUp = prices[prices.length - 1] >= prices[0]
-  const color = isUp ? '#34d399' : '#fb7185' // success / error colors
+  const color = isUp ? '#34d399' : '#fb7185'
   
   return {
     labels: history.map(h => new Date(h.time).toLocaleDateString()),
@@ -98,8 +162,8 @@ function getChartData(symbol: string) {
         const { ctx: c, chartArea } = chart
         if (!chartArea) return color + '1a'
         const gradient = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom)
-        gradient.addColorStop(0, color + '33') // 20%
-        gradient.addColorStop(1, color + '00') // 0%
+        gradient.addColorStop(0, color + '33')
+        gradient.addColorStop(1, color + '00')
         return gradient
       },
       borderWidth: 2,
@@ -145,12 +209,20 @@ function getChartData(symbol: string) {
     <!-- Portfolio Grid -->
     <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div v-for="pos in stockStore.positions" :key="pos.id" class="card-premium p-5 flex flex-col relative group">
-        <button @click="removePos(pos.id)" class="absolute top-4 right-4 p-1.5 text-text-disabled hover:text-error hover:bg-error/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100">
-          <Trash2 :size="16" />
-        </button>
-        <div class="flex items-center justify-between mb-4 pr-8">
+        <!-- Action buttons -->
+        <div class="absolute top-4 right-4 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button @click="openAlertModal(pos)" class="p-1.5 text-text-disabled hover:text-warning hover:bg-warning/10 rounded-lg transition-colors" :title="t('stockAlert.addAlert')">
+            <Bell :size="16" />
+          </button>
+          <button @click="removePos(pos.id)" class="p-1.5 text-text-disabled hover:text-error hover:bg-error/10 rounded-lg transition-colors">
+            <Trash2 :size="16" />
+          </button>
+        </div>
+
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-4 pr-16">
           <div class="flex items-center gap-3">
-            <div class="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent font-bold">
+            <div class="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent font-bold text-xs">
               {{ pos.symbol }}
             </div>
             <div>
@@ -164,6 +236,7 @@ function getChartData(symbol: string) {
           </div>
         </div>
 
+        <!-- Stats Row -->
         <div class="grid grid-cols-2 gap-4 mb-4">
           <div class="bg-bg-surface p-3 rounded-xl border border-border-default">
             <p class="text-xs text-text-disabled">{{ t('common.buyPrice') }}</p>
@@ -188,6 +261,82 @@ function getChartData(symbol: string) {
           <Line :data="getChartData(pos.symbol)" :options="chartOptions" />
         </div>
 
+        <!-- Price Bar — Visual Price Markers -->
+        <div v-if="pos.alerts && pos.alerts.length > 0 && stockStore.prices[pos.symbol]" class="mb-4">
+          <div class="relative h-6 bg-bg-surface rounded-full border border-border-default overflow-visible">
+            <!-- Buy price marker -->
+            <div 
+              class="absolute top-0 h-full w-0.5 bg-accent/50"
+              :style="{ left: priceToPercent(pos.buyPrice, getPriceRange(pos).min, getPriceRange(pos).range) + '%' }"
+              :title="'Giá mua: ' + pos.buyPrice"
+            ></div>
+            <!-- Current price marker -->
+            <div 
+              class="absolute top-[-2px] h-[calc(100%+4px)] w-1.5 bg-accent rounded-full shadow-sm shadow-accent/40 z-10"
+              :style="{ left: 'calc(' + priceToPercent(stockStore.prices[pos.symbol], getPriceRange(pos).min, getPriceRange(pos).range) + '% - 3px)' }"
+              :title="'Giá hiện tại: ' + stockStore.prices[pos.symbol]"
+            ></div>
+            <!-- Alert markers -->
+            <div 
+              v-for="alert in pos.alerts" :key="alert.id"
+              class="absolute top-0 h-full w-0.5 z-5"
+              :class="alert.triggered ? 'bg-text-disabled' : (alert.direction === 'below' ? 'bg-success' : 'bg-error')"
+              :style="{ left: priceToPercent(alert.targetPrice, getPriceRange(pos).min, getPriceRange(pos).range) + '%' }"
+              :title="alert.label + ': ' + alert.targetPrice"
+            >
+              <!-- Dot -->
+              <div 
+                class="absolute -top-1 left-1/2 -translate-x-1/2 h-2 w-2 rounded-full"
+                :class="alert.triggered ? 'bg-text-disabled' : (alert.direction === 'below' ? 'bg-success' : 'bg-error')"
+              ></div>
+            </div>
+          </div>
+          <div class="flex justify-between text-[9px] text-text-disabled mt-0.5 px-0.5">
+            <span>{{ getPriceRange(pos).min.toFixed(1) }}</span>
+            <span>{{ getPriceRange(pos).max.toFixed(1) }}</span>
+          </div>
+        </div>
+
+        <!-- Alert Badges -->
+        <div v-if="pos.alerts && pos.alerts.length > 0" class="flex flex-wrap gap-1.5 mb-3">
+          <div 
+            v-for="alert in pos.alerts" :key="alert.id"
+            class="group/alert flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg font-medium transition-all"
+            :class="alert.triggered 
+              ? 'bg-bg-elevated text-text-disabled line-through' 
+              : (alert.direction === 'below' ? 'bg-success/10 text-success' : 'bg-error/10 text-error')"
+          >
+            <BellRing v-if="alert.triggered" :size="10" />
+            <Bell v-else :size="10" />
+            <span>{{ alert.direction === 'below' ? '📉' : '📈' }} {{ alert.targetPrice }}</span>
+            <!-- Alert actions -->
+            <button 
+              v-if="alert.triggered"
+              @click.stop="handleResetAlert(pos.id, alert.id)" 
+              class="ml-0.5 p-0.5 rounded hover:bg-bg-hover transition-colors"
+              :title="t('stockAlert.reset')"
+            >
+              <RotateCcw :size="9" />
+            </button>
+            <button 
+              @click.stop="handleDeleteAlert(pos.id, alert.id)" 
+              class="ml-0.5 p-0.5 rounded hover:bg-error/20 hover:text-error transition-colors opacity-0 group-hover/alert:opacity-100"
+              :title="t('stockAlert.delete')"
+            >
+              <X :size="9" />
+            </button>
+          </div>
+        </div>
+
+        <!-- Mobile: Add alert button (always visible) -->
+        <button 
+          @click="openAlertModal(pos)" 
+          class="md:hidden flex items-center justify-center gap-1.5 text-xs text-warning bg-warning/10 hover:bg-warning/20 rounded-lg py-2 px-3 font-medium transition-colors mb-3"
+        >
+          <Bell :size="14" /> {{ t('stockAlert.addAlert') }}
+        </button>
+
+        <!-- Original target/stopLoss badges -->
         <div v-if="pos.targetProfit || pos.stopLoss" class="flex gap-2 mt-auto pt-4 border-t border-border-subtle">
           <span v-if="pos.targetProfit" class="text-[10px] px-2 py-1 rounded-md bg-success/10 text-success font-medium">🎯 {{ pos.targetProfit }}%</span>
           <span v-if="pos.stopLoss" class="text-[10px] px-2 py-1 rounded-md bg-error/10 text-error font-medium">🛑 {{ pos.stopLoss }}%</span>
@@ -195,7 +344,7 @@ function getChartData(symbol: string) {
       </div>
     </div>
 
-    <!-- Add Modal -->
+    <!-- ══════ Add Position Modal ══════ -->
     <transition name="fade">
       <div v-if="showAddModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
         <div class="card-premium w-full max-w-sm p-6 shadow-2xl relative overflow-hidden" @click.stop>
@@ -232,6 +381,82 @@ function getChartData(symbol: string) {
           <div class="mt-8 flex justify-end gap-3">
             <button @click="showAddModal = false" class="btn-secondary w-full">{{ t('common.cancel') }}</button>
             <button @click="handleAdd" class="btn-primary w-full">{{ t('common.save') }}</button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- ══════ Add Alert Modal ══════ -->
+    <transition name="fade">
+      <div v-if="showAlertModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-4 backdrop-blur-sm" @click.self="showAlertModal = false">
+        <div class="card-premium w-full max-w-sm shadow-2xl relative overflow-hidden" @click.stop>
+          <!-- Header gradient -->
+          <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-warning to-orange-400"></div>
+          
+          <div class="p-6">
+            <div class="flex items-center gap-3 mb-5">
+              <div class="h-10 w-10 rounded-xl bg-warning/10 flex items-center justify-center">
+                <Bell :size="20" class="text-warning" />
+              </div>
+              <div>
+                <h3 class="text-base font-bold">{{ t('stockAlert.addAlert') }}</h3>
+                <p class="text-xs text-text-tertiary">{{ alertTargetStock?.symbol }} — {{ t('common.currentPrice') }}: <span class="text-accent font-semibold">{{ stockStore.prices[alertTargetStock?.symbol || ''] || '---' }}</span></p>
+              </div>
+            </div>
+
+            <div class="space-y-4">
+              <!-- Direction Toggle -->
+              <div>
+                <label class="mb-1.5 block text-xs font-semibold text-text-secondary uppercase tracking-wider">{{ t('stockAlert.direction') }}</label>
+                <div class="flex overflow-hidden rounded-xl border border-border-default">
+                  <button 
+                    class="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium transition-all"
+                    :class="alertForm.direction === 'below' ? 'bg-success/10 text-success' : 'bg-bg-surface text-text-tertiary hover:bg-bg-hover'"
+                    @click="alertForm.direction = 'below'"
+                  >
+                    📉 {{ t('stockAlert.buy') }}
+                  </button>
+                  <button 
+                    class="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium transition-all"
+                    :class="alertForm.direction === 'above' ? 'bg-error/10 text-error' : 'bg-bg-surface text-text-tertiary hover:bg-bg-hover'"
+                    @click="alertForm.direction = 'above'"
+                  >
+                    📈 {{ t('stockAlert.sell') }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Target Price -->
+              <div>
+                <label class="mb-1.5 block text-sm font-medium text-text-secondary">{{ t('stockAlert.targetPrice') }}</label>
+                <input 
+                  v-model="alertForm.targetPrice" 
+                  type="number" 
+                  step="0.1"
+                  class="border-border-default bg-bg-surface text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all focus:ring-2 focus:outline-none" 
+                  :placeholder="alertForm.direction === 'below' ? '16.9' : '42.5'" 
+                />
+              </div>
+
+              <!-- Label -->
+              <div>
+                <label class="mb-1.5 block text-sm font-medium text-text-secondary">{{ t('stockAlert.label') }} <span class="text-text-disabled">({{ t('stockAlert.optional') }})</span></label>
+                <input 
+                  v-model="alertForm.label" 
+                  type="text"
+                  class="border-border-default bg-bg-surface text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-2.5 text-sm transition-all focus:ring-2 focus:outline-none" 
+                  :placeholder="alertForm.direction === 'below' ? t('stockAlert.buyPlaceholder') : t('stockAlert.sellPlaceholder')" 
+                />
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="mt-6 flex gap-3">
+              <button @click="showAlertModal = false" class="btn-secondary flex-1">{{ t('common.cancel') }}</button>
+              <button @click="handleAddAlert" class="flex-1 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-warning to-orange-400 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-warning/20 hover:shadow-warning/40 transition-all hover:-translate-y-0.5">
+                <Bell :size="16" /> {{ t('stockAlert.addAlert') }}
+              </button>
+            </div>
           </div>
         </div>
       </div>

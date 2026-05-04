@@ -95,10 +95,14 @@ import {
   handleListStocks,
   handleCreateStock,
   handleUpdateStock,
-  handleDeleteStock
+  handleDeleteStock,
+  handleAddStockAlert,
+  handleDeleteStockAlert,
+  handleResetStockAlert
 } from './controllers/stock.controller'
 
 import { runAutoBlog } from './services/auto-blog.service'
+import { checkAllStockAlerts } from './services/stock-alert.service'
 
 
 async function handleRequest(request: Request, env: Env): Promise<Response> {
@@ -390,7 +394,22 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
       if (path === '/api/stocks' && request.method === 'POST') {
         return handleCreateStock(userId, request, env)
       }
-      const stockMatch = path.match(/^\/api\/stocks\/(.+)$/)
+
+      // Stock Alerts
+      const alertMatch = path.match(/^\/api\/stocks\/([^\/]+)\/alerts$/)
+      if (alertMatch && request.method === 'POST') {
+        return handleAddStockAlert(userId, alertMatch[1], request, env)
+      }
+      const alertDeleteMatch = path.match(/^\/api\/stocks\/([^\/]+)\/alerts\/([^\/]+)$/)
+      if (alertDeleteMatch && request.method === 'DELETE') {
+        return handleDeleteStockAlert(userId, alertDeleteMatch[1], alertDeleteMatch[2], env)
+      }
+      const alertResetMatch = path.match(/^\/api\/stocks\/([^\/]+)\/alerts\/([^\/]+)\/reset$/)
+      if (alertResetMatch && request.method === 'POST') {
+        return handleResetStockAlert(userId, alertResetMatch[1], alertResetMatch[2], env)
+      }
+
+      const stockMatch = path.match(/^\/api\/stocks\/([^\/]+)$/)
       if (stockMatch) {
         const stockId = stockMatch[1]
         if (request.method === 'PUT') return handleUpdateStock(userId, stockId, request, env)
@@ -453,12 +472,24 @@ export default {
   },
 
   // ── Cloudflare Cron Trigger ──
-  // Runs daily at 2:00 UTC (= 9:00 AM Vietnam time, UTC+7)
-  async scheduled(_event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
+  // Cron 1: 0 2 * * * = AutoBlog at 9 AM VN (daily)
+  // Cron 2: */5 2-8 * * 1-5 = Stock alerts every 5 min during trading hours (9-15h VN, Mon-Fri)
+  async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
+    // Always check stock alerts during trading hours
     ctx.waitUntil(
-      runAutoBlog(env)
-        .then(result => console.log(`[Cron] AutoBlog completed: ${result}`))
-        .catch(err => console.error('[Cron] AutoBlog failed:', err))
+      checkAllStockAlerts(env)
+        .then(result => console.log(`[Cron] StockAlerts: ${result}`))
+        .catch(err => console.error('[Cron] StockAlerts failed:', err))
     )
+
+    // AutoBlog only runs at 2:00 UTC (cron = "0 2 * * *")
+    const cronTime = new Date(event.scheduledTime)
+    if (cronTime.getUTCHours() === 2 && cronTime.getUTCMinutes() === 0) {
+      ctx.waitUntil(
+        runAutoBlog(env)
+          .then(result => console.log(`[Cron] AutoBlog completed: ${result}`))
+          .catch(err => console.error('[Cron] AutoBlog failed:', err))
+      )
+    }
   }
 }

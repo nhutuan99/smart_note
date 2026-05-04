@@ -115,6 +115,17 @@ export interface BlogData {
   updatedAt: string
 }
 
+export interface StockAlert {
+  id: string
+  symbol: string
+  targetPrice: number
+  direction: 'above' | 'below' // above = sell target, below = buy target
+  label: string
+  triggered: boolean
+  notifiedAt?: string
+  createdAt: string
+}
+
 export interface StockData {
   id: string
   symbol: string
@@ -122,6 +133,7 @@ export interface StockData {
   quantity: number
   targetProfit?: number
   stopLoss?: number
+  alerts?: StockAlert[]
   createdAt: string
   updatedAt: string
 }

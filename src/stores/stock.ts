@@ -1,13 +1,15 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, onUnmounted } from 'vue'
 import { stockApi } from '@/services/api/stock.api'
-import type { StockPosition } from '@/types'
+import type { StockPosition, StockAlert } from '@/types'
 
 export const useStockStore = defineStore('stock', () => {
   const positions = ref<StockPosition[]>([])
   const loading = ref(false)
   const prices = ref<Record<string, number>>({})
   const histories = ref<Record<string, { price: number, time: number }[]>>({})
+
+  let pollTimer: ReturnType<typeof setInterval> | null = null
 
   async function fetchPositions() {
     loading.value = true
@@ -36,6 +38,11 @@ export const useStockStore = defineStore('stock', () => {
     } catch (e) {
       // Ignore
     }
+  }
+
+  async function fetchAllPrices() {
+    const symbols = [...new Set(positions.value.map(p => p.symbol))]
+    await Promise.allSettled(symbols.map(s => fetchPrice(s)))
   }
 
   async function fetchHistory(symbol: string) {
@@ -85,6 +92,57 @@ export const useStockStore = defineStore('stock', () => {
     }
   }
 
+  // ── Alert Actions ──────────────────────────────────────────
+
+  async function addAlert(stockId: string, data: { targetPrice: number; direction: 'above' | 'below'; label?: string }) {
+    const alert = await stockApi.addAlert(stockId, data)
+    if (alert) {
+      const pos = positions.value.find(p => p.id === stockId)
+      if (pos) {
+        if (!pos.alerts) pos.alerts = []
+        pos.alerts.push(alert)
+      }
+    }
+    return alert
+  }
+
+  async function deleteAlert(stockId: string, alertId: string) {
+    await stockApi.deleteAlert(stockId, alertId)
+    const pos = positions.value.find(p => p.id === stockId)
+    if (pos?.alerts) {
+      pos.alerts = pos.alerts.filter(a => a.id !== alertId)
+    }
+  }
+
+  async function resetAlert(stockId: string, alertId: string) {
+    const alert = await stockApi.resetAlert(stockId, alertId)
+    if (alert) {
+      const pos = positions.value.find(p => p.id === stockId)
+      const existing = pos?.alerts?.find(a => a.id === alertId)
+      if (existing) {
+        existing.triggered = false
+        existing.notifiedAt = undefined
+      }
+    }
+  }
+
+  // ── Client-side Polling ─────────────────────────────────────
+  // Poll prices every 60s when user is on the Stocks page
+
+  function startPolling() {
+    if (pollTimer) return
+    pollTimer = setInterval(() => {
+      fetchAllPrices()
+    }, 60_000)
+  }
+
+  function stopPolling() {
+    if (pollTimer) {
+      clearInterval(pollTimer)
+      pollTimer = null
+    }
+  }
+
   return {
     positions,
     loading,
@@ -92,9 +150,15 @@ export const useStockStore = defineStore('stock', () => {
     histories,
     fetchPositions,
     fetchPrice,
+    fetchAllPrices,
     fetchHistory,
     addPosition,
     updatePosition,
-    deletePosition
+    deletePosition,
+    addAlert,
+    deleteAlert,
+    resetAlert,
+    startPolling,
+    stopPolling
   }
 })

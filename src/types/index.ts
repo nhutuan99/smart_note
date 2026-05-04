@@ -136,6 +136,17 @@ export type { BudgetGoal, CategoryBudget } from './budget'
 export type { SavingsGoal } from './savings'
 export type { Debt, DebtType, DebtStatus } from './debt'
 
+export interface StockAlert {
+  id: string
+  symbol: string
+  targetPrice: number
+  direction: 'above' | 'below'
+  label: string
+  triggered: boolean
+  notifiedAt?: string
+  createdAt: string
+}
+
 export interface StockPosition {
   id: string
   symbol: string
@@ -143,6 +154,7 @@ export interface StockPosition {
   quantity: number
   targetProfit?: number
   stopLoss?: number
+  alerts?: StockAlert[]
   createdAt: string
   updatedAt: string
 }
