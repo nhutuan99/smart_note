@@ -292,9 +292,9 @@ export async function handleProxyLogo(request: Request): Promise<Response> {
   }
 
   const urls = [
-    `https://tcdn.tcbs.com.vn/avatar/a/${symbol}.png`,
+    `https://cdn.simplize.vn/simplizevn/logo/${symbol}.jpeg`,
     `https://fiin-fundamental.ssi.com.vn/StockTicker/GetTickerImage?code=${symbol}`,
-    `https://file.fireant.vn/symbols/${symbol}.png`,
+    `https://tcdn.tcbs.com.vn/avatar/a/${symbol}.png`,
     `https://image.simplize.vn/logo/${symbol.toLowerCase()}.jpeg`
   ]
 

@@ -27,9 +27,9 @@ const stockStore = useStockStore()
 const ui = useUiStore()
 
 const getLogoUrls = (symbol: string) => [
+  `https://smart-note-api.smart-note.workers.dev/api/proxy/logo?symbol=${symbol.toUpperCase()}`,
   `https://cdn.simplize.vn/simplizevn/logo/${symbol.toUpperCase()}.jpeg`,
   `https://fiin-fundamental.ssi.com.vn/StockTicker/GetTickerImage?code=${symbol.toUpperCase()}`,
-  `https://tcdn.tcbs.com.vn/avatar/a/${symbol.toUpperCase()}.png`,
   `https://ui-avatars.com/api/?name=${symbol}&background=1e293b&color=cbd5e1&bold=true&font-size=0.4`
 ]
 
