@@ -6,6 +6,7 @@ import { useStockStore } from '@/stores/stock'
 import { useUiStore } from '@/stores/ui'
 import { formatVNDShort } from '@/constants/finance'
 import type { StockPosition, StockAlert } from '@/types'
+import stocksList from '@/constants/stocks.json'
 
 // Chart.js
 import { Line } from 'vue-chartjs'
@@ -34,12 +35,13 @@ const getLogoUrls = (symbol: string) => [
 
 function handleImageError(e: Event, symbol: string) {
   const img = e.target as HTMLImageElement
-  const currentSrc = img.src
   const urls = getLogoUrls(symbol)
-  const currentIndex = urls.indexOf(currentSrc)
+  let currentIndex = parseInt(img.dataset.fallbackIndex || '0')
   
-  if (currentIndex !== -1 && currentIndex < urls.length - 1) {
-    img.src = urls[currentIndex + 1]
+  if (currentIndex < urls.length - 1) {
+    currentIndex++
+    img.dataset.fallbackIndex = currentIndex.toString()
+    img.src = urls[currentIndex]
   } else {
     img.style.display = 'none'
   }
@@ -47,6 +49,15 @@ function handleImageError(e: Event, symbol: string) {
 
 const showAddModal = ref(false)
 const newPosition = ref({ symbol: '', buyPrice: '', quantity: '', targetProfit: '', stopLoss: '' })
+const isSymbolFocused = ref(false)
+
+const searchResults = computed(() => {
+  const query = newPosition.value.symbol.trim().toUpperCase()
+  if (!query) return []
+  return stocksList
+    .filter(s => s.symbol.includes(query) || s.name.toUpperCase().includes(query))
+    .slice(0, 5)
+})
 
 // Alert modal state
 const showAlertModal = ref(false)
@@ -450,9 +461,32 @@ function getChartData(symbol: string) {
           <h3 class="mb-5 text-lg font-bold">{{ t('common.add') }} {{ t('settings.stocks') }}</h3>
           
           <div class="space-y-4">
-            <div>
+            <div class="relative">
               <label class="mb-1.5 block text-sm font-medium text-text-secondary">{{ t('common.symbol') }}</label>
-              <input v-model="newPosition.symbol" type="text" class="uppercase border-border-default bg-bg-surface text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-2.5 text-sm transition-all duration-150 focus:ring-2 focus:outline-none" placeholder="FPT" />
+              <input 
+                v-model="newPosition.symbol" 
+                type="text" 
+                class="uppercase border-border-default bg-bg-surface text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-2.5 text-sm transition-all duration-150 focus:ring-2 focus:outline-none" 
+                placeholder="FPT" 
+                @focus="isSymbolFocused = true"
+                @blur="setTimeout(() => isSymbolFocused = false, 200)"
+              />
+              <!-- Autocomplete dropdown -->
+              <div v-if="isSymbolFocused && searchResults.length > 0" class="absolute z-10 mt-1 w-full bg-bg-elevated border border-border-default rounded-xl shadow-lg overflow-hidden">
+                <div 
+                  v-for="stock in searchResults" 
+                  :key="stock.symbol"
+                  @click="newPosition.symbol = stock.symbol; isSymbolFocused = false"
+                  class="flex items-center gap-3 p-3 hover:bg-bg-hover cursor-pointer transition-colors"
+                >
+                  <img :src="getLogoUrls(stock.symbol)[0]" :data-fallback-index="0" @error="handleImageError($event, stock.symbol)" class="w-8 h-8 rounded-full bg-bg-surface border border-border-subtle object-cover" />
+                  <div class="overflow-hidden">
+                    <div class="font-bold text-sm text-text-primary">{{ stock.symbol }}</div>
+                    <div class="text-xs text-text-tertiary truncate">{{ stock.name }}</div>
+                  </div>
+                  <div class="ml-auto flex-shrink-0 text-[10px] bg-bg-surface px-1.5 py-0.5 rounded text-text-tertiary border border-border-subtle">{{ stock.exchange }}</div>
+                </div>
+              </div>
             </div>
             <div class="grid grid-cols-2 gap-4">
               <div>
