@@ -79,7 +79,7 @@ const totalTarget = computed(() => goals.value.reduce((s, g) => s + g.targetAmou
           <div class="bg-success/10 flex h-9 w-9 items-center justify-center rounded-lg"><Target :size="18" class="text-success" /></div>
           <div>
             <div class="text-text-tertiary text-[0.6875rem] font-medium">{{ t('savings.totalSaved') }}</div>
-            <div class="text-lg font-bold text-success">{{ formatVND(totalSaved) }}</div>
+            <div class="text-lg font-bold text-text-primary">{{ formatVND(totalSaved) }}</div>
           </div>
         </div>
         <div class="text-right">

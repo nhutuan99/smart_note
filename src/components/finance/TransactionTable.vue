@@ -170,8 +170,8 @@ function dayTotal(txs: Transaction[]) {
                 <td colspan="3" class="px-4 py-2.5 text-xs font-semibold text-text-secondary">
                   <div class="flex items-center justify-between">
                     <span>{{ formatDateGroup(date) }}</span>
-                    <span :class="dayTotal(txs).net >= 0 ? 'text-success' : 'text-error'">
-                      {{ dayTotal(txs).net >= 0 ? '+' : '' }}{{ formatVND(dayTotal(txs).net) }}
+                    <span :class="dayTotal(txs).net > 0 ? 'text-success' : (dayTotal(txs).net < 0 ? 'text-error' : 'text-text-primary')">
+                      {{ dayTotal(txs).net > 0 ? '+' : '' }}{{ formatVND(dayTotal(txs).net) }}
                     </span>
                   </div>
                 </td>

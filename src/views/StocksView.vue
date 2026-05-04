@@ -119,8 +119,8 @@ function getChartData(symbol: string) {
         <h1 class="text-xl font-bold">{{ t('settings.stocks') }}</h1>
         <p class="text-text-tertiary text-sm mt-1">
           {{ t('nav.totalBalance') }}: <span class="text-accent font-semibold">{{ formatVNDShort(totalValue) }}</span>
-          <span :class="totalProfit >= 0 ? 'text-success' : 'text-error'" class="ml-2 font-medium">
-            ({{ totalProfit >= 0 ? '+' : '' }}{{ formatVNDShort(totalProfit) }})
+          <span :class="totalProfit > 0 ? 'text-success' : (totalProfit < 0 ? 'text-error' : 'text-text-primary')" class="ml-2 font-medium">
+            ({{ totalProfit > 0 ? '+' : '' }}{{ formatVNDShort(totalProfit) }})
           </span>
         </p>
       </div>
@@ -172,9 +172,10 @@ function getChartData(symbol: string) {
           <div class="bg-bg-surface p-3 rounded-xl border border-border-default text-right">
             <p class="text-xs text-text-disabled">{{ t('common.profit') }}</p>
             <template v-if="stockStore.prices[pos.symbol]">
-              <p :class="(stockStore.prices[pos.symbol] - pos.buyPrice) >= 0 ? 'text-success' : 'text-error'" class="font-medium text-sm mt-0.5 flex items-center justify-end gap-1">
-                <TrendingUp v-if="(stockStore.prices[pos.symbol] - pos.buyPrice) >= 0" :size="14" />
-                <TrendingDown v-else :size="14" />
+              <p :class="(stockStore.prices[pos.symbol] - pos.buyPrice) > 0 ? 'text-success' : ((stockStore.prices[pos.symbol] - pos.buyPrice) < 0 ? 'text-error' : 'text-text-primary')" class="font-medium text-sm mt-0.5 flex items-center justify-end gap-1">
+                <TrendingUp v-if="(stockStore.prices[pos.symbol] - pos.buyPrice) > 0" :size="14" />
+                <TrendingDown v-else-if="(stockStore.prices[pos.symbol] - pos.buyPrice) < 0" :size="14" />
+                <span v-else class="w-[14px] inline-block"></span>
                 {{ (((stockStore.prices[pos.symbol] - pos.buyPrice) / pos.buyPrice) * 100).toFixed(2) }}%
               </p>
             </template>

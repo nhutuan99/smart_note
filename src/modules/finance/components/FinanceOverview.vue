@@ -160,8 +160,8 @@ const isCurrentMonth = computed(() => {
           <span class="text-text-tertiary text-sm">{{ t('dashboard.monthIncome') }}</span>
         </div>
         <div v-if="finance.loading" class="skeleton h-8 w-32 mt-1"></div>
-        <div v-else class="text-success text-2xl font-bold tracking-tight">
-          +{{ formatVND(finance.monthIncome) }}
+        <div v-else :class="finance.monthIncome > 0 ? 'text-success' : 'text-text-primary'" class="text-2xl font-bold tracking-tight">
+          {{ finance.monthIncome > 0 ? '+' : '' }}{{ formatVND(finance.monthIncome) }}
         </div>
       </div>
 
@@ -177,8 +177,8 @@ const isCurrentMonth = computed(() => {
           <span class="text-text-tertiary text-sm">{{ t('dashboard.monthExpense') }}</span>
         </div>
         <div v-if="finance.loading" class="skeleton h-8 w-32 mt-1"></div>
-        <div v-else class="text-error text-2xl font-bold tracking-tight">
-          -{{ formatVND(finance.monthExpense) }}
+        <div v-else :class="finance.monthExpense > 0 ? 'text-error' : 'text-text-primary'" class="text-2xl font-bold tracking-tight">
+          {{ finance.monthExpense > 0 ? '-' : '' }}{{ formatVND(finance.monthExpense) }}
         </div>
       </div>
     </div>

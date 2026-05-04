@@ -159,10 +159,11 @@ async function handleResponse<T>(response: Response, retryFn?: () => Promise<T>)
   // Handle non-JSON error responses (e.g. 500 plain text from worker)
   const contentType = response.headers.get('content-type') || ''
   if (!contentType.includes('application/json')) {
-    const errorMsg = `Request failed (${response.status})`
+    const isSpaFallback = response.status === 200
+    const errorMsg = isSpaFallback ? 'API not found (SPA fallback)' : `Request failed (${response.status})`
     try {
       const { useUiStore } = await import('@/stores/ui')
-      useUiStore().showToast('error', errorMsg)
+      useUiStore().showToast(isSpaFallback ? 'warning' : 'error', errorMsg)
     } catch (e) {}
     throw new Error(errorMsg)
   }

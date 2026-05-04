@@ -110,7 +110,7 @@ function resetBudget() { budget.value = null; showSetup.value = true; localStora
           </div>
           <div class="text-right">
             <div class="text-text-tertiary text-[0.6875rem]">{{ t('budget.remaining') }}</div>
-            <div class="text-xl font-bold" :class="remaining > 0 ? 'text-success' : 'text-error'">{{ formatVND(remaining) }}</div>
+            <div class="text-xl font-bold" :class="remaining > 0 ? 'text-success' : (remaining < 0 ? 'text-error' : 'text-text-primary')">{{ formatVND(remaining) }}</div>
           </div>
         </div>
         <div class="bg-bg-elevated h-3 overflow-hidden rounded-full mb-2 relative z-10">
