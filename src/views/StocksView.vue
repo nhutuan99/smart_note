@@ -132,43 +132,17 @@ function priceToPercent(price: number, min: number, range: number) {
 }
 
 // ── Sparkline config ──
-const chartOptions = computed(() => ({
+const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
-  animation: { duration: 400 } as any,
+  animation: false as any,
   interaction: { mode: 'index' as const, intersect: false },
-  plugins: { 
-    legend: { display: false }, 
-    tooltip: { 
-      enabled: true,
-      backgroundColor: 'rgba(15, 23, 42, 0.95)',
-      titleColor: '#fff',
-      bodyColor: '#cbd5e1',
-      borderColor: 'rgba(124, 111, 247, 0.2)',
-      borderWidth: 1,
-      padding: 12,
-      displayColors: false,
-      callbacks: {
-        label: (context: any) => {
-          const ds = context.dataset
-          const pt = ds.customData?.[context.dataIndex]
-          if (!pt) return `Giá: ${context.raw}`
-          return [
-            `Mở cửa: ${pt.open}`,
-            `Cao nhất: ${pt.high}`,
-            `Thấp nhất: ${pt.low}`,
-            `Kết phiên: ${pt.price}`,
-            `KL: ${pt.volume ? pt.volume.toLocaleString() : '0'}`
-          ]
-        }
-      }
-    } 
-  },
+  plugins: { legend: { display: false }, tooltip: { enabled: true } },
   scales: {
     x: { display: false },
     y: { display: false }
   }
-}))
+}
 
 function getChartData(symbol: string) {
   const history = stockStore.histories[symbol]
@@ -182,7 +156,6 @@ function getChartData(symbol: string) {
     labels: history.map(h => new Date(h.time).toLocaleDateString()),
     datasets: [{
       data: prices,
-      customData: history,
       borderColor: color,
       backgroundColor: (ctx: any) => {
         const chart = ctx.chart
@@ -193,14 +166,10 @@ function getChartData(symbol: string) {
         gradient.addColorStop(1, color + '00')
         return gradient
       },
-      borderWidth: 2.5,
-      pointRadius: 1.5,
-      pointBackgroundColor: color,
-      pointHoverBackgroundColor: '#fff',
-      pointHoverBorderColor: color,
-      pointHoverBorderWidth: 2,
-      pointHoverRadius: 6,
-      tension: 0.35,
+      borderWidth: 2,
+      pointRadius: 0,
+      pointHoverRadius: 4,
+      tension: 0.3,
       fill: true
     }]
   }
@@ -253,9 +222,8 @@ function getChartData(symbol: string) {
         <!-- Header -->
         <div class="flex items-center justify-between mb-4 pr-16">
           <div class="flex items-center gap-3">
-            <div class="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent font-bold text-xs relative overflow-hidden border border-accent/20">
-              <span class="absolute z-0">{{ pos.symbol }}</span>
-              <img :src="`https://image.simplize.vn/logo/${pos.symbol.toLowerCase()}.jpeg`" :alt="pos.symbol" class="w-full h-full object-cover relative z-10 bg-white" @error="(e) => (e.target as HTMLImageElement).style.display = 'none'" />
+            <div class="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent font-bold text-xs">
+              {{ pos.symbol }}
             </div>
             <div>
               <p class="font-semibold text-lg">{{ pos.symbol }}</p>
