@@ -15,3 +15,7 @@ binding = "AI"
 # Environment variables (set secrets via: npx wrangler secret put JWT_SECRET)
 [vars]
 ENVIRONMENT = "production"
+
+# Cron Trigger: Auto-blog generation daily at 9 AM Vietnam time (2 AM UTC)
+[triggers]
+crons = ["0 2 * * *"]

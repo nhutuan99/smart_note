@@ -95,6 +95,9 @@ import {
   handleProxyExchangeRate
 } from './controllers/proxy.controller'
 
+import { runAutoBlog } from './services/auto-blog.service'
+
+
 async function handleRequest(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url)
   const path = url.pathname
@@ -247,6 +250,24 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
       }
       if (adminBlogMatch && request.method === 'DELETE') {
         return handleDeleteBlog(userId, adminBlogMatch[1], env)
+      }
+
+      // Manual Auto-Blog Trigger (admin only)
+      if (path === '/api/admin/auto-blog' && request.method === 'POST') {
+        // Reuse admin check from blog controller
+        const { getJSON: getJ } = await import('./services/kv.service')
+        const userProfile = await getJ<{ email: string }>(env.SMART_NOTE_KV, `users/${userId}/profile`)
+        if (userProfile?.email !== 'tintphcm@gmail.com') {
+          return errorResponse('Forbidden', 403)
+        }
+        try {
+          const result = await runAutoBlog(env)
+          return new Response(JSON.stringify({ success: true, message: result }), {
+            headers: { 'Content-Type': 'application/json', ...corsHeaders() }
+          })
+        } catch (err: any) {
+          return errorResponse(`AutoBlog failed: ${err.message}`, 500)
+        }
       }
 
       // Bug Report
@@ -405,5 +426,15 @@ export default {
       statusText: response.statusText,
       headers: finalHeaders
     })
+  },
+
+  // ── Cloudflare Cron Trigger ──
+  // Runs daily at 2:00 UTC (= 9:00 AM Vietnam time, UTC+7)
+  async scheduled(_event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
+    ctx.waitUntil(
+      runAutoBlog(env)
+        .then(result => console.log(`[Cron] AutoBlog completed: ${result}`))
+        .catch(err => console.error('[Cron] AutoBlog failed:', err))
+    )
   }
 }
