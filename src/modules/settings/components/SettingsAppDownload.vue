@@ -1,18 +1,8 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { DownloadCloud, Smartphone } from 'lucide-vue-next'
+import { Smartphone } from 'lucide-vue-next'
 
 const { t } = useI18n()
-
-function downloadIOSApp() {
-  // Trigger file download
-  const link = document.createElement('a')
-  link.href = '/downloads/FinNote.ipa'
-  link.download = 'FinNote.ipa'
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-}
 </script>
 
 <template>
@@ -26,15 +16,6 @@ function downloadIOSApp() {
         <div>
           <h4 class="mb-0.5 text-sm font-semibold">{{ t('settings.iosApp') }}</h4>
           <p class="text-text-tertiary text-sm">{{ t('settings.iosAppDesc') }}</p>
-        </div>
-        <div>
-          <button
-            @click="downloadIOSApp"
-            class="btn-primary whitespace-nowrap bg-gradient-to-r from-accent to-pink-500 hover:from-accent-hover hover:to-pink-600 border-none shadow-[0_4px_15px_rgba(142,125,250,0.3)]"
-          >
-            <DownloadCloud :size="16" />
-            {{ t('settings.downloadApp') }}
-          </button>
         </div>
       </div>
     </div>

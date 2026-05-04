@@ -28,8 +28,6 @@ const ui = useUiStore()
 
 const getLogoUrls = (symbol: string) => [
   `https://smart-note-api.smart-note.workers.dev/api/proxy/logo?symbol=${symbol.toUpperCase()}`,
-  `https://cdn.simplize.vn/simplizevn/logo/${symbol.toUpperCase()}.jpeg`,
-  `https://fiin-fundamental.ssi.com.vn/StockTicker/GetTickerImage?code=${symbol.toUpperCase()}`,
   `https://ui-avatars.com/api/?name=${symbol}&background=1e293b&color=cbd5e1&bold=true&font-size=0.4`
 ]
 
@@ -374,9 +372,9 @@ function getChartData(symbol: string) {
         <!-- Header -->
         <div class="flex items-center justify-between mb-4 pr-16">
           <div class="flex items-center gap-3 relative">
-            <div class="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent font-bold text-xs relative overflow-hidden border border-accent/20">
-              <span class="absolute z-0">{{ pos.symbol }}</span>
-              <img :src="getLogoUrls(pos.symbol)[0]" :alt="pos.symbol" referrerpolicy="no-referrer" :data-fallback-index="0" class="w-full h-full object-contain relative z-10 bg-white" @error="(e) => handleImageError(e, pos.symbol)" />
+            <div class="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent font-bold text-xs relative overflow-hidden border border-accent/20 p-1.5 bg-white dark:bg-bg-elevated">
+              <span class="absolute z-0 text-accent">{{ pos.symbol }}</span>
+              <img :src="getLogoUrls(pos.symbol)[0]" :alt="pos.symbol" referrerpolicy="no-referrer" :data-fallback-index="0" class="w-full h-full object-contain relative z-10" @error="(e) => handleImageError(e, pos.symbol)" />
             </div>
             <div>
               <p class="font-semibold text-lg cursor-help inline-block" @mouseenter="fetchCompanyInfo(pos.symbol)" @mouseleave="clearTooltip">{{ pos.symbol }}</p>
