@@ -279,3 +279,39 @@ export async function handleProxyStockHistory(request: Request, env: Env): Promi
   }
 }
 
+/**
+ * Handle /api/proxy/logo
+ * Proxy logo fetching to bypass frontend CORS/DNS blocks
+ */
+export async function handleProxyLogo(request: Request): Promise<Response> {
+  const url = new URL(request.url)
+  const symbol = url.searchParams.get('symbol')?.toLowerCase()
+
+  if (!symbol) {
+    return new Response('Missing symbol', { status: 400 })
+  }
+
+  try {
+    const res = await fetch(`https://tcdn.tcbs.com.vn/avatar/a/${symbol}.png`, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+      }
+    })
+
+    if (!res.ok) {
+      return new Response('Not found', { status: 404 })
+    }
+
+    const headers = new Headers()
+    headers.set('Content-Type', res.headers.get('content-type') || 'image/png')
+    headers.set('Cache-Control', 'public, max-age=864000') // 10 days cache
+    headers.set('Access-Control-Allow-Origin', '*')
+
+    return new Response(res.body, {
+      status: res.status,
+      headers
+    })
+  } catch (err: any) {
+    return new Response('Proxy error', { status: 502 })
+  }
+}

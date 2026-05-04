@@ -25,6 +25,8 @@ const { t } = useI18n()
 const stockStore = useStockStore()
 const ui = useUiStore()
 
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || ''
+
 const showAddModal = ref(false)
 const newPosition = ref({ symbol: '', buyPrice: '', quantity: '', targetProfit: '', stopLoss: '' })
 
@@ -259,8 +261,9 @@ function getChartData(symbol: string) {
         <!-- Header -->
         <div class="flex items-center justify-between mb-4 pr-16">
           <div class="flex items-center gap-3">
-            <div class="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent font-bold text-xs">
-              {{ pos.symbol }}
+            <div class="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent font-bold text-xs relative overflow-hidden border border-accent/20">
+              <span class="absolute z-0">{{ pos.symbol }}</span>
+              <img :src="`${apiBaseUrl}/api/proxy/logo?symbol=${pos.symbol}`" :alt="pos.symbol" class="w-full h-full object-contain relative z-10 bg-white" @error="(e) => (e.target as HTMLImageElement).style.display = 'none'" />
             </div>
             <div>
               <p class="font-semibold text-lg">{{ pos.symbol }}</p>
