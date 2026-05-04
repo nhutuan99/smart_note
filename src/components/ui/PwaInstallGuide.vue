@@ -104,22 +104,7 @@ onMounted(() => {
               </div>
             </div>
 
-            <!-- Native App Option -->
-            <div class="mt-4 pt-3 border-t border-white/10">
-              <div class="flex items-center justify-between">
-                <span class="text-xs text-white/60">{{ t('pwa.iosNativeOption') }}</span>
-                <a 
-                  href="/downloads/FinNote.ipa" 
-                  download="FinNote.ipa"
-                  class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-medium transition-colors"
-                >
-                  {{ t('pwa.downloadIpa') }}
-                </a>
-              </div>
-              <p class="mt-1.5 text-[10px] text-white/40 leading-tight">
-                <span v-html="t('pwa.ipaInstruction')"></span>
-              </p>
-            </div>
+            <!-- Native App Option removed as requested -->
           </div>
         </div>
       </div>

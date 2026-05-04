@@ -350,11 +350,16 @@ export default {
   // ── Settings ──
   settings: {
     title: 'Settings',
-    // App Download
-    appDownload: 'App Download',
-    iosApp: 'iOS Native App (IPA)',
-    iosAppDesc: 'Download the .ipa file to install via TestFlight or Sideload.',
-    downloadApp: 'Download',
+    // App Installation (PWA)
+    appDownload: 'App Installation',
+    pwaInstallTitle: 'Install FinNote (PWA)',
+    pwaInstallDesc: 'Experience a full-screen, smoother app without downloading from App Store/Google Play.',
+    pwaIosTarget: '📱 On iOS (Safari):',
+    pwaIosStep: 'Tap the <strong>Share</strong> button at the bottom > Select <strong>Add to Home Screen</strong>.',
+    pwaAndroidTarget: '🤖 On Android (Chrome):',
+    pwaAndroidStep: 'Tap the <strong>Menu (3 dots)</strong> button at the top right > Select <strong>Add to Home Screen</strong>.',
+    pwaDesktopTarget: '💻 On Desktop (Chrome/Edge):',
+    pwaDesktopStep: 'Click the <strong>Install</strong> icon on the right side of the address bar.',
     // Language
     language: 'Language',
     languageDesc: 'Choose display language',

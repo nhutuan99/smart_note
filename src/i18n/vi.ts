@@ -350,11 +350,16 @@ export default {
   // ── Settings ──
   settings: {
     title: 'Cài đặt',
-    // App Download
-    appDownload: 'Tải Ứng Dụng',
-    iosApp: 'App iOS Native (IPA)',
-    iosAppDesc: 'Tải file .ipa để cài đặt qua TestFlight hoặc Sideload.',
-    downloadApp: 'Tải Xuống',
+    // App Installation (PWA)
+    appDownload: 'Cài đặt Ứng dụng',
+    pwaInstallTitle: 'Cài đặt FinNote (PWA)',
+    pwaInstallDesc: 'Trải nghiệm ứng dụng toàn màn hình, mượt mà hơn và không cần tải qua App Store/CH Play.',
+    pwaIosTarget: '📱 Trên iOS (Safari):',
+    pwaIosStep: 'Nhấn nút <strong>Chia sẻ (Share)</strong> ở thanh dưới > Chọn <strong>Thêm vào Màn hình chính</strong>.',
+    pwaAndroidTarget: '🤖 Trên Android (Chrome):',
+    pwaAndroidStep: 'Nhấn nút <strong>Menu (3 chấm)</strong> ở góc phải > Chọn <strong>Thêm vào Màn hình chính</strong>.',
+    pwaDesktopTarget: '💻 Trên Desktop (Chrome/Edge):',
+    pwaDesktopStep: 'Nhấn vào biểu tượng <strong>Cài đặt (Install)</strong> ở góc phải thanh địa chỉ trình duyệt.',
     // Language
     language: 'Ngôn ngữ',
     languageDesc: 'Chọn ngôn ngữ hiển thị',
