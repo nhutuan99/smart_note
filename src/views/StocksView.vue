@@ -372,8 +372,8 @@ function getChartData(symbol: string) {
         <!-- Header -->
         <div class="flex items-center justify-between mb-4 pr-16">
           <div class="flex items-center gap-3 relative">
-            <div class="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent font-bold text-xs relative overflow-hidden border border-accent/20 p-1.5 bg-white dark:bg-bg-elevated">
-              <span class="absolute z-0 text-accent">{{ pos.symbol }}</span>
+            <div class="h-10 w-14 rounded-xl bg-accent/10 flex items-center justify-center text-accent font-bold text-xs relative overflow-hidden border border-accent/20 p-1.5 bg-white dark:bg-bg-elevated flex-shrink-0">
+              <span class="absolute z-0 text-accent opacity-50">{{ pos.symbol }}</span>
               <img :src="getLogoUrls(pos.symbol)[0]" :alt="pos.symbol" referrerpolicy="no-referrer" :data-fallback-index="0" class="w-full h-full object-contain relative z-10" @error="(e) => handleImageError(e, pos.symbol)" />
             </div>
             <div>
@@ -543,7 +543,10 @@ function getChartData(symbol: string) {
                   @click="newPosition.symbol = stock.symbol; isSymbolFocused = false"
                   class="flex items-center gap-3 p-3 hover:bg-bg-hover cursor-pointer transition-colors"
                 >
-                  <img :src="getLogoUrls(stock.symbol)[0]" referrerpolicy="no-referrer" :data-fallback-index="0" @error="handleImageError($event, stock.symbol)" class="w-8 h-8 flex-shrink-0 rounded-full bg-bg-surface border border-border-subtle object-cover" />
+                  <div class="h-8 w-12 rounded-md bg-bg-surface flex items-center justify-center text-text-secondary font-bold text-[10px] relative overflow-hidden border border-border-subtle p-1 bg-white dark:bg-bg-elevated flex-shrink-0">
+                    <span class="absolute z-0 opacity-30">{{ stock.symbol }}</span>
+                    <img :src="getLogoUrls(stock.symbol)[0]" referrerpolicy="no-referrer" :data-fallback-index="0" @error="handleImageError($event, stock.symbol)" class="w-full h-full object-contain relative z-10" />
+                  </div>
                   <div class="overflow-hidden">
                     <div class="font-bold text-sm text-text-primary">{{ stock.symbol }}</div>
                     <div class="text-xs text-text-tertiary truncate">{{ stock.name }}</div>
