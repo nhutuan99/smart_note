@@ -72,7 +72,8 @@ watch(() => ui.showWeeklyEvent, async (newVal) => {
 function interact() {
   ui.showToast('success', t('weeklyEvent.success'))
   ui.completeWeeklyEvent()
-  router.push('/budget')
+  ui.enableStocks = true
+  router.push('/stocks')
 }
 
 function skip() {

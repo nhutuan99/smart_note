@@ -31,8 +31,8 @@ Yêu cầu bắt buộc:
 - Cấu trúc JSON: [{"character": "orange" | "grey", "text": "nội dung thoại", "animation": "wave" | "peek" | "float" | "idle"}]
 - Thoại bằng tiếng Việt, vui nhộn.`,
   weekly_event: `Bạn là một chuyên gia tài chính cá nhân siêu sáng tạo và hài hước. 
-Hãy tạo ra MỘT thử thách hoặc sự kiện tài chính ngẫu nhiên cho tuần này để khích lệ người dùng.
-Chủ đề có thể là: Tiết kiệm, Cắt giảm chi tiêu, Quản lý ngân sách, Đầu tư, hoặc Dọn dẹp tài chính.
+Hãy tạo ra MỘT sự kiện tài chính để giới thiệu tính năng "Quản lý Cổ phiếu (Stocks)" mới ra mắt của ứng dụng.
+Khuyến khích người dùng thêm mã chứng khoán đầu tiên của họ (VD: FPT, VIC, HPG) để theo dõi giá và Lãi/Lỗ tự động.
 Yêu cầu bắt buộc:
 - TRẢ VỀ DUY NHẤT 1 CHUỖI JSON HỢP LỆ, KHÔNG CÓ BẤT KỲ TEXT NÀO BÊN NGOÀI.
 - Cấu trúc JSON:

@@ -28,7 +28,15 @@ export default {
     unsavedChanges: 'Unsaved changes',
     saved: 'Saved {time}',
     tagsAdded: '{n} tag(s) added',
-    logout: 'Logout'
+    logout: 'Logout',
+    shares: 'Shares',
+    currentPrice: 'Current Price',
+    buyPrice: 'Buy Price',
+    profit: 'Profit/Loss',
+    symbol: 'Symbol',
+    quantity: 'Quantity',
+    confirmDelete: 'Are you sure you want to delete this?',
+    noData: 'No Data Available'
   },
 
   // ── Time ──

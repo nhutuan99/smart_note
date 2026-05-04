@@ -28,7 +28,15 @@ export default {
     unsavedChanges: 'Chưa lưu',
     saved: 'Đã lưu {time}',
     tagsAdded: 'Đã thêm {n} tag',
-    logout: 'Đăng xuất'
+    logout: 'Đăng xuất',
+    shares: 'Cổ phiếu',
+    currentPrice: 'Giá hiện tại',
+    buyPrice: 'Giá mua',
+    profit: 'Lãi/Lỗ',
+    symbol: 'Mã CK',
+    quantity: 'Số lượng',
+    confirmDelete: 'Bạn có chắc chắn muốn xóa không?',
+    noData: 'Chưa có dữ liệu'
   },
 
   // ── Time ──

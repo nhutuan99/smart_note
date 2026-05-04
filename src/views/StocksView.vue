@@ -127,42 +127,45 @@ async function removePos(id: string) {
     </div>
 
     <!-- Add Modal -->
-    <div v-if="showAddModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div class="card-premium w-full max-w-sm p-6 shadow-2xl">
-        <h3 class="mb-5 text-lg font-bold">{{ t('common.add') }} {{ t('settings.stocks') }}</h3>
-        
-        <div class="space-y-4">
-          <div>
-            <label class="mb-1.5 block text-sm font-medium">{{ t('common.symbol') }}</label>
-            <input v-model="newPosition.symbol" type="text" class="input-field" placeholder="FPT" uppercase />
+    <transition name="fade">
+      <div v-if="showAddModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+        <div class="card-premium w-full max-w-sm p-6 shadow-2xl relative overflow-hidden" @click.stop>
+          <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-accent to-accent-hover"></div>
+          <h3 class="mb-5 text-lg font-bold">{{ t('common.add') }} {{ t('settings.stocks') }}</h3>
+          
+          <div class="space-y-4">
+            <div>
+              <label class="mb-1.5 block text-sm font-medium text-text-secondary">{{ t('common.symbol') }}</label>
+              <input v-model="newPosition.symbol" type="text" class="uppercase border-border-default bg-bg-surface text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-2.5 text-sm transition-all duration-150 focus:ring-2 focus:outline-none" placeholder="FPT" />
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="mb-1.5 block text-sm font-medium text-text-secondary">{{ t('common.quantity') }}</label>
+                <input v-model="newPosition.quantity" type="number" class="border-border-default bg-bg-surface text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-2.5 text-sm transition-all duration-150 focus:ring-2 focus:outline-none" placeholder="1000" />
+              </div>
+              <div>
+                <label class="mb-1.5 block text-sm font-medium text-text-secondary">{{ t('common.buyPrice') }} (x1000)</label>
+                <input v-model="newPosition.buyPrice" type="number" step="0.1" class="border-border-default bg-bg-surface text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-2.5 text-sm transition-all duration-150 focus:ring-2 focus:outline-none" placeholder="75.5" />
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="mb-1.5 block text-sm font-medium text-text-secondary">Target (%)</label>
+                <input v-model="newPosition.targetProfit" type="number" class="border-border-default bg-bg-surface text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-2.5 text-sm transition-all duration-150 focus:ring-2 focus:outline-none" placeholder="15" />
+              </div>
+              <div>
+                <label class="mb-1.5 block text-sm font-medium text-text-secondary">Stop Loss (%)</label>
+                <input v-model="newPosition.stopLoss" type="number" class="border-border-default bg-bg-surface text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-2.5 text-sm transition-all duration-150 focus:ring-2 focus:outline-none" placeholder="-7" />
+              </div>
+            </div>
           </div>
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="mb-1.5 block text-sm font-medium">{{ t('common.quantity') }}</label>
-              <input v-model="newPosition.quantity" type="number" class="input-field" placeholder="1000" />
-            </div>
-            <div>
-              <label class="mb-1.5 block text-sm font-medium">{{ t('common.buyPrice') }} (x1000)</label>
-              <input v-model="newPosition.buyPrice" type="number" step="0.1" class="input-field" placeholder="75.5" />
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="mb-1.5 block text-sm font-medium">Target (%)</label>
-              <input v-model="newPosition.targetProfit" type="number" class="input-field" placeholder="15" />
-            </div>
-            <div>
-              <label class="mb-1.5 block text-sm font-medium">Stop Loss (%)</label>
-              <input v-model="newPosition.stopLoss" type="number" class="input-field" placeholder="-7" />
-            </div>
-          </div>
-        </div>
 
-        <div class="mt-6 flex justify-end gap-3">
-          <button @click="showAddModal = false" class="btn-secondary">{{ t('common.cancel') }}</button>
-          <button @click="handleAdd" class="btn-primary">{{ t('common.save') }}</button>
+          <div class="mt-8 flex justify-end gap-3">
+            <button @click="showAddModal = false" class="btn-secondary w-full">{{ t('common.cancel') }}</button>
+            <button @click="handleAdd" class="btn-primary w-full">{{ t('common.save') }}</button>
+          </div>
         </div>
       </div>
-    </div>
+    </transition>
   </div>
 </template>
