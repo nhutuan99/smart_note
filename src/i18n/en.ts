@@ -36,7 +36,8 @@ export default {
     symbol: 'Symbol',
     quantity: 'Quantity',
     confirmDelete: 'Are you sure you want to delete this?',
-    noData: 'No Data Available'
+    noData: 'No Data Available',
+    fillRequiredFields: 'Please fill in all required fields'
   },
 
   // ── Time ──

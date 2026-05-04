@@ -3,6 +3,7 @@ import { onMounted, ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Plus, Trash2, LineChart, TrendingUp, TrendingDown } from 'lucide-vue-next'
 import { useStockStore } from '@/stores/stock'
+import { useUiStore } from '@/stores/ui'
 import { formatVNDShort } from '@/constants/finance'
 
 // Chart.js
@@ -21,6 +22,7 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, 
 
 const { t } = useI18n()
 const stockStore = useStockStore()
+const ui = useUiStore()
 
 const showAddModal = ref(false)
 const newPosition = ref({ symbol: '', buyPrice: '', quantity: '', targetProfit: '', stopLoss: '' })
@@ -44,7 +46,10 @@ const totalProfit = computed(() => {
 })
 
 async function handleAdd() {
-  if (!newPosition.value.symbol || !newPosition.value.buyPrice || !newPosition.value.quantity) return
+  if (!newPosition.value.symbol || !newPosition.value.buyPrice || !newPosition.value.quantity) {
+    ui.showToast('error', t('common.fillRequiredFields'))
+    return
+  }
   await stockStore.addPosition({
     symbol: newPosition.value.symbol.toUpperCase(),
     buyPrice: Number(newPosition.value.buyPrice),

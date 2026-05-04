@@ -36,7 +36,8 @@ export default {
     symbol: 'Mã CK',
     quantity: 'Số lượng',
     confirmDelete: 'Bạn có chắc chắn muốn xóa không?',
-    noData: 'Chưa có dữ liệu'
+    noData: 'Chưa có dữ liệu',
+    fillRequiredFields: 'Vui lòng điền đầy đủ thông tin bắt buộc'
   },
 
   // ── Time ──
