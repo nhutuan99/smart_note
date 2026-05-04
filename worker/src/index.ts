@@ -480,15 +480,21 @@ export default {
   // Cron 2: */30 2-8 * * 1-5 = Stock alerts every 30 min during trading hours (9-15h VN, Mon-Fri)
   async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
     // Always check stock alerts during trading hours
-    ctx.waitUntil(
-      checkAllStockAlerts(env)
-        .then(result => console.log(`[Cron] StockAlerts: ${result}`))
-        .catch(err => console.error('[Cron] StockAlerts failed:', err))
-    )
+    const cronTime = new Date(event.scheduledTime)
+    const day = cronTime.getUTCDay()
+    const hour = cronTime.getUTCHours()
+    
+    // Only check stock alerts Mon-Fri (1-5) and between 2-8 UTC (9h-15h VN)
+    if (day >= 1 && day <= 5 && hour >= 2 && hour <= 8) {
+      ctx.waitUntil(
+        checkAllStockAlerts(env)
+          .then(result => console.log(`[Cron] StockAlerts: ${result}`))
+          .catch(err => console.error('[Cron] StockAlerts failed:', err))
+      )
+    }
 
     // AutoBlog only runs at 2:00 UTC (cron = "0 2 * * *")
-    const cronTime = new Date(event.scheduledTime)
-    if (cronTime.getUTCHours() === 2 && cronTime.getUTCMinutes() === 0) {
+    if (hour === 2 && cronTime.getUTCMinutes() === 0) {
       ctx.waitUntil(
         runAutoBlog(env)
           .then(result => console.log(`[Cron] AutoBlog completed: ${result}`))

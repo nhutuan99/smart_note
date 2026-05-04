@@ -98,7 +98,9 @@ export async function checkAllStockAlerts(env: Env): Promise<string> {
       for (const stock of stocks) {
         if (!stock.alerts?.length) continue
 
-        const pendingAlerts = stock.alerts.filter(a => !a.triggered)
+        // Check ALL alerts, not just pending ones. 
+        // User explicitly wants repeated updates every 30 mins while the price remains in the target zone.
+        const pendingAlerts = stock.alerts
         if (pendingAlerts.length === 0) continue
 
         const currentPrice = await getCurrentPrice(stock.symbol, env)
