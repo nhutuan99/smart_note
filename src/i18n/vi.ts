@@ -56,7 +56,9 @@ export default {
     reset: 'Đặt lại',
     resetDone: 'Đã đặt lại mốc giá',
     delete: 'Xóa mốc',
-    noAlerts: 'Chưa có mốc giá'
+    noAlerts: 'Chưa có mốc giá',
+    stopLoss: 'Cắt lỗ',
+    takeProfit: 'Mục tiêu chốt lời'
   },
 
   // ── Time ──

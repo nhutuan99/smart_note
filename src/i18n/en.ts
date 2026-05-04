@@ -56,7 +56,9 @@ export default {
     reset: 'Reset',
     resetDone: 'Price alert has been reset',
     delete: 'Delete alert',
-    noAlerts: 'No price alerts set'
+    noAlerts: 'No price alerts set',
+    stopLoss: 'Stop Loss',
+    takeProfit: 'Take Profit Target'
   },
 
   // ── Time ──

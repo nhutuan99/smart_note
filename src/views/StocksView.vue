@@ -370,8 +370,8 @@ function getChartData(symbol: string) {
 
         <!-- Original target/stopLoss badges -->
         <div v-if="pos.targetProfit || pos.stopLoss" class="flex gap-2 mt-auto pt-4 border-t border-border-subtle">
-          <span v-if="pos.targetProfit" class="text-[10px] px-2 py-1 rounded-md bg-success/10 text-success font-medium">🎯 {{ pos.targetProfit }}%</span>
-          <span v-if="pos.stopLoss" class="text-[10px] px-2 py-1 rounded-md bg-error/10 text-error font-medium">🛑 {{ pos.stopLoss }}%</span>
+          <span v-if="pos.targetProfit" class="text-[10px] px-2 py-1 rounded-md bg-success/10 text-success font-medium">{{ t('stockAlert.takeProfit') }}: {{ pos.targetProfit }}%</span>
+          <span v-if="pos.stopLoss" class="text-[10px] px-2 py-1 rounded-md bg-error/10 text-error font-medium">{{ t('stockAlert.stopLoss') }}: {{ pos.stopLoss }}%</span>
         </div>
       </div>
     </div>
