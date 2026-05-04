@@ -135,9 +135,40 @@ function priceToPercent(price: number, min: number, range: number) {
 const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
-  animation: false as any,
+  animation: { duration: 400 } as any,
   interaction: { mode: 'index' as const, intersect: false },
-  plugins: { legend: { display: false }, tooltip: { enabled: true } },
+  plugins: { 
+    legend: { display: false }, 
+    tooltip: { 
+      enabled: true,
+      backgroundColor: 'rgba(15, 23, 42, 0.95)',
+      titleColor: '#fff',
+      bodyColor: '#cbd5e1',
+      borderColor: 'rgba(124, 111, 247, 0.2)',
+      borderWidth: 1,
+      padding: 12,
+      displayColors: false,
+      callbacks: {
+        label: (context: any) => {
+          const ds = context.dataset
+          const pt = ds.customData?.[context.dataIndex]
+          
+          // Safety fallback for old cache data
+          if (!pt || pt.open === undefined) {
+             return `Kết phiên: ${context.raw}`
+          }
+
+          return [
+            `Mở cửa: ${pt.open}`,
+            `Cao nhất: ${pt.high}`,
+            `Thấp nhất: ${pt.low}`,
+            `Kết phiên: ${pt.price}`,
+            `KL: ${pt.volume ? pt.volume.toLocaleString() : '0'}`
+          ]
+        }
+      }
+    } 
+  },
   scales: {
     x: { display: false },
     y: { display: false }
@@ -156,6 +187,7 @@ function getChartData(symbol: string) {
     labels: history.map(h => new Date(h.time).toLocaleDateString()),
     datasets: [{
       data: prices,
+      customData: history,
       borderColor: color,
       backgroundColor: (ctx: any) => {
         const chart = ctx.chart
@@ -166,10 +198,15 @@ function getChartData(symbol: string) {
         gradient.addColorStop(1, color + '00')
         return gradient
       },
-      borderWidth: 2,
-      pointRadius: 0,
-      pointHoverRadius: 4,
-      tension: 0.3,
+      borderWidth: 2.5,
+      pointRadius: 1,
+      hitRadius: 20,
+      pointBackgroundColor: color,
+      pointHoverBackgroundColor: '#fff',
+      pointHoverBorderColor: color,
+      pointHoverBorderWidth: 2,
+      pointHoverRadius: 6,
+      tension: 0.35,
       fill: true
     }]
   }
