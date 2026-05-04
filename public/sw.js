@@ -1,5 +1,5 @@
 // FinNote Service Worker — Offline Cache + Push Notifications
-const CACHE_NAME = 'finnote-v1'
+const CACHE_NAME = 'finnote-v2'
 const STATIC_ASSETS = [
   '/',
   '/images/logo-512.png'
@@ -23,21 +23,30 @@ self.addEventListener('activate', (event) => {
   self.clients.claim()
 })
 
-// Fetch: Network-first for API, Cache-first for static assets
+// Fetch: Network-first for pages, Cache-first for static assets
 self.addEventListener('fetch', (event) => {
   const { request } = event
   const url = new URL(request.url)
 
-  // Skip non-GET and API requests — always go to network
-  if (request.method !== 'GET' || url.pathname.startsWith('/api')) {
-    return
-  }
+  // ── Skip all non-cacheable requests ──
+  // 1. Only handle GET requests
+  if (request.method !== 'GET') return
 
+  // 2. Skip cross-origin requests entirely (fonts, Google APIs, external APIs, etc.)
+  //    These should NEVER be intercepted by the SW to avoid CSP violations.
+  if (url.origin !== self.location.origin) return
+
+  // 3. Skip API routes — always go direct to network
+  if (url.pathname.startsWith('/api')) return
+
+  // 4. Skip browser extension requests
+  if (url.protocol === 'chrome-extension:' || url.protocol === 'moz-extension:') return
+
+  // ── Cache strategy: Stale-While-Revalidate for same-origin assets ──
   event.respondWith(
     caches.match(request).then((cached) => {
       const fetched = fetch(request).then((response) => {
-        // Only cache successful same-origin responses
-        if (response.ok && url.origin === self.location.origin) {
+        if (response.ok) {
           const clone = response.clone()
           caches.open(CACHE_NAME).then((cache) => cache.put(request, clone))
         }
