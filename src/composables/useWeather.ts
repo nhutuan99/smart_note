@@ -152,9 +152,15 @@ export function useWeather() {
 
   // ── Location detection ────────────────────────────────────────────────────
 
+  const GEO_DENIED_KEY = 'finnote_geo_denied'
+
   async function detectLocation(): Promise<{ lat: number; lon: number; city: string; country: string }> {
     // 1. Browser Geolocation (most accurate)
-    if (typeof navigator !== 'undefined' && navigator.geolocation) {
+    // Skip entirely if user previously denied — respects their choice.
+    // Only a fresh install (cleared localStorage) will re-trigger the prompt.
+    const wasDenied = localStorage.getItem(GEO_DENIED_KEY)
+    
+    if (!wasDenied && typeof navigator !== 'undefined' && navigator.geolocation) {
       try {
         // Prevent [Violation] Permissions policy violation in console
         if (typeof document !== 'undefined') {
@@ -171,10 +177,13 @@ export function useWeather() {
           try {
             const perm = await navigator.permissions.query({ name: 'geolocation' })
             if (perm.state === 'denied') {
+              // Remember denial permanently until app reinstall
+              localStorage.setItem(GEO_DENIED_KEY, '1')
               throw new Error('Geolocation denied')
             }
-          } catch {
-            // ignore
+          } catch (permErr: any) {
+            if (permErr?.message === 'Geolocation denied') throw permErr
+            // ignore other permission query errors
           }
         }
 
@@ -202,8 +211,12 @@ export function useWeather() {
         } catch {
           return { lat, lon, city: 'Vị trí của bạn', country: '' }
         }
-      } catch {
-        // Permission denied or timeout → fall through to IP
+      } catch (geoErr: any) {
+        // User denied or timeout → remember if it was a denial
+        if (geoErr?.code === 1 || geoErr?.message?.includes('denied')) {
+          localStorage.setItem(GEO_DENIED_KEY, '1')
+        }
+        // Fall through to IP fallback
       }
     }
 
