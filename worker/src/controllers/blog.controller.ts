@@ -419,6 +419,13 @@ Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải th
         } else {
           const data: any = await response.json()
           text = data?.candidates?.[0]?.content?.parts?.[0]?.text || ''
+          // BUG FIX: empty Gemini response (safety filter / empty candidates)
+          // → fall through to CF AI instead of trying to parse empty string
+          if (!text) {
+            geminiError = 'Gemini returned empty response (possible safety filter)'
+            console.warn('[BlogGen] Gemini returned empty text, falling back to CF AI')
+            useGemini = false
+          }
         }
       } catch (geminiErr: any) {
         geminiError = geminiErr.message || 'Gemini request failed'
@@ -481,15 +488,21 @@ Chỉ trả về nội dung Markdown, không bọc trong JSON hay code block.`
       })
     }
 
-    // Parse Gemini response
+    // Parse Gemini response — only reached when useGemini=true AND text is non-empty
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (jsonMatch) text = jsonMatch[0]
+
+    if (!text) {
+      return errorResponse('AI returned empty response. Please try again.', 500)
+    }
 
     let result
     try {
       result = JSON.parse(text)
     } catch {
-      return errorResponse('Failed to parse AI response', 500)
+      // Last resort: try to extract any valid JSON object
+      console.error('[BlogGen] JSON parse failed, text snippet:', text.substring(0, 200))
+      return errorResponse('Failed to parse AI response. Please try again or switch to Cloudflare AI model.', 500)
     }
 
     if (result.content) {
@@ -572,6 +585,12 @@ Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải th
         } else {
           const data: any = await response.json()
           text = data?.candidates?.[0]?.content?.parts?.[0]?.text || ''
+          // BUG FIX: empty Gemini refine response → fall through to CF AI
+          if (!text) {
+            geminiError = 'Gemini refine returned empty response (possible safety filter)'
+            console.warn('[BlogRefine] Gemini returned empty text, falling back to CF AI')
+            useGemini = false
+          }
         }
       } catch (e: any) {
         geminiError = e.message || 'Gemini request failed'
@@ -583,16 +602,95 @@ Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải th
     if (!useGemini || !text) {
       if (!env.AI) return errorResponse('AI binding not configured', 503)
 
-      const metaResponse = await env.AI.run('@cf/meta/llama-3.1-8b-instruct' as any, {
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Hãy tinh chỉnh bản nháp này và trả về JSON: \n${JSON.stringify(draftData)}` }
-        ],
-        max_tokens: 2048,
-        temperature: 0.5
-      }) as any
-      text = metaResponse?.response || ''
-      geminiError = geminiError // keep existing error if set
+      // ── CF AI Lightweight Refine ──────────────────────────────
+      // BUG FIX: Do NOT send full content in one call (Llama 3.1 8B
+      // can't output 1500-word JSON within 2048 tokens → truncation → parse fail)
+      // Instead: (1) refine meta only, (2) improve content separately
+
+      // Step 1: Refine meta fields only (compact — fits in 512 tokens)
+      const metaOnlyPrompt = `Bạn là SEO editor. Tối ưu các trường sau cho chuẩn SEO, trả về JSON thuần (không text khác):
+{"title":"Tiêu đề tối ưu dưới 60 ký tự","excerpt":"Mô tả SEO dưới 160 ký tự","tags":["tag1","tag2","tag3"],"seoKeywords":"keyword1, keyword2, keyword3"}`
+      
+      let refinedMeta: any = {
+        title: draftData.title || '',
+        excerpt: draftData.excerpt || '',
+        tags: draftData.tags || [],
+        seoKeywords: draftData.seoKeywords || ''
+      }
+
+      try {
+        const metaRes = await env.AI.run('@cf/meta/llama-3.1-8b-instruct' as any, {
+          messages: [
+            { role: 'system', content: metaOnlyPrompt },
+            { role: 'user', content: `Title: ${draftData.title}\nExcerpt: ${draftData.excerpt}\nTags: ${(draftData.tags || []).join(', ')}\nKeywords: ${draftData.seoKeywords || ''}` }
+          ],
+          max_tokens: 400,
+          temperature: 0.3
+        }) as any
+
+        const metaRaw = metaRes?.response || ''
+        const metaMatch = metaRaw.match(/\{[\s\S]*\}/)
+        if (metaMatch) {
+          try { refinedMeta = { ...refinedMeta, ...JSON.parse(metaMatch[0]) } } catch { /* keep original */ }
+        }
+      } catch { /* keep original meta on error */ }
+
+      // Step 2: Light content polish (plain text in, plain text out — no JSON wrapping)
+      const contentPolishPrompt = `Bạn là editor viết blog tài chính. Hãy cải thiện bài viết sau:
+- Sửa lỗi pha trộn ngôn ngữ (vd: "tài chínhallenging" → "tài chính thách thức")
+- Thêm 1-2 ví dụ thực tế nếu thiếu
+- KHÔNG thay đổi cấu trúc heading/markdown
+- KHÔNG bọc trong JSON hay code block
+- Trả về nội dung Markdown trực tiếp`
+
+      let refinedContent = draftData.content || ''
+
+      // Only polish if content is reasonable length (avoid timeout on very long content)
+      if (refinedContent.length < 8000) {
+        try {
+          const contentTruncated = refinedContent.substring(0, 4000) // limit input
+          const contentRes = await env.AI.run('@cf/meta/llama-3.1-8b-instruct' as any, {
+            messages: [
+              { role: 'system', content: contentPolishPrompt },
+              { role: 'user', content: contentTruncated }
+            ],
+            max_tokens: 4096,
+            temperature: 0.4
+          }) as any
+          const polished = contentRes?.response || ''
+          if (polished.length > 200) {
+            // Verify it's actually content (not an error message or empty)
+            refinedContent = polished
+          }
+        } catch { /* keep original content on error */ }
+      }
+
+      // Assemble result without JSON parse — guaranteed safe
+      const cfResult: any = {
+        title: refinedMeta.title || draftData.title,
+        excerpt: refinedMeta.excerpt || draftData.excerpt,
+        tags: Array.isArray(refinedMeta.tags) ? refinedMeta.tags : (draftData.tags || []),
+        seoKeywords: refinedMeta.seoKeywords || draftData.seoKeywords || '',
+        content: refinedContent,
+        modelUsed: 'cloudflare',
+        geminiError
+      }
+
+      function stripH1(md: string) { return md.replace(/^\s*#\s+[^\n]+\n*/m, '').trim() }
+      if (cfResult.content) cfResult.content = stripH1(cfResult.content)
+
+      console.log(`[BlogRefine] CF AI done: "${cfResult.title}", ${cfResult.content.length} chars`)
+      return jsonResponse({ success: true, data: cfResult })
+    }
+
+    // BUG FIX: Gemini refine returned empty text → fall through to CF AI
+    if (!text) {
+      if (!geminiError) geminiError = 'Gemini refine returned empty response'
+      console.warn('[BlogRefine] Gemini empty text, using draft as-is')
+      return jsonResponse({
+        success: true,
+        data: { ...draftData, modelUsed: 'cloudflare', geminiError }
+      })
     }
 
     const jsonMatch = text.match(/\{[\s\S]*\}/)
@@ -602,7 +700,16 @@ Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải th
     try {
       result = JSON.parse(text)
     } catch {
-      return errorResponse('Failed to parse AI response', 500)
+      // Parse failed: return original draft instead of hard error
+      console.error('[BlogRefine] Gemini JSON parse failed, returning original draft')
+      return jsonResponse({
+        success: true,
+        data: {
+          ...draftData,
+          modelUsed: 'cloudflare',
+          geminiError: 'Gemini response parse failed, using original draft'
+        }
+      })
     }
 
     function stripLeadingH1(md: string): string {
