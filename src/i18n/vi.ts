@@ -620,7 +620,8 @@ export default {
     step1: 'Nhấn <strong>Share</strong> (🔲↑) ở thanh dưới Safari',
     step2: 'Chọn <strong>"Thêm vào Màn hình chính"</strong>',
     iosNativeOption: 'Hoặc cài đặt Native App:',
-    downloadIpa: 'Tải file .IPA'
+    downloadIpa: 'Tải file .IPA',
+    ipaInstruction: '*Yêu cầu sử dụng máy tính cài qua <strong>AltStore</strong>, <strong>Sideloadly</strong>, hoặc dùng thiết bị đã có <strong>TrollStore</strong>.'
   },
 
   // ── Blog ──

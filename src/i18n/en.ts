@@ -620,7 +620,8 @@ export default {
     step1: 'Tap <strong>Share</strong> (🔲↑) at the bottom of Safari',
     step2: 'Select <strong>"Add to Home Screen"</strong>',
     iosNativeOption: 'Or install Native App:',
-    downloadIpa: 'Download .IPA'
+    downloadIpa: 'Download .IPA',
+    ipaInstruction: '*Requires a computer with <strong>AltStore</strong>, <strong>Sideloadly</strong>, or a <strong>TrollStore</strong> enabled device.'
   },
 
   // ── Blog ──
