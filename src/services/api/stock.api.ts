@@ -14,5 +14,8 @@ export const stockApi = {
     httpClient.del(`/api/stocks/${id}`),
 
   getCurrentPrice: (symbol: string) =>
-    httpClient.get<{ currentPrice: number, symbol: string }>(`/api/proxy/stock-price?symbol=${symbol}`)
+    httpClient.get<{ currentPrice: number, symbol: string }>(`/api/proxy/stock-price?symbol=${symbol}`),
+
+  getStockHistory: (symbol: string, days: number = 7) =>
+    httpClient.get<{ history: { price: number, time: number }[], symbol: string }>(`/api/proxy/stock-history?symbol=${symbol}&days=${days}`)
 }

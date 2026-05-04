@@ -50,7 +50,7 @@ export async function handleAi(request: Request, env: Env): Promise<Response> {
   const { action, content, question } = body
 
   if (!action) return errorResponse('Missing action')
-  if (!content && action !== 'ask') return errorResponse('Note content is required')
+  if (!content && !['ask', 'cat_story', 'weekly_event'].includes(action)) return errorResponse('Note content is required')
   if (action === 'ask' && !question) return errorResponse('Missing question')
 
   const systemPrompt = AI_SYSTEM_PROMPTS[action]
@@ -97,7 +97,7 @@ export async function handleAiStream(request: Request, env: Env): Promise<Respon
   const { action, content, question } = body
 
   if (!action) return errorResponse('Missing action')
-  if (!content && action !== 'ask') return errorResponse('Note content is required')
+  if (!content && !['ask', 'cat_story', 'weekly_event'].includes(action)) return errorResponse('Note content is required')
   if (action === 'ask' && !question) return errorResponse('Missing question')
 
   const systemPrompt = AI_SYSTEM_PROMPTS[action]

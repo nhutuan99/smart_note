@@ -5,6 +5,20 @@ import { Plus, Trash2, LineChart, TrendingUp, TrendingDown } from 'lucide-vue-ne
 import { useStockStore } from '@/stores/stock'
 import { formatVNDShort } from '@/constants/finance'
 
+// Chart.js
+import { Line } from 'vue-chartjs'
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Filler,
+  Tooltip
+} from 'chart.js'
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip)
+
 const { t } = useI18n()
 const stockStore = useStockStore()
 
@@ -45,6 +59,50 @@ async function handleAdd() {
 async function removePos(id: string) {
   if (confirm(t('common.confirmDelete'))) {
     await stockStore.deletePosition(id)
+  }
+}
+
+// Sparkline config
+const chartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  animation: false as any,
+  interaction: { mode: 'index' as const, intersect: false },
+  plugins: { legend: { display: false }, tooltip: { enabled: true } },
+  scales: {
+    x: { display: false },
+    y: { display: false }
+  }
+}
+
+function getChartData(symbol: string) {
+  const history = stockStore.histories[symbol]
+  if (!history || history.length === 0) return { labels: [], datasets: [] }
+  
+  const prices = history.map(h => h.price)
+  const isUp = prices[prices.length - 1] >= prices[0]
+  const color = isUp ? '#34d399' : '#fb7185' // success / error colors
+  
+  return {
+    labels: history.map(h => new Date(h.time).toLocaleDateString()),
+    datasets: [{
+      data: prices,
+      borderColor: color,
+      backgroundColor: (ctx: any) => {
+        const chart = ctx.chart
+        const { ctx: c, chartArea } = chart
+        if (!chartArea) return color + '1a'
+        const gradient = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom)
+        gradient.addColorStop(0, color + '33') // 20%
+        gradient.addColorStop(1, color + '00') // 0%
+        return gradient
+      },
+      borderWidth: 2,
+      pointRadius: 0,
+      pointHoverRadius: 4,
+      tension: 0.3,
+      fill: true
+    }]
   }
 }
 </script>
@@ -117,6 +175,11 @@ async function removePos(id: string) {
             </template>
             <p v-else class="font-medium text-sm mt-0.5">---</p>
           </div>
+        </div>
+
+        <!-- 7-Day Chart -->
+        <div v-if="stockStore.histories[pos.symbol] && stockStore.histories[pos.symbol].length > 0" class="h-16 mb-4 -mx-2">
+          <Line :data="getChartData(pos.symbol)" :options="chartOptions" />
         </div>
 
         <div v-if="pos.targetProfit || pos.stopLoss" class="flex gap-2 mt-auto pt-4 border-t border-border-subtle">

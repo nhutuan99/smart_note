@@ -7,6 +7,7 @@ export const useStockStore = defineStore('stock', () => {
   const positions = ref<StockPosition[]>([])
   const loading = ref(false)
   const prices = ref<Record<string, number>>({})
+  const histories = ref<Record<string, { price: number, time: number }[]>>({})
 
   async function fetchPositions() {
     loading.value = true
@@ -15,7 +16,10 @@ export const useStockStore = defineStore('stock', () => {
       positions.value = data || []
       
       // Fetch current prices in background
-      data?.forEach(p => fetchPrice(p.symbol))
+      data?.forEach(p => {
+        fetchPrice(p.symbol)
+        fetchHistory(p.symbol)
+      })
     } catch (error) {
       console.error('Failed to fetch stocks:', error)
     } finally {
@@ -34,12 +38,24 @@ export const useStockStore = defineStore('stock', () => {
     }
   }
 
+  async function fetchHistory(symbol: string) {
+    try {
+      const data = await stockApi.getStockHistory(symbol, 7)
+      if (data?.history) {
+        histories.value[symbol] = data.history
+      }
+    } catch (e) {
+      // Ignore
+    }
+  }
+
   async function addPosition(data: Partial<StockPosition>) {
     try {
       const newPos = await stockApi.createPosition(data)
       if (newPos) {
         positions.value.push(newPos)
         fetchPrice(newPos.symbol)
+        fetchHistory(newPos.symbol)
       }
     } catch (e) {
       throw e
@@ -53,6 +69,7 @@ export const useStockStore = defineStore('stock', () => {
         const index = positions.value.findIndex(p => p.id === id)
         if (index !== -1) positions.value[index] = updated
         fetchPrice(updated.symbol)
+        fetchHistory(updated.symbol)
       }
     } catch (e) {
       throw e
@@ -72,8 +89,10 @@ export const useStockStore = defineStore('stock', () => {
     positions,
     loading,
     prices,
+    histories,
     fetchPositions,
     fetchPrice,
+    fetchHistory,
     addPosition,
     updatePosition,
     deletePosition

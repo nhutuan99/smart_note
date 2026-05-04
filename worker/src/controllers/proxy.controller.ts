@@ -212,3 +212,62 @@ export async function handleProxyStockPrice(request: Request, env: Env): Promise
     return errorResponse(err.message, 500)
   }
 }
+
+/**
+ * Handle /api/proxy/stock-history
+ * Fetch from DNSE API and cache in KV
+ */
+export async function handleProxyStockHistory(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url)
+  const symbol = url.searchParams.get('symbol')?.toUpperCase()
+  const days = parseInt(url.searchParams.get('days') || '7', 10)
+
+  if (!symbol) {
+    return errorResponse('Missing symbol query parameter', 400)
+  }
+
+  const cacheKey = `public/stocks/history/${symbol}/${days}`
+  const now = Date.now()
+
+  try {
+    const cachedStr = await env.SMART_NOTE_KV.get(cacheKey)
+    if (cachedStr) {
+      const cached = JSON.parse(cachedStr)
+      if (now - cached.timestamp < 30 * 60 * 1000) { // 30 mins cache
+        return jsonResponse({ success: true, data: { history: cached.history, symbol } })
+      }
+    }
+
+    const to = Math.floor(now / 1000)
+    // Add extra days to account for weekends/holidays where market is closed
+    const from = to - 86400 * (days + 4) 
+    const res = await fetch(`https://services.entrade.com.vn/chart-api/v2/ohlcs/stock?from=${from}&to=${to}&symbol=${symbol}&resolution=1D`)
+
+    if (!res.ok) {
+      return errorResponse(`DNSE API HTTP ${res.status}`, 502)
+    }
+
+    const data = await res.json() as any
+    if (!data || !data.c || data.c.length === 0) {
+      return errorResponse('Symbol not found or no data', 404)
+    }
+
+    // Get last 'days' items
+    const prices = data.c.slice(-days)
+    const timestamps = data.t.slice(-days)
+    const history = prices.map((price: number, i: number) => ({
+      price,
+      time: timestamps[i] * 1000
+    }))
+
+    await env.SMART_NOTE_KV.put(cacheKey, JSON.stringify({ history, timestamp: now }), { expirationTtl: 3600 })
+
+    return jsonResponse({
+      success: true,
+      data: { history, symbol }
+    })
+  } catch (err: any) {
+    return errorResponse(err.message, 500)
+  }
+}
+

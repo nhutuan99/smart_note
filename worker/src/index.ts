@@ -89,12 +89,7 @@ import {
   handleUploadImage,
 } from './controllers/blog.controller'
 
-import {
-  handleProxyLocation,
-  handleProxyWeather,
-  handleProxyExchangeRate,
-  handleProxyStockPrice
-} from './controllers/proxy.controller'
+import { handleProxyLocation, handleProxyWeather, handleProxyExchangeRate, handleProxyStockPrice, handleProxyStockHistory } from './controllers/proxy.controller'
 
 import {
   handleListStocks,
@@ -123,6 +118,10 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
     }
     if (path === '/api/proxy/stock-price' && request.method === 'GET') {
       return handleProxyStockPrice(request, env)
+    }
+
+    if (path === '/api/proxy/stock-history' && request.method === 'GET') {
+      return handleProxyStockHistory(request, env)
     }
 
     // Auth routes (no token needed)
