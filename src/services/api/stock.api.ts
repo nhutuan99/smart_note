@@ -13,11 +13,12 @@ export const stockApi = {
   deletePosition: (id: string) => 
     httpClient.del(`/api/stocks/${id}`),
 
+  // Silent mode: background fetches that shouldn't show error toasts
   getCurrentPrice: (symbol: string) =>
-    httpClient.get<{ currentPrice: number, symbol: string }>(`/api/proxy/stock-price?symbol=${symbol}`),
+    httpClient.get<{ currentPrice: number, symbol: string }>(`/api/proxy/stock-price?symbol=${symbol}`, { silent: true }),
 
   getStockHistory: (symbol: string, days: number = 7) =>
-    httpClient.get<{ history: { price: number, time: number }[], symbol: string }>(`/api/proxy/stock-history?symbol=${symbol}&days=${days}`),
+    httpClient.get<{ history: { price: number, time: number }[], symbol: string }>(`/api/proxy/stock-history?symbol=${symbol}&days=${days}`, { silent: true }),
 
   // ── Alert CRUD ──
   addAlert: (stockId: string, data: { targetPrice: number; direction: 'above' | 'below'; label?: string }) =>

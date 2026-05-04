@@ -60,7 +60,7 @@ async function fetchExchangeRate(): Promise<void> {
   rateError.value = ''
   try {
     // Using our backend proxy to avoid adblocker/CORS issues
-    const data = await httpClient.get<any>('/api/proxy/exchange-rate')
+    const data = await httpClient.get<any>('/api/proxy/exchange-rate', { silent: true })
     const rate = data?.vnd?.usd
     if (rate && typeof rate === 'number') {
       exchangeRate.value = rate

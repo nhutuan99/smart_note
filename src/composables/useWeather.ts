@@ -222,7 +222,7 @@ export function useWeather() {
 
     // 2. IP-based fallback (using our own proxy to avoid adblockers)
     try {
-      const data = await httpClient.get<any>('/api/proxy/location')
+      const data = await httpClient.get<any>('/api/proxy/location', { silent: true })
       if (data && data.lat) {
         return {
           lat: data.lat,
@@ -246,7 +246,7 @@ export function useWeather() {
     try {
       const loc = await detectLocation()
 
-      const proxyData = await httpClient.get<any>(`/api/proxy/weather?lat=${loc.lat}&lon=${loc.lon}`)
+      const proxyData = await httpClient.get<any>(`/api/proxy/weather?lat=${loc.lat}&lon=${loc.lon}`, { silent: true })
 
       const wData = proxyData.weather
       const aqiData = proxyData.aqi

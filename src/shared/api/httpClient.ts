@@ -138,7 +138,7 @@ function buildHeaders(hasBody: boolean, isExternal: boolean = false): HeadersIni
   return headers
 }
 
-async function handleResponse<T>(response: Response, retryFn?: () => Promise<T>): Promise<T> {
+async function handleResponse<T>(response: Response, retryFn?: () => Promise<T>, silent?: boolean): Promise<T> {
   if (response.status === 401 && retryFn) {
     // Attempt silent refresh before giving up
     const refreshed = await tryRefreshToken()
@@ -161,10 +161,12 @@ async function handleResponse<T>(response: Response, retryFn?: () => Promise<T>)
   if (!contentType.includes('application/json')) {
     const isSpaFallback = response.status === 200
     const errorMsg = isSpaFallback ? 'API not found (SPA fallback)' : `Request failed (${response.status})`
-    try {
-      const { useUiStore } = await import('@/stores/ui')
-      useUiStore().showToast(isSpaFallback ? 'warning' : 'error', errorMsg)
-    } catch (e) {}
+    if (!silent) {
+      try {
+        const { useUiStore } = await import('@/stores/ui')
+        useUiStore().showToast(isSpaFallback ? 'warning' : 'error', errorMsg)
+      } catch (e) {}
+    }
     throw new Error(errorMsg)
   }
 
@@ -178,19 +180,22 @@ async function handleResponse<T>(response: Response, retryFn?: () => Promise<T>)
 
   if (!json.success) {
     const errorMsg = json.error || `Request failed (${response.status})`
-    try {
-      const { useUiStore } = await import('@/stores/ui')
-      useUiStore().showToast('error', errorMsg)
-    } catch (e) {}
+    if (!silent) {
+      try {
+        const { useUiStore } = await import('@/stores/ui')
+        useUiStore().showToast('error', errorMsg)
+      } catch (e) {}
+    }
     throw new Error(errorMsg)
   }
 
   return json.data as T
 }
 
-async function get<T>(url: string): Promise<T> {
+async function get<T>(url: string, options?: { silent?: boolean }): Promise<T> {
   const isExternal = url.startsWith('http')
   const fullUrl = isExternal ? url : `${API_BASE}${url}`
+  const silent = options?.silent
 
   const doRequest = async (): Promise<T> => {
     const response = await fetch(fullUrl, {
@@ -198,7 +203,7 @@ async function get<T>(url: string): Promise<T> {
       headers: buildHeaders(false, isExternal),
       cache: 'no-store'
     })
-    return handleResponse<T>(response)
+    return handleResponse<T>(response, undefined, silent)
   }
 
   const response = await fetch(fullUrl, {
@@ -206,7 +211,7 @@ async function get<T>(url: string): Promise<T> {
     headers: buildHeaders(false, isExternal),
     cache: 'no-store'
   })
-  return handleResponse<T>(response, doRequest)
+  return handleResponse<T>(response, doRequest, silent)
 }
 
 async function post<T>(url: string, body?: unknown): Promise<T> {
