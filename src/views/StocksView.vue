@@ -264,12 +264,42 @@ const externalTooltipHandler = (context: any) => {
 
   const canvasRect = chart.canvas.getBoundingClientRect()
   tooltipEl.style.opacity = '1'
-  tooltipEl.style.left = canvasRect.left + window.scrollX + tooltip.caretX + 'px'
-  tooltipEl.style.top = canvasRect.top + window.scrollY + tooltip.caretY - tooltipEl.offsetHeight - 10 + 'px'
-  
-  if (parseInt(tooltipEl.style.top) < window.scrollY + 10) {
-     tooltipEl.style.top = canvasRect.top + window.scrollY + tooltip.caretY + 10 + 'px'
+
+  // Calculate initial position
+  let left = canvasRect.left + window.scrollX + tooltip.caretX
+  let top = canvasRect.top + window.scrollY + tooltip.caretY - tooltipEl.offsetHeight - 10
+
+  // Clamp top: if tooltip goes above viewport, flip below the caret
+  if (top < window.scrollY + 10) {
+    top = canvasRect.top + window.scrollY + tooltip.caretY + 10
   }
+
+  // Clamp horizontal: keep tooltip fully inside viewport with 12px margin
+  const margin = 12
+  const tooltipWidth = tooltipEl.offsetWidth
+  const viewportWidth = window.innerWidth
+
+  // Remove default centering transform; we'll position manually
+  tooltipEl.style.transform = 'none'
+
+  // Left edge: tooltip's left side (accounting for centered position)
+  const tooltipLeft = left - tooltipWidth / 2
+  // Right edge
+  const tooltipRight = left + tooltipWidth / 2
+
+  if (tooltipLeft < margin) {
+    // Tooltip would overflow left — pin to left margin
+    left = margin
+  } else if (tooltipRight > viewportWidth - margin) {
+    // Tooltip would overflow right — pin to right margin
+    left = viewportWidth - margin - tooltipWidth
+  } else {
+    // Normal centered positioning
+    left = left - tooltipWidth / 2
+  }
+
+  tooltipEl.style.left = left + 'px'
+  tooltipEl.style.top = top + 'px'
 }
 
 // ── Sparkline config ──
