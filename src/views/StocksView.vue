@@ -615,39 +615,44 @@ function getChartData(symbol: string) {
       </div>
     </transition>
 
-    <!-- ══════ Add Alert Modal ══════ -->
     <transition name="fade">
       <div v-if="showAlertModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-4 backdrop-blur-sm" @click.self="showAlertModal = false">
         <div class="card-premium w-full max-w-sm shadow-2xl relative overflow-hidden" @click.stop>
-          <!-- Header gradient -->
-          <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-accent to-accent-hover"></div>
+          <!-- Header gradient - Thicker for premium look -->
+          <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-accent to-accent-hover"></div>
           
           <div class="p-6">
-            <div class="flex items-center gap-3 mb-5">
-              <div class="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center">
-                <Bell :size="20" class="text-accent" />
+            <div class="flex items-center gap-3 mb-6">
+              <div class="h-11 w-11 rounded-2xl bg-accent/10 flex items-center justify-center shadow-inner">
+                <Bell :size="22" class="text-accent" />
               </div>
               <div>
-                <h3 class="text-base font-bold">{{ t('stockAlert.addAlert') }}</h3>
-                <p class="text-xs text-text-tertiary">{{ alertTargetStock?.symbol }} — {{ t('common.currentPrice') }}: <span class="text-accent font-semibold">{{ stockStore.prices[alertTargetStock?.symbol || ''] || '---' }}</span></p>
+                <h3 class="text-base font-bold tracking-tight">{{ t('stockAlert.addAlert') }}</h3>
+                <p class="text-[11px] text-text-tertiary uppercase font-medium tracking-wider">
+                  {{ alertTargetStock?.symbol }} <span class="mx-1 opacity-30">•</span> {{ t('common.currentPrice') }}: <span class="text-accent font-bold">{{ stockStore.prices[alertTargetStock?.symbol || ''] || '---' }}</span>
+                </p>
               </div>
             </div>
 
-            <div class="space-y-4">
-              <!-- Direction Toggle -->
+            <div class="space-y-5">
+              <!-- Direction Toggle - Refined CSS -->
               <div>
-                <label class="mb-1.5 block text-xs font-semibold text-text-secondary uppercase tracking-wider">{{ t('stockAlert.direction') }}</label>
-                <div class="flex overflow-hidden rounded-xl border border-border-default">
+                <label class="mb-2 block text-[11px] font-bold text-text-tertiary uppercase tracking-widest">{{ t('stockAlert.direction') }}</label>
+                <div class="flex p-1 rounded-2xl bg-bg-surface border border-border-default">
                   <button 
-                    class="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium transition-all"
-                    :class="alertForm.direction === 'below' ? 'bg-success/10 text-success' : 'bg-bg-surface text-text-tertiary hover:bg-bg-hover'"
+                    class="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold transition-all duration-200"
+                    :class="alertForm.direction === 'below' 
+                      ? 'bg-success/20 text-success shadow-sm' 
+                      : 'text-text-tertiary hover:bg-bg-hover'"
                     @click="alertForm.direction = 'below'"
                   >
                     📉 {{ t('stockAlert.buy') }}
                   </button>
                   <button 
-                    class="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium transition-all"
-                    :class="alertForm.direction === 'above' ? 'bg-error/10 text-error' : 'bg-bg-surface text-text-tertiary hover:bg-bg-hover'"
+                    class="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold transition-all duration-200"
+                    :class="alertForm.direction === 'above' 
+                      ? 'bg-error/20 text-error shadow-sm' 
+                      : 'text-text-tertiary hover:bg-bg-hover'"
                     @click="alertForm.direction = 'above'"
                   >
                     📈 {{ t('stockAlert.sell') }}
@@ -657,33 +662,36 @@ function getChartData(symbol: string) {
 
               <!-- Target Price -->
               <div>
-                <label class="mb-1.5 block text-sm font-medium text-text-secondary">{{ t('stockAlert.targetPrice') }}</label>
-                <input 
-                  v-model="alertForm.targetPrice" 
-                  type="number" 
-                  step="0.1"
-                  class="border-border-default bg-bg-surface text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all focus:ring-2 focus:outline-none" 
-                  :placeholder="alertForm.direction === 'below' ? '16.9' : '42.5'" 
-                />
+                <label class="mb-1.5 block text-xs font-semibold text-text-secondary">{{ t('stockAlert.targetPrice') }}</label>
+                <div class="relative">
+                  <input 
+                    v-model="alertForm.targetPrice" 
+                    type="number" 
+                    step="0.1"
+                    class="border-border-default bg-bg-surface text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-3 text-sm font-bold transition-all focus:ring-2 focus:outline-none" 
+                    :placeholder="alertForm.direction === 'below' ? '16.9' : '42.5'" 
+                  />
+                  <div class="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-text-disabled uppercase">VND</div>
+                </div>
               </div>
 
               <!-- Label -->
               <div>
-                <label class="mb-1.5 block text-sm font-medium text-text-secondary">{{ t('stockAlert.label') }} <span class="text-text-disabled">({{ t('stockAlert.optional') }})</span></label>
+                <label class="mb-1.5 block text-xs font-semibold text-text-secondary">{{ t('stockAlert.label') }} <span class="text-text-disabled font-normal">({{ t('stockAlert.optional') }})</span></label>
                 <input 
                   v-model="alertForm.label" 
                   type="text"
-                  class="border-border-default bg-bg-surface text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-2.5 text-sm transition-all focus:ring-2 focus:outline-none" 
+                  class="border-border-default bg-bg-surface text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-3 text-sm transition-all focus:ring-2 focus:outline-none" 
                   :placeholder="alertForm.direction === 'below' ? t('stockAlert.buyPlaceholder') : t('stockAlert.sellPlaceholder')" 
                 />
               </div>
             </div>
 
-            <!-- Footer -->
-            <div class="mt-6 flex gap-3">
-              <button @click="showAlertModal = false" class="btn-secondary flex-1">{{ t('common.cancel') }}</button>
-              <button @click="handleAddAlert" class="flex-1 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-accent to-accent-hover px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-accent/20 hover:shadow-accent/40 transition-all hover:-translate-y-0.5">
-                <Bell :size="16" /> {{ t('stockAlert.addAlert') }}
+            <!-- Footer - Standardized border-radius -->
+            <div class="mt-8 flex gap-3">
+              <button @click="showAlertModal = false" class="btn-secondary flex-1 !rounded-xl !py-3">{{ t('common.cancel') }}</button>
+              <button @click="handleAddAlert" class="flex-[1.5] flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-accent to-accent-hover px-4 py-3 text-sm font-bold text-white shadow-lg shadow-accent/20 hover:shadow-accent/40 active:scale-[0.98] transition-all">
+                <Bell :size="18" /> {{ t('stockAlert.addAlert') }}
               </button>
             </div>
           </div>
