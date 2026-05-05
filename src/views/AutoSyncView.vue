@@ -107,7 +107,7 @@ onMounted(() => {
               {{ t('autoSync.revealUrl') }}
             </button>
             <button
-              class="bg-accent text-bg-primary hover:bg-accent-hover shrink-0 rounded-lg px-4 py-2 text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+              class="btn-primary shrink-0 justify-center"
               @click="copyWebhookUrl"
             >
               <Copy :size="16" />

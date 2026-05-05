@@ -50,14 +50,14 @@ function handleCancel() {
         <div class="flex gap-3">
           <button
             @click="handleCancel"
-            class="hover:bg-bg-hover text-text-secondary border-border-default flex-1 rounded-xl border py-2.5 text-sm font-semibold transition-all duration-150"
+            class="btn-secondary flex-1 justify-center py-2.5"
           >
             {{ ui.confirmState.options.cancelText || t('common.cancel') }}
           </button>
           <button
             @click="handleConfirm"
-            class="flex-1 rounded-xl py-2.5 text-sm font-semibold transition-all duration-150 text-white"
-            :class="ui.confirmState.options.danger ? 'bg-error hover:bg-error/90' : 'bg-accent hover:bg-accent/90'"
+            class="btn-primary flex-1 justify-center py-2.5"
+            :class="ui.confirmState.options.danger ? '!bg-error !text-white !border-error hover:!bg-error/90' : ''"
           >
             {{ ui.confirmState.options.confirmText || t('common.confirm') }}
           </button>

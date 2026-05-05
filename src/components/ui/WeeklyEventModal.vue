@@ -154,12 +154,12 @@ function skip() {
               <button
                 :disabled="isGeneratingText"
                 @click="interact"
-                class="btn-join"
+                class="btn-primary w-full justify-center !rounded-xl !py-3.5 text-[0.9375rem]"
               >
                 <span>{{ t('weeklyEvent.join') }}</span>
                 <ChevronRight :size="18" />
               </button>
-              <button @click="skip" class="btn-skip">
+              <button @click="skip" class="btn-secondary w-full justify-center !rounded-xl !py-3">
                 {{ t('weeklyEvent.skip') }}
               </button>
             </div>
@@ -400,46 +400,6 @@ function skip() {
   flex-shrink: 0;
 }
 
-.btn-join {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  width: 100%;
-  padding: 0.875rem 1rem;
-  border-radius: 0.875rem;
-  background: linear-gradient(135deg, #7c6ff7, #ec4899);
-  color: #fff;
-  font-size: 0.9375rem;
-  font-weight: 700;
-  border: 1px solid rgba(255,255,255,0.12);
-  transition: opacity 0.15s ease, transform 0.15s ease;
-  cursor: pointer;
-}
-.btn-join:hover { opacity: 0.92; }
-.btn-join:active { transform: scale(0.98); }
-.btn-join:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.btn-skip {
-  width: 100%;
-  padding: 0.75rem;
-  border-radius: 0.875rem;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.08);
-  color: rgba(255,255,255,0.45);
-  font-size: 0.875rem;
-  font-weight: 500;
-  transition: background 0.15s ease, color 0.15s ease;
-  cursor: pointer;
-}
-.btn-skip:hover {
-  background: rgba(255,255,255,0.09);
-  color: rgba(255,255,255,0.65);
-}
-.btn-skip:active { transform: scale(0.99); }
 
 /* ══════════════════════════════════════════════
    Transitions

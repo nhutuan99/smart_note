@@ -339,7 +339,7 @@ function handleLogout() {
       <template v-else>
         <router-link
           to="/login"
-          class="bg-accent text-bg-primary hover:bg-accent-hover active:bg-accent-hover flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-sm font-semibold transition-colors"
+          class="btn-primary"
         >
           {{ t('common.login') }}
         </router-link>
