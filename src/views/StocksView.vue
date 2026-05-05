@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, computed } from 'vue'
+import { onMounted, onUnmounted, ref, computed, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Plus, Trash2, LineChart, TrendingUp, TrendingDown, Bell, BellRing, RotateCcw, X } from 'lucide-vue-next'
 import { useStockStore } from '@/stores/stock'
@@ -47,6 +47,46 @@ function handleImageError(e: Event, symbol: string) {
 
 const showAddModal = ref(false)
 const newPosition = ref({ symbol: '', buyPrice: '', quantity: '', targetProfit: '', stopLoss: '' })
+const addModalRef = ref<HTMLElement | null>(null)
+const alertModalRef = ref<HTMLElement | null>(null)
+
+// Alert modal state (declared here so watch() can reference it)
+const showAlertModal = ref(false)
+const alertTargetStock = ref<StockPosition | null>(null)
+const alertForm = ref({ targetPrice: '', direction: 'below' as 'above' | 'below', label: '' })
+
+// Lock body scroll & focus modal into viewport when any modal opens
+function lockScroll() {
+  document.body.style.overflow = 'hidden'
+  document.body.style.position = 'fixed'
+  document.body.style.width = '100%'
+  document.body.style.top = `-${window.scrollY}px`
+}
+function unlockScroll() {
+  const scrollY = document.body.style.top
+  document.body.style.overflow = ''
+  document.body.style.position = ''
+  document.body.style.width = ''
+  document.body.style.top = ''
+  window.scrollTo(0, parseInt(scrollY || '0') * -1)
+}
+
+watch(showAddModal, (open) => {
+  if (open) {
+    lockScroll()
+    nextTick(() => addModalRef.value?.scrollIntoView({ block: 'center', behavior: 'instant' }))
+  } else {
+    unlockScroll()
+  }
+})
+watch(showAlertModal, (open) => {
+  if (open) {
+    lockScroll()
+    nextTick(() => alertModalRef.value?.scrollIntoView({ block: 'center', behavior: 'instant' }))
+  } else {
+    unlockScroll()
+  }
+})
 const isSymbolFocused = ref(false)
 
 const searchResults = computed(() => {
@@ -57,10 +97,7 @@ const searchResults = computed(() => {
     .slice(0, 5)
 })
 
-// Alert modal state
-const showAlertModal = ref(false)
-const alertTargetStock = ref<StockPosition | null>(null)
-const alertForm = ref({ targetPrice: '', direction: 'below' as 'above' | 'below', label: '' })
+
 
 onMounted(() => {
   stockStore.fetchPositions()
@@ -549,8 +586,8 @@ function getChartData(symbol: string) {
 
     <!-- ══════ Add Position Modal ══════ -->
     <transition name="fade">
-      <div v-if="showAddModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-        <div class="card-premium w-full max-w-sm p-6 shadow-2xl relative overflow-visible" @click.stop>
+      <div v-if="showAddModal" class="stock-modal-overlay" @click.self="showAddModal = false">
+        <div ref="addModalRef" class="stock-modal-panel card-premium" @click.stop>
           <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-accent to-accent-hover rounded-t-2xl"></div>
           <h3 class="mb-5 text-lg font-bold">{{ t('common.add') }} {{ t('settings.stocks') }}</h3>
           
@@ -616,8 +653,8 @@ function getChartData(symbol: string) {
     </transition>
 
     <transition name="fade">
-      <div v-if="showAlertModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-4 backdrop-blur-sm" @click.self="showAlertModal = false">
-        <div class="card-premium w-full max-w-sm shadow-2xl relative overflow-hidden" @click.stop>
+      <div v-if="showAlertModal" class="stock-modal-overlay" @click.self="showAlertModal = false">
+        <div ref="alertModalRef" class="stock-modal-panel card-premium" @click.stop>
           <!-- Header gradient - Thicker for premium look -->
           <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-accent to-accent-hover"></div>
           
@@ -700,3 +737,53 @@ function getChartData(symbol: string) {
     </transition>
   </div>
 </template>
+
+<style scoped>
+/* ── Stock Modal: always centered in visual viewport ── */
+.stock-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  padding: 1rem;
+  /* Allow overlay itself to scroll if modal is taller than viewport */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.stock-modal-panel {
+  position: relative;
+  width: 100%;
+  max-width: 24rem; /* max-w-sm */
+  max-height: 90vh;
+  max-height: 90dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 1.5rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  /* Prevent iOS keyboard from pushing modal off-screen */
+  margin: auto;
+}
+
+/* On small mobile screens, shrink padding and ensure safe-area */
+@media (max-height: 600px) {
+  .stock-modal-panel {
+    max-height: 85vh;
+    max-height: 85dvh;
+    padding: 1rem;
+  }
+}
+
+/* iOS PWA safe area at bottom */
+@media (display-mode: standalone) {
+  .stock-modal-overlay {
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 1rem);
+  }
+}
+</style>

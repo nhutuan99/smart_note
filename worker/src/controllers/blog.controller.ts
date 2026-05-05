@@ -369,12 +369,18 @@ Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải th
 {
   "title": "Tiêu đề hấp dẫn (dưới 60 ký tự)",
   "excerpt": "Đoạn mô tả ngắn (dưới 160 ký tự) cho SEO meta description",
-  "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
+  "tags": ["tag1", "tag2", "tag3"],
   "seoKeywords": "keyword1, keyword2, keyword3",
   "youtubeQuery": "từ khóa tìm video YouTube liên quan (tiếng Việt, 3-5 từ)",
   "content": "Nội dung chi tiết bằng Markdown. KHÔNG bao gồm H1. Bắt đầu với đoạn mở bài hấp dẫn, thân bài chia H2/H3 rõ ràng, bullet points, bold text, blockquotes cho số liệu nổi bật, kết bài CTA giới thiệu FinNote.",
   "imagePrompts": ["Mô tả ngắn cho ảnh minh họa section 1", "Mô tả cho ảnh section 2"]
-}`
+}
+
+QUY TẮC TAGS (BẮT BUỘC):
+- Tối đa 3 tags, viết thường, bằng tiếng Việt
+- Chỉ dùng chủ đề tài chính phổ quát: "tài chính", "đầu tư", "tiết kiệm", "quản lý chi tiêu", "chứng khoán", "bất động sản", "thu nhập thụ động", "fintech"
+- KHÔNG dùng tên thương hiệu (Google, Anthropic, Warren Buffett, v.v.)
+- KHÔNG trùng lặp`
 
     let text = ''
 
@@ -546,7 +552,9 @@ Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải th
   "tags": ["tag1", "tag2", "tag3"],
   "seoKeywords": "keyword1, keyword2",
   "content": "Nội dung bài viết chi tiết được format bằng Markdown (không chứa H1 đầu bài). Đảm bảo nội dung sắc sảo, tự nhiên, có checklist và ví dụ thực tế."
-}`
+}
+
+QUY TẮC TAGS: Tối đa 3 tags, viết thường, tiếng Việt, chỉ chủ đề tài chính phổ quát. KHÔNG tên thương hiệu. KHÔNG trùng lặp.`
 
   try {
     let text = ''

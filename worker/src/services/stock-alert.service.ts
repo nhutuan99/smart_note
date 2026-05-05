@@ -28,7 +28,8 @@ export async function registerAlertUser(userId: string, env: Env): Promise<void>
 export async function unregisterAlertUserIfEmpty(userId: string, env: Env): Promise<void> {
   const stocks = await getJSON<StockData[]>(env.SMART_NOTE_KV, `users/${userId}/stocks`) || []
   const hasAlerts = stocks.some(s => s.alerts && s.alerts.some(a => !a.triggered))
-  if (!hasAlerts) {
+  const hasThresholds = stocks.some(s => s.targetProfit || s.stopLoss)
+  if (!hasAlerts && !hasThresholds) {
     const users = (await getJSON<string[]>(env.SMART_NOTE_KV, ALERT_USERS_KEY)) || []
     const filtered = users.filter(u => u !== userId)
     await putJSON(env.SMART_NOTE_KV, ALERT_USERS_KEY, filtered)
@@ -96,46 +97,75 @@ export async function checkAllStockAlerts(env: Env): Promise<string> {
       let modified = false
 
       for (const stock of stocks) {
-        if (!stock.alerts?.length) continue
-
-        // Check ALL alerts, not just pending ones. 
-        // User explicitly wants repeated updates every 30 mins while the price remains in the target zone.
-        const pendingAlerts = stock.alerts
-        if (pendingAlerts.length === 0) continue
-
         const currentPrice = await getCurrentPrice(stock.symbol, env)
         if (currentPrice === null) continue
 
-        for (const alert of pendingAlerts) {
-          let shouldTrigger = false
-          // Trigger early when price is within ±2% of the target
-          // This ensures the user gets notified if the price is "close enough" 
-          // because exact matches are difficult in a volatile market.
-          if (alert.direction === 'above' && currentPrice >= alert.targetPrice * 0.98) {
-            shouldTrigger = true
-          } else if (alert.direction === 'below' && currentPrice <= alert.targetPrice * 1.02) {
-            shouldTrigger = true
+        // ── 1. Check manual alerts ──
+        if (stock.alerts?.length) {
+          // Check ALL alerts, not just pending ones. 
+          // User explicitly wants repeated updates every 30 mins while the price remains in the target zone.
+          const pendingAlerts = stock.alerts
+          for (const alert of pendingAlerts) {
+            let shouldTrigger = false
+            // Trigger early when price is within ±2% of the target
+            if (alert.direction === 'above' && currentPrice >= alert.targetPrice * 0.98) {
+              shouldTrigger = true
+            } else if (alert.direction === 'below' && currentPrice <= alert.targetPrice * 1.02) {
+              shouldTrigger = true
+            }
+
+            if (shouldTrigger) {
+              alert.triggered = true
+              alert.notifiedAt = new Date().toISOString()
+              modified = true
+              totalTriggered++
+
+              // Send push notification
+              const isBuy = alert.direction === 'below'
+              const action = isBuy ? '📉 MUA' : '📈 BÁN'
+              const title = `📊 ${stock.symbol} đã vào vùng giá ${action}!`
+              const body = `Giá hiện tại: ${currentPrice} (Mốc ${alert.targetPrice}) — Đã tiệm cận biên độ ±2% để ${alert.label || (isBuy ? 'mua vào' : 'bán ra')}`
+
+              await sendPushToUser(userId, env, {
+                title,
+                body,
+                tag: `stock-alert-${stock.symbol}-${alert.id}`,
+                url: '/stocks',
+                data: { type: 'stock_alert', symbol: stock.symbol, alertId: alert.id }
+              })
+            }
+          }
+        }
+
+        // ── 2. Check targetProfit & stopLoss (percentage-based) ──
+        if (stock.buyPrice > 0 && (stock.targetProfit || stock.stopLoss)) {
+          const profitPct = ((currentPrice - stock.buyPrice) / stock.buyPrice) * 100
+
+          // Target Profit: notify when profit% >= targetProfit%
+          if (stock.targetProfit && profitPct >= stock.targetProfit) {
+            totalTriggered++
+            await sendPushToUser(userId, env, {
+              title: `🎯 ${stock.symbol} đã đạt mục tiêu chốt lời!`,
+              body: `Lãi ${profitPct.toFixed(1)}% (mục tiêu ${stock.targetProfit}%) — Giá hiện tại: ${currentPrice} / Giá mua: ${stock.buyPrice}`,
+              tag: `stock-tp-${stock.symbol}`,
+              url: '/stocks',
+              data: { type: 'stock_tp', symbol: stock.symbol }
+            })
           }
 
-          if (shouldTrigger) {
-            alert.triggered = true
-            alert.notifiedAt = new Date().toISOString()
-            modified = true
-            totalTriggered++
-
-            // Send push notification
-            const isBuy = alert.direction === 'below'
-            const action = isBuy ? '📉 MUA' : '📈 BÁN'
-            const title = `📊 ${stock.symbol} đã vào vùng giá ${action}!`
-            const body = `Giá hiện tại: ${currentPrice} (Mốc ${alert.targetPrice}) — Đã tiệm cận biên độ ±2% để ${alert.label || (isBuy ? 'mua vào' : 'bán ra')}`
-
-            await sendPushToUser(userId, env, {
-              title,
-              body,
-              tag: `stock-alert-${stock.symbol}-${alert.id}`,
-              url: '/stocks',
-              data: { type: 'stock_alert', symbol: stock.symbol, alertId: alert.id }
-            })
+          // Stop Loss: notify when loss% <= stopLoss% (stopLoss is typically negative, e.g. -7)
+          if (stock.stopLoss) {
+            const stopLossThreshold = stock.stopLoss < 0 ? stock.stopLoss : -Math.abs(stock.stopLoss)
+            if (profitPct <= stopLossThreshold) {
+              totalTriggered++
+              await sendPushToUser(userId, env, {
+                title: `🚨 ${stock.symbol} đã chạm ngưỡng cắt lỗ!`,
+                body: `Lỗ ${profitPct.toFixed(1)}% (ngưỡng ${stopLossThreshold}%) — Giá hiện tại: ${currentPrice} / Giá mua: ${stock.buyPrice}`,
+                tag: `stock-sl-${stock.symbol}`,
+                url: '/stocks',
+                data: { type: 'stock_sl', symbol: stock.symbol }
+              })
+            }
           }
         }
       }

@@ -34,7 +34,12 @@ export async function handleCreateStock(userId: string, request: Request, env: E
 
   stocks.push(newStock)
   await putJSON(env.SMART_NOTE_KV, `users/${userId}/stocks`, stocks)
-  
+
+  // Register user for cron if they have targetProfit or stopLoss
+  if (newStock.targetProfit || newStock.stopLoss) {
+    await registerAlertUser(userId, env)
+  }
+
   return jsonResponse({ success: true, data: newStock }, 201)
 }
 
@@ -55,7 +60,12 @@ export async function handleUpdateStock(userId: string, stockId: string, request
   
   stocks[index] = updatedStock
   await putJSON(env.SMART_NOTE_KV, `users/${userId}/stocks`, stocks)
-  
+
+  // Register user for cron if targetProfit or stopLoss is set
+  if (updatedStock.targetProfit || updatedStock.stopLoss) {
+    await registerAlertUser(userId, env)
+  }
+
   return jsonResponse({ success: true, data: updatedStock })
 }
 

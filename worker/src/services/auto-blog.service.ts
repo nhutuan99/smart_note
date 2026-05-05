@@ -34,7 +34,37 @@ function createSlug(title: string): string {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)+/g, '')
+    .replace(/(^-|-$)+/g, '-')
+}
+
+/**
+ * Normalize and deduplicate blog tags:
+ * - Lowercase, trim
+ * - Merge near-duplicates (e.g. 'Gen Z' and 'GenZ' → 'gen z')
+ * - Remove brand names and overly specific terms
+ * - Cap at 3 tags max
+ */
+function normalizeTags(rawTags: string[]): string[] {
+  if (!Array.isArray(rawTags)) return ['tài chính']
+
+  const seen = new Set<string>()
+  const result: string[] = []
+
+  for (const tag of rawTags) {
+    // Normalize: lowercase, trim, collapse spaces
+    let t = tag.toLowerCase().trim().replace(/\s+/g, ' ')
+    if (!t || t.length < 2) continue
+
+    // Create a "key" for dedup: strip all non-alphanumeric
+    const key = t.replace(/[^a-z0-9\u00C0-\u024F\u1E00-\u1EFF]/gi, '').toLowerCase()
+    if (seen.has(key)) continue
+    seen.add(key)
+
+    result.push(t)
+    if (result.length >= 3) break
+  }
+
+  return result.length > 0 ? result : ['tài chính']
 }
 
 function stripCDATA(text: string): string {
@@ -298,7 +328,13 @@ Trả về ĐÚNG JSON format:
   "youtubeQuery": "từ khóa tìm video YouTube liên quan (tiếng Việt, 3-5 từ)",
   "imagePrompt": "Mô tả ngắn gọn bằng tiếng Anh cho hình ảnh banner minh họa bài viết (ví dụ: young person managing finances on smartphone with charts)",
   "content": "Bài viết markdown đầy đủ (tối thiểu 1200 từ). KHÔNG bao gồm tiêu đề H1. Bắt đầu bằng đoạn mở bài, chia H2/H3, bullet points, bold text, kết bài CTA về FinNote."
-}`
+}
+
+QUY TẮC TAGS (BẮT BUỘC):
+- Tối đa 3 tags, viết thường, bằng tiếng Việt
+- Chỉ dùng chủ đề tài chính phổ quát: "tài chính", "đầu tư", "tiết kiệm", "quản lý chi tiêu", "chứng khoán", "bất động sản", "thu nhập thụ động", "fintech"
+- KHÔNG dùng tên thương hiệu (Google, Anthropic, Warren Buffett, v.v.)
+- KHÔNG trùng lặp ("gen z" và "genz" là trùng — chỉ giữ 1)`
 
   const userPrompt = `Chủ đề hot từ VnExpress: "${topic}"
 Góc nhìn blog: "${angle}"
@@ -333,6 +369,7 @@ Hãy viết 1 bài blog tài chính cá nhân chuyên sâu, sáng tạo, dễ hi
           if (jsonMatch) {
             const parsed = JSON.parse(jsonMatch[0])
             if (parsed.content && parsed.title) {
+              parsed.tags = normalizeTags(parsed.tags)
               return { ...parsed, modelUsed: 'gemini' }
             }
           }
@@ -395,7 +432,7 @@ Yêu cầu:
   return {
     title: meta.title || angle,
     excerpt: meta.excerpt || `Blog tài chính: ${angle}`,
-    tags: Array.isArray(meta.tags) ? meta.tags : ['tài chính', 'genz'],
+    tags: normalizeTags(meta.tags),
     seoKeywords: meta.seoKeywords || '',
     content: content.replace(/^\s*#\s+[^\n]+\n*/m, '').trim(), // strip H1
     modelUsed: 'cloudflare'
