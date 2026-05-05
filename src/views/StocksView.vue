@@ -540,7 +540,7 @@ function getChartData(symbol: string) {
             @click="openAlertModal(pos)" 
             class="ml-auto flex-shrink-0 flex items-center justify-center gap-1.5 text-xs font-medium text-text-primary bg-bg-surface hover:bg-bg-hover active:bg-bg-hover border border-border-default hover:border-border-hover active:border-border-hover rounded-lg py-1.5 px-3 transition-all duration-200"
           >
-            <BellRing :size="14" class="text-warning" /> 
+            <BellRing :size="14" class="text-accent" /> 
             <span>{{ t('stockAlert.addAlert') }}</span>
           </button>
         </div>
@@ -620,12 +620,12 @@ function getChartData(symbol: string) {
       <div v-if="showAlertModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-4 backdrop-blur-sm" @click.self="showAlertModal = false">
         <div class="card-premium w-full max-w-sm shadow-2xl relative overflow-hidden" @click.stop>
           <!-- Header gradient -->
-          <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-warning to-orange-400"></div>
+          <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-accent to-accent-hover"></div>
           
           <div class="p-6">
             <div class="flex items-center gap-3 mb-5">
-              <div class="h-10 w-10 rounded-xl bg-warning/10 flex items-center justify-center">
-                <Bell :size="20" class="text-warning" />
+              <div class="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center">
+                <Bell :size="20" class="text-accent" />
               </div>
               <div>
                 <h3 class="text-base font-bold">{{ t('stockAlert.addAlert') }}</h3>
@@ -682,7 +682,7 @@ function getChartData(symbol: string) {
             <!-- Footer -->
             <div class="mt-6 flex gap-3">
               <button @click="showAlertModal = false" class="btn-secondary flex-1">{{ t('common.cancel') }}</button>
-              <button @click="handleAddAlert" class="flex-1 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-warning to-orange-400 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-warning/20 hover:shadow-warning/40 transition-all hover:-translate-y-0.5">
+              <button @click="handleAddAlert" class="flex-1 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-accent to-accent-hover px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-accent/20 hover:shadow-accent/40 transition-all hover:-translate-y-0.5">
                 <Bell :size="16" /> {{ t('stockAlert.addAlert') }}
               </button>
             </div>
