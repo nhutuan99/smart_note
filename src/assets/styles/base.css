@@ -84,11 +84,11 @@
   --warning: #fbbf24; /* Amber 400 */
   --info: #60a5fa; /* Blue 400 */
 
-  /* Glassmorphism */
-  --glass-bg: rgba(13, 13, 12, 0.75);
-  --glass-bg-heavy: rgba(13, 13, 12, 0.92);
-  --glass-border: rgba(255, 255, 255, 0.09);
-  --glass-blur: blur(24px);
+  /* Glassmorphism - Updated to solid colors to prevent iOS liquid glass bleed-through */
+  --glass-bg: var(--bg-surface);
+  --glass-bg-heavy: var(--bg-elevated);
+  --glass-border: var(--border-default);
+  --glass-blur: none;
 }
 
 /* ============================================
@@ -125,11 +125,11 @@
   --warning: #f59e0b; /* Amber 500 */
   --info: #3b82f6; /* Blue 500 */
 
-  /* Glassmorphism (frosted white glass for light mode) */
-  --glass-bg: rgba(255, 255, 255, 0.8);
-  --glass-bg-heavy: rgba(255, 255, 255, 0.92);
-  --glass-border: rgba(0, 0, 0, 0.08);
-  --glass-blur: blur(24px);
+  /* Glassmorphism (Solid colors for light mode) */
+  --glass-bg: var(--bg-surface);
+  --glass-bg-heavy: var(--bg-elevated);
+  --glass-border: var(--border-default);
+  --glass-blur: none;
 }
 
 /* ============================================
