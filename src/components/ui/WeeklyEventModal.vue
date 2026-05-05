@@ -51,6 +51,9 @@ watch(() => ui.showWeeklyEvent, async (newVal) => {
           const blob = await imgRes.blob()
           generatedImageBlob.value = URL.createObjectURL(blob)
           isGeneratingImage.value = false
+        } else {
+          generatedImageBlob.value = '/images/events/event1.png'
+          isGeneratingImage.value = false
         }
       } catch (err) {
         console.error('AI Event Error:', err)

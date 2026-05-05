@@ -350,6 +350,12 @@ export default {
   // ── Settings ──
   settings: {
     title: 'Settings',
+    tabs: {
+      general: 'General',
+      profile: 'Profile',
+      security: 'Security',
+      other: 'Other'
+    },
     // App Installation (PWA)
     appDownload: 'App Installation',
     pwaInstallTitle: 'Install FinNote (PWA)',
@@ -365,7 +371,7 @@ export default {
     languageDesc: 'Choose display language',
     stocks: 'Stocks',
     enableStocks: 'Enable Stocks Module',
-    enableStocksDesc: 'Manage your stock portfolio and track real-time prices',
+    enableStocksDesc: 'Manage your stock portfolio and track real-time prices (Vietnam market only)',
     // Currency
     currency: 'Currency',
     currencyDisplay: 'Display Currency',

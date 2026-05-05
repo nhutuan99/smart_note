@@ -315,9 +315,17 @@ export async function handleSmsWebhook(request: Request, env: Env): Promise<Resp
           return { text, senderHint }
         })
       } else {
-        const raw = body?.text ?? body?.message ?? body?.body ?? body?.content ?? body?.sms ?? ''
+        let raw = body?.text ?? body?.message ?? body?.body ?? body?.content ?? body?.sms ?? ''
+        // Support Apple Wallet Shortcut Payload
+        if (!raw && body?.amount) {
+          const amt = body.amount.toString().replace(/[^\d]/g, '')
+          const mrc = body.merchant || 'Apple Pay'
+          raw = `PS: -${amt} VND ND: ${mrc} (Apple Pay)`
+        }
+        
         const text = typeof raw === 'string' ? raw : (raw?.body ?? raw?.content ?? raw?.text ?? JSON.stringify(raw))
-        const senderHint = (body?.sender ?? body?.from ?? body?.bank ?? '').toString().trim()
+        // Map sender, from, bank or explicit bank field from shortcut
+        const senderHint = (body?.sender ?? body?.from ?? body?.bank ?? body?.wallet ?? '').toString().trim()
         items.push({ text, senderHint })
       }
     } else if (contentType.includes('application/x-www-form-urlencoded')) {

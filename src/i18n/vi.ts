@@ -350,6 +350,12 @@ export default {
   // ── Settings ──
   settings: {
     title: 'Cài đặt',
+    tabs: {
+      general: 'Chung',
+      profile: 'Cá nhân',
+      security: 'Bảo mật',
+      other: 'Khác'
+    },
     // App Installation (PWA)
     appDownload: 'Cài đặt Ứng dụng',
     pwaInstallTitle: 'Cài đặt FinNote (PWA)',
@@ -365,7 +371,7 @@ export default {
     languageDesc: 'Chọn ngôn ngữ hiển thị',
     stocks: 'Chứng khoán',
     enableStocks: 'Bật module Chứng khoán',
-    enableStocksDesc: 'Quản lý danh mục đầu tư và theo dõi giá cổ phiếu',
+    enableStocksDesc: 'Quản lý danh mục đầu tư và theo dõi giá cổ phiếu (Chỉ hỗ trợ thị trường Việt Nam)',
     // Currency
     currency: 'Tiền tệ',
     currencyDisplay: 'Đơn vị tiền tệ',
