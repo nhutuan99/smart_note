@@ -269,7 +269,7 @@ function togglePicker() {
             class="py-2 rounded-lg text-xs font-semibold transition-all duration-100"
             :class="[
               idx === currentMonth && yearPage === currentYear
-                ? 'bg-accent text-white shadow-md shadow-accent/30'
+                ? 'bg-accent-subtle text-accent font-bold'
                 : idx === today.getMonth() && yearPage === today.getFullYear()
                   ? 'text-accent font-bold hover:bg-bg-hover'
                   : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary'
@@ -303,7 +303,7 @@ function togglePicker() {
               class="aspect-square flex items-center justify-center rounded-lg text-[0.8125rem] font-medium transition-all duration-100"
               :class="[
                 isSameDate(day)
-                  ? 'bg-accent text-white font-bold shadow-md shadow-accent/30'
+                  ? 'bg-accent-subtle text-accent font-bold'
                   : isToday(day)
                     ? 'text-accent font-bold ring-1 ring-accent/30'
                     : 'text-text-primary hover:bg-bg-hover'

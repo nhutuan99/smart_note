@@ -275,7 +275,7 @@ function dayTotal(txs: Transaction[]) {
             <button 
               v-else
               class="min-w-[28px] h-7 px-2 text-xs font-medium rounded-md transition-colors"
-              :class="currentPage === page ? 'bg-accent text-white hover:bg-accent-strong' : 'text-text-secondary hover:bg-bg-hover'"
+              :class="currentPage === page ? 'bg-accent-subtle text-accent font-bold' : 'text-text-secondary hover:bg-bg-hover'"
               @click="currentPage = page as number"
             >
               {{ page }}

@@ -37,7 +37,7 @@ const tabs = [
         class="whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors"
         :class="[
           activeTab === tab.key
-            ? 'bg-accent text-white shadow-md'
+            ? 'bg-accent-subtle text-accent font-semibold'
             : 'bg-bg-elevated text-text-secondary hover:bg-bg-hover hover:text-text-primary'
         ]"
       >
