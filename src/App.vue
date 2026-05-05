@@ -146,10 +146,10 @@ onMounted(() => {
   flex-direction: column;
 }
 .public-header {
-  border-bottom: 1px solid var(--color-border-subtle);
-  background: rgba(13, 14, 18, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   position: sticky;
   top: 0;
   z-index: 50;

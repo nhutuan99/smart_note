@@ -107,7 +107,7 @@ function navigateWallet(walletId: string) {
   />
 
   <aside
-    class="pwa-sidebar-safe sidebar bg-bg-surface border-border-default fixed top-[3.5rem] bottom-0 z-40 flex flex-col overflow-hidden border-r transition-all duration-300 md:translate-x-0"
+    class="pwa-sidebar-safe sidebar glass-sidebar fixed top-[3.5rem] bottom-0 z-40 flex flex-col overflow-hidden transition-all duration-300 md:translate-x-0"
     :class="[
       ui.sidebarOpen
         ? 'w-[15.5rem] translate-x-0'
@@ -543,5 +543,13 @@ function navigateWallet(walletId: string) {
 .note-row:hover,
 .note-row:active {
   background: var(--color-bg-hover);
+}
+
+/* ── Glassmorphism ── */
+.glass-sidebar {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-right: 1px solid var(--glass-border);
 }
 </style>
