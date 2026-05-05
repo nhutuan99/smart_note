@@ -366,7 +366,8 @@ const charCount = () => editor.value?.storage.characterCount.characters() ?? 0
   font-size: 0.75rem;
 }
 
-.toolbar-group button:hover:not(:disabled) {
+.toolbar-group button:hover:not(:disabled),
+.toolbar-group button:active:not(:disabled) {
   background: var(--bg-hover);
   color: var(--text-primary);
 }
@@ -621,7 +622,8 @@ const charCount = () => editor.value?.storage.characterCount.characters() ?? 0
   cursor: pointer;
   transition: all 120ms;
 }
-.editor-dialog-btn-cancel:hover { background: var(--bg-hover); }
+.editor-dialog-btn-cancel:hover,
+.editor-dialog-btn-cancel:active { background: var(--bg-hover); }
 
 .editor-dialog-btn-apply {
   padding: 0.4rem 1rem;
@@ -634,7 +636,8 @@ const charCount = () => editor.value?.storage.characterCount.characters() ?? 0
   cursor: pointer;
   transition: opacity 120ms;
 }
-.editor-dialog-btn-apply:hover { opacity: 0.85; }
+.editor-dialog-btn-apply:hover,
+.editor-dialog-btn-apply:active { opacity: 0.85; }
 
 /* ── Fade Transition ── */
 .fade-enter-active, .fade-leave-active { transition: opacity 150ms ease; }

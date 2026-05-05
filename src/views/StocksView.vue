@@ -363,8 +363,8 @@ function getChartData(symbol: string) {
     <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div v-for="pos in stockStore.positions" :key="pos.id" class="card-premium p-5 flex flex-col relative group">
         <!-- Action buttons -->
-        <div class="absolute top-4 right-4 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button @click="removePos(pos.id, pos.symbol)" class="p-1.5 text-text-disabled hover:text-error hover:bg-error/10 rounded-lg transition-colors">
+        <div class="absolute top-4 right-4 flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+          <button @click="removePos(pos.id, pos.symbol)" class="p-1.5 text-text-disabled hover:text-error active:text-error hover:bg-error/10 active:bg-error/10 rounded-lg transition-colors">
             <Trash2 :size="16" />
           </button>
         </div>
@@ -482,14 +482,14 @@ function getChartData(symbol: string) {
             <button 
               v-if="alert.triggered"
               @click.stop="handleResetAlert(pos.id, alert.id)" 
-              class="ml-0.5 p-0.5 rounded hover:bg-bg-hover transition-colors"
+              class="ml-0.5 p-0.5 rounded hover:bg-bg-hover active:bg-bg-hover transition-colors"
               :title="t('stockAlert.reset')"
             >
               <RotateCcw :size="9" />
             </button>
             <button 
               @click.stop="handleDeleteAlert(pos.id, alert.id)" 
-              class="ml-0.5 p-0.5 rounded hover:bg-error/20 hover:text-error transition-colors opacity-0 group-hover/alert:opacity-100"
+              class="ml-0.5 p-0.5 rounded hover:bg-error/20 active:bg-error/20 hover:text-error active:text-error transition-colors opacity-100 md:opacity-0 md:group-hover/alert:opacity-100"
               :title="t('stockAlert.delete')"
             >
               <X :size="9" />
@@ -508,7 +508,7 @@ function getChartData(symbol: string) {
           <!-- Premium Add Alert Button -->
           <button 
             @click="openAlertModal(pos)" 
-            class="ml-auto flex-shrink-0 flex items-center justify-center gap-1.5 text-xs font-medium text-text-primary bg-bg-surface hover:bg-bg-hover border border-border-default hover:border-border-hover rounded-lg py-1.5 px-3 transition-all duration-200"
+            class="ml-auto flex-shrink-0 flex items-center justify-center gap-1.5 text-xs font-medium text-text-primary bg-bg-surface hover:bg-bg-hover active:bg-bg-hover border border-border-default hover:border-border-hover active:border-border-hover rounded-lg py-1.5 px-3 transition-all duration-200"
           >
             <BellRing :size="14" class="text-warning" /> 
             <span>{{ t('stockAlert.addAlert') }}</span>
@@ -541,7 +541,7 @@ function getChartData(symbol: string) {
                   v-for="stock in searchResults" 
                   :key="stock.symbol"
                   @click="newPosition.symbol = stock.symbol; isSymbolFocused = false"
-                  class="flex items-center gap-3 p-3 hover:bg-bg-hover cursor-pointer transition-colors"
+                  class="flex items-center gap-3 p-3 hover:bg-bg-hover active:bg-bg-hover cursor-pointer transition-colors"
                 >
                   <div class="h-8 w-12 rounded-md bg-bg-surface flex items-center justify-center text-text-secondary font-bold text-[10px] relative overflow-hidden border border-border-subtle p-1 bg-white dark:bg-bg-elevated flex-shrink-0">
                     <span class="absolute z-0 opacity-30">{{ stock.symbol }}</span>

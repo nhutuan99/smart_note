@@ -77,7 +77,7 @@ function handleLogout() {
     <div class="flex items-center gap-3">
       <button
         v-if="backRoute"
-        class="text-text-secondary hover:bg-bg-hover hover:text-text-primary flex h-8.5 w-8.5 items-center justify-center rounded-lg transition-all duration-150"
+        class="text-text-secondary hover:bg-bg-hover active:bg-bg-hover hover:text-text-primary active:text-text-primary flex h-8.5 w-8.5 items-center justify-center rounded-lg transition-all duration-150"
         @click="goBack"
       >
         <ChevronLeft :size="24" />
@@ -85,7 +85,7 @@ function handleLogout() {
       <button
         v-else
         id="toggle-sidebar-btn"
-        class="text-text-secondary hover:bg-bg-hover hover:text-text-primary flex h-8.5 w-8.5 items-center justify-center rounded-lg transition-all duration-150"
+        class="text-text-secondary hover:bg-bg-hover active:bg-bg-hover hover:text-text-primary active:text-text-primary flex h-8.5 w-8.5 items-center justify-center rounded-lg transition-all duration-150"
         @click="ui.toggleSidebar"
       >
         <Menu :size="18" />
@@ -105,7 +105,7 @@ function handleLogout() {
     <div class="flex items-center gap-1">
       <!-- Theme Toggle -->
       <button
-        class="text-text-secondary hover:bg-bg-hover hover:text-accent relative flex h-[2.125rem] w-[2.125rem] items-center justify-center rounded-lg transition-all duration-150"
+        class="text-text-secondary hover:bg-bg-hover active:bg-bg-hover hover:text-accent active:text-accent relative flex h-[2.125rem] w-[2.125rem] items-center justify-center rounded-lg transition-all duration-150"
         :title="t('common.toggleTheme')"
         @click="ui.toggleTheme()"
       >
@@ -116,7 +116,7 @@ function handleLogout() {
       <!-- Auto Sync -->
       <router-link
         to="/auto-sync"
-        class="text-text-secondary hover:bg-bg-hover hover:text-accent relative flex h-[2.125rem] w-[2.125rem] items-center justify-center rounded-lg transition-all duration-150"
+        class="text-text-secondary hover:bg-bg-hover active:bg-bg-hover hover:text-accent active:text-accent relative flex h-[2.125rem] w-[2.125rem] items-center justify-center rounded-lg transition-all duration-150"
         :title="t('nav.autoSync')"
       >
         <Zap :size="18" />
@@ -126,7 +126,7 @@ function handleLogout() {
       <div ref="bellRef" class="relative">
         <button
           id="notifications-btn"
-          class="text-text-secondary hover:bg-bg-hover hover:text-text-primary relative flex h-[2.125rem] w-[2.125rem] items-center justify-center rounded-lg transition-all duration-150"
+          class="text-text-secondary hover:bg-bg-hover active:bg-bg-hover hover:text-text-primary active:text-text-primary relative flex h-[2.125rem] w-[2.125rem] items-center justify-center rounded-lg transition-all duration-150"
           :class="bellOpen ? 'bg-bg-hover text-text-primary' : ''"
           @click.stop="toggleBell"
         >
@@ -166,7 +166,7 @@ function handleLogout() {
               <div class="flex items-center gap-1">
                 <button
                   v-if="notiStore.unreadCount > 0"
-                  class="text-text-tertiary hover:bg-bg-hover hover:text-accent flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-[0.6875rem] transition-colors duration-150"
+                  class="text-text-tertiary hover:bg-bg-hover active:bg-bg-hover hover:text-accent active:text-accent flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-[0.6875rem] transition-colors duration-150"
                   :title="t('notifications.readAll')"
                   @click="notiStore.markAllRead()"
                 >
@@ -175,7 +175,7 @@ function handleLogout() {
                 </button>
                 <button
                   v-if="notiStore.notifications.length > 0"
-                  class="text-text-tertiary hover:bg-error/10 hover:text-error flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-[0.6875rem] transition-colors duration-150"
+                  class="text-text-tertiary hover:bg-error/10 active:bg-error/10 hover:text-error active:text-error flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-[0.6875rem] transition-colors duration-150"
                   :title="t('notifications.deleteAll')"
                   @click="notiStore.clearAll()"
                 >
@@ -193,7 +193,7 @@ function handleLogout() {
                 class="border-border-default flex-1 border-r py-2 text-[0.75rem] font-medium transition-colors duration-150 last:border-r-0"
                 :class="notiStore.filter === tab.key
                   ? 'bg-accent-subtle text-accent'
-                  : 'text-text-secondary hover:bg-bg-hover'"
+                  : 'text-text-secondary hover:bg-bg-hover active:bg-bg-hover'"
                 @click="notiStore.filter = tab.key as any"
               >
                 {{ t(tab.labelKey) }}
@@ -298,7 +298,7 @@ function handleLogout() {
       <!-- Settings -->
       <router-link
         to="/settings"
-        class="text-text-secondary hover:bg-bg-hover hover:text-text-primary flex h-[2.125rem] w-[2.125rem] items-center justify-center rounded-lg transition-all duration-150"
+        class="text-text-secondary hover:bg-bg-hover active:bg-bg-hover hover:text-text-primary active:text-text-primary flex h-[2.125rem] w-[2.125rem] items-center justify-center rounded-lg transition-all duration-150"
         id="settings-btn"
       >
         <Settings :size="18" />
@@ -339,7 +339,7 @@ function handleLogout() {
       <template v-else>
         <router-link
           to="/login"
-          class="bg-accent text-bg-primary hover:bg-accent-hover flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-sm font-semibold transition-colors"
+          class="bg-accent text-bg-primary hover:bg-accent-hover active:bg-accent-hover flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-sm font-semibold transition-colors"
         >
           {{ t('common.login') }}
         </router-link>

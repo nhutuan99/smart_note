@@ -243,7 +243,7 @@ function dayTotal(txs: Transaction[]) {
                 <!-- Delete -->
                 <td class="px-3 py-3 w-10 text-right">
                   <button
-                    class="text-text-tertiary hover:text-error hover:bg-error/10 inline-flex rounded-md p-1.5 opacity-100 md:opacity-0 transition-all duration-150 md:group-hover:opacity-100"
+                    class="text-text-tertiary hover:text-error active:text-error hover:bg-error/10 active:bg-error/10 inline-flex rounded-md p-1.5 opacity-100 md:opacity-0 transition-all duration-150 md:group-hover:opacity-100"
                     @click.stop="emit('delete', tx)"
                     :title="t('transactions.deleteTitle')"
                   >
@@ -339,7 +339,7 @@ function dayTotal(txs: Transaction[]) {
                 <p class="text-[0.6875rem] text-text-tertiary mt-0.5">{{ formatDateTime(selectedTx.createdAt || selectedTx.date) }}</p>
               </div>
             </div>
-            <button @click="selectedTx = null" class="text-text-tertiary hover:bg-bg-hover hover:text-text-primary p-1.5 rounded-lg transition-colors">
+            <button @click="selectedTx = null" class="text-text-tertiary hover:bg-bg-hover active:bg-bg-hover hover:text-text-primary active:text-text-primary p-1.5 rounded-lg transition-colors">
               <X :size="20" />
             </button>
           </div>
@@ -574,7 +574,8 @@ function dayTotal(txs: Transaction[]) {
   border-radius: 0.5rem;
   transition: all 0.15s ease;
 }
-.tx-detail-card__delete-btn:hover {
+.tx-detail-card__delete-btn:hover,
+.tx-detail-card__delete-btn:active {
   background: rgba(239, 68, 68, 0.15);
   border-color: rgba(239, 68, 68, 0.3);
 }

@@ -254,20 +254,20 @@ const formatDate = (dateStr: string) => {
             <span>{{ blogStore.currentBlog.viewCount || 0 }}</span>
           </div>
           <div class="ml-auto flex items-center gap-1 sm:gap-2">
-            <button @click="shareSocial('facebook')" class="text-text-tertiary hover:text-[#1877F2] transition-colors p-1.5 rounded-md hover:bg-bg-hover" title="Share on Facebook">
+            <button @click="shareSocial('facebook')" class="text-text-tertiary hover:text-[#1877F2] active:text-[#1877F2] transition-colors p-1.5 rounded-md hover:bg-bg-hover active:bg-bg-hover" title="Share on Facebook">
               <Facebook :size="14" />
             </button>
-            <button @click="shareSocial('messenger')" class="text-text-tertiary hover:text-[#0084FF] transition-colors p-1.5 rounded-md hover:bg-bg-hover" title="Share on Messenger">
+            <button @click="shareSocial('messenger')" class="text-text-tertiary hover:text-[#0084FF] active:text-[#0084FF] transition-colors p-1.5 rounded-md hover:bg-bg-hover active:bg-bg-hover" title="Share on Messenger">
               <MessageCircle :size="14" />
             </button>
-            <button @click="shareSocial('zalo')" class="text-text-tertiary hover:text-[#0068FF] transition-colors p-1.5 rounded-md hover:bg-bg-hover" title="Share on Zalo">
+            <button @click="shareSocial('zalo')" class="text-text-tertiary hover:text-[#0068FF] active:text-[#0068FF] transition-colors p-1.5 rounded-md hover:bg-bg-hover active:bg-bg-hover" title="Share on Zalo">
               <div class="font-bold text-[10px] leading-none tracking-tighter w-[14px] text-center flex items-center justify-center">Zalo</div>
             </button>
-            <button @click="shareSocial('telegram')" class="text-text-tertiary hover:text-[#0088cc] transition-colors p-1.5 rounded-md hover:bg-bg-hover hidden sm:block" title="Share on Telegram">
+            <button @click="shareSocial('telegram')" class="text-text-tertiary hover:text-[#0088cc] active:text-[#0088cc] transition-colors p-1.5 rounded-md hover:bg-bg-hover active:bg-bg-hover hidden sm:block" title="Share on Telegram">
               <Send :size="14" />
             </button>
             <div class="w-px h-4 bg-border-default mx-0.5 sm:mx-1"></div>
-            <button @click="shareBlog" class="flex items-center gap-1.5 text-text-secondary hover:text-accent transition-colors px-2.5 py-1.5 rounded-lg hover:bg-accent/10 font-medium">
+            <button @click="shareBlog" class="flex items-center gap-1.5 text-text-secondary hover:text-accent active:text-accent transition-colors px-2.5 py-1.5 rounded-lg hover:bg-accent/10 active:bg-accent/10 font-medium">
               <Share2 :size="14" />
               <span class="hidden sm:inline">Share</span>
             </button>
@@ -392,7 +392,8 @@ const formatDate = (dateStr: string) => {
   border-radius: 9999px;
   transition: all 0.2s ease;
 }
-.blog-detail__back-btn:hover {
+.blog-detail__back-btn:hover,
+.blog-detail__back-btn:active {
   color: var(--color-accent);
   border-color: rgba(124, 111, 247, 0.3);
   background: rgba(124, 111, 247, 0.06);
@@ -827,7 +828,8 @@ const formatDate = (dateStr: string) => {
   border-radius: 9999px;
   transition: all 0.2s ease;
 }
-.blog-footer__back:hover {
+.blog-footer__back:hover,
+.blog-footer__back:active {
   background: rgba(124, 111, 247, 0.15);
 }
 
@@ -885,7 +887,8 @@ const formatDate = (dateStr: string) => {
     0 0 0 0 rgba(124, 111, 247, 0);
   cursor: pointer;
 }
-.cta-float__btn:hover {
+.cta-float__btn:hover,
+.cta-float__btn:active {
   transform: translateY(-4px) scale(1.05);
   box-shadow:
     0 8px 32px rgba(124, 111, 247, 0.5),
@@ -924,7 +927,8 @@ const formatDate = (dateStr: string) => {
   transition: transform 0.3s ease;
 }
 
-.cta-float__btn:hover .cta-float__inner img {
+.cta-float__btn:hover .cta-float__inner img,
+.cta-float__btn:active .cta-float__inner img {
   transform: scale(1.1);
 }
 
@@ -1032,7 +1036,8 @@ const formatDate = (dateStr: string) => {
   transition: all 0.2s ease;
   box-shadow: 0 2px 8px rgba(124, 111, 247, 0.3);
 }
-.cta-tooltip__action:hover {
+.cta-tooltip__action:hover,
+.cta-tooltip__action:active {
   box-shadow: 0 4px 16px rgba(124, 111, 247, 0.4);
   transform: translateY(-1px);
 }

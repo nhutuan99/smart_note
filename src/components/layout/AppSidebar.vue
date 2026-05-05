@@ -306,7 +306,8 @@ function navigateWallet(walletId: string) {
   white-space: nowrap;
   cursor: pointer;
 }
-.quick-add-btn:hover {
+.quick-add-btn:hover,
+.quick-add-btn:active {
   background: var(--color-bg-hover);
   color: var(--color-text-primary);
   border-color: var(--color-border-default);
@@ -367,7 +368,8 @@ function navigateWallet(walletId: string) {
   transition: background 0.12s ease, color 0.12s ease;
   white-space: nowrap;
 }
-.nav-item:hover {
+.nav-item:hover,
+.nav-item:active {
   background: var(--color-bg-hover);
   color: var(--color-text-primary);
 }
@@ -376,7 +378,8 @@ function navigateWallet(walletId: string) {
   color: var(--color-accent);
   font-weight: 600;
 }
-.nav-item--active:hover {
+.nav-item--active:hover,
+.nav-item--active:active {
   background: rgba(124, 111, 247, 0.15);
 }
 .nav-item--icon {
@@ -403,7 +406,8 @@ function navigateWallet(walletId: string) {
   white-space: nowrap;
   transition: all 0.15s ease;
 }
-.admin-blog-btn:hover {
+.admin-blog-btn:hover,
+.admin-blog-btn:active {
   background: linear-gradient(135deg, rgba(124, 111, 247, 0.18), rgba(168, 85, 247, 0.12));
   border-color: rgba(124, 111, 247, 0.35);
 }
@@ -431,7 +435,8 @@ function navigateWallet(walletId: string) {
   transition: background 0.12s ease;
   gap: 0.5rem;
 }
-.section-header:hover {
+.section-header:hover,
+.section-header:active {
   background: var(--color-bg-hover);
 }
 
@@ -486,7 +491,8 @@ function navigateWallet(walletId: string) {
   transition: background 0.1s ease;
   gap: 0.5rem;
 }
-.wallet-row:hover {
+.wallet-row:hover,
+.wallet-row:active {
   background: var(--color-bg-hover);
 }
 
@@ -534,7 +540,8 @@ function navigateWallet(walletId: string) {
   cursor: pointer;
   transition: background 0.1s ease;
 }
-.note-row:hover {
+.note-row:hover,
+.note-row:active {
   background: var(--color-bg-hover);
 }
 </style>

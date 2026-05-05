@@ -249,8 +249,12 @@ select:-webkit-autofill {
   gap: 0.5rem;
   transition: all 0.15s ease;
 }
-.btn-danger:hover {
+.btn-danger:hover,
+.btn-danger:active {
   filter: brightness(0.9);
+}
+.btn-danger:active {
+  transform: translateY(1px);
 }
 
 .btn-sm {

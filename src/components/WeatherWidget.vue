@@ -245,7 +245,7 @@ const trafficBg = computed(() => {
   background: radial-gradient(ellipse 60% 40% at 10% 20%, rgba(124,111,247,.07) 0%, transparent 70%);
   pointer-events: none;
 }
-.widget-card:hover { border-color: var(--border-strong); }
+.widget-card:hover, .widget-card:active { border-color: var(--border-strong); }
 
 /* ── Pills ── */
 .pill {
@@ -262,7 +262,7 @@ const trafficBg = computed(() => {
   transition: all 0.15s ease;
   white-space: nowrap;
 }
-.pill:hover { background: var(--bg-hover); border-color: var(--border-strong); }
+.pill:hover, .pill:active { background: var(--bg-hover); border-color: var(--border-strong); }
 .pill-label { color: var(--text-tertiary); font-weight: 500; }
 .pill-val   { font-weight: 700; color: var(--text-primary); }
 

@@ -915,7 +915,8 @@ const formatDate = (dateStr: string) => {
   border-radius: 0.375rem;
   transition: all 0.15s ease;
 }
-.blog-btn--back:hover {
+.blog-btn--back:hover,
+.blog-btn--back:active {
   color: var(--color-text-primary);
   background: var(--color-bg-hover);
 }
@@ -934,11 +935,13 @@ const formatDate = (dateStr: string) => {
   flex-shrink: 0;
   text-decoration: none;
 }
-.blog-action-btn:hover {
+.blog-action-btn:hover,
+.blog-action-btn:active {
   color: var(--color-accent);
   background: rgba(124, 111, 247, 0.1);
 }
-.blog-action-btn--danger:hover {
+.blog-action-btn--danger:hover,
+.blog-action-btn--danger:active {
   color: var(--color-error);
   background: rgba(251, 113, 133, 0.1);
 }
@@ -1032,7 +1035,8 @@ const formatDate = (dateStr: string) => {
   border-radius: 0.375rem;
   transition: all 0.15s ease;
 }
-.blog-modal__close:hover {
+.blog-modal__close:hover,
+.blog-modal__close:active {
   color: var(--color-text-primary);
   background: var(--color-bg-hover);
 }
@@ -1076,7 +1080,8 @@ const formatDate = (dateStr: string) => {
   cursor: pointer;
   white-space: nowrap;
 }
-.blog-tab:hover {
+.blog-tab:hover,
+.blog-tab:active {
   color: var(--color-text-secondary);
 }
 .blog-tab--active {
@@ -1179,7 +1184,8 @@ const formatDate = (dateStr: string) => {
   transition: all 0.15s ease;
   align-self: flex-start;
 }
-.blog-preview__upload-btn:hover {
+.blog-preview__upload-btn:hover,
+.blog-preview__upload-btn:active {
   background: var(--color-bg-hover);
   border-color: var(--color-accent);
   color: var(--color-accent);
@@ -1427,7 +1433,8 @@ const formatDate = (dateStr: string) => {
   color: var(--color-accent);
   border: 1px solid rgba(124, 111, 247, 0.3);
 }
-.ai-switch-btn--cf:hover {
+.ai-switch-btn--cf:hover,
+.ai-switch-btn--cf:active {
   background: rgba(124, 111, 247, 0.2);
   border-color: var(--color-accent);
 }
@@ -1436,7 +1443,8 @@ const formatDate = (dateStr: string) => {
   color: var(--color-success, #34d399);
   border: 1px solid rgba(52, 211, 153, 0.3);
 }
-.ai-switch-btn--gemini:hover {
+.ai-switch-btn--gemini:hover,
+.ai-switch-btn--gemini:active {
   background: rgba(52, 211, 153, 0.18);
 }
 
@@ -1491,7 +1499,8 @@ const formatDate = (dateStr: string) => {
   transition: all 0.15s ease;
   white-space: nowrap;
 }
-.ai-model-indicator__reset:hover {
+.ai-model-indicator__reset:hover,
+.ai-model-indicator__reset:active {
   color: var(--color-text-secondary);
   background: var(--color-bg-hover);
 }
@@ -1500,7 +1509,8 @@ const formatDate = (dateStr: string) => {
   border-color: rgba(124, 111, 247, 0.3);
   background: rgba(124, 111, 247, 0.06);
 }
-.ai-model-indicator__reset--switch:hover {
+.ai-model-indicator__reset--switch:hover,
+.ai-model-indicator__reset--switch:active {
   background: rgba(124, 111, 247, 0.14);
 }
 </style>

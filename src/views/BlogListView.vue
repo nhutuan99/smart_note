@@ -295,7 +295,9 @@ const formatDate = (dateStr: string) => {
   transition: all 0.2s ease;
 }
 .blog-list__read-more:hover,
-.group:hover .blog-list__read-more {
+.blog-list__read-more:active,
+.group:hover .blog-list__read-more,
+.group:active .blog-list__read-more {
   background: rgba(124, 111, 247, 0.15);
   gap: 0.5rem;
 }
@@ -316,7 +318,8 @@ const formatDate = (dateStr: string) => {
   transition: all 0.15s ease;
   white-space: nowrap;
 }
-.blog-filter-tag:hover {
+.blog-filter-tag:hover,
+.blog-filter-tag:active {
   border-color: var(--color-accent);
   color: var(--color-accent);
 }
@@ -325,7 +328,8 @@ const formatDate = (dateStr: string) => {
   color: #fff;
   border-color: var(--color-accent);
 }
-.blog-filter-tag--active:hover {
+.blog-filter-tag--active:hover,
+.blog-filter-tag--active:active {
   opacity: 0.9;
   color: #fff;
 }
@@ -367,7 +371,8 @@ const formatDate = (dateStr: string) => {
     0 0 0 0 rgba(124, 111, 247, 0);
   cursor: pointer;
 }
-.cta-float__btn:hover {
+.cta-float__btn:hover,
+.cta-float__btn:active {
   transform: translateY(-4px) scale(1.05);
   box-shadow:
     0 8px 32px rgba(124, 111, 247, 0.5),
@@ -406,7 +411,8 @@ const formatDate = (dateStr: string) => {
   transition: transform 0.3s ease;
 }
 
-.cta-float__btn:hover .cta-float__inner img {
+.cta-float__btn:hover .cta-float__inner img,
+.cta-float__btn:active .cta-float__inner img {
   transform: scale(1.1);
 }
 
@@ -514,7 +520,8 @@ const formatDate = (dateStr: string) => {
   transition: all 0.2s ease;
   box-shadow: 0 2px 8px rgba(124, 111, 247, 0.3);
 }
-.cta-tooltip__action:hover {
+.cta-tooltip__action:hover,
+.cta-tooltip__action:active {
   box-shadow: 0 4px 16px rgba(124, 111, 247, 0.4);
   transform: translateY(-1px);
 }
