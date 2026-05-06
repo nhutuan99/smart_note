@@ -5,7 +5,7 @@ import { useReminderStore } from '@/stores/reminders'
 import { useUiStore } from '@/stores/ui'
 import type { ReminderSuggestion } from '@/types'
 import CreateReminderModal from './CreateReminderModal.vue'
-import { Sparkles, Bell, X, ChevronRight, Loader } from 'lucide-vue-next'
+import { Sparkles, Bell, X, ChevronRight, Loader, Link } from 'lucide-vue-next'
 
 const props = defineProps<{
   suggestions: ReminderSuggestion[]

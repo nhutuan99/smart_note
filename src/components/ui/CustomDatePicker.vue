@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-vue-next'
 import { useEventListener } from '@/composables/useEventListener'
@@ -19,6 +19,8 @@ const { t, tm } = useI18n()
 // ─── State ────────────────────────────────────────
 const showPicker = ref(false)
 const pickerRef = ref<HTMLElement | null>(null)
+const triggerRef = ref<HTMLElement | null>(null)
+const dropdownStyle = ref<Record<string, string>>({})
 
 // View mode: 'days' (default) | 'months' (pick month+year)
 const viewMode = ref<'days' | 'months'>('days')
@@ -158,11 +160,60 @@ function selectToday() {
 
 // ─── Outside-click close ──────────────────────────
 useEventListener(document, 'click', (e: MouseEvent) => {
-  if (pickerRef.value && !pickerRef.value.contains(e.target as Node)) {
+  const target = e.target as Node
+  // Check both the wrapper ref and the trigger ref
+  if (pickerRef.value && !pickerRef.value.contains(target)) {
+    // Also check if click is inside the teleported dropdown
+    const dropdown = document.getElementById(dropdownId)
+    if (dropdown && dropdown.contains(target)) return
     showPicker.value = false
     viewMode.value = 'days'
   }
 })
+
+// ─── Unique ID for the teleported dropdown ────────
+const dropdownId = `cdp-${Math.random().toString(36).substring(2, 8)}`
+
+// ─── Position calculation ─────────────────────────
+function updateDropdownPosition() {
+  if (!triggerRef.value) return
+  const rect = triggerRef.value.getBoundingClientRect()
+  const dropdownH = 340 // approximate max height of dropdown
+  const dropdownW = 280 // 17.5rem
+  const spaceAbove = rect.top
+  const spaceBelow = window.innerHeight - rect.bottom
+
+  let top: number
+  if (spaceAbove >= dropdownH || spaceAbove > spaceBelow) {
+    // Place above
+    top = rect.top - dropdownH - 8
+    if (top < 4) top = 4
+  } else {
+    // Place below
+    top = rect.bottom + 8
+  }
+
+  let left = rect.left
+  if (left + dropdownW > window.innerWidth - 8) {
+    left = window.innerWidth - dropdownW - 8
+  }
+  if (left < 8) left = 8
+
+  dropdownStyle.value = {
+    position: 'fixed',
+    top: `${top}px`,
+    left: `${left}px`,
+    width: `${dropdownW}px`,
+    zIndex: '9999',
+  }
+}
+
+// Reposition on scroll/resize
+function onScrollOrResize() {
+  if (showPicker.value) updateDropdownPosition()
+}
+useEventListener(window, 'scroll', onScrollOrResize, true)
+useEventListener(window, 'resize', onScrollOrResize)
 
 function togglePicker() {
   showPicker.value = !showPicker.value
@@ -181,12 +232,13 @@ function togglePicker() {
       currentMonth.value = d.getMonth()
       yearPage.value = d.getFullYear()
     }
+    nextTick(() => updateDropdownPosition())
   }
 }
 </script>
 
 <template>
-  <div class="relative" ref="pickerRef">
+  <div ref="pickerRef">
     <!-- Label -->
     <label v-if="label" class="block text-sm font-medium text-text-secondary mb-2">
       {{ label }}
@@ -194,6 +246,7 @@ function togglePicker() {
 
     <!-- Trigger -->
     <button
+      ref="triggerRef"
       type="button"
       class="flex w-full items-center justify-between rounded-xl border px-4 py-2.5 text-sm font-medium text-left transition-all duration-150
              border-border-default bg-bg-surface text-text-primary
@@ -208,18 +261,21 @@ function togglePicker() {
       <Calendar :size="16" class="text-text-tertiary shrink-0" />
     </button>
 
-    <!-- Dropdown -->
+    <!-- Dropdown (teleported to body to escape overflow clipping) -->
+    <Teleport to="body">
     <Transition
       enter-active-class="transition duration-150 ease-out"
-      enter-from-class="opacity-0 translate-y-1.5 scale-[0.97]"
-      enter-to-class="opacity-100 translate-y-0 scale-100"
+      enter-from-class="opacity-0 scale-[0.97]"
+      enter-to-class="opacity-100 scale-100"
       leave-active-class="transition duration-100 ease-in"
-      leave-from-class="opacity-100 translate-y-0 scale-100"
-      leave-to-class="opacity-0 translate-y-1 scale-[0.98]"
+      leave-from-class="opacity-100 scale-100"
+      leave-to-class="opacity-0 scale-[0.98]"
     >
       <div
         v-if="showPicker"
-        class="absolute bottom-full left-0 z-[999] mb-2 w-[17.5rem] rounded-xl border border-border-default bg-bg-elevated p-3.5 shadow-2xl"
+        :id="dropdownId"
+        :style="dropdownStyle"
+        class="rounded-xl border border-border-default bg-bg-elevated p-3.5 shadow-2xl"
         @click.stop
       >
         <!-- ════════ HEADER ════════ -->
@@ -332,5 +388,6 @@ function togglePicker() {
         </div>
       </div>
     </Transition>
+    </Teleport>
   </div>
 </template>

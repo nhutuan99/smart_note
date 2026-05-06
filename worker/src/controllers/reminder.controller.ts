@@ -281,6 +281,7 @@ Quy tắc BẮT BUỘC:
         title: String(e.title).substring(0, 100),
         eventDate: String(e.eventDate),
         description: String(e.description || '').substring(0, 200),
+        url: e.url ? String(e.url).substring(0, 500) : undefined,
       }))
       .slice(0, 5)
 
