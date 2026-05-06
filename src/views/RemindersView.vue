@@ -153,6 +153,26 @@ function getStatusColor(status: string) {
   if (status === 'completed') return 'text-success'
   return 'text-text-disabled'
 }
+function formatDescription(text: string) {
+  if (!text) return ''
+  const escapeHtml = (unsafe: string) => unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+  
+  let formatted = escapeHtml(text)
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  formatted = formatted.replace(urlRegex, (url) => {
+    return `<a href="${url}" target="_blank" class="text-accent hover:underline inline-flex items-center gap-[0.125rem]" onclick="event.stopPropagation()" title="Mở liên kết">
+      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+      ${url}
+    </a>`
+  })
+  return formatted.replace(/\n/g, '<br>')
+}
+
 </script>
 
 <template>
@@ -315,9 +335,7 @@ function getStatusColor(status: string) {
 
           <!-- Content -->
           <h3 class="reminder-card__title">{{ reminder.title }}</h3>
-          <p v-if="reminder.description" class="reminder-card__desc">
-            {{ reminder.description }}
-          </p>
+          <p v-if="reminder.description" class="reminder-card__desc" v-html="formatDescription(reminder.description)"></p>
           <a
             v-if="reminder.url"
             :href="reminder.url"

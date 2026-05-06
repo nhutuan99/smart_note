@@ -25,7 +25,6 @@ const isEditing = computed(() => !!props.reminder?.id)
 
 const title = ref('')
 const description = ref('')
-const url = ref('')
 const eventDate = ref('')
 const eventTime = ref('09:00')
 const selectedOffsets = ref<string[]>(['1h', '1d'])
@@ -77,7 +76,6 @@ onMounted(() => {
   if (props.reminder) {
     title.value = props.reminder.title
     description.value = props.reminder.description || ''
-    url.value = props.reminder.url || ''
     selectedOffsets.value = [...(props.reminder.offsets || ['1h', '1d'])]
     repeatInterval.value = props.reminder.repeatInterval || 'none'
     const d = new Date(props.reminder.eventDate)
@@ -94,24 +92,24 @@ onMounted(() => {
       }
     }
   } else {
-    const tomorrow = new Date()
-    tomorrow.setDate(tomorrow.getDate() + 1)
-    eventDate.value = tomorrow.toISOString().substring(0, 10)
+    const now = new Date()
+    if (now.getHours() < 9) {
+      eventDate.value = now.toISOString().substring(0, 10)
+      eventTime.value = '09:00'
+    } else if (now.getHours() < 16) {
+      eventDate.value = now.toISOString().substring(0, 10)
+      eventTime.value = '16:00'
+    } else {
+      now.setDate(now.getDate() + 1)
+      eventDate.value = now.toISOString().substring(0, 10)
+      eventTime.value = '09:00'
+    }
   }
 
   nextTick(() => {
     const el = document.getElementById('reminder-title-input')
     if (el) el.focus()
   })
-})
-
-watch(description, (newVal) => {
-  if (!url.value && newVal) {
-    const match = newVal.match(/(https?:\/\/[^\s]+)/)
-    if (match) {
-      url.value = match[0]
-    }
-  }
 })
 
 function computeCustomRemindAt(): string | undefined {
@@ -131,7 +129,6 @@ async function handleSave() {
       const result = await store.update(props.reminder.id, {
         title: title.value.trim(),
         description: description.value.trim(),
-        url: url.value.trim() || undefined,
         eventDate: new Date(eventDateTime).toISOString(),
         offsets: selectedOffsets.value,
         customRemindAt,
@@ -142,7 +139,6 @@ async function handleSave() {
       const result = await store.create({
         title: title.value.trim(),
         description: description.value.trim(),
-        url: url.value.trim() || undefined,
         eventDate: new Date(eventDateTime).toISOString(),
         offsets: selectedOffsets.value,
         customRemindAt,
@@ -201,28 +197,6 @@ async function handleSave() {
                 rows="4"
                 maxlength="1000"
               />
-            </div>
-
-            <!-- Link URL -->
-            <div class="field">
-              <label class="field-label">Liên kết (URL)</label>
-              <div class="relative flex items-center">
-                <input
-                  v-model="url"
-                  type="url"
-                  class="field-input pr-10"
-                  placeholder="https://..."
-                />
-                <a
-                  v-if="url"
-                  :href="url"
-                  target="_blank"
-                  class="absolute right-3 text-accent hover:text-accent-hover transition-colors flex items-center justify-center"
-                  title="Mở liên kết"
-                >
-                  <ExternalLink :size="16" />
-                </a>
-              </div>
             </div>
 
             <!-- Date & Time -->
