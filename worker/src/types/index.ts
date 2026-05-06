@@ -152,6 +152,8 @@ export interface ReminderData {
   id: string
   title: string
   description: string
+  /** An optional URL relevant to the reminder (e.g. Jira link) */
+  url?: string
   /** The target event datetime (ISO string) */
   eventDate: string
   /** Pre-calculated reminder fire times (ISO strings) */

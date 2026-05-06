@@ -78,7 +78,7 @@ export async function handleListReminders(userId: string, env: Env): Promise<Res
 
 export async function handleCreateReminder(userId: string, request: Request, env: Env): Promise<Response> {
   const body = (await request.json()) as any
-  const { title, description, eventDate, offsets, customRemindAt, repeatInterval, sourceType, sourceId } = body
+  const { title, description, eventDate, offsets, customRemindAt, repeatInterval, sourceType, sourceId, url } = body
 
   if (!title || !eventDate) {
     return errorResponse('Title and eventDate are required')
@@ -92,6 +92,7 @@ export async function handleCreateReminder(userId: string, request: Request, env
     id: generateId(),
     title: title.trim(),
     description: (description || '').trim(),
+    url: url ? url.trim() : undefined,
     eventDate,
     remindAt,
     offsets: validOffsets,
@@ -140,6 +141,7 @@ export async function handleUpdateReminder(
 
   if (body.title !== undefined) existing.title = body.title.trim()
   if (body.description !== undefined) existing.description = body.description.trim()
+  if (body.url !== undefined) existing.url = body.url ? body.url.trim() : undefined
   if (body.eventDate !== undefined) existing.eventDate = body.eventDate
   if (body.offsets !== undefined) existing.offsets = body.offsets.filter((o: string) => OFFSET_MS[o])
   if (body.customRemindAt !== undefined) existing.customRemindAt = body.customRemindAt || undefined
@@ -225,7 +227,8 @@ Phân tích nội dung và trả về các sự kiện có ngày/giờ cụ th�
 
 Quy tắc:
 - CHỈ trả về JSON ARRAY hợp lệ, KHÔNG có text nào khác bên ngoài
-- Mỗi sự kiện có cấu trúc: {"title": "tên sự kiện", "eventDate": "ISO 8601 datetime string", "description": "mô tả ngắn"}
+- Mỗi sự kiện có cấu trúc: {"title": "tên sự kiện", "eventDate": "ISO 8601 datetime string", "description": "mô tả ngắn", "url": "link liên quan nếu có"}
+- Đặc biệt chú ý trích xuất các đường link (URL bắt đầu bằng http/https) có trong văn bản và gán vào trường "url".
 - Nếu chỉ có ngày (VD: "15/5"), mặc định giờ là 09:00
 - Nếu chỉ có "tuần sau", "tháng sau", tính từ ngày hiện tại: ${new Date().toISOString()}
 - Các pattern cần phát hiện: họp, hạn, deadline, trả nợ, đóng tiền, thanh toán, hẹn, lịch, nhắc, sinh nhật, kỷ niệm

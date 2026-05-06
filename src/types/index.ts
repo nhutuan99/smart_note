@@ -163,6 +163,7 @@ export interface Reminder {
   id: string
   title: string
   description: string
+  url?: string
   eventDate: string
   remindAt: string[]
   offsets: string[]
@@ -182,4 +183,5 @@ export interface ReminderSuggestion {
   title: string
   eventDate: string
   description: string
+  url?: string
 }

@@ -21,16 +21,18 @@ export const useReminderStore = defineStore('reminders', () => {
     return reminders.value
   })
 
-  function getCountdown(eventDate: string): { text: string; urgent: boolean } {
+  function getCountdown(eventDate: string): { text: string; level: 'normal' | 'warning' | 'urgent' } {
     const diff = new Date(eventDate).getTime() - Date.now()
-    if (diff <= 0) return { text: 'Đã qua hạn', urgent: true }
+    if (diff <= 0) return { text: 'Đã qua hạn', level: 'urgent' }
     const minutes = Math.floor(diff / 60_000)
     const hours = Math.floor(minutes / 60)
     const days = Math.floor(hours / 24)
-    if (days > 7) return { text: `${days} ngày nữa`, urgent: false }
-    if (days > 0) return { text: `${days} ngày nữa`, urgent: days <= 1 }
-    if (hours > 0) return { text: `${hours} giờ nữa`, urgent: hours <= 2 }
-    return { text: `${minutes} phút nữa`, urgent: true }
+    
+    if (days > 3) return { text: `${days} ngày nữa`, level: 'normal' }
+    if (days > 1) return { text: `${days} ngày nữa`, level: 'warning' }
+    if (days === 1) return { text: `1 ngày nữa`, level: 'urgent' }
+    if (hours > 0) return { text: `${hours} giờ nữa`, level: 'urgent' }
+    return { text: `${minutes} phút nữa`, level: 'urgent' }
   }
 
   const repeatLabels: Record<string, string> = {

@@ -9,7 +9,7 @@ import ReminderSuggestionModal from '@/components/ui/ReminderSuggestionModal.vue
 import {
   Bell, Plus, Check, Clock, CalendarDays, Trash2,
   CheckCircle2, AlertCircle, Timer, BellRing, Repeat, Eye,
-  Sparkles, Loader
+  Sparkles, Loader, Link
 } from 'lucide-vue-next'
 
 const { t } = useI18n()
@@ -59,6 +59,15 @@ function openCreate() {
 function openEdit(reminder: Reminder) {
   editingReminder.value = reminder
   showCreateModal.value = true
+}
+
+function getDisplayUrl(url: string) {
+  try {
+    const obj = new URL(url)
+    return obj.hostname + (obj.pathname !== '/' ? '...' : '')
+  } catch {
+    return url.length > 30 ? url.substring(0, 30) + '...' : url
+  }
 }
 
 async function handleDelete(id: string) {
@@ -240,7 +249,7 @@ function getStatusColor(status: string) {
               <span
                 v-if="reminder.status === 'active'"
                 class="countdown-badge"
-                :class="{ 'countdown-badge--urgent': store.getCountdown(reminder.eventDate).urgent }"
+                :class="`countdown-badge--${store.getCountdown(reminder.eventDate).level}`"
               >
                 <Timer :size="12" />
                 {{ store.getCountdown(reminder.eventDate).text }}
@@ -274,6 +283,17 @@ function getStatusColor(status: string) {
           <p v-if="reminder.description" class="reminder-card__desc">
             {{ reminder.description }}
           </p>
+          <a
+            v-if="reminder.url"
+            :href="reminder.url"
+            target="_blank"
+            class="reminder-card__url"
+            @click.stop
+            title="Mở liên kết"
+          >
+            <Link :size="12" class="shrink-0" />
+            <span class="truncate">{{ getDisplayUrl(reminder.url) }}</span>
+          </a>
 
           <!-- Date & Offsets -->
           <div class="reminder-card__footer">
@@ -665,13 +685,20 @@ function getStatusColor(status: string) {
   padding: 0.125rem 0.5rem;
   border-radius: var(--radius-full);
   font-size: 0.6875rem;
-  font-weight: 600;
+  font-weight: 700;
   background: var(--accent-subtle);
   color: var(--accent);
+  border: 1px solid rgba(142, 125, 250, 0.2);
+}
+.countdown-badge--warning {
+  background: rgba(251, 191, 36, 0.15);
+  color: var(--warning);
+  border-color: rgba(251, 191, 36, 0.3);
 }
 .countdown-badge--urgent {
-  background: rgba(251, 113, 133, 0.12);
+  background: rgba(251, 113, 133, 0.15);
   color: var(--error);
+  border-color: rgba(251, 113, 133, 0.3);
   animation: urgentPulse 2s ease-in-out infinite;
 }
 @keyframes urgentPulse {
