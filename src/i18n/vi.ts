@@ -880,6 +880,7 @@ export default {
     deleted: 'Đã xóa lời nhắc',
     aiDetected: 'AI phát hiện sự kiện',
     aiDetectedDesc: 'AI đã phát hiện sự kiện trong ghi chú. Bạn có muốn tạo lời nhắc?',
-    quickAdd: 'Thêm nhanh'
+    quickAdd: 'Thêm nhanh',
+    noEventsFound: 'Không tìm thấy sự kiện nào trong nội dung'
   }
 }

@@ -880,6 +880,7 @@ export default {
     deleted: 'Reminder deleted',
     aiDetected: 'AI detected events',
     aiDetectedDesc: 'AI detected events in your note. Would you like to create reminders?',
-    quickAdd: 'Quick add'
+    quickAdd: 'Quick add',
+    noEventsFound: 'No events found in the content'
   }
 }
