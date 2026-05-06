@@ -334,7 +334,13 @@ QUY TẮC TAGS (BẮT BUỘC):
 - Tối đa 3 tags, viết thường, bằng tiếng Việt
 - Chỉ dùng chủ đề tài chính phổ quát: "tài chính", "đầu tư", "tiết kiệm", "quản lý chi tiêu", "chứng khoán", "bất động sản", "thu nhập thụ động", "fintech"
 - KHÔNG dùng tên thương hiệu (Google, Anthropic, Warren Buffett, v.v.)
-- KHÔNG trùng lặp ("gen z" và "genz" là trùng — chỉ giữ 1)`
+- KHÔNG trùng lặp ("gen z" và "genz" là trùng — chỉ giữ 1)
+
+QUY TẮC LIÊN HỆ (BẮT BUỘC):
+- TUYỆT ĐỐI KHÔNG bịa ra bất kỳ email liên hệ nào (info@finnote.vn, support@..., contact@... v.v.)
+- KHÔNG viết section "Liên hệ" với email hoặc địa chỉ bịa đặt
+- Nếu muốn mời người đọc góp ý/liên hệ, hãy viết: "Bạn có thể gửi ý kiến trực tiếp cho Admin qua mục **Cài đặt → Liên hệ & Góp ý** trong ứng dụng FinNote."
+- Chỉ dùng CTA hướng người dùng vào app FinNote, KHÔNG cung cấp email hay link bên ngoài nào khác`
 
   const userPrompt = `Chủ đề hot từ VnExpress: "${topic}"
 Góc nhìn blog: "${angle}"
@@ -344,6 +350,7 @@ Hãy viết 1 bài blog tài chính cá nhân chuyên sâu, sáng tạo, dễ hi
 - Có ví dụ thực tế và con số cụ thể
 - Có checklist hoặc hướng dẫn hành động (actionable advice)
 - Kết bài giới thiệu FinNote app
+- KHÔNG bịa email liên hệ (info@finnote.vn, support@...). Nếu muốn mời liên hệ, hướng người đọc vào mục "Cài đặt → Liên hệ & Góp ý" trong FinNote app
 - Đề xuất youtubeQuery để tìm video YouTube liên quan (bằng tiếng Việt)`
 
   // Try Gemini first
@@ -412,6 +419,7 @@ Yêu cầu:
 - Tối thiểu 1000 từ
 - Có ví dụ thực tế, con số cụ thể
 - Kết bài CTA giới thiệu FinNote
+- TUYỆT ĐỐI KHÔNG bịa email liên hệ (info@finnote.vn, support@...). Nếu cần mời liên hệ, viết: "Gửi ý kiến qua mục Cài đặt → Liên hệ & Góp ý trong FinNote app"
 - Chỉ trả về Markdown, không bọc JSON hay code block`
 
     const contentRes = await env.AI.run('@cf/meta/llama-3.1-8b-instruct' as any, {

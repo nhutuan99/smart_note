@@ -627,6 +627,25 @@ export default {
     error: 'Failed to submit report'
   },
 
+  // ── Contact / Feedback ──
+  contact: {
+    sectionTitle: 'Contact & Feedback',
+    sendFeedback: 'Send feedback to Admin',
+    sendFeedbackDesc: 'Have a question or suggestion? Send it directly to Admin via email.',
+    sendNow: 'Send Feedback',
+    modalTitle: 'Send Feedback / Contact',
+    modalDesc: 'Your message will be sent directly to the Admin\'s email for a quick response.',
+    emailInfo: 'Admin Email:',
+    subjectLabel: 'Subject',
+    subjectPlaceholder: 'e.g. UI suggestion, Feature question...',
+    messageLabel: 'Message',
+    messagePlaceholder: 'Write your feedback, question, or suggestion...',
+    submitBtn: 'Send Feedback',
+    requiredError: 'Please fill in both Subject and Message',
+    success: 'Feedback sent successfully! Admin will respond soon.',
+    error: 'Failed to send feedback'
+  },
+
   // ── Categories ──
   categories: {
     food: 'Food & Drinks',

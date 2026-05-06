@@ -627,6 +627,25 @@ export default {
     error: 'Lỗi khi gửi báo cáo'
   },
 
+  // ── Contact / Feedback ──
+  contact: {
+    sectionTitle: 'Liên hệ & Góp ý',
+    sendFeedback: 'Gửi ý kiến cho Admin',
+    sendFeedbackDesc: 'Có câu hỏi hoặc góp ý? Hãy gửi trực tiếp cho Admin qua email.',
+    sendNow: 'Gửi ý kiến',
+    modalTitle: 'Gửi ý kiến / Liên hệ',
+    modalDesc: 'Nội dung sẽ được gửi trực tiếp đến email Admin để phản hồi nhanh chóng.',
+    emailInfo: 'Email Admin:',
+    subjectLabel: 'Tiêu đề',
+    subjectPlaceholder: 'VD: Góp ý giao diện, Hỏi về tính năng...',
+    messageLabel: 'Nội dung',
+    messagePlaceholder: 'Viết ý kiến, câu hỏi hoặc góp ý của bạn...',
+    submitBtn: 'Gửi ý kiến',
+    requiredError: 'Vui lòng nhập đầy đủ Tiêu đề và Nội dung',
+    success: 'Đã gửi ý kiến thành công! Admin sẽ phản hồi sớm.',
+    error: 'Lỗi khi gửi ý kiến'
+  },
+
   // ── Categories ──
   categories: {
     food: 'Ăn uống',

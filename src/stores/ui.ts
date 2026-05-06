@@ -19,6 +19,7 @@ export const useUiStore = defineStore('ui', () => {
   const sidebarOpen = ref(window.innerWidth >= 768)
   const searchOpen = ref(false)
   const showBugReport = ref(false)
+  const showContactFeedback = ref(false)
   const showWeeklyEvent = ref(false)
   const hasCompletedWeeklyEvent = ref(false)
   const showStoryModal = ref(false)
@@ -220,6 +221,7 @@ export const useUiStore = defineStore('ui', () => {
     requestPinValidation,
     resolvePin,
     showBugReport,
+    showContactFeedback,
     showWeeklyEvent,
     hasCompletedWeeklyEvent,
     checkWeeklyEvent,

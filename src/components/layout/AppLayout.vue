@@ -6,6 +6,7 @@ import ToastContainer from '@/components/ui/ToastContainer.vue'
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import PinDialog from '@/components/PinDialog.vue'
 import BugReportModal from '@/components/ui/BugReportModal.vue'
+import ContactFeedbackModal from '@/components/ui/ContactFeedbackModal.vue'
 import PwaInstallGuide from '@/components/ui/PwaInstallGuide.vue'
 import PullToRefresh from '@/components/ui/PullToRefresh.vue'
 import WeeklyEventModal from '@/components/ui/WeeklyEventModal.vue'
@@ -247,6 +248,10 @@ async function handleRefresh(done: () => void) {
     <BugReportModal 
       :show="ui.showBugReport" 
       @close="ui.showBugReport = false" 
+    />
+    <ContactFeedbackModal 
+      :show="ui.showContactFeedback" 
+      @close="ui.showContactFeedback = false" 
     />
     <PwaInstallGuide />
     <WeeklyEventModal />

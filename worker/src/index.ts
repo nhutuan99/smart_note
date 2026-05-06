@@ -71,6 +71,7 @@ import {
 
 import {
   handleReportBug,
+  handleContactFeedback,
   handleGetLatestSmsLog,
   handleGetWebhookHistory,
 } from './controllers/misc.controller'
@@ -291,6 +292,11 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
       // Bug Report
       if (path === '/api/report-bug' && request.method === 'POST') {
         return handleReportBug(userId, request, env)
+      }
+
+      // Contact Feedback
+      if (path === '/api/contact-feedback' && request.method === 'POST') {
+        return handleContactFeedback(userId, request, env)
       }
 
       // Notes CRUD

@@ -7,6 +7,7 @@ import SettingsStorage from '@/modules/settings/components/SettingsStorage.vue'
 import SettingsSecurity from '@/modules/settings/components/SettingsSecurity.vue'
 import SettingsNotifications from '@/modules/settings/components/SettingsNotifications.vue'
 import SettingsBugReport from '@/modules/settings/components/SettingsBugReport.vue'
+import SettingsContact from '@/modules/settings/components/SettingsContact.vue'
 import SettingsAccount from '@/modules/settings/components/SettingsAccount.vue'
 import SettingsAppDownload from '@/modules/settings/components/SettingsAppDownload.vue'
 
@@ -69,6 +70,7 @@ const tabs = [
       <div v-show="activeTab === 'other'" class="space-y-6">
         <SettingsNotifications />
         <SettingsBugReport />
+        <SettingsContact />
       </div>
     </div>
 

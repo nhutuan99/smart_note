@@ -137,3 +137,13 @@ export interface StockData {
   createdAt: string
   updatedAt: string
 }
+
+export interface ContactFeedback {
+  id: string
+  userId: string
+  userName: string
+  userEmail: string
+  subject: string
+  message: string
+  createdAt: string
+}
