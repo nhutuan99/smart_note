@@ -144,9 +144,9 @@ function formatDate(iso: string): string {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   animation: fadeIn 0.15s ease;
 }
 
@@ -155,10 +155,12 @@ function formatDate(iso: string): string {
   max-width: 28rem;
   max-height: 60vh;
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-default);
+  background: rgba(18, 18, 18, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-bottom: none;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   animation: slideUp 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   display: flex;
@@ -227,11 +229,14 @@ function formatDate(iso: string): string {
   gap: 0.5rem;
   padding: 0.75rem;
   border-radius: var(--radius-md);
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-default);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   transition: all 0.15s ease;
 }
-.suggestion-item:hover { border-color: var(--accent); }
+.suggestion-item:hover { 
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(142, 125, 250, 0.3); /* subtle accent */
+}
 
 .suggestion-info {
   display: flex;
