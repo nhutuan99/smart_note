@@ -107,6 +107,7 @@ import {
   handleCreateReminder,
   handleUpdateReminder,
   handleDeleteReminder,
+  handleClearReminders,
   handleCompleteReminder,
   handleAcknowledgeReminder,
   handleAiDetectReminders,
@@ -454,6 +455,9 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
       }
       if (path === '/api/reminders' && request.method === 'POST') {
         return handleCreateReminder(userId, request, env)
+      }
+      if (path === '/api/reminders' && request.method === 'DELETE') {
+        return handleClearReminders(userId, request, env)
       }
       if (path === '/api/reminders/ai-detect' && request.method === 'POST') {
         return handleAiDetectReminders(userId, request, env)

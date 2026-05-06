@@ -98,6 +98,29 @@ function handleModalClose() {
   editingReminder.value = null
 }
 
+async function handleClearReminders() {
+  const isConfirmed = await ui.requestConfirm({
+    title: t('common.delete') || 'Xóa tất cả',
+    message: `Bạn có chắc chắn muốn xóa tất cả lời nhắc ${store.filter === 'all' ? '' : (store.filter === 'active' ? 'đang hoạt động' : 'đã hoàn thành')} không? Hành động này không thể hoàn tác.`,
+    confirmText: t('common.delete') || 'Xóa',
+    cancelText: t('common.cancel') || 'Hủy',
+    danger: true
+  })
+  
+  if (!isConfirmed) return
+
+  try {
+    const success = await store.clear(store.filter)
+    if (success) {
+      ui.showToast('success', 'Đã xóa thành công')
+    } else {
+      ui.showToast('error', t('common.somethingWentWrong'))
+    }
+  } catch {
+    ui.showToast('error', t('common.somethingWentWrong'))
+  }
+}
+
 function handleModalSaved() {
   showCreateModal.value = false
   editingReminder.value = null
@@ -185,22 +208,34 @@ function getStatusColor(status: string) {
       </div>
     </div>
 
-    <!-- Filter Tabs -->
-    <div class="mb-6 flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
-      <button
-        v-for="tab in tabs"
-        :key="tab.key"
-        @click="store.filter = tab.key"
-        class="flex items-center gap-1.5 px-4 py-2 rounded-full text-[0.8125rem] font-medium whitespace-nowrap transition-all duration-150 border"
-        :class="store.filter === tab.key
-          ? 'bg-accent/10 border-accent/30 text-accent font-semibold shadow-[0_0_12px_rgba(142,125,250,0.1)]'
-          : 'bg-bg-elevated border-border-default text-text-secondary hover:bg-bg-hover hover:text-text-primary hover:border-border-strong'"
+    <!-- Filter Tabs & Actions -->
+    <div class="mb-6 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        <button
+          v-for="tab in tabs"
+          :key="tab.key"
+          @click="store.filter = tab.key"
+          class="flex items-center gap-1.5 px-4 py-2 rounded-full text-[0.8125rem] font-medium whitespace-nowrap transition-all duration-150 border"
+          :class="store.filter === tab.key
+            ? 'bg-accent/10 border-accent/30 text-accent font-semibold shadow-[0_0_12px_rgba(142,125,250,0.1)]'
+            : 'bg-bg-elevated border-border-default text-text-secondary hover:bg-bg-hover hover:text-text-primary hover:border-border-strong'"
+        >
+          {{ t(tab.label) }}
+          <span v-if="tab.key === 'active' && store.activeCount > 0" 
+                class="inline-flex items-center justify-center min-w-[1.125rem] h-[1.125rem] px-1 rounded-full text-[0.625rem] font-bold bg-accent text-white shadow-sm">
+            {{ store.activeCount }}
+          </span>
+        </button>
+      </div>
+
+      <button 
+        v-if="store.filtered.length > 0"
+        @click="handleClearReminders"
+        class="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-error bg-error/10 hover:bg-error/20 transition-colors"
+        title="Xóa tất cả"
       >
-        {{ t(tab.label) }}
-        <span v-if="tab.key === 'active' && store.activeCount > 0" 
-              class="inline-flex items-center justify-center min-w-[1.125rem] h-[1.125rem] px-1 rounded-full text-[0.625rem] font-bold bg-accent text-white shadow-sm">
-          {{ store.activeCount }}
-        </span>
+        <Trash2 :size="14" />
+        <span class="hidden sm:inline">Xóa tất cả</span>
       </button>
     </div>
 

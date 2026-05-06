@@ -176,6 +176,30 @@ export async function handleDeleteReminder(userId: string, reminderId: string, e
   return jsonResponse({ success: true })
 }
 
+export async function handleClearReminders(userId: string, request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url)
+  const statusFilter = url.searchParams.get('status') || 'all'
+  
+  let reminders = (await getJSON<ReminderData[]>(
+    env.SMART_NOTE_KV, `users/${userId}/reminders`
+  )) || []
+
+  if (statusFilter === 'all') {
+    reminders = []
+  } else if (statusFilter === 'completed') {
+    reminders = reminders.filter(r => r.status !== 'completed')
+  } else if (statusFilter === 'active') {
+    reminders = reminders.filter(r => r.status !== 'active')
+  }
+
+  await putJSON(env.SMART_NOTE_KV, `users/${userId}/reminders`, reminders)
+  if (reminders.length === 0) {
+    await unregisterReminderUserIfEmpty(userId, env)
+  }
+
+  return jsonResponse({ success: true })
+}
+
 export async function handleCompleteReminder(userId: string, reminderId: string, env: Env): Promise<Response> {
   const reminders = (await getJSON<ReminderData[]>(
     env.SMART_NOTE_KV, `users/${userId}/reminders`

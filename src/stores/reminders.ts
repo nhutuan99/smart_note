@@ -110,6 +110,20 @@ export const useReminderStore = defineStore('reminders', () => {
     }
   }
 
+  async function clear(status: 'all' | 'completed' | 'active' = 'all'): Promise<boolean> {
+    try {
+      await httpClient.del(`/api/reminders?status=${status}`)
+      if (status === 'all') {
+        reminders.value = []
+      } else {
+        reminders.value = reminders.value.filter(r => r.status !== status)
+      }
+      return true
+    } catch {
+      return false
+    }
+  }
+
   async function complete(id: string): Promise<boolean> {
     try {
       await httpClient.post(`/api/reminders/${id}/complete`)
@@ -151,6 +165,6 @@ export const useReminderStore = defineStore('reminders', () => {
     reminders, loading, filter,
     activeReminders, completedReminders, activeCount, filtered,
     getCountdown, getRepeatLabel,
-    fetch, create, update, remove, complete, acknowledge, detectFromText,
+    fetch, create, update, remove, clear, complete, acknowledge, detectFromText,
   }
 })
