@@ -5,6 +5,8 @@ import { useReminderStore } from '@/stores/reminders'
 import { useUiStore } from '@/stores/ui'
 import type { Reminder } from '@/types'
 import { X, Bell, CalendarDays, Clock, Save, Repeat, Plus } from 'lucide-vue-next'
+import CustomDatePicker from './CustomDatePicker.vue'
+import CustomTimePicker from './CustomTimePicker.vue'
 
 const props = defineProps<{
   reminder?: Reminder | null
@@ -184,18 +186,10 @@ async function handleSave() {
           <!-- Date & Time -->
           <div class="field-row">
             <div class="field flex-1">
-              <label class="field-label">
-                <CalendarDays :size="14" class="inline-block mr-1" />
-                {{ t('reminders.eventDate') }}
-              </label>
-              <input v-model="eventDate" type="date" class="field-input" />
+              <CustomDatePicker v-model="eventDate" :label="t('reminders.eventDate')" />
             </div>
-            <div class="field" style="width: 8rem">
-              <label class="field-label">
-                <Clock :size="14" class="inline-block mr-1" />
-                {{ t('reminders.eventTime') }}
-              </label>
-              <input v-model="eventTime" type="time" class="field-input" />
+            <div class="field" style="width: 8.5rem">
+              <CustomTimePicker v-model="eventTime" :label="t('reminders.eventTime')" />
             </div>
           </div>
 
@@ -241,10 +235,10 @@ async function handleSave() {
             </button>
             <template v-else>
               <label class="field-label">🕐 {{ t('reminders.customTime') }}</label>
-              <div class="field-row">
-                <input v-model="customDate" type="date" class="field-input flex-1" />
-                <input v-model="customTime" type="time" class="field-input" style="width: 8rem" />
-                <button @click="showCustomInput = false; customDate = ''; customTime = ''" class="custom-remove-btn">
+              <div class="field-row" style="align-items: flex-start">
+                <div class="flex-1"><CustomDatePicker v-model="customDate" /></div>
+                <div style="width: 8.5rem"><CustomTimePicker v-model="customTime" /></div>
+                <button @click="showCustomInput = false; customDate = ''; customTime = ''" class="custom-remove-btn" style="height: 2.625rem; margin-top: 0">
                   <X :size="14" />
                 </button>
               </div>

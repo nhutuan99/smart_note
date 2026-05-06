@@ -132,11 +132,14 @@ function getStatusColor(status: string) {
         v-for="tab in tabs"
         :key="tab.key"
         @click="store.filter = tab.key"
-        class="filter-tab"
-        :class="{ 'filter-tab--active': store.filter === tab.key }"
+        class="flex items-center gap-1.5 px-4 py-2 rounded-full text-[0.8125rem] font-medium whitespace-nowrap transition-all duration-150 border"
+        :class="store.filter === tab.key
+          ? 'bg-accent/10 border-accent/30 text-accent font-semibold shadow-[0_0_12px_rgba(142,125,250,0.1)]'
+          : 'bg-bg-elevated border-border-default text-text-secondary hover:bg-bg-hover hover:text-text-primary hover:border-border-strong'"
       >
         {{ t(tab.label) }}
-        <span v-if="tab.key === 'active' && store.activeCount > 0" class="filter-badge">
+        <span v-if="tab.key === 'active' && store.activeCount > 0" 
+              class="inline-flex items-center justify-center min-w-[1.125rem] h-[1.125rem] px-1 rounded-full text-[0.625rem] font-bold bg-accent text-white shadow-sm">
           {{ store.activeCount }}
         </span>
       </button>
@@ -152,16 +155,16 @@ function getStatusColor(status: string) {
     </div>
 
     <!-- Empty State -->
-    <div v-else-if="store.filtered.length === 0" class="empty-state">
-      <div class="empty-icon">
-        <Bell :size="48" />
+    <div v-else-if="store.filtered.length === 0" class="flex flex-col items-center justify-center py-16 px-4">
+      <div class="w-20 h-20 flex items-center justify-center rounded-3xl bg-accent/10 text-accent mb-6 shadow-[0_0_30px_rgba(142,125,250,0.15)] border border-accent/20">
+        <Bell :size="40" />
       </div>
-      <h3 class="text-lg font-semibold mb-2">{{ t('reminders.empty') }}</h3>
-      <p class="text-text-tertiary text-sm mb-6 max-w-xs text-center">
+      <h3 class="text-xl font-bold mb-2">{{ t('reminders.empty') }}</h3>
+      <p class="text-text-tertiary text-sm mb-8 max-w-[280px] text-center leading-relaxed">
         {{ t('reminders.emptyDesc') }}
       </p>
-      <button @click="openCreate" class="empty-cta">
-        <Plus :size="16" />
+      <button @click="openCreate" class="flex items-center gap-2 px-6 py-3 rounded-full text-[0.875rem] font-bold text-white bg-accent hover:bg-accent-hover transition-all duration-200 shadow-[0_4px_16px_rgba(142,125,250,0.3)] hover:shadow-[0_6px_24px_rgba(142,125,250,0.4)] hover:-translate-y-0.5">
+        <Plus :size="18" />
         {{ t('reminders.create') }}
       </button>
     </div>

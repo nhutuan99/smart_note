@@ -3,10 +3,13 @@ import { ref, watch, onMounted, onUnmounted, computed } from 'vue'
 import { useEventListener } from '@/composables/useEventListener'
 import { useRoute, useRouter } from 'vue-router'
 import { useNotesStore } from '@/stores/notes'
+import { useReminderStore } from '@/stores/reminders'
 import { useUiStore } from '@/stores/ui'
 import RichEditor from '@/components/editor/RichEditor.vue'
 import AiPanel from '@/components/editor/AiPanel.vue'
-import { ArrowLeft, Save, Pin, Trash2, Tag, X, Plus, Check, Sparkles } from 'lucide-vue-next'
+import ReminderSuggestionModal from '@/components/ui/ReminderSuggestionModal.vue'
+import type { ReminderSuggestion } from '@/types'
+import { ArrowLeft, Save, Pin, Trash2, Tag, X, Plus, Check, Sparkles, Bell, Loader } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
 
 const route = useRoute()
@@ -133,6 +136,28 @@ function handleAiInsert(text: string) {
   ui.showToast('success', t('notes.ai.insert'))
 }
 
+const reminderStore = useReminderStore()
+const extractingEvents = ref(false)
+const reminderSuggestions = ref<ReminderSuggestion[]>([])
+
+async function handleExtractEvents() {
+  if (!content.value.trim() || extractingEvents.value) return
+  extractingEvents.value = true
+  try {
+    const rawText = content.value.replace(/<[^>]*>?/gm, '') // simple strip html
+    const suggestions = await reminderStore.detectFromText(rawText)
+    if (suggestions.length > 0) {
+      reminderSuggestions.value = suggestions
+    } else {
+      ui.showToast('info', t('reminders.noEventsFound'))
+    }
+  } catch (e) {
+    ui.showToast('error', t('common.somethingWentWrong'))
+  } finally {
+    extractingEvents.value = false
+  }
+}
+
 function handleApplyTags(aiTags: string[]) {
   const newTags = aiTags.filter(t => !tags.value.includes(t))
   tags.value.push(...newTags)
@@ -166,6 +191,18 @@ function handleApplyTags(aiTags: string[]) {
         </div>
       </div>
       <div class="flex items-center gap-1">
+        <button
+          id="extract-events-btn"
+          title="Trích xuất sự kiện"
+          class="flex h-[2.125rem] items-center gap-1.5 rounded-lg px-2.5 text-sm font-medium transition-all duration-150 text-text-secondary hover:bg-bg-hover hover:text-text-primary"
+          @click="handleExtractEvents"
+          :disabled="extractingEvents"
+        >
+          <Loader v-if="extractingEvents" :size="15" class="animate-spin" />
+          <Bell v-else :size="15" />
+          <span class="hidden sm:inline">Quét sự kiện</span>
+        </button>
+
         <!-- AI Button -->
         <button
           id="ai-panel-btn"
@@ -274,5 +311,12 @@ function handleApplyTags(aiTags: string[]) {
       <!-- Rich Editor -->
       <RichEditor v-model="content" />
     </template>
+
+    <ReminderSuggestionModal
+      v-if="reminderSuggestions.length > 0"
+      :suggestions="reminderSuggestions"
+      @close="reminderSuggestions = []"
+      @created="reminderSuggestions = []"
+    />
   </div>
 </template>
