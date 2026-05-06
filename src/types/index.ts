@@ -158,3 +158,28 @@ export interface StockPosition {
   createdAt: string
   updatedAt: string
 }
+
+export interface Reminder {
+  id: string
+  title: string
+  description: string
+  eventDate: string
+  remindAt: string[]
+  offsets: string[]
+  customRemindAt?: string
+  repeatInterval?: string
+  notifiedAt: string[]
+  acknowledged: boolean
+  lastChanceSent: boolean
+  sourceType: 'note' | 'manual' | 'debt' | 'recurring'
+  sourceId?: string
+  status: 'active' | 'completed' | 'expired'
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ReminderSuggestion {
+  title: string
+  eventDate: string
+  description: string
+}

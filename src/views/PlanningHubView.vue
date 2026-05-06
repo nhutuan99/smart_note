@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
-import { Target, PieChart, Repeat, CreditCard, PiggyBank, ArrowRight, HandCoins } from 'lucide-vue-next'
+import { Target, PieChart, Repeat, CreditCard, PiggyBank, ArrowRight, HandCoins, Bell } from 'lucide-vue-next'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -46,6 +46,14 @@ const features = [
     icon: HandCoins,
     color: '#ef4444',
     route: '/debts'
+  },
+  {
+    id: 'reminders',
+    key: 'reminders.title',
+    desc: 'reminders.emptyDesc',
+    icon: Bell,
+    color: '#8e7dfa',
+    route: '/reminders'
   }
 ]
 </script>

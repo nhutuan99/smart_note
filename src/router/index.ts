@@ -75,6 +75,12 @@ const router = createRouter({
       component: () => import('@/views/PlanningHubView.vue')
     },
     {
+      path: '/reminders',
+      name: 'reminders',
+      component: () => import('@/views/RemindersView.vue'),
+      meta: { parentRoute: '/planning' }
+    },
+    {
       path: '/stocks',
       name: 'stocks',
       component: () => import('@/views/StocksView.vue'),

@@ -102,8 +102,19 @@ import {
   handleResetStockAlert
 } from './controllers/stock.controller'
 
+import {
+  handleListReminders,
+  handleCreateReminder,
+  handleUpdateReminder,
+  handleDeleteReminder,
+  handleCompleteReminder,
+  handleAcknowledgeReminder,
+  handleAiDetectReminders,
+} from './controllers/reminder.controller'
+
 import { runAutoBlog } from './services/auto-blog.service'
 import { checkAllStockAlerts } from './services/stock-alert.service'
+import { checkAllReminders } from './services/reminder.service'
 
 
 async function handleRequest(request: Request, env: Env): Promise<Response> {
@@ -437,6 +448,31 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
         return handlePushTest(userId, request, env)
       }
 
+      // Reminders
+      if (path === '/api/reminders' && request.method === 'GET') {
+        return handleListReminders(userId, env)
+      }
+      if (path === '/api/reminders' && request.method === 'POST') {
+        return handleCreateReminder(userId, request, env)
+      }
+      if (path === '/api/reminders/ai-detect' && request.method === 'POST') {
+        return handleAiDetectReminders(userId, request, env)
+      }
+      const reminderMatch = path.match(/^\/api\/reminders\/([^\/]+)$/)
+      if (reminderMatch) {
+        const reminderId = reminderMatch[1]
+        if (request.method === 'PUT') return handleUpdateReminder(userId, reminderId, request, env)
+        if (request.method === 'DELETE') return handleDeleteReminder(userId, reminderId, env)
+      }
+      const reminderCompleteMatch = path.match(/^\/api\/reminders\/([^\/]+)\/complete$/)
+      if (reminderCompleteMatch && request.method === 'POST') {
+        return handleCompleteReminder(userId, reminderCompleteMatch[1], env)
+      }
+      const reminderAckMatch = path.match(/^\/api\/reminders\/([^\/]+)\/acknowledge$/)
+      if (reminderAckMatch && request.method === 'POST') {
+        return handleAcknowledgeReminder(userId, reminderAckMatch[1], env)
+      }
+
       // AI
       if (path === '/api/ai/stream' && request.method === 'POST') {
         return handleAiStream(request, env)
@@ -507,5 +543,12 @@ export default {
           .catch(err => console.error('[Cron] AutoBlog failed:', err))
       )
     }
+
+    // Reminders: check every 15 minutes (all cron triggers hit this handler)
+    ctx.waitUntil(
+      checkAllReminders(env)
+        .then(result => console.log(`[Cron] Reminders: ${result}`))
+        .catch(err => console.error('[Cron] Reminders failed:', err))
+    )
   }
 }

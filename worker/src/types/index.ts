@@ -147,3 +147,31 @@ export interface ContactFeedback {
   message: string
   createdAt: string
 }
+
+export interface ReminderData {
+  id: string
+  title: string
+  description: string
+  /** The target event datetime (ISO string) */
+  eventDate: string
+  /** Pre-calculated reminder fire times (ISO strings) */
+  remindAt: string[]
+  /** User-selected offsets: '15m','30m','1h','2h','3h','1d','2d','3d','1w' */
+  offsets: string[]
+  /** User-defined custom reminder datetime (ISO string, optional) */
+  customRemindAt?: string
+  /** Repeat interval: 'none','daily','weekly','monthly', or custom minutes number */
+  repeatInterval?: string
+  /** Which remindAt entries have been notified (ISO strings) */
+  notifiedAt: string[]
+  /** Whether user has acknowledged/seen the reminder */
+  acknowledged: boolean
+  /** Whether the auto last-chance noti (1h before deadline) has been sent */
+  lastChanceSent: boolean
+  /** Source feature that created this reminder */
+  sourceType: 'note' | 'manual' | 'debt' | 'recurring'
+  sourceId?: string
+  status: 'active' | 'completed' | 'expired'
+  createdAt: string
+  updatedAt: string
+}
