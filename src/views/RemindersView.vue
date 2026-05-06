@@ -161,18 +161,18 @@ function getStatusColor(status: string) {
 
     <!-- AI Quick Add -->
     <div class="mb-6 relative group">
-      <div class="absolute top-4 left-4 text-accent pointer-events-none">
-        <Sparkles :size="18" />
+      <div class="absolute top-5 left-5 text-accent pointer-events-none">
+        <Sparkles :size="20" />
       </div>
       <textarea
         v-model="aiInput"
         @keydown.enter.prevent="handleAiSubmit"
         :disabled="processingAi"
-        rows="3"
+        rows="5"
         placeholder="Nhập nội dung để AI tạo nhanh...&#10;(vd: Hẹn gặp khách lúc 3h chiều mai, nhắc trước 1 tiếng)"
-        class="w-full pl-11 pr-14 py-4 bg-bg-surface border border-border-default hover:border-accent/50 focus:border-accent focus:ring-2 focus:ring-accent-subtle rounded-2xl text-sm transition-all duration-200 outline-none text-text-primary placeholder:text-text-disabled shadow-sm resize-none"
+        class="w-full pl-12 pr-16 py-5 bg-bg-surface border border-border-default hover:border-accent/50 focus:border-accent focus:ring-2 focus:ring-accent-subtle rounded-2xl text-base transition-all duration-200 outline-none text-text-primary placeholder:text-text-disabled shadow-sm resize-none"
       />
-      <div class="absolute bottom-3 right-3 flex items-center">
+      <div class="absolute bottom-4 right-4 flex items-center">
         <button
           @click="handleAiSubmit"
           :disabled="!aiInput.trim() || processingAi"
