@@ -237,6 +237,27 @@ export async function handleAcknowledgeReminder(userId: string, reminderId: stri
 }
 
 /**
+ * Strip markdown formatting to get clean plain text for AI processing.
+ */
+function stripMarkdown(text: string): string {
+  return text
+    // Extract URLs from markdown links [text](url) → text (url)
+    .replace(/\[([^\]]*)\]\(([^)]+)\)/g, '$1 $2')
+    // Remove bold/italic markers
+    .replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1')
+    .replace(/_{1,3}([^_]+)_{1,3}/g, '$1')
+    // Remove heading markers
+    .replace(/^#{1,6}\s+/gm, '')
+    // Remove bullet points but keep content
+    .replace(/^\s*[-*+]\s+/gm, '• ')
+    // Remove backticks
+    .replace(/`([^`]+)`/g, '$1')
+    // Clean up extra whitespace
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
+/**
  * AI Detection: Analyze text content for events/deadlines, return structured suggestions.
  */
 export async function handleAiDetectReminders(userId: string, request: Request, env: Env): Promise<Response> {
@@ -246,25 +267,46 @@ export async function handleAiDetectReminders(userId: string, request: Request, 
   const { content } = body
   if (!content) return errorResponse('Content is required')
 
-  const systemPrompt = `Bạn là AI chuyên trích xuất sự kiện, task, deadline từ văn bản tiếng Việt.
-Phân tích nội dung và trả về danh sách các sự kiện.
+  // Pre-process: strip markdown + HTML to give AI clean text
+  const cleanContent = stripMarkdown(content)
 
-Quy tắc BẮT BUỘC:
-1. CHỈ trả về JSON ARRAY hợp lệ (tối đa 5 item), KHÔNG giải thích thêm.
-2. Cấu trúc mỗi item: {"title": "tên ngắn gọn", "eventDate": "ISO 8601 datetime", "description": "CHI TIẾT ĐẦY ĐỦ", "url": "URL nguyên bản"}
-3. "description": Phải giữ lại toàn bộ mô tả, note, task name trong văn bản gốc. KHÔNG ĐƯỢC TÓM TẮT LƯỢC BỎ.
-4. "url": Bắt buộc tìm và trích xuất MỌI đường link (http/https). Nếu link nằm trong markdown dạng [text](url) thì lấy phần url. KHÔNG ĐƯỢC BỎ SÓT LINK NÀO!
-5. "eventDate": Nếu chỉ có ngày (VD: "13/5"), lấy năm hiện tại và gán giờ mặc định 09:00. Tính từ hiện tại: ${new Date().toISOString()}
-6. Nếu KHÔNG có sự kiện nào, trả về mảng rỗng [].`
+  const now = new Date()
+  const currentYear = now.getFullYear()
+  const currentDateISO = now.toISOString()
+
+  const systemPrompt = `Bạn là AI chuyên trích xuất sự kiện, task, deadline từ văn bản.
+Phân tích nội dung và trả về danh sách các sự kiện dưới dạng JSON ARRAY.
+
+QUY TẮC BẮT BUỘC:
+1. CHỈ trả về JSON ARRAY hợp lệ (tối đa 5 item). KHÔNG giải thích, KHÔNG thêm text bên ngoài.
+2. Cấu trúc mỗi item: {"title": "string", "eventDate": "ISO 8601", "description": "string", "url": "string hoặc null"}
+3. CÁCH PARSE NGÀY:
+   - "13/5" → "${currentYear}-05-13T09:00:00.000Z"
+   - "19/5" → "${currentYear}-05-19T09:00:00.000Z"  
+   - "Build 1: 13/5" → eventDate = "${currentYear}-05-13T09:00:00.000Z"
+   - Nếu có giờ cụ thể (VD: "3h chiều") → dùng giờ đó
+   - Nếu KHÔNG có giờ → mặc định 09:00:00
+4. "description": Giữ nguyên mô tả task/chi tiết từ văn bản gốc.
+5. "url": Trích xuất mọi đường link https://... nếu có. Nếu không có url → null
+6. Nếu KHÔNG tìm thấy sự kiện nào → trả về []
+
+Thời gian hiện tại: ${currentDateISO}
+
+VÍ DỤ:
+Input: "Build 1: 13/5 - Task: Chuyển API monitor cho SCC - Link: https://jira.example.com/123"
+Output: [{"title":"Build 1","eventDate":"${currentYear}-05-13T09:00:00.000Z","description":"Task: Chuyển API monitor cho SCC","url":"https://jira.example.com/123"}]
+
+Input: "Họp team lúc 2h chiều ngày 20/5"
+Output: [{"title":"Họp team","eventDate":"${currentYear}-05-20T07:00:00.000Z","description":"Họp team lúc 2h chiều ngày 20/5","url":null}]`
 
   try {
-    const response = await env.AI.run('@cf/meta/llama-3.1-8b-instruct' as any, {
+    const response = await env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast' as any, {
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: content.substring(0, 2000) }
+        { role: 'user', content: cleanContent.substring(0, 3000) }
       ],
-      max_tokens: 512,
-      temperature: 0.3
+      max_tokens: 1024,
+      temperature: 0.1
     }) as any
 
     const text = (response?.response || '').trim()
@@ -275,14 +317,29 @@ Quy tắc BẮT BUỘC:
       if (jsonMatch) events = JSON.parse(jsonMatch[0])
     } catch { events = [] }
 
+    // Post-process: validate and fix dates
     const validEvents = events
       .filter((e: any) => e?.title && e?.eventDate)
-      .map((e: any) => ({
-        title: String(e.title).substring(0, 100),
-        eventDate: String(e.eventDate),
-        description: String(e.description || '').substring(0, 200),
-        url: e.url ? String(e.url).substring(0, 500) : undefined,
-      }))
+      .map((e: any) => {
+        let eventDate = String(e.eventDate)
+        // Fix common AI date mistakes - ensure valid ISO
+        if (isNaN(new Date(eventDate).getTime())) {
+          // Try to parse dd/M or d/M format from the date string
+          const dateMatch = eventDate.match(/(\d{1,2})\/(\d{1,2})/)
+          if (dateMatch) {
+            const day = dateMatch[1].padStart(2, '0')
+            const month = dateMatch[2].padStart(2, '0')
+            eventDate = `${currentYear}-${month}-${day}T09:00:00.000Z`
+          }
+        }
+        return {
+          title: String(e.title).substring(0, 100),
+          eventDate,
+          description: String(e.description || '').substring(0, 300),
+          url: e.url && e.url !== 'null' ? String(e.url).substring(0, 500) : undefined,
+        }
+      })
+      .filter((e: any) => !isNaN(new Date(e.eventDate).getTime())) // final validation
       .slice(0, 5)
 
     return jsonResponse({ success: true, data: validEvents })

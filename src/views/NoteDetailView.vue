@@ -144,7 +144,19 @@ async function handleExtractEvents() {
   if (!content.value.trim() || extractingEvents.value) return
   extractingEvents.value = true
   try {
-    const rawText = content.value.replace(/<[^>]*>?/gm, '') // simple strip html
+    // Convert HTML to readable plain text for AI
+    const rawText = content.value
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/(p|div|li|h[1-6])>/gi, '\n')
+      .replace(/<[^>]*>?/gm, '')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#039;/g, "'")
+      .replace(/&nbsp;/g, ' ')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim()
     const suggestions = await reminderStore.detectFromText(rawText)
     if (suggestions.length > 0) {
       reminderSuggestions.value = suggestions
