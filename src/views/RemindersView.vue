@@ -151,23 +151,23 @@ function getStatusColor(status: string) {
     </div>
 
     <!-- AI Quick Add -->
-    <div class="mb-6 relative">
-      <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-accent">
+    <div class="mb-6 relative group">
+      <div class="absolute top-4 left-4 text-accent pointer-events-none">
         <Sparkles :size="18" />
       </div>
-      <input
+      <textarea
         v-model="aiInput"
-        @keydown.enter="handleAiSubmit"
+        @keydown.enter.prevent="handleAiSubmit"
         :disabled="processingAi"
-        type="text"
-        placeholder="Nhập nội dung để AI tạo nhanh... (vd: Hẹn gặp khách lúc 3h chiều mai)"
-        class="w-full pl-11 pr-12 py-3.5 bg-bg-surface border border-border-default hover:border-accent/50 focus:border-accent focus:ring-2 focus:ring-accent-subtle rounded-2xl text-sm transition-all duration-200 outline-none text-text-primary placeholder:text-text-disabled shadow-sm"
+        rows="3"
+        placeholder="Nhập nội dung để AI tạo nhanh...&#10;(vd: Hẹn gặp khách lúc 3h chiều mai, nhắc trước 1 tiếng)"
+        class="w-full pl-11 pr-14 py-4 bg-bg-surface border border-border-default hover:border-accent/50 focus:border-accent focus:ring-2 focus:ring-accent-subtle rounded-2xl text-sm transition-all duration-200 outline-none text-text-primary placeholder:text-text-disabled shadow-sm resize-none"
       />
-      <div class="absolute inset-y-0 right-0 pr-2 flex items-center">
+      <div class="absolute bottom-3 right-3 flex items-center">
         <button
           @click="handleAiSubmit"
           :disabled="!aiInput.trim() || processingAi"
-          class="p-2 bg-accent text-white rounded-xl hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+          class="p-2.5 bg-accent text-white rounded-xl hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg"
           title="Tạo nhanh"
         >
           <Loader v-if="processingAi" :size="16" class="animate-spin" />

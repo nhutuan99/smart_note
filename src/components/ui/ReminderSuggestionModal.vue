@@ -64,7 +64,7 @@ function formatDate(iso: string): string {
 
 <template>
   <!-- Bottom sheet style suggestion panel -->
-  <div class="suggestion-overlay" @click.self="emit('close')">
+  <div class="suggestion-overlay">
     <div class="suggestion-sheet">
       <!-- Header -->
       <div class="sheet-header">
@@ -144,9 +144,9 @@ function formatDate(iso: string): string {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   animation: fadeIn 0.15s ease;
 }
 
