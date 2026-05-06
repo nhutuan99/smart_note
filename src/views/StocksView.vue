@@ -53,7 +53,7 @@ const alertModalRef = ref<HTMLElement | null>(null)
 // Alert modal state (declared here so watch() can reference it)
 const showAlertModal = ref(false)
 const alertTargetStock = ref<StockPosition | null>(null)
-const alertForm = ref({ targetPrice: '', direction: 'below' as 'above' | 'below', label: '' })
+const alertForm = ref({ targetPriceBelow: '', targetPriceAbove: '', direction: 'below' as 'above' | 'below', label: '' })
 
 // Lock body scroll & focus modal into viewport when any modal opens
 function lockScroll() {
@@ -195,18 +195,19 @@ function clearTooltip() {
 // ── Alert Functions ──
 function openAlertModal(pos: StockPosition) {
   alertTargetStock.value = pos
-  alertForm.value = { targetPrice: '', direction: 'below', label: '' }
+  alertForm.value = { targetPriceBelow: '', targetPriceAbove: '', direction: 'below', label: '' }
   showAlertModal.value = true
 }
 
 async function handleAddAlert() {
-  if (!alertTargetStock.value || !alertForm.value.targetPrice) {
+  const price = alertForm.value.direction === 'below' ? alertForm.value.targetPriceBelow : alertForm.value.targetPriceAbove
+  if (!alertTargetStock.value || !price) {
     ui.showToast('error', t('common.fillRequiredFields'))
     return
   }
   try {
     await stockStore.addAlert(alertTargetStock.value.id, {
-      targetPrice: Number(alertForm.value.targetPrice),
+      targetPrice: Number(price),
       direction: alertForm.value.direction,
       label: alertForm.value.label || undefined
     })
@@ -625,21 +626,21 @@ function getChartData(symbol: string) {
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <label class="mb-1.5 block text-sm font-medium text-text-secondary">{{ t('common.quantity') }}</label>
-                <input v-model="newPosition.quantity" type="number" class="border-border-default bg-bg-surface text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-2.5 text-sm transition-all duration-150 focus:ring-2 focus:outline-none" placeholder="1000" />
+                <input v-model="newPosition.quantity" type="number" class="border-border-default bg-bg-surface text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-2.5 text-sm transition-all duration-150 focus:ring-2 focus:outline-none" />
               </div>
               <div>
                 <label class="mb-1.5 block text-sm font-medium text-text-secondary">{{ t('common.buyPrice') }} (x1000)</label>
-                <input v-model="newPosition.buyPrice" type="number" step="0.1" class="border-border-default bg-bg-surface text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-2.5 text-sm transition-all duration-150 focus:ring-2 focus:outline-none" placeholder="75.5" />
+                <input v-model="newPosition.buyPrice" type="number" step="0.1" class="border-border-default bg-bg-surface text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-2.5 text-sm transition-all duration-150 focus:ring-2 focus:outline-none" />
               </div>
             </div>
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <label class="mb-1.5 block text-sm font-medium text-text-secondary">Target (%)</label>
-                <input v-model="newPosition.targetProfit" type="number" class="border-border-default bg-bg-surface text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-2.5 text-sm transition-all duration-150 focus:ring-2 focus:outline-none" placeholder="15" />
+                <input v-model="newPosition.targetProfit" type="number" class="border-border-default bg-bg-surface text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-2.5 text-sm transition-all duration-150 focus:ring-2 focus:outline-none" />
               </div>
               <div>
                 <label class="mb-1.5 block text-sm font-medium text-text-secondary">Stop Loss (%)</label>
-                <input v-model="newPosition.stopLoss" type="number" class="border-border-default bg-bg-surface text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-2.5 text-sm transition-all duration-150 focus:ring-2 focus:outline-none" placeholder="-7" />
+                <input v-model="newPosition.stopLoss" type="number" class="border-border-default bg-bg-surface text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-2.5 text-sm transition-all duration-150 focus:ring-2 focus:outline-none" />
               </div>
             </div>
           </div>
@@ -702,11 +703,18 @@ function getChartData(symbol: string) {
                 <label class="mb-1.5 block text-xs font-semibold text-text-secondary">{{ t('stockAlert.targetPrice') }}</label>
                 <div class="relative">
                   <input 
-                    v-model="alertForm.targetPrice" 
+                    v-if="alertForm.direction === 'below'"
+                    v-model="alertForm.targetPriceBelow" 
                     type="number" 
                     step="0.1"
                     class="border-border-default bg-bg-surface text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-3 text-sm font-bold transition-all focus:ring-2 focus:outline-none" 
-                    :placeholder="alertForm.direction === 'below' ? '16.9' : '42.5'" 
+                  />
+                  <input 
+                    v-else
+                    v-model="alertForm.targetPriceAbove" 
+                    type="number" 
+                    step="0.1"
+                    class="border-border-default bg-bg-surface text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-3 text-sm font-bold transition-all focus:ring-2 focus:outline-none" 
                   />
                   <div class="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-text-disabled uppercase">VND</div>
                 </div>
