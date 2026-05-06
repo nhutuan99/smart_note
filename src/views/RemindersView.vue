@@ -635,6 +635,23 @@ function getStatusColor(status: string) {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+.reminder-card__url {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  color: var(--accent);
+  background: var(--accent-subtle);
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 0.75rem;
+  transition: all 0.2s ease;
+  max-width: 100%;
+}
+.reminder-card__url:hover {
+  background: rgba(142, 125, 250, 0.15);
+  text-decoration: underline;
+}
 .reminder-card__footer {
   display: flex;
   flex-wrap: wrap;

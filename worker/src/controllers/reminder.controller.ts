@@ -187,7 +187,7 @@ export async function handleClearReminders(userId: string, request: Request, env
   if (statusFilter === 'all') {
     reminders = []
   } else if (statusFilter === 'completed') {
-    reminders = reminders.filter(r => r.status !== 'completed')
+    reminders = reminders.filter(r => r.status !== 'completed' && r.status !== 'expired')
   } else if (statusFilter === 'active') {
     reminders = reminders.filter(r => r.status !== 'active')
   }

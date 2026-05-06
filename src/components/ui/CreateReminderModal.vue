@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useReminderStore } from '@/stores/reminders'
 import { useUiStore } from '@/stores/ui'
 import type { Reminder } from '@/types'
-import { X, Bell, CalendarDays, Clock, Save, Repeat, Plus } from 'lucide-vue-next'
+import { X, Bell, CalendarDays, Clock, Save, Repeat, Plus, Link, ExternalLink } from 'lucide-vue-next'
 import CustomDatePicker from './CustomDatePicker.vue'
 import CustomTimePicker from './CustomTimePicker.vue'
 
@@ -25,6 +25,7 @@ const isEditing = computed(() => !!props.reminder?.id)
 
 const title = ref('')
 const description = ref('')
+const url = ref('')
 const eventDate = ref('')
 const eventTime = ref('09:00')
 const selectedOffsets = ref<string[]>(['1h', '1d'])
@@ -75,7 +76,8 @@ const isValid = computed(() => {
 onMounted(() => {
   if (props.reminder) {
     title.value = props.reminder.title
-    description.value = props.reminder.description
+    description.value = props.reminder.description || ''
+    url.value = props.reminder.url || ''
     selectedOffsets.value = [...(props.reminder.offsets || ['1h', '1d'])]
     repeatInterval.value = props.reminder.repeatInterval || 'none'
     const d = new Date(props.reminder.eventDate)
@@ -103,6 +105,15 @@ onMounted(() => {
   })
 })
 
+watch(description, (newVal) => {
+  if (!url.value && newVal) {
+    const match = newVal.match(/(https?:\/\/[^\s]+)/)
+    if (match) {
+      url.value = match[0]
+    }
+  }
+})
+
 function computeCustomRemindAt(): string | undefined {
   if (!customDate.value || !customTime.value) return undefined
   return new Date(`${customDate.value}T${customTime.value}:00`).toISOString()
@@ -120,6 +131,7 @@ async function handleSave() {
       const result = await store.update(props.reminder.id, {
         title: title.value.trim(),
         description: description.value.trim(),
+        url: url.value.trim() || undefined,
         eventDate: new Date(eventDateTime).toISOString(),
         offsets: selectedOffsets.value,
         customRemindAt,
@@ -130,6 +142,7 @@ async function handleSave() {
       const result = await store.create({
         title: title.value.trim(),
         description: description.value.trim(),
+        url: url.value.trim() || undefined,
         eventDate: new Date(eventDateTime).toISOString(),
         offsets: selectedOffsets.value,
         customRemindAt,
@@ -185,9 +198,31 @@ async function handleSave() {
                 v-model="description"
                 class="field-input field-textarea"
                 :placeholder="t('reminders.descPlaceholder')"
-                rows="2"
-                maxlength="300"
+                rows="4"
+                maxlength="1000"
               />
+            </div>
+
+            <!-- Link URL -->
+            <div class="field">
+              <label class="field-label">Liên kết (URL)</label>
+              <div class="relative flex items-center">
+                <input
+                  v-model="url"
+                  type="url"
+                  class="field-input pr-10"
+                  placeholder="https://..."
+                />
+                <a
+                  v-if="url"
+                  :href="url"
+                  target="_blank"
+                  class="absolute right-3 text-accent hover:text-accent-hover transition-colors flex items-center justify-center"
+                  title="Mở liên kết"
+                >
+                  <ExternalLink :size="16" />
+                </a>
+              </div>
             </div>
 
             <!-- Date & Time -->
@@ -348,7 +383,7 @@ async function handleSave() {
 }
 .field-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-subtle); }
 .field-input::placeholder { color: var(--text-disabled); }
-.field-textarea { resize: none; min-height: 3.5rem; }
+.field-textarea { resize: vertical; min-height: 5.5rem; }
 .field-row { display: flex; gap: 0.75rem; align-items: flex-end; }
 
 .offset-section { margin-bottom: 0.75rem; }

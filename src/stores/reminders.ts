@@ -116,7 +116,11 @@ export const useReminderStore = defineStore('reminders', () => {
       if (status === 'all') {
         reminders.value = []
       } else {
-        reminders.value = reminders.value.filter(r => r.status !== status)
+        if (status === 'completed') {
+          reminders.value = reminders.value.filter(r => r.status !== 'completed' && r.status !== 'expired')
+        } else {
+          reminders.value = reminders.value.filter(r => r.status !== status)
+        }
       }
       return true
     } catch {
