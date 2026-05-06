@@ -21,7 +21,8 @@ import {
   Target,
   ChevronDown,
   ChevronRight as ChevronRightIcon,
-  LineChart
+  LineChart,
+  Bell
 } from 'lucide-vue-next'
 
 const { t } = useI18n()
@@ -46,6 +47,7 @@ const navItems = computed(() => {
   }
   
   items.push(
+    { key: 'reminders.title',  icon: Bell,            route: '/reminders' },
     { key: 'nav.notes',        icon: FileText,        route: '/notes' },
     { key: 'nav.blog',         icon: Newspaper,       route: '/blog' },
     { key: 'nav.settings',     icon: Settings,        route: '/settings' }
