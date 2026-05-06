@@ -70,6 +70,7 @@ export const useReminderStore = defineStore('reminders', () => {
   async function create(reminder: {
     title: string
     description?: string
+    url?: string
     eventDate: string
     offsets: string[]
     customRemindAt?: string
