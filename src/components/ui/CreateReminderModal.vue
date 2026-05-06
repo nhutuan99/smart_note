@@ -56,14 +56,20 @@ const repeatOptions = [
 const timeOffsets = computed(() => offsetOptions.filter(o => o.group === 'time'))
 const dayOffsets = computed(() => offsetOptions.filter(o => o.group === 'day'))
 
+const currentStep = ref(1)
+
 function toggleOffset(key: string) {
   const idx = selectedOffsets.value.indexOf(key)
   if (idx === -1) selectedOffsets.value.push(key)
   else selectedOffsets.value.splice(idx, 1)
 }
 
+const isStep1Valid = computed(() => {
+  return title.value.trim() && eventDate.value
+})
+
 const isValid = computed(() => {
-  return title.value.trim() && eventDate.value && (selectedOffsets.value.length > 0 || (customDate.value && customTime.value))
+  return isStep1Valid.value && (selectedOffsets.value.length > 0 || (customDate.value && customTime.value))
 })
 
 onMounted(() => {
@@ -158,40 +164,44 @@ async function handleSave() {
 
         <!-- Body -->
         <div class="modal-body">
-          <!-- Title -->
-          <div class="field">
-            <label class="field-label">{{ t('reminders.titleField') }} *</label>
-            <input
-              id="reminder-title-input"
-              v-model="title"
-              type="text"
-              class="field-input"
-              :placeholder="t('reminders.titlePlaceholder')"
-              maxlength="100"
-            />
-          </div>
-
-          <!-- Description -->
-          <div class="field">
-            <label class="field-label">{{ t('reminders.descField') }}</label>
-            <textarea
-              v-model="description"
-              class="field-input field-textarea"
-              :placeholder="t('reminders.descPlaceholder')"
-              rows="2"
-              maxlength="300"
-            />
-          </div>
-
-          <!-- Date & Time -->
-          <div class="field-row">
-            <div class="field flex-1">
-              <CustomDatePicker v-model="eventDate" :label="t('reminders.eventDate')" />
+          <template v-if="currentStep === 1">
+            <!-- Title -->
+            <div class="field">
+              <label class="field-label">{{ t('reminders.titleField') }} *</label>
+              <input
+                id="reminder-title-input"
+                v-model="title"
+                type="text"
+                class="field-input"
+                :placeholder="t('reminders.titlePlaceholder')"
+                maxlength="100"
+              />
             </div>
-            <div class="field" style="width: 8.5rem">
-              <CustomTimePicker v-model="eventTime" :label="t('reminders.eventTime')" />
+
+            <!-- Description -->
+            <div class="field">
+              <label class="field-label">{{ t('reminders.descField') }}</label>
+              <textarea
+                v-model="description"
+                class="field-input field-textarea"
+                :placeholder="t('reminders.descPlaceholder')"
+                rows="2"
+                maxlength="300"
+              />
             </div>
-          </div>
+
+            <!-- Date & Time -->
+            <div class="field-row">
+              <div class="field flex-1">
+                <CustomDatePicker v-model="eventDate" :label="t('reminders.eventDate')" />
+              </div>
+              <div class="field" style="width: 8.5rem">
+                <CustomTimePicker v-model="eventTime" :label="t('reminders.eventTime')" />
+              </div>
+            </div>
+          </template>
+
+          <template v-if="currentStep === 2">
 
           <!-- Offset Selector -->
           <div class="field">
@@ -268,16 +278,25 @@ async function handleSave() {
               {{ t('reminders.lastChanceInfo') }}
             </span>
           </div>
+          </template>
         </div>
 
         <!-- Footer -->
         <div class="modal-footer">
-          <button @click="emit('close')" class="btn-cancel">{{ t('common.cancel') }}</button>
-          <button @click="handleSave" :disabled="!isValid || saving" class="btn-save">
-            <span v-if="saving" class="spinner" />
-            <Save v-else :size="15" />
-            {{ isEditing ? t('common.save') : t('reminders.create') }}
-          </button>
+          <template v-if="currentStep === 1">
+            <button @click="emit('close')" class="btn-cancel">{{ t('common.cancel') }}</button>
+            <button @click="currentStep = 2" :disabled="!isStep1Valid" class="btn-save">
+              Tiếp tục
+            </button>
+          </template>
+          <template v-else>
+            <button @click="currentStep = 1" class="btn-cancel">Quay lại</button>
+            <button @click="handleSave" :disabled="!isValid || saving" class="btn-save">
+              <span v-if="saving" class="spinner" />
+              <Save v-else :size="15" />
+              {{ isEditing ? t('common.save') : t('reminders.create') }}
+            </button>
+          </template>
         </div>
       </div>
     </div>
@@ -292,11 +311,11 @@ async function handleSave() {
   padding: 1rem; animation: fadeIn 0.15s ease;
 }
 .modal-container {
-  width: 100%; max-width: 30rem; max-height: 90vh;
+  width: 100%; max-width: 36rem; max-height: 90vh;
   display: flex; flex-direction: column;
   border-radius: var(--radius-xl); background: var(--bg-surface);
   border: 1px solid var(--border-default); box-shadow: var(--shadow-lg);
-  animation: scaleIn 0.2s ease; overflow: hidden;
+  animation: scaleIn 0.2s ease;
 }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -314,7 +333,7 @@ async function handleSave() {
 .modal-close-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
 
 .modal-body {
-  padding: 1.5rem; overflow-y: auto;
+  padding: 1.5rem;
   display: flex; flex-direction: column; gap: 1.25rem;
 }
 .field-label {

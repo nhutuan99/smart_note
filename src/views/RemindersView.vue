@@ -3,11 +3,13 @@ import { ref, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useReminderStore, type ReminderFilter } from '@/stores/reminders'
 import { useUiStore } from '@/stores/ui'
-import type { Reminder } from '@/types'
+import type { Reminder, ReminderSuggestion } from '@/types'
 import CreateReminderModal from '@/components/ui/CreateReminderModal.vue'
+import ReminderSuggestionModal from '@/components/ui/ReminderSuggestionModal.vue'
 import {
   Bell, Plus, Check, Clock, CalendarDays, Trash2,
-  CheckCircle2, AlertCircle, Timer, BellRing, Repeat, Eye
+  CheckCircle2, AlertCircle, Timer, BellRing, Repeat, Eye,
+  Sparkles, Loader
 } from 'lucide-vue-next'
 
 const { t } = useI18n()
@@ -22,6 +24,28 @@ const tabs: { key: ReminderFilter; label: string }[] = [
   { key: 'active', label: 'reminders.active' },
   { key: 'completed', label: 'reminders.completed' },
 ]
+
+const aiInput = ref('')
+const processingAi = ref(false)
+const aiSuggestions = ref<ReminderSuggestion[]>([])
+
+async function handleAiSubmit() {
+  if (!aiInput.value.trim() || processingAi.value) return
+  processingAi.value = true
+  try {
+    const suggestions = await store.detectFromText(aiInput.value)
+    if (suggestions.length > 0) {
+      aiSuggestions.value = suggestions
+      aiInput.value = '' // clear on success
+    } else {
+      ui.showToast('info', t('reminders.noEventsFound'))
+    }
+  } catch (e) {
+    ui.showToast('error', t('common.somethingWentWrong'))
+  } finally {
+    processingAi.value = false
+  }
+}
 
 onMounted(() => {
   store.fetch()
@@ -122,6 +146,32 @@ function getStatusColor(status: string) {
         >
           <Plus :size="18" />
           <span class="hidden sm:inline">{{ t('reminders.create') }}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- AI Quick Add -->
+    <div class="mb-6 relative">
+      <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-accent">
+        <Sparkles :size="18" />
+      </div>
+      <input
+        v-model="aiInput"
+        @keydown.enter="handleAiSubmit"
+        :disabled="processingAi"
+        type="text"
+        placeholder="Nhập nội dung để AI tạo nhanh... (vd: Hẹn gặp khách lúc 3h chiều mai)"
+        class="w-full pl-11 pr-12 py-3.5 bg-bg-surface border border-border-default hover:border-accent/50 focus:border-accent focus:ring-2 focus:ring-accent-subtle rounded-2xl text-sm transition-all duration-200 outline-none text-text-primary placeholder:text-text-disabled shadow-sm"
+      />
+      <div class="absolute inset-y-0 right-0 pr-2 flex items-center">
+        <button
+          @click="handleAiSubmit"
+          :disabled="!aiInput.trim() || processingAi"
+          class="p-2 bg-accent text-white rounded-xl hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+          title="Tạo nhanh"
+        >
+          <Loader v-if="processingAi" :size="16" class="animate-spin" />
+          <Plus v-else :size="16" />
         </button>
       </div>
     </div>
@@ -293,6 +343,14 @@ function getStatusColor(status: string) {
       :reminder="editingReminder"
       @close="handleModalClose"
       @saved="handleModalSaved"
+    />
+
+    <!-- AI Suggestion Modal -->
+    <ReminderSuggestionModal
+      v-if="aiSuggestions.length > 0"
+      :suggestions="aiSuggestions"
+      @close="aiSuggestions = []"
+      @created="() => { aiSuggestions = []; store.fetch(); }"
     />
   </div>
 </template>
