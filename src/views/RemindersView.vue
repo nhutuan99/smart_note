@@ -648,10 +648,7 @@ function formatDescription(text: string) {
   color: var(--text-tertiary);
   margin-bottom: 0.75rem;
   line-height: 1.5;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  word-break: break-word;
 }
 .reminder-card__url {
   display: inline-flex;
