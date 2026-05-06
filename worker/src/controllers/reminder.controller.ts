@@ -222,18 +222,16 @@ export async function handleAiDetectReminders(userId: string, request: Request, 
   const { content } = body
   if (!content) return errorResponse('Content is required')
 
-  const systemPrompt = `Bạn là AI chuyên phát hiện sự kiện, hạn chót, deadline, lịch hẹn trong văn bản tiếng Việt.
-Phân tích nội dung và trả về các sự kiện có ngày/giờ cụ thể hoặc có thể suy ra.
+  const systemPrompt = `Bạn là AI chuyên trích xuất sự kiện, task, deadline từ văn bản tiếng Việt.
+Phân tích nội dung và trả về danh sách các sự kiện.
 
-Quy tắc:
-- CHỈ trả về JSON ARRAY hợp lệ, KHÔNG có text nào khác bên ngoài
-- Mỗi sự kiện có cấu trúc: {"title": "tên sự kiện", "eventDate": "ISO 8601 datetime string", "description": "mô tả ngắn", "url": "link liên quan nếu có"}
-- Đặc biệt chú ý trích xuất các đường link (URL bắt đầu bằng http/https) có trong văn bản và gán vào trường "url".
-- Nếu chỉ có ngày (VD: "15/5"), mặc định giờ là 09:00
-- Nếu chỉ có "tuần sau", "tháng sau", tính từ ngày hiện tại: ${new Date().toISOString()}
-- Các pattern cần phát hiện: họp, hạn, deadline, trả nợ, đóng tiền, thanh toán, hẹn, lịch, nhắc, sinh nhật, kỷ niệm
-- Nếu KHÔNG có sự kiện nào, trả về mảng rỗng []
-- Tối đa 5 sự kiện`
+Quy tắc BẮT BUỘC:
+1. CHỈ trả về JSON ARRAY hợp lệ (tối đa 5 item), KHÔNG giải thích thêm.
+2. Cấu trúc mỗi item: {"title": "tên ngắn gọn", "eventDate": "ISO 8601 datetime", "description": "CHI TIẾT ĐẦY ĐỦ", "url": "URL nguyên bản"}
+3. "description": Phải giữ lại toàn bộ mô tả, note, task name trong văn bản gốc. KHÔNG ĐƯỢC TÓM TẮT LƯỢC BỎ.
+4. "url": Bắt buộc tìm và trích xuất MỌI đường link (http/https). Nếu link nằm trong markdown dạng [text](url) thì lấy phần url. KHÔNG ĐƯỢC BỎ SÓT LINK NÀO!
+5. "eventDate": Nếu chỉ có ngày (VD: "13/5"), lấy năm hiện tại và gán giờ mặc định 09:00. Tính từ hiện tại: ${new Date().toISOString()}
+6. Nếu KHÔNG có sự kiện nào, trả về mảng rỗng [].`
 
   try {
     const response = await env.AI.run('@cf/meta/llama-3.1-8b-instruct' as any, {
