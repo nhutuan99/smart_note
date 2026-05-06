@@ -35,7 +35,7 @@ async function quickCreate(suggestion: ReminderSuggestion) {
     title: suggestion.title,
     description: suggestion.description,
     eventDate: suggestion.eventDate,
-    offsets: ['1h', '1d'],
+    offsets: ['1d'], // Default to 1 day for deadlines
     sourceType: 'note',
   })
   creating.value = null
@@ -58,6 +58,46 @@ function formatDate(iso: string): string {
     return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
   } catch {
     return iso
+  }
+}
+
+// Batch Add Logic
+const batchMode = ref(false)
+const batchCreating = ref(false)
+const batchOffsets = ref<string[]>(['1d'])
+
+const offsetOptions = [
+  { key: '1d', label: '1 ngày' },
+  { key: '2d', label: '2 ngày' },
+  { key: '3d', label: '3 ngày' },
+  { key: '1w', label: '1 tuần' },
+]
+
+function toggleBatchOffset(key: string) {
+  const idx = batchOffsets.value.indexOf(key)
+  if (idx === -1) batchOffsets.value.push(key)
+  else batchOffsets.value.splice(idx, 1)
+}
+
+async function handleBatchCreate() {
+  if (batchOffsets.value.length === 0 || batchCreating.value) return
+  batchCreating.value = true
+  try {
+    for (const s of props.suggestions) {
+      await store.create({
+        title: s.title,
+        description: s.description,
+        eventDate: s.eventDate,
+        offsets: batchOffsets.value,
+        sourceType: 'note',
+      })
+    }
+    ui.showToast('success', t('reminders.created'))
+    emit('created')
+  } catch {
+    ui.showToast('error', t('common.somethingWentWrong'))
+  } finally {
+    batchCreating.value = false
   }
 }
 </script>
@@ -86,29 +126,72 @@ function formatDate(iso: string): string {
 
       <!-- Suggestions List -->
       <div class="sheet-body">
-        <div
-          v-for="(s, idx) in suggestions"
-          :key="idx"
-          class="suggestion-item"
-        >
-          <div class="suggestion-info" @click="selectSuggestion(s)">
-            <Bell :size="14" class="text-accent shrink-0 mt-0.5" />
-            <div class="flex-1 min-w-0">
-              <div class="text-sm font-semibold truncate">{{ s.title }}</div>
-              <div class="text-[0.6875rem] text-text-tertiary">{{ formatDate(s.eventDate) }}</div>
-              <div v-if="s.description" class="text-xs text-text-disabled mt-0.5 truncate">{{ s.description }}</div>
-            </div>
-            <ChevronRight :size="14" class="text-text-disabled shrink-0" />
-          </div>
-          <button
-            @click="quickCreate(s)"
-            :disabled="creating === s.title"
-            class="quick-create-btn"
+        <template v-if="!batchMode">
+          <div
+            v-for="(s, idx) in suggestions"
+            :key="idx"
+            class="suggestion-item"
           >
-            <Loader v-if="creating === s.title" :size="13" class="animate-spin" />
-            <template v-else>+ {{ t('reminders.quickAdd') }}</template>
+            <div class="suggestion-info" @click="selectSuggestion(s)">
+              <Bell :size="14" class="text-accent shrink-0 mt-0.5" />
+              <div class="flex-1 min-w-0">
+                <div class="text-sm font-semibold truncate">{{ s.title }}</div>
+                <div class="text-[0.6875rem] text-text-tertiary">{{ formatDate(s.eventDate) }}</div>
+                <div v-if="s.description" class="text-xs text-text-disabled mt-0.5 truncate">{{ s.description }}</div>
+              </div>
+              <ChevronRight :size="14" class="text-text-disabled shrink-0" />
+            </div>
+            <button
+              @click="quickCreate(s)"
+              :disabled="creating === s.title"
+              class="quick-create-btn"
+            >
+              <Loader v-if="creating === s.title" :size="13" class="animate-spin" />
+              <template v-else>+ {{ t('reminders.quickAdd') }}</template>
+            </button>
+          </div>
+
+          <!-- Add All Button -->
+          <button
+            v-if="suggestions.length > 1"
+            @click="batchMode = true"
+            class="w-full mt-2 py-3 rounded-xl bg-accent-subtle text-accent font-semibold text-sm hover:bg-accent/20 transition-all border border-accent/20"
+          >
+            Thêm nhanh tất cả ({{ suggestions.length }})
           </button>
-        </div>
+        </template>
+
+        <!-- Batch Add Options -->
+        <template v-else>
+          <div class="p-4 rounded-xl bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.05)]">
+            <h4 class="text-sm font-semibold mb-1 text-text-primary">Thêm {{ suggestions.length }} lời nhắc</h4>
+            <p class="text-xs text-text-secondary mb-4">Các sự kiện deadline nên được nhắc trước tối thiểu 1 ngày.</p>
+            
+            <label class="text-xs font-semibold text-text-tertiary uppercase mb-2 block">Nhắc trước bao lâu?</label>
+            <div class="flex flex-wrap gap-2 mb-6">
+              <button
+                v-for="opt in offsetOptions" :key="opt.key"
+                @click="toggleBatchOffset(opt.key)"
+                class="px-3 py-1.5 rounded-full text-xs font-medium border transition-all"
+                :class="batchOffsets.includes(opt.key) ? 'bg-accent/20 border-accent text-accent' : 'bg-bg-elevated border-border-default text-text-secondary hover:border-accent'"
+              >
+                {{ opt.label }}
+              </button>
+            </div>
+
+            <div class="flex gap-2">
+              <button @click="batchMode = false" class="flex-1 py-2 rounded-lg bg-bg-elevated border border-border-default text-xs font-medium hover:bg-bg-hover">Hủy</button>
+              <button 
+                @click="handleBatchCreate" 
+                :disabled="batchOffsets.length === 0 || batchCreating"
+                class="flex-1 py-2 rounded-lg bg-accent text-white text-xs font-semibold hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                <Loader v-if="batchCreating" :size="14" class="animate-spin" />
+                Xác nhận thêm
+              </button>
+            </div>
+          </div>
+        </template>
       </div>
     </div>
   </div>
