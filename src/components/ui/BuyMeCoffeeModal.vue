@@ -74,8 +74,8 @@ async function copyAccount() {
           </p>
 
           <!-- QR Code Container -->
-          <div class="bg-white p-3 rounded-2xl shadow-sm mb-6 ring-1 ring-border-subtle w-56 h-56 mx-auto flex items-center justify-center">
-            <img :src="qrImage" alt="QR Code" class="w-full h-full object-contain rounded-xl" />
+          <div class="mb-6 w-56 h-56 mx-auto flex items-center justify-center rounded-2xl overflow-hidden shadow-md ring-1 ring-border-subtle/30">
+            <img :src="qrImage" alt="QR Code" class="w-full h-full object-contain scale-[1.02]" />
           </div>
 
           <!-- Bank Details -->
