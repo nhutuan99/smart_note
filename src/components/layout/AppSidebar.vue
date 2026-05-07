@@ -23,7 +23,8 @@ import {
   ChevronRight as ChevronRightIcon,
   LineChart,
   Bell,
-  GripVertical
+  GripVertical,
+  Coffee
 } from 'lucide-vue-next'
 
 const { t } = useI18n()
@@ -375,6 +376,17 @@ function onDragEnd() {
 
       <!-- spacer -->
       <div class="flex-1" />
+
+      <!-- Buy me a coffee -->
+      <button
+        @click="ui.showBuyMeCoffee = true"
+        class="nav-item group mt-2"
+        :class="{ 'nav-item--icon': !ui.sidebarOpen }"
+        :title="ui.sidebarOpen ? '' : 'Buy me a coffee ☕'"
+      >
+        <Coffee :size="ui.sidebarOpen ? 17 : 20" class="shrink-0 text-text-tertiary group-hover:text-accent transition-colors" />
+        <span v-if="ui.sidebarOpen" class="truncate font-medium bg-gradient-to-r from-accent/80 to-accent bg-clip-text text-transparent">Buy me a coffee ☕</span>
+      </button>
 
     </div>
   </aside>

@@ -7,9 +7,9 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import PinDialog from '@/components/PinDialog.vue'
 import BugReportModal from '@/components/ui/BugReportModal.vue'
 import ContactFeedbackModal from '@/components/ui/ContactFeedbackModal.vue'
+import BuyMeCoffeeModal from '@/components/ui/BuyMeCoffeeModal.vue'
 import PwaInstallGuide from '@/components/ui/PwaInstallGuide.vue'
 import PullToRefresh from '@/components/ui/PullToRefresh.vue'
-import WeeklyEventModal from '@/components/ui/WeeklyEventModal.vue'
 import FinanceAiAdvisor from '@/modules/finance/components/FinanceAiAdvisor.vue'
 import CatStoryModal from '@/components/ui/CatStoryModal.vue'
 import { ArrowUp } from 'lucide-vue-next'
@@ -157,9 +157,6 @@ onMounted(async () => {
   }
   _lastSyncTime = Date.now()
 
-  // Check Weekly AI Event
-  ui.checkWeeklyEvent()
-
   // Schedule sync guide after 5 minutes
   scheduleGuide()
 
@@ -253,8 +250,11 @@ async function handleRefresh(done: () => void) {
       :show="ui.showContactFeedback" 
       @close="ui.showContactFeedback = false" 
     />
+    <BuyMeCoffeeModal 
+      :show="ui.showBuyMeCoffee" 
+      @close="ui.showBuyMeCoffee = false" 
+    />
     <PwaInstallGuide />
-    <WeeklyEventModal />
     <CatStoryModal />
   </div>
 </template>

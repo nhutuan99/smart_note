@@ -20,6 +20,7 @@ export const useUiStore = defineStore('ui', () => {
   const searchOpen = ref(false)
   const showBugReport = ref(false)
   const showContactFeedback = ref(false)
+  const showBuyMeCoffee = ref(false)
   const showWeeklyEvent = ref(false)
   const hasCompletedWeeklyEvent = ref(false)
   const showStoryModal = ref(false)
@@ -222,6 +223,7 @@ export const useUiStore = defineStore('ui', () => {
     resolvePin,
     showBugReport,
     showContactFeedback,
+    showBuyMeCoffee,
     showWeeklyEvent,
     hasCompletedWeeklyEvent,
     checkWeeklyEvent,

@@ -89,12 +89,7 @@ async function submitFeedback() {
             {{ t('contact.modalDesc') }}
           </p>
 
-          <!-- Admin Email Info -->
-          <div class="flex items-center gap-2 rounded-xl bg-accent/5 border border-accent/20 px-4 py-3">
-            <span class="text-sm">📧</span>
-            <span class="text-sm text-text-secondary">{{ t('contact.emailInfo') }}</span>
-            <a href="mailto:tintphcm@gmail.com" class="text-sm font-medium text-accent hover:underline ml-auto">tintphcm@gmail.com</a>
-          </div>
+
 
           <div class="space-y-4">
             <!-- Subject -->
