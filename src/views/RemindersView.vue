@@ -173,6 +173,51 @@ function formatDescription(text: string) {
   return formatted.replace(/\n/g, '<br>')
 }
 
+// ── Timeline grouping ──
+interface DateGroup {
+  dateKey: string
+  label: string
+  relative: string
+  level: 'normal' | 'warning' | 'urgent'
+  reminders: Reminder[]
+}
+
+const groupedReminders = computed<DateGroup[]>(() => {
+  const groups = new Map<string, Reminder[]>()
+  for (const r of store.filtered) {
+    const d = new Date(r.eventDate)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    if (!groups.has(key)) groups.set(key, [])
+    groups.get(key)!.push(r)
+  }
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  return Array.from(groups.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([dateKey, items]) => {
+      const d = new Date(dateKey + 'T00:00:00')
+      const diffDays = Math.round((d.getTime() - today.getTime()) / 86_400_000)
+      let relative = ''
+      let level: 'normal' | 'warning' | 'urgent' = 'normal'
+
+      if (diffDays < 0) { relative = `${Math.abs(diffDays)} ngày trước`; level = 'urgent' }
+      else if (diffDays === 0) { relative = 'Hôm nay'; level = 'urgent' }
+      else if (diffDays === 1) { relative = 'Ngày mai'; level = 'warning' }
+      else if (diffDays <= 3) { relative = `${diffDays} ngày nữa`; level = 'warning' }
+      else { relative = `${diffDays} ngày nữa`; level = 'normal' }
+
+      return {
+        dateKey,
+        label: d.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' }),
+        relative,
+        level,
+        reminders: items.sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime()),
+      }
+    })
+})
+
 </script>
 
 <template>
@@ -211,9 +256,9 @@ function formatDescription(text: string) {
         v-model="aiInput"
         @keydown.enter.prevent="handleAiSubmit"
         :disabled="processingAi"
-        rows="5"
-        placeholder="Nhập nội dung để AI tạo nhanh...&#10;(vd: Hẹn gặp khách lúc 3h chiều mai, nhắc trước 1 tiếng)"
-        class="w-full pl-12 pr-16 py-5 bg-bg-surface border border-border-default hover:border-accent/50 focus:border-accent focus:ring-2 focus:ring-accent-subtle rounded-2xl text-base transition-all duration-200 outline-none text-text-primary placeholder:text-text-disabled shadow-sm resize-none"
+        rows="2"
+        placeholder="Nhập nội dung để AI tạo nhanh... (vd: Hẹn gặp khách lúc 3h chiều mai, nhắc trước 1 tiếng)"
+        class="w-full pl-12 pr-16 py-4 bg-bg-surface border border-border-default hover:border-accent/50 focus:border-accent focus:ring-2 focus:ring-accent-subtle rounded-2xl text-sm transition-all duration-200 outline-none text-text-primary placeholder:text-text-disabled shadow-sm resize-none"
       />
       <div class="absolute bottom-4 right-4 flex items-center">
         <button
@@ -283,122 +328,132 @@ function formatDescription(text: string) {
       </button>
     </div>
 
-    <!-- Reminders List -->
-    <div v-else class="reminders-grid">
-      <TransitionGroup name="reminder-card">
-        <div
-          v-for="reminder in store.filtered"
-          :key="reminder.id"
-          class="reminder-card"
-          :class="[`reminder-card--${reminder.status}`]"
-          @click="openEdit(reminder)"
-        >
-          <!-- Status & Countdown -->
-          <div class="reminder-card__header">
-            <div class="flex items-center gap-2">
-              <component
-                :is="getStatusIcon(reminder.status)"
-                :size="16"
-                :class="getStatusColor(reminder.status)"
-              />
-              <span
-                v-if="reminder.status === 'active'"
-                class="countdown-badge"
-                :class="`countdown-badge--${store.getCountdown(reminder.eventDate).level}`"
-              >
-                <Timer :size="12" />
-                {{ store.getCountdown(reminder.eventDate).text }}
-              </span>
-              <span v-else class="text-[0.6875rem] font-medium" :class="getStatusColor(reminder.status)">
-                {{ reminder.status === 'completed' ? t('reminders.completed') : t('reminders.expired') }}
-              </span>
-            </div>
-            <!-- Actions -->
-            <div class="reminder-card__actions" @click.stop>
-              <button
-                v-if="reminder.status === 'active'"
-                @click="handleComplete(reminder.id)"
-                class="action-btn action-btn--check"
-                :title="t('reminders.markComplete')"
-              >
-                <Check :size="14" />
-              </button>
-              <button
-                @click="handleDelete(reminder.id)"
-                class="action-btn action-btn--delete"
-                :title="t('common.delete')"
-              >
-                <Trash2 :size="14" />
-              </button>
-            </div>
-          </div>
-
-          <!-- Content -->
-          <h3 class="reminder-card__title">{{ reminder.title }}</h3>
-          <p v-if="reminder.description" class="reminder-card__desc" v-html="formatDescription(reminder.description)"></p>
-          <a
-            v-if="reminder.url"
-            :href="reminder.url"
-            target="_blank"
-            class="reminder-card__url"
-            @click.stop
-            title="Mở liên kết"
-          >
-            <Link :size="12" class="shrink-0" />
-            <span class="truncate">{{ getDisplayUrl(reminder.url) }}</span>
-          </a>
-
-          <!-- Date & Offsets -->
-          <div class="reminder-card__footer">
-            <div class="reminder-date">
-              <CalendarDays :size="13" class="text-text-disabled" />
-              <span>{{ formatDate(reminder.eventDate) }}</span>
-              <Clock :size="13" class="text-text-disabled ml-1" />
-              <span>{{ formatTime(reminder.eventDate) }}</span>
-            </div>
-            <div class="reminder-offsets">
-              <span
-                v-for="offset in reminder.offsets"
-                :key="offset"
-                class="offset-pill"
-              >
-                {{ offsetLabels[offset] || offset }}
-              </span>
-            </div>
-          </div>
-
-          <!-- Meta: Repeat + Acknowledge + Source -->
-          <div class="reminder-card__meta">
-            <!-- Repeat badge -->
+    <!-- Timeline Layout -->
+    <div v-else class="timeline">
+      <div
+        v-for="group in groupedReminders"
+        :key="group.dateKey"
+        class="timeline-group"
+      >
+        <!-- Date Header -->
+        <div class="timeline-date-header">
+          <div class="timeline-dot" :class="`timeline-dot--${group.level}`" />
+          <div class="timeline-date-info">
+            <span class="timeline-date-label">{{ group.label }}</span>
             <span
-              v-if="reminder.repeatInterval && reminder.repeatInterval !== 'none'"
-              class="repeat-badge"
+              class="timeline-relative"
+              :class="`timeline-relative--${group.level}`"
             >
-              <Repeat :size="11" />
-              {{ store.getRepeatLabel(reminder.repeatInterval) }}
-            </span>
-
-            <!-- Acknowledge button (anti-forget shield) -->
-            <button
-              v-if="reminder.status === 'active' && !reminder.acknowledged"
-              @click.stop="handleAcknowledge(reminder.id)"
-              class="ack-btn"
-              :title="t('reminders.markAcknowledged')"
-            >
-              <Eye :size="13" />
-              {{ t('reminders.iRemember') }}
-            </button>
-            <span v-else-if="reminder.acknowledged && reminder.status === 'active'" class="ack-done">
-              ✓ {{ t('reminders.remembered') }}
-            </span>
-
-            <!-- Source badge -->
-            <span v-if="reminder.sourceType === 'note'" class="reminder-source">
-              📝 {{ t('reminders.fromNote') }}
+              {{ group.relative }}
             </span>
           </div>
         </div>
-      </TransitionGroup>
+
+        <!-- Cards Grid -->
+        <div class="timeline-cards">
+          <div
+            v-for="reminder in group.reminders"
+            :key="reminder.id"
+            class="tl-card"
+            :class="[
+              `tl-card--${reminder.status}`,
+              { 'tl-card--acknowledged': reminder.acknowledged }
+            ]"
+            @click="openEdit(reminder)"
+          >
+            <!-- Top Row: time + countdown + actions -->
+            <div class="tl-card__top">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="tl-card__time">
+                  <Clock :size="12" class="opacity-50" />
+                  {{ formatTime(reminder.eventDate) }}
+                </span>
+                <span
+                  v-if="reminder.status === 'active'"
+                  class="countdown-badge"
+                  :class="`countdown-badge--${store.getCountdown(reminder.eventDate).level}`"
+                >
+                  {{ store.getCountdown(reminder.eventDate).text }}
+                </span>
+                <span v-else class="text-[0.625rem] font-medium" :class="getStatusColor(reminder.status)">
+                  {{ reminder.status === 'completed' ? '✓ ' + t('reminders.completed') : t('reminders.expired') }}
+                </span>
+              </div>
+              <div class="tl-card__actions" @click.stop>
+                <button
+                  v-if="reminder.status === 'active'"
+                  @click="handleComplete(reminder.id)"
+                  class="action-btn action-btn--check"
+                  :title="t('reminders.markComplete')"
+                >
+                  <Check :size="13" />
+                </button>
+                <button
+                  @click="handleDelete(reminder.id)"
+                  class="action-btn action-btn--delete"
+                  :title="t('common.delete')"
+                >
+                  <Trash2 :size="13" />
+                </button>
+              </div>
+            </div>
+
+            <!-- Title -->
+            <h3 class="tl-card__title" :class="{ 'line-through opacity-50': reminder.status === 'completed' }">
+              {{ reminder.title }}
+            </h3>
+
+            <!-- Description (truncated) -->
+            <p v-if="reminder.description" class="tl-card__desc" v-html="formatDescription(reminder.description)"></p>
+
+            <!-- URL -->
+            <a
+              v-if="reminder.url"
+              :href="reminder.url"
+              target="_blank"
+              class="tl-card__url"
+              @click.stop
+            >
+              <Link :size="11" class="shrink-0" />
+              <span class="truncate">{{ getDisplayUrl(reminder.url) }}</span>
+            </a>
+
+            <!-- Footer: offsets + meta -->
+            <div class="tl-card__footer">
+              <div class="tl-card__offsets">
+                <span
+                  v-for="offset in reminder.offsets"
+                  :key="offset"
+                  class="offset-pill"
+                >
+                  {{ offsetLabels[offset] || offset }}
+                </span>
+              </div>
+              <span
+                v-if="reminder.repeatInterval && reminder.repeatInterval !== 'none'"
+                class="repeat-badge"
+              >
+                <Repeat :size="10" />
+                {{ store.getRepeatLabel(reminder.repeatInterval) }}
+              </span>
+              <button
+                v-if="reminder.status === 'active' && !reminder.acknowledged"
+                @click.stop="handleAcknowledge(reminder.id)"
+                class="ack-btn"
+              >
+                <Eye :size="12" />
+                {{ t('reminders.iRemember') }}
+              </button>
+              <span v-else-if="reminder.acknowledged && reminder.status === 'active'" class="ack-done">
+                ✓ {{ t('reminders.remembered') }}
+              </span>
+              <span v-if="reminder.sourceType === 'note'" class="reminder-source">
+                📝 {{ t('reminders.fromNote') }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- FAB (mobile) -->
@@ -572,148 +627,227 @@ function formatDescription(text: string) {
   background: var(--accent-hover);
 }
 
-/* ── Reminder Cards ── */
-.reminders-grid {
+/* ── Timeline Layout ── */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.timeline-group {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  /* The vertical line connecting groups */
+  border-left: 2px solid var(--border-default);
+  margin-left: 0.5rem;
+  padding-left: 1.25rem;
+  padding-bottom: 0.5rem;
 }
-.reminder-card {
-  padding: 1.25rem;
+/* Last group doesn't need the line extending past its content */
+.timeline-group:last-child {
+  border-left-color: transparent;
+}
+
+/* Timeline Header */
+.timeline-date-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+.timeline-dot {
+  position: absolute;
+  left: -1.65rem; /* center on the border */
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  border: 2px solid var(--accent);
+  box-shadow: 0 0 0 4px var(--bg-surface);
+}
+.timeline-dot--warning { border-color: var(--warning); }
+.timeline-dot--urgent { border-color: var(--error); }
+.timeline-dot--normal { border-color: var(--text-tertiary); }
+
+.timeline-date-info {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.timeline-date-label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.timeline-relative {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-full);
+}
+.timeline-relative--urgent { background: rgba(251, 113, 133, 0.15); color: var(--error); }
+.timeline-relative--warning { background: rgba(251, 191, 36, 0.15); color: var(--warning); }
+.timeline-relative--normal { background: var(--bg-elevated); color: var(--text-secondary); }
+
+/* Timeline Cards Grid */
+.timeline-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+@media (min-width: 768px) {
+  .timeline-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Compact Card */
+.tl-card {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
   border-radius: var(--radius-lg);
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
   cursor: pointer;
   transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
 }
-.reminder-card:hover {
+.tl-card:hover {
   border-color: rgba(142, 125, 250, 0.3);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   transform: translateY(-1px);
 }
-.reminder-card:active {
-  transform: translateY(0);
-}
-.reminder-card--completed,
-.reminder-card--expired {
+.tl-card--completed,
+.tl-card--expired {
   opacity: 0.6;
+  background: var(--bg-elevated);
 }
-.reminder-card--active {
+.tl-card--active {
   border-left: 3px solid var(--accent);
 }
-.reminder-card__header {
+
+.tl-card__top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.625rem;
+  margin-bottom: 0.5rem;
+  gap: 0.5rem;
 }
-.reminder-card__actions {
+.tl-card__time {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.countdown-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.375rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.625rem;
+  font-weight: 700;
+  background: var(--accent-subtle);
+  color: var(--accent);
+}
+.countdown-badge--warning { background: rgba(251, 191, 36, 0.15); color: var(--warning); }
+.countdown-badge--urgent { background: rgba(251, 113, 133, 0.15); color: var(--error); }
+
+.tl-card__actions {
   display: flex;
   gap: 0.25rem;
   opacity: 0;
   transition: opacity 0.15s ease;
 }
-.reminder-card:hover .reminder-card__actions {
-  opacity: 1;
-}
-@media (max-width: 640px) {
-  .reminder-card__actions { opacity: 1; }
-}
+.tl-card:hover .tl-card__actions { opacity: 1; }
+@media (max-width: 640px) { .tl-card__actions { opacity: 1; } }
+
 .action-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
+  width: 1.5rem;
+  height: 1.5rem;
   border-radius: var(--radius-sm);
   border: none;
   cursor: pointer;
-  transition: all 0.15s ease;
   background: var(--bg-elevated);
   color: var(--text-tertiary);
+  transition: all 0.15s ease;
 }
 .action-btn:hover { background: var(--bg-hover); }
 .action-btn--check:hover { color: var(--success); }
 .action-btn--delete:hover { color: var(--error); }
 
-.reminder-card__title {
-  font-size: 1rem;
+.tl-card__title {
+  font-size: 0.9375rem;
   font-weight: 600;
-  margin-bottom: 0.25rem;
   color: var(--text-primary);
+  margin-bottom: 0.25rem;
   line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
-.reminder-card__desc {
+.tl-card__desc {
   font-size: 0.8125rem;
   color: var(--text-tertiary);
-  margin-bottom: 0.75rem;
-  line-height: 1.5;
-  word-break: break-word;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
-.reminder-card__url {
+.tl-card__url {
   display: inline-flex;
   align-items: center;
-  gap: 0.375rem;
-  font-size: 0.75rem;
+  gap: 0.25rem;
+  font-size: 0.6875rem;
   color: var(--accent);
   background: var(--accent-subtle);
-  padding: 0.25rem 0.625rem;
-  border-radius: var(--radius-md);
-  margin-bottom: 0.75rem;
-  transition: all 0.2s ease;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.5rem;
   max-width: 100%;
 }
-.reminder-card__url:hover {
-  background: rgba(142, 125, 250, 0.15);
-  text-decoration: underline;
-}
-.reminder-card__footer {
+.tl-card__url:hover { text-decoration: underline; }
+
+.tl-card__footer {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.5rem;
 }
-.reminder-date {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-}
-.reminder-offsets {
+.tl-card__offsets {
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem;
 }
 .offset-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.125rem 0.5rem;
-  border-radius: var(--radius-full);
+  padding: 0.125rem 0.375rem;
+  border-radius: var(--radius-sm);
   font-size: 0.625rem;
   font-weight: 600;
-  background: var(--accent-subtle);
-  color: var(--accent);
-}
-.reminder-source {
-  font-size: 0.6875rem;
-  color: var(--text-disabled);
-}
-
-/* ── Card Meta row ── */
-.reminder-card__meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 0.625rem;
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
 }
 .repeat-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.125rem 0.5rem;
-  border-radius: var(--radius-full);
+  gap: 0.125rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: var(--radius-sm);
   font-size: 0.625rem;
   font-weight: 600;
   background: rgba(96, 165, 250, 0.12);
@@ -722,9 +856,9 @@ function formatDescription(text: string) {
 .ack-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.1875rem 0.625rem;
-  border-radius: var(--radius-full);
+  gap: 0.125rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-sm);
   font-size: 0.625rem;
   font-weight: 600;
   background: rgba(251, 191, 36, 0.1);
@@ -733,44 +867,16 @@ function formatDescription(text: string) {
   cursor: pointer;
   transition: all 0.15s ease;
 }
-.ack-btn:hover {
-  background: rgba(251, 191, 36, 0.18);
-  border-color: rgba(251, 191, 36, 0.35);
-}
+.ack-btn:hover { background: rgba(251, 191, 36, 0.18); }
 .ack-done {
   font-size: 0.625rem;
   font-weight: 500;
   color: var(--success);
-  opacity: 0.7;
+  opacity: 0.8;
 }
-
-/* ── Countdown Badge ── */
-.countdown-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.125rem 0.5rem;
-  border-radius: var(--radius-full);
-  font-size: 0.6875rem;
-  font-weight: 700;
-  background: var(--accent-subtle);
-  color: var(--accent);
-  border: 1px solid rgba(142, 125, 250, 0.2);
-}
-.countdown-badge--warning {
-  background: rgba(251, 191, 36, 0.15);
-  color: var(--warning);
-  border-color: rgba(251, 191, 36, 0.3);
-}
-.countdown-badge--urgent {
-  background: rgba(251, 113, 133, 0.15);
-  color: var(--error);
-  border-color: rgba(251, 113, 133, 0.3);
-  animation: urgentPulse 2s ease-in-out infinite;
-}
-@keyframes urgentPulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+.reminder-source {
+  font-size: 0.625rem;
+  color: var(--text-disabled);
 }
 
 /* ── FAB ── */
@@ -800,20 +906,6 @@ function formatDescription(text: string) {
 
 @media (min-width: 768px) {
   .fab { display: none; }
-}
-
-/* ── Transition ── */
-.reminder-card-enter-active,
-.reminder-card-leave-active {
-  transition: all 0.3s ease;
-}
-.reminder-card-enter-from {
-  opacity: 0;
-  transform: translateY(12px);
-}
-.reminder-card-leave-to {
-  opacity: 0;
-  transform: translateX(-20px);
 }
 
 /* ── Scrollbar hide ── */
