@@ -309,13 +309,22 @@ Output: [{"title":"Họp team","eventDate":"${currentYear}-05-20T07:00:00.000Z",
       temperature: 0.1
     }) as any
 
-    const text = (response?.response || '').trim()
+    // Workers AI may return response as string, object, or array — always coerce to string
+    const rawResponse = response?.response ?? response?.result ?? ''
+    const text = String(typeof rawResponse === 'object' ? JSON.stringify(rawResponse) : rawResponse).trim()
 
     let events: any[] = []
     try {
-      const jsonMatch = text.match(/\[[\s\S]*\]/)
-      if (jsonMatch) events = JSON.parse(jsonMatch[0])
-    } catch { events = [] }
+      // Try parsing directly first (if AI returned pure JSON)
+      const parsed = JSON.parse(text)
+      events = Array.isArray(parsed) ? parsed : []
+    } catch {
+      // Fallback: extract JSON array from mixed text
+      try {
+        const jsonMatch = text.match(/\[[\s\S]*\]/)
+        if (jsonMatch) events = JSON.parse(jsonMatch[0])
+      } catch { events = [] }
+    }
 
     // Post-process: validate and fix dates
     const validEvents = events
