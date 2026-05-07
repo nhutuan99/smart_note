@@ -34,9 +34,11 @@ const noteId = computed(() => route.params.id as string)
 // AI Panel
 const showAiPanel = ref(false)
 
-onMounted(async () => {
+async function loadNote(id: string) {
   loadingNote.value = true
-  const note = await notesStore.fetchNote(noteId.value)
+  hasChanges.value = false
+  if (saveTimeout) clearTimeout(saveTimeout)
+  const note = await notesStore.fetchNote(id)
   if (note) {
     title.value = note.title
     content.value = note.content
@@ -48,6 +50,13 @@ onMounted(async () => {
     router.push('/notes')
   }
   loadingNote.value = false
+}
+
+onMounted(() => loadNote(noteId.value))
+
+// Re-fetch when navigating to a different note (e.g. sidebar click)
+watch(noteId, (newId, oldId) => {
+  if (newId && newId !== oldId) loadNote(newId)
 })
 
 useEventListener(document, 'keydown', handleKeydown)
@@ -178,7 +187,7 @@ function handleApplyTags(aiTags: string[]) {
 </script>
 
 <template>
-  <div class="mx-auto flex min-h-[calc(100vh-3.5rem-3rem)] max-w-[56.25rem] flex-col">
+  <div class="mx-auto flex min-h-[calc(100vh-3.5rem-3rem)] max-w-[68rem] flex-col">
     <!-- Toolbar -->
     <div
       class="border-border-default mb-4 flex flex-col items-start justify-between gap-3 border-b pb-4 sm:flex-row sm:items-center"

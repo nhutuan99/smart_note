@@ -63,7 +63,7 @@ const totalTarget = computed(() => goals.value.reduce((s, g) => s + g.targetAmou
 </script>
 
 <template>
-  <div class="mx-auto max-w-[50rem]">
+  <div class="mx-auto max-w-[64rem]">
     <div class="mb-6 flex items-center justify-between">
       <div>
         <h1 class="text-2xl font-bold tracking-tight">{{ t('savings.title') }}</h1>

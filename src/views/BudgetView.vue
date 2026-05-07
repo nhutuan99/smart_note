@@ -77,7 +77,7 @@ function resetBudget() { budget.value = null; showSetup.value = true; localStora
 </script>
 
 <template>
-  <div class="mx-auto max-w-[50rem]">
+  <div class="mx-auto max-w-[64rem]">
     <div class="mb-6 flex items-center justify-between">
       <div>
         <h1 class="text-2xl font-bold tracking-tight">{{ t('budget.title') }}</h1>

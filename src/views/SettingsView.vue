@@ -26,7 +26,7 @@ const tabs = [
 </script>
 
 <template>
-  <div class="max-w-[43.75rem] pb-8">
+  <div class="max-w-[56rem] pb-8">
     <h1 class="mb-4 text-2xl font-bold tracking-tight md:mb-6">{{ t('settings.title') }}</h1>
 
     <!-- Tabs Navigation -->

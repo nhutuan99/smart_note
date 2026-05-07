@@ -47,7 +47,7 @@ function fmtDate(d: string) { const [y, m, dd] = d.split('-'); return `${dd}/${m
 </script>
 
 <template>
-  <div class="mx-auto max-w-[50rem]">
+  <div class="mx-auto max-w-[64rem]">
     <div class="mb-6">
       <h1 class="text-2xl font-bold tracking-tight">{{ t('subs.title') }}</h1>
       <p class="text-text-tertiary mt-1 text-sm">{{ t('subs.desc') }}</p>

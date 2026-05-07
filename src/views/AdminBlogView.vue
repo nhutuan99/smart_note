@@ -446,7 +446,7 @@ const formatDate = (dateStr: string) => {
 </script>
 
 <template>
-  <div class="admin-blog max-w-[64rem] mx-auto pb-12">
+  <div class="admin-blog max-w-[80rem] mx-auto pb-12">
     <!-- Header -->
     <div class="admin-blog__header">
       <div class="min-w-0">

@@ -22,7 +22,8 @@ import {
   ChevronDown,
   ChevronRight as ChevronRightIcon,
   LineChart,
-  Bell
+  Bell,
+  GripVertical
 } from 'lucide-vue-next'
 
 const { t } = useI18n()
@@ -97,6 +98,85 @@ function navigateWallet(walletId: string) {
   finance.filter = { walletId }
   router.push('/transactions')
   closeSidebarOnMobile()
+}
+
+// ── Drag & Drop for Notes ──
+const dragIndex = ref<number | null>(null)
+const dropIndex = ref<number | null>(null)
+
+// Sidebar notes order (first 5), persisted via localStorage
+const NOTES_ORDER_KEY = 'sb_notes_order'
+
+function loadNotesOrder(): string[] {
+  try {
+    const raw = localStorage.getItem(NOTES_ORDER_KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch (e) { console.warn('[Sidebar] Failed to parse notes order', e); return [] }
+}
+
+const sidebarNotesOrder = ref<string[]>(loadNotesOrder())
+
+const sidebarNotes = computed(() => {
+  const all = notesStore.notes
+  const order = sidebarNotesOrder.value
+  if (order.length === 0) return all.slice(0, 5)
+
+  // Place ordered notes first, then any remaining notes not in the order list
+  const ordered: typeof all = []
+  const remaining = [...all]
+
+  for (const id of order) {
+    const idx = remaining.findIndex(n => n.id === id)
+    if (idx !== -1) {
+      ordered.push(remaining.splice(idx, 1)[0])
+    }
+  }
+
+  return [...ordered, ...remaining].slice(0, 5)
+})
+
+function onDragStart(index: number, e: DragEvent) {
+  dragIndex.value = index
+  if (e.dataTransfer) {
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', String(index))
+  }
+}
+
+function onDragOver(index: number, e: DragEvent) {
+  e.preventDefault()
+  if (e.dataTransfer) e.dataTransfer.dropEffect = 'move'
+  dropIndex.value = index
+}
+
+function onDragLeave() {
+  dropIndex.value = null
+}
+
+function onDrop(index: number, e: DragEvent) {
+  e.preventDefault()
+  if (dragIndex.value === null || dragIndex.value === index) {
+    dragIndex.value = null
+    dropIndex.value = null
+    return
+  }
+
+  // Build a mutable array from current sidebar notes
+  const items = [...sidebarNotes.value]
+  const [moved] = items.splice(dragIndex.value, 1)
+  items.splice(index, 0, moved)
+
+  // Persist the new order
+  sidebarNotesOrder.value = items.map(n => n.id)
+  try { localStorage.setItem(NOTES_ORDER_KEY, JSON.stringify(sidebarNotesOrder.value)) } catch (e) { console.warn('[Sidebar] Failed to persist notes order', e) }
+
+  dragIndex.value = null
+  dropIndex.value = null
+}
+
+function onDragEnd() {
+  dragIndex.value = null
+  dropIndex.value = null
 }
 </script>
 
@@ -266,11 +346,23 @@ function navigateWallet(walletId: string) {
         >
           <div class="section-body__inner">
             <div
-              v-for="note in notesStore.notes.slice(0, 5)"
+              v-for="(note, idx) in sidebarNotes"
               :key="note.id"
               class="note-row group"
+              :class="{
+                'note-row--dragging': dragIndex === idx,
+                'note-row--drop-above': dropIndex === idx && dragIndex !== null && dragIndex > idx,
+                'note-row--drop-below': dropIndex === idx && dragIndex !== null && dragIndex < idx
+              }"
+              draggable="true"
+              @dragstart="onDragStart(idx, $event)"
+              @dragover="onDragOver(idx, $event)"
+              @dragleave="onDragLeave"
+              @drop="onDrop(idx, $event)"
+              @dragend="onDragEnd"
               @click="router.push('/notes/' + note.id); closeSidebarOnMobile()"
             >
+              <GripVertical :size="11" class="shrink-0 text-text-disabled/30 cursor-grab drag-handle" />
               <FileText :size="13" class="shrink-0 text-text-disabled" />
               <span class="truncate text-[0.75rem] text-text-secondary flex-1">
                 {{ note.title || t('notes.untitledNote') }}
@@ -540,11 +632,34 @@ function navigateWallet(walletId: string) {
   padding: 0.375rem 0.625rem;
   border-radius: 0.4375rem;
   cursor: pointer;
-  transition: background 0.1s ease;
+  transition: background 0.12s ease, opacity 0.12s ease, box-shadow 0.12s ease;
+  position: relative;
 }
 .note-row:hover,
 .note-row:active {
   background: var(--color-bg-hover);
+}
+
+/* Drag handle — only visible on hover */
+.drag-handle {
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+.note-row:hover .drag-handle {
+  opacity: 1;
+}
+
+/* Dragging state */
+.note-row--dragging {
+  opacity: 0.35;
+}
+
+/* Drop target indicators */
+.note-row--drop-above {
+  box-shadow: 0 -2px 0 0 var(--color-accent) inset;
+}
+.note-row--drop-below {
+  box-shadow: 0 2px 0 0 var(--color-accent) inset;
 }
 
 /* ── Glassmorphism ── */

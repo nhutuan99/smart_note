@@ -59,7 +59,7 @@ const features = [
 </script>
 
 <template>
-  <div class="mx-auto max-w-[50rem]">
+  <div class="mx-auto max-w-[68rem]">
     <!-- Header -->
     <div class="mb-8 relative overflow-hidden rounded-3xl bg-gradient-to-br from-accent/20 to-accent/5 p-8 border border-accent/20">
       <div class="absolute -right-10 -top-10 w-40 h-40 bg-accent/20 rounded-full blur-3xl pointer-events-none"></div>

@@ -208,7 +208,7 @@ async function handleRefresh(done: () => void) {
       :class="ui.sidebarOpen ? 'md:w-[calc(100%-16.25rem)]' : 'md:w-[calc(100%-3.75rem)]'"
     >
       <PullToRefresh @refresh="handleRefresh">
-        <div class="mx-auto w-full max-w-5xl px-4 py-5 sm:px-6 sm:py-6 lg:px-10 lg:py-8 min-h-[calc(100vh-3.5rem)]">
+        <div class="mx-auto w-full max-w-[90rem] px-4 py-5 sm:px-6 sm:py-6 lg:px-10 lg:py-8 min-h-[calc(100vh-3.5rem)]">
           <router-view v-slot="{ Component }">
             <transition
               name="fade"

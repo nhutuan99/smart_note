@@ -176,7 +176,7 @@ function formatDescription(text: string) {
 </script>
 
 <template>
-  <div class="reminders-page mx-auto max-w-[50rem]">
+  <div class="reminders-page mx-auto max-w-[68rem]">
     <!-- Header -->
     <div class="reminders-hero mb-8">
       <div class="hero-glow hero-glow--1" />

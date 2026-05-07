@@ -74,7 +74,7 @@ useEventListener(document, 'click', handleClickOutside)
 </script>
 
 <template>
-  <div class="mx-auto max-w-[50rem]">
+  <div class="mx-auto max-w-[68rem]">
     <!-- Header -->
     <div class="mb-6 flex items-center justify-between">
       <div>

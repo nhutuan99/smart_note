@@ -66,7 +66,7 @@ async function handleTogglePin(id: string, e: Event) {
 </script>
 
 <template>
-  <div class="notes-page max-w-[75rem]">
+  <div class="notes-page max-w-[85rem]">
     <!-- Ambient background orbs -->
     <div class="ambient-orbs" aria-hidden="true">
       <div class="orb orb-1"></div>

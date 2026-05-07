@@ -107,7 +107,7 @@ async function handleDelete(debt: Debt) {
 </script>
 
 <template>
-  <div class="mx-auto max-w-[50rem]">
+  <div class="mx-auto max-w-[64rem]">
     <!-- Header -->
     <div class="mb-6 flex items-center justify-between">
       <div>

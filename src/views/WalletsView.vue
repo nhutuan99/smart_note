@@ -161,7 +161,7 @@ function onDragEnd() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-[50rem]">
+  <div class="mx-auto max-w-[64rem]">
     <div class="mb-6 flex items-center justify-between">
       <div class="flex items-center gap-3">
         <h1 class="text-2xl font-bold tracking-tight">{{ t('wallets.title') }}</h1>

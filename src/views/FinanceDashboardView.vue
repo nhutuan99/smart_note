@@ -10,7 +10,7 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <div class="max-w-[75rem]">
+  <div class="max-w-[85rem]">
 
 
     <!-- Balance + Income/Expense Cards -->
