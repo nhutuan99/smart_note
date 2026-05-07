@@ -881,6 +881,10 @@ export default {
     aiDetected: 'AI detected events',
     aiDetectedDesc: 'AI detected events in your note. Would you like to create reminders?',
     quickAdd: 'Quick add',
-    noEventsFound: 'No events found in the content'
+    noEventsFound: 'No events found in the content',
+    timelineToday: 'Today',
+    timelineTomorrow: 'Tomorrow',
+    timelineDaysAgo: '{n} days ago',
+    timelineDaysLeft: '{n} days left'
   }
 }

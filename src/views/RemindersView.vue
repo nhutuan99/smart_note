@@ -12,9 +12,11 @@ import {
   Sparkles, Loader, Link
 } from 'lucide-vue-next'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const store = useReminderStore()
 const ui = useUiStore()
+
+const isAiFocused = ref(false)
 
 const showCreateModal = ref(false)
 const editingReminder = ref<Reminder | null>(null)
@@ -129,12 +131,12 @@ function handleModalSaved() {
 
 function formatDate(iso: string): string {
   const d = new Date(iso)
-  return d.toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' })
+  return d.toLocaleDateString(locale.value, { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
 function formatTime(iso: string): string {
   const d = new Date(iso)
-  return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+  return d.toLocaleTimeString(locale.value, { hour: '2-digit', minute: '2-digit' })
 }
 
 const offsetLabels: Record<string, string> = {
@@ -202,15 +204,15 @@ const groupedReminders = computed<DateGroup[]>(() => {
       let relative = ''
       let level: 'normal' | 'warning' | 'urgent' = 'normal'
 
-      if (diffDays < 0) { relative = `${Math.abs(diffDays)} ngày trước`; level = 'urgent' }
-      else if (diffDays === 0) { relative = 'Hôm nay'; level = 'urgent' }
-      else if (diffDays === 1) { relative = 'Ngày mai'; level = 'warning' }
-      else if (diffDays <= 3) { relative = `${diffDays} ngày nữa`; level = 'warning' }
-      else { relative = `${diffDays} ngày nữa`; level = 'normal' }
+      if (diffDays < 0) { relative = t('reminders.timelineDaysAgo', { n: Math.abs(diffDays) }); level = 'urgent' }
+      else if (diffDays === 0) { relative = t('reminders.timelineToday'); level = 'urgent' }
+      else if (diffDays === 1) { relative = t('reminders.timelineTomorrow'); level = 'warning' }
+      else if (diffDays <= 3) { relative = t('reminders.timelineDaysLeft', { n: diffDays }); level = 'warning' }
+      else { relative = t('reminders.timelineDaysLeft', { n: diffDays }); level = 'normal' }
 
       return {
         dateKey,
-        label: d.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' }),
+        label: d.toLocaleDateString(locale.value, { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' }),
         relative,
         level,
         reminders: items.sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime()),
@@ -255,10 +257,13 @@ const groupedReminders = computed<DateGroup[]>(() => {
       <textarea
         v-model="aiInput"
         @keydown.enter.prevent="handleAiSubmit"
+        @focus="isAiFocused = true"
+        @blur="isAiFocused = false"
         :disabled="processingAi"
-        rows="2"
+        :rows="isAiFocused || aiInput.length > 50 ? 4 : 1"
         placeholder="Nhập nội dung để AI tạo nhanh... (vd: Hẹn gặp khách lúc 3h chiều mai, nhắc trước 1 tiếng)"
-        class="w-full pl-12 pr-16 py-4 bg-bg-surface border border-border-default hover:border-accent/50 focus:border-accent focus:ring-2 focus:ring-accent-subtle rounded-2xl text-sm transition-all duration-200 outline-none text-text-primary placeholder:text-text-disabled shadow-sm resize-none"
+        class="w-full pl-12 pr-16 bg-bg-surface border border-border-default hover:border-accent/50 focus:border-accent focus:ring-2 focus:ring-accent-subtle rounded-2xl text-sm transition-all duration-200 outline-none text-text-primary placeholder:text-text-disabled shadow-sm resize-none"
+        :class="isAiFocused || aiInput.length > 50 ? 'py-4' : 'py-3'"
       />
       <div class="absolute bottom-4 right-4 flex items-center">
         <button

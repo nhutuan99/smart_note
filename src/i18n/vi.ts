@@ -881,6 +881,10 @@ export default {
     aiDetected: 'AI phát hiện sự kiện',
     aiDetectedDesc: 'AI đã phát hiện sự kiện trong ghi chú. Bạn có muốn tạo lời nhắc?',
     quickAdd: 'Thêm nhanh',
-    noEventsFound: 'Không tìm thấy sự kiện nào trong nội dung'
+    noEventsFound: 'Không tìm thấy sự kiện nào trong nội dung',
+    timelineToday: 'Hôm nay',
+    timelineTomorrow: 'Ngày mai',
+    timelineDaysAgo: '{n} ngày trước',
+    timelineDaysLeft: '{n} ngày nữa'
   }
 }
