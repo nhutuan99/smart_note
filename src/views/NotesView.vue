@@ -188,6 +188,7 @@ function stripHtml(html: string) {
         v-for="(note, idx) in notesStore.filteredNotes"
         :key="note.id"
         class="relative note-card-wrapper"
+        :class="notesStore.viewMode === 'grid' ? 'h-full' : ''"
         :id="`note-item-${note.id}`"
         :style="`--i: ${idx}`"
       >
@@ -197,7 +198,7 @@ function stripHtml(html: string) {
           :class="
             notesStore.viewMode === 'list'
               ? 'md:flex-row md:items-center gap-3 md:gap-4 !py-3 md:!py-4'
-              : 'min-h-[9.375rem]'
+              : 'min-h-[9.375rem] h-full'
           "
         >
           <div
