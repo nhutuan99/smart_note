@@ -63,6 +63,12 @@ async function handleTogglePin(id: string, e: Event) {
   e.stopPropagation()
   await notesStore.togglePin(id)
 }
+
+function stripHtml(html: string) {
+  if (!html) return ''
+  const doc = new DOMParser().parseFromString(html, 'text/html')
+  return doc.body.textContent || ''
+}
 </script>
 
 <template>
@@ -200,15 +206,16 @@ async function handleTogglePin(id: string, e: Event) {
           >
             <h3 class="text-text-primary text-sm font-semibold">{{ note.title }}</h3>
             <div
-              class="flex gap-0.5 opacity-100 md:opacity-0 transition-opacity duration-150 md:group-hover:opacity-100"
+              class="flex gap-0.5 transition-opacity duration-150"
+              :class="note.pinned ? 'opacity-100' : 'opacity-100 md:opacity-0 md:group-hover:opacity-100'"
               @click.prevent
             >
               <button
-                class="text-text-tertiary hover:bg-bg-hover hover:text-text-primary rounded p-2 md:p-1 transition-all duration-150 touch-target"
-                :class="note.pinned ? 'text-warning' : ''"
+                class="hover:bg-bg-hover rounded p-2 md:p-1 transition-all duration-150 touch-target"
+                :class="note.pinned ? 'text-warning hover:text-warning/80' : 'text-text-tertiary hover:text-text-primary'"
                 @click="handleTogglePin(note.id, $event)"
               >
-                <Pin :size="16" />
+                <Pin :size="16" :class="note.pinned ? 'fill-warning' : ''" />
               </button>
               <button
                 class="text-text-tertiary hover:bg-bg-hover hover:text-error rounded p-2 md:p-1 transition-all duration-150 touch-target"
@@ -219,10 +226,10 @@ async function handleTogglePin(id: string, e: Event) {
             </div>
           </div>
           <p
-            class="text-text-tertiary line-clamp-2 flex-1 text-sm leading-relaxed"
+            class="text-text-tertiary line-clamp-2 flex-1 text-sm leading-relaxed break-words"
             :class="notesStore.viewMode === 'list' ? 'line-clamp-1' : ''"
           >
-            {{ note.excerpt || t('notes.noContent') }}
+            {{ stripHtml(note.excerpt) || t('notes.noContent') }}
           </p>
           <div
             class="border-border-subtle mt-3 flex items-center justify-between border-t pt-3"
