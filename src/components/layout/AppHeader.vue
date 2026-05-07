@@ -158,7 +158,7 @@ function handleLogout() {
                 <span class="text-sm font-semibold">{{ t('notifications.title') }}</span>
                 <span
                   v-if="notiStore.unreadCount > 0"
-                  class="bg-error/15 text-error rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold"
+                  class="bg-error/15 text-error rounded-full px-2.5 py-0.5 text-[0.6875rem] font-semibold whitespace-nowrap shrink-0"
                 >
                   {{ t('notifications.new', { n: notiStore.unreadCount }) }}
                 </span>

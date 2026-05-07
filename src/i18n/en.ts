@@ -886,5 +886,13 @@ export default {
     timelineTomorrow: 'Tomorrow',
     timelineDaysAgo: '{n} days ago',
     timelineDaysLeft: '{n} days left'
+  },
+
+  // ── Coffee ──
+  coffee: {
+    title: 'Buy me a coffee ☕',
+    desc: 'Thank you for using FinNote! If you find it helpful, consider buying me a coffee.',
+    bankName: 'TP Bank',
+    accountName: 'TRUONG NHU TUAN'
   }
 }

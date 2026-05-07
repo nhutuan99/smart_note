@@ -886,5 +886,13 @@ export default {
     timelineTomorrow: 'Ngày mai',
     timelineDaysAgo: '{n} ngày trước',
     timelineDaysLeft: '{n} ngày nữa'
+  },
+
+  // ── Coffee ──
+  coffee: {
+    title: 'Buy me a coffee ☕',
+    desc: 'Cảm ơn bạn đã sử dụng FinNote! Nếu thấy ứng dụng hữu ích, bạn có thể mời mình một ly cà phê nhé.',
+    bankName: 'TP Bank',
+    accountName: 'TRUONG NHU TUAN'
   }
 }

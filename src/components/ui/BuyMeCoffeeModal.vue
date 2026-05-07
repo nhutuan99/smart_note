@@ -40,8 +40,16 @@ async function copyAccount() {
 
       <!-- Modal Content -->
       <div 
-        class="relative w-full max-w-sm overflow-hidden rounded-3xl bg-bg-primary shadow-2xl ring-1 ring-white/10 transition-all transform"
+        class="relative w-full max-w-md overflow-hidden rounded-3xl bg-bg-primary shadow-2xl ring-1 ring-white/10 transition-all transform mt-16"
       >
+        <!-- Cat Mascots (Absolute positioned at the top of the modal) -->
+        <div class="absolute -top-[4.5rem] left-8 z-20" style="pointer-events: none;">
+          <CatMascot type="orange" size="md" :animation="show ? 'jump' : 'hide'" />
+        </div>
+        <div class="absolute -top-[4.5rem] right-8 z-20" style="pointer-events: none;">
+          <CatMascot type="grey" size="md" :animation="show ? 'jump' : 'hide'" />
+        </div>
+
         <!-- Header background -->
         <div class="h-32 w-full bg-gradient-to-br from-accent/20 to-accent/5 absolute top-0 left-0">
           <div class="absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay"></div>
@@ -60,20 +68,20 @@ async function copyAccount() {
             <Heart class="h-8 w-8 fill-accent animate-pulse" />
           </div>
 
-          <h3 class="text-xl font-bold text-text-primary mb-2">Buy me a coffee ☕</h3>
+          <h3 class="text-xl font-bold text-text-primary mb-2">{{ t('coffee.title') }}</h3>
           <p class="text-sm text-text-secondary mb-6 px-4">
-            Cảm ơn bạn đã sử dụng FinNote! Nếu thấy ứng dụng hữu ích, bạn có thể mời mình một ly cà phê nhé.
+            {{ t('coffee.desc') }}
           </p>
 
           <!-- QR Code Container -->
-          <div class="bg-white p-3 rounded-2xl shadow-sm mb-6 ring-1 ring-border-subtle w-48 h-48 mx-auto flex items-center justify-center">
-            <img :src="qrImage" alt="TP Bank QR Code" class="w-full h-full object-contain rounded-xl" />
+          <div class="bg-white p-3 rounded-2xl shadow-sm mb-6 ring-1 ring-border-subtle w-56 h-56 mx-auto flex items-center justify-center">
+            <img :src="qrImage" alt="QR Code" class="w-full h-full object-contain rounded-xl" />
           </div>
 
           <!-- Bank Details -->
           <div class="w-full bg-bg-secondary rounded-2xl p-4 text-left border border-border-default/50">
-            <div class="text-xs text-text-tertiary uppercase font-semibold tracking-wider mb-1">TP Bank</div>
-            <div class="text-sm font-medium text-text-primary mb-3">TRUONG NHU TUAN</div>
+            <div class="text-xs text-text-tertiary uppercase font-semibold tracking-wider mb-1">{{ t('coffee.bankName') }}</div>
+            <div class="text-sm font-medium text-text-primary mb-3">{{ t('coffee.accountName') }}</div>
             
             <div class="flex items-center justify-between bg-bg-tertiary/50 p-3 rounded-xl border border-border-subtle/50 group cursor-pointer hover:bg-bg-tertiary transition-colors" @click="copyAccount">
               <span class="font-mono text-text-primary tracking-widest">{{ accountNumber }}</span>
