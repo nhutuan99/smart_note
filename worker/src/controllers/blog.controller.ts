@@ -345,7 +345,7 @@ Trả về bản tóm tắt nghiên cứu chi tiết bằng tiếng Việt.`
     // PHASE 2: Generate blog content using research context
     // AI creates original content enriched with research data
     // ═══════════════════════════════════════════════════
-    const systemPrompt = `Bạn là một chuyên gia viết blog cấp cao về quản lý tài chính cá nhân.
+    const systemPrompt = `Bạn là một chuyên gia viết blog (Content Creator) cấp cao về đa chủ đề (Công nghệ, Tài chính, Đời sống GenZ).
 
 ${researchContext ? `## DỮ LIỆU NGHIÊN CỨU TỪ INTERNET
 Dưới đây là thông tin đã được tổng hợp từ các bài viết thực tế trên internet. Sử dụng dữ liệu này để làm giàu bài viết, nhưng PHẢI viết lại bằng giọng văn riêng (KHÔNG copy nguyên văn):
@@ -378,7 +378,7 @@ Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải th
 
 QUY TẮC TAGS (BẮT BUỘC):
 - Tối đa 3 tags, viết thường, bằng tiếng Việt
-- Chỉ dùng chủ đề tài chính phổ quát: "tài chính", "đầu tư", "tiết kiệm", "quản lý chi tiêu", "chứng khoán", "bất động sản", "thu nhập thụ động", "fintech"
+- Phù hợp với nội dung bài viết (Ví dụ: "công nghệ", "genz", "tài chính", "xu hướng", "đầu tư")
 - KHÔNG dùng tên thương hiệu (Google, Anthropic, Warren Buffett, v.v.)
 - KHÔNG trùng lặp`
 
@@ -399,7 +399,7 @@ QUY TẮC TAGS (BẮT BUỘC):
         const promptParts: any[] = []
         if (topic) promptParts.push({ text: `Yêu cầu / Chủ đề: ${topic}` })
         if (inlineData) promptParts.push({ inline_data: inlineData })
-        if (promptParts.length === 0) promptParts.push({ text: "Hãy viết 1 bài blog về quản lý tài chính cá nhân." })
+        if (promptParts.length === 0) promptParts.push({ text: "Hãy viết 1 bài blog thú vị dành cho GenZ." })
 
         console.log('[BlogGen] Phase 2: Generating content with Gemini...')
         const response = await fetch(
@@ -445,7 +445,7 @@ QUY TẮC TAGS (BẮT BUỘC):
     if (!useGemini || !text) {
       if (!env.AI) return errorResponse('AI binding not configured', 503)
 
-      const metaPrompt = `Bạn là chuyên gia SEO blog tài chính. Trả về ĐÚNG JSON (không có text thêm):
+      const metaPrompt = `Bạn là chuyên gia SEO blog đa chủ đề. Trả về ĐÚNG JSON (không có text thêm):
 {"title":"Tiêu đề hấp dẫn dưới 60 ký tự","excerpt":"Mô tả SEO dưới 160 ký tự","tags":["tag1","tag2","tag3"],"seoKeywords":"keyword1, keyword2","imagePrompts":["mô tả ảnh 1","mô tả ảnh 2"]}`
       const metaResponse = await env.AI.run('@cf/meta/llama-3.1-8b-instruct' as any, {
         messages: [
@@ -463,7 +463,7 @@ QUY TẮC TAGS (BẮT BUỘC):
       let meta: any = {}
       try { meta = JSON.parse(metaText) } catch { meta = { title: topic, excerpt: '', tags: [], seoKeywords: '', imagePrompts: [] } }
 
-      const contentPrompt = `Bạn là chuyên gia viết blog tài chính cá nhân. Viết bài blog bằng Markdown cho chủ đề dưới đây.
+      const contentPrompt = `Bạn là chuyên gia viết blog đa chủ đề. Viết bài blog hấp dẫn bằng Markdown cho chủ đề dưới đây.
 ${researchContext ? `Thông tin nghiên cứu: ${researchContext.substring(0, 1500)}` : ''}
 Yêu cầu: KHÔNG bao gồm tiêu đề H1. Bắt đầu trực tiếp với đoạn mở bài, thân bài chia H2/H3, bullet points, bold text, kết bài CTA giới thiệu FinNote.
 Viết tối thiểu 1500 từ, chi tiết và chuyên sâu.
@@ -538,7 +538,7 @@ export async function handleRefineBlogContent(userId: string, request: Request, 
   const draftData = (await request.json()) as any
   if (!draftData || !draftData.content) return errorResponse('Missing draft content', 400)
 
-  const systemPrompt = `Bạn là một Tổng biên tập Blog Tài chính cấp cao (Senior Financial Blog Editor).
+  const systemPrompt = `Bạn là một Tổng biên tập Blog đa chủ đề cấp cao (Senior Content Editor).
 Nhiệm vụ của bạn là đọc và tinh chỉnh (refine) bài blog nháp được cung cấp. Bạn PHẢI:
 1. Viết lại bài viết sao cho tự nhiên, giống con người nhất (human-like style).
 2. Sửa toàn bộ các lỗi pha trộn ngôn ngữ ngớ ngẩn (ví dụ: "tài chínhallenging", "quản lý cost", v.v.).
@@ -554,7 +554,7 @@ Trả về ĐÚNG định dạng JSON sau, không kèm bất kỳ text giải th
   "content": "Nội dung bài viết chi tiết được format bằng Markdown (không chứa H1 đầu bài). Đảm bảo nội dung sắc sảo, tự nhiên, có checklist và ví dụ thực tế."
 }
 
-QUY TẮC TAGS: Tối đa 3 tags, viết thường, tiếng Việt, chỉ chủ đề tài chính phổ quát. KHÔNG tên thương hiệu. KHÔNG trùng lặp.`
+QUY TẮC TAGS: Tối đa 3 tags, viết thường, tiếng Việt, phù hợp nội dung. KHÔNG tên thương hiệu. KHÔNG trùng lặp.`
 
   try {
     let text = ''
@@ -645,7 +645,7 @@ QUY TẮC TAGS: Tối đa 3 tags, viết thường, tiếng Việt, chỉ chủ 
       } catch { /* keep original meta on error */ }
 
       // Step 2: Light content polish (plain text in, plain text out — no JSON wrapping)
-      const contentPolishPrompt = `Bạn là editor viết blog tài chính. Hãy cải thiện bài viết sau:
+      const contentPolishPrompt = `Bạn là editor viết blog chuyên nghiệp. Hãy cải thiện bài viết sau:
 - Sửa lỗi pha trộn ngôn ngữ (vd: "tài chínhallenging" → "tài chính thách thức")
 - Thêm 1-2 ví dụ thực tế nếu thiếu
 - KHÔNG thay đổi cấu trúc heading/markdown
@@ -745,7 +745,7 @@ export async function handleGenerateBlogImage(userId: string, request: Request, 
   const { prompt } = (await request.json()) as { prompt: string }
   if (!prompt) return errorResponse('Missing prompt', 400)
 
-  const optimizedPrompt = `A premium, modern illustration for a finance blog: ${prompt}. Style: clean gradient background, minimal flat design, professional finance theme, vivid accent colors, editorial quality.`
+  const optimizedPrompt = `A premium, modern illustration for a blog: ${prompt}. Style: clean gradient background, minimal flat design, professional theme, vivid accent colors, editorial quality.`
 
   try {
     const response: any = await env.AI.run('@cf/black-forest-labs/flux-1-schnell' as any, {
