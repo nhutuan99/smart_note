@@ -134,7 +134,10 @@ useEventListener(document, 'click', handleClickOutside)
         >
           <span v-if="selectedWallet" class="flex items-center gap-1.5">
             <template v-if="getWalletBrand(selectedWallet.name)">
-              <div v-if="getWalletBrand(selectedWallet.name)?.logoUrl" class="flex h-4 w-4 shrink-0 overflow-hidden rounded-[3px] bg-white border border-border-default/50 p-0.5">
+              <div v-if="selectedWallet.customLogoUrl" class="flex h-4 w-4 shrink-0 overflow-hidden rounded-[3px] bg-white border border-border-default/50 p-0.5">
+                <img :src="selectedWallet.customLogoUrl" class="h-full w-full object-contain object-center" />
+              </div>
+              <div v-else-if="getWalletBrand(selectedWallet.name)?.logoUrl" class="flex h-4 w-4 shrink-0 overflow-hidden rounded-[3px] bg-white border border-border-default/50 p-0.5">
                 <img
                   :src="getWalletBrand(selectedWallet.name)!.logoUrl"
                   class="h-full w-full object-contain object-center"
@@ -145,6 +148,11 @@ useEventListener(document, 'click', handleClickOutside)
               >
                 {{ getWalletBrand(selectedWallet.name)!.abbr }}
               </span>
+            </template>
+            <template v-else-if="selectedWallet.customLogoUrl">
+              <div class="flex h-4 w-4 shrink-0 overflow-hidden rounded-[3px] bg-white border border-border-default/50 p-0.5">
+                <img :src="selectedWallet.customLogoUrl" class="h-full w-full object-contain object-center" />
+              </div>
             </template>
             <span v-else class="text-sm font-emoji">{{ selectedWallet.icon }}</span>
             <span class="text-text-primary">{{ selectedWallet.name }}</span>
@@ -198,7 +206,13 @@ useEventListener(document, 'click', handleClickOutside)
               :class="finance.filter.walletId === w.id ? 'bg-accent-subtle' : ''"
             >
               <span v-if="getWalletBrand(w.name)" class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-sm bg-bg-elevated overflow-hidden border border-border-default">
-                <div v-if="getWalletBrand(w.name)?.logoUrl" class="flex h-full w-full bg-white p-1">
+                <div v-if="w.customLogoUrl" class="flex h-full w-full bg-white p-1">
+                  <img
+                    :src="w.customLogoUrl"
+                    class="h-full w-full object-contain object-center"
+                  />
+                </div>
+                <div v-else-if="getWalletBrand(w.name)?.logoUrl" class="flex h-full w-full bg-white p-1">
                   <img
                     :src="getWalletBrand(w.name)!.logoUrl"
                     class="h-full w-full object-contain object-center"
@@ -209,6 +223,11 @@ useEventListener(document, 'click', handleClickOutside)
                 >
                   {{ getWalletBrand(w.name)!.abbr }}
                 </span>
+              </span>
+              <span v-else-if="w.customLogoUrl" class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-sm bg-bg-elevated overflow-hidden border border-border-default">
+                <div class="flex h-full w-full bg-white p-1">
+                  <img :src="w.customLogoUrl" class="h-full w-full object-contain object-center" />
+                </div>
               </span>
               <span v-else
                 class="flex h-7 w-7 items-center justify-center rounded-lg text-sm"

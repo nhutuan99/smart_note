@@ -99,7 +99,8 @@ const monthlyEst = computed(() => {
             <label class="text-text-secondary mb-2 block text-sm font-medium">{{ t('addTx.wallet') }}</label>
             <div class="grid grid-cols-3 gap-2">
               <button v-for="w in finance.wallets" :key="w.id" class="flex flex-col items-center gap-1 rounded-xl border p-2.5 transition-all" :class="form.walletId === w.id ? 'border-accent bg-accent-subtle' : 'border-border-default bg-bg-surface hover:border-border-strong'" @click="form.walletId = w.id">
-                <div v-if="getWalletBrand(w.name)?.logoUrl" class="flex h-6 w-6 shrink-0 overflow-hidden rounded-[3px] bg-white border border-border-default/50 p-0.5"><img :src="getWalletBrand(w.name)!.logoUrl" class="h-full w-full object-contain" /></div>
+                <div v-if="w.customLogoUrl" class="flex h-6 w-6 shrink-0 overflow-hidden rounded-[3px] bg-white border border-border-default/50 p-0.5"><img :src="w.customLogoUrl" class="h-full w-full object-contain" /></div>
+                <div v-else-if="getWalletBrand(w.name)?.logoUrl" class="flex h-6 w-6 shrink-0 overflow-hidden rounded-[3px] bg-white border border-border-default/50 p-0.5"><img :src="getWalletBrand(w.name)!.logoUrl" class="h-full w-full object-contain" /></div>
                 <span v-else class="text-sm">{{ w.icon }}</span>
                 <span class="text-text-secondary w-full truncate text-center text-[0.625rem]">{{ w.name }}</span>
               </button>

@@ -360,10 +360,17 @@ const activeWalletStats = computed(() => walletBreakdownTab.value === 'expense' 
           <!-- Wallet Logo / Category Icon -->
           <div
             class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg overflow-hidden border border-border-default/30"
-            :style="{ backgroundColor: getWalletBrand(finance.getWalletName(tx.walletId))?.logoUrl ? '#fff' : getCategoryConfig(tx.category).color + '12' }"
+            :style="{ backgroundColor: (finance.wallets.find(w => w.id === tx.walletId)?.customLogoUrl || getWalletBrand(finance.getWalletName(tx.walletId))?.logoUrl) ? '#fff' : getCategoryConfig(tx.category).color + '12' }"
           >
             <img
-              v-if="getWalletBrand(finance.getWalletName(tx.walletId))?.logoUrl"
+              v-if="finance.wallets.find(w => w.id === tx.walletId)?.customLogoUrl"
+              :src="finance.wallets.find(w => w.id === tx.walletId)!.customLogoUrl"
+              :alt="finance.getWalletName(tx.walletId)"
+              class="h-6 w-6 object-contain"
+              loading="lazy"
+            />
+            <img
+              v-else-if="getWalletBrand(finance.getWalletName(tx.walletId))?.logoUrl"
               :src="getWalletBrand(finance.getWalletName(tx.walletId))!.logoUrl"
               :alt="finance.getWalletName(tx.walletId)"
               class="h-6 w-6 object-contain"

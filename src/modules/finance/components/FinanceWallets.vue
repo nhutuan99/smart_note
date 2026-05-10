@@ -32,8 +32,13 @@ const finance = useFinancePolling()
       >
         <!-- Brand Logo -->
         <div class="mb-2 h-8 w-8">
+          <!-- Custom logo -->
+          <div v-if="w.customLogoUrl" class="flex h-8 w-8 overflow-hidden rounded-lg bg-white dark:bg-bg-elevated border border-border-default shadow-sm p-1">
+            <img :src="w.customLogoUrl" :alt="w.name" class="h-full w-full object-contain object-center" loading="lazy" />
+          </div>
+          <!-- Auto brand logo -->
           <img
-            v-if="getWalletBrand(w.name)?.logoUrl"
+            v-else-if="getWalletBrand(w.name)?.logoUrl"
             :src="getWalletBrand(w.name)!.logoUrl"
             :alt="w.name"
             class="h-8 w-8 rounded-lg object-contain"
@@ -41,14 +46,14 @@ const finance = useFinancePolling()
             @error="($event.target as HTMLImageElement).style.display = 'none'; ($event.target as HTMLImageElement).nextElementSibling!.classList.remove('hidden')"
           />
           <div
-            v-if="getWalletBrand(w.name) && !getWalletBrand(w.name)!.logoUrl"
+            v-if="!w.customLogoUrl && getWalletBrand(w.name) && !getWalletBrand(w.name)!.logoUrl"
             class="flex h-8 w-8 items-center justify-center rounded-lg text-xs font-bold"
             :style="{ backgroundColor: getWalletBrand(w.name)!.bgColor, color: getWalletBrand(w.name)!.textColor }"
           >
             {{ getWalletBrand(w.name)!.abbr }}
           </div>
           <div
-            v-if="!getWalletBrand(w.name)"
+            v-if="!w.customLogoUrl && !getWalletBrand(w.name)"
             class="flex h-8 w-8 items-center justify-center rounded-lg text-xl"
             :style="{ backgroundColor: w.color + '20' }"
           >

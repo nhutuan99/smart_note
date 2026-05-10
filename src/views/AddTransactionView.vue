@@ -188,7 +188,15 @@ async function submit() {
           "
           @click="walletId = w.id"
         >
-          <div v-if="getWalletBrand(w.name)?.logoUrl" class="flex h-7 w-7 shrink-0 overflow-hidden rounded-[4px] bg-white border border-border-default shadow-sm p-1">
+          <div v-if="w.customLogoUrl" class="flex h-7 w-7 shrink-0 overflow-hidden rounded-[4px] bg-white border border-border-default shadow-sm p-1">
+            <img
+              :src="w.customLogoUrl"
+              :alt="w.name"
+              class="h-full w-full object-contain object-center"
+              loading="lazy"
+            />
+          </div>
+          <div v-else-if="getWalletBrand(w.name)?.logoUrl" class="flex h-7 w-7 shrink-0 overflow-hidden rounded-[4px] bg-white border border-border-default shadow-sm p-1">
             <img
               :src="getWalletBrand(w.name)!.logoUrl"
               :alt="w.name"
