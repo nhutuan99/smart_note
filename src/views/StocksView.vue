@@ -9,6 +9,7 @@ import { formatVNDShort } from '@/constants/finance'
 import type { StockPosition, StockAlert, FundPosition } from '@/types'
 import stocksList from '@/constants/stocks.json'
 import fundsList from '@/constants/funds.json'
+import LogoLoader from '@/components/ui/LogoLoader.vue'
 
 // Chart.js
 import { Line } from 'vue-chartjs'
@@ -552,7 +553,7 @@ function getChartData(symbol: string) {
 
     <!-- Loading State -->
     <div v-if="stockStore.loading" class="text-center py-10">
-      <div class="h-6 w-6 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto"></div>
+      <LogoLoader :size="32" :showGlow="true" class="mx-auto" />
     </div>
 
     <!-- Empty State -->
@@ -590,7 +591,7 @@ function getChartData(symbol: string) {
             <transition name="fade">
               <div v-if="activeTooltip === pos.symbol" class="absolute top-full left-0 mt-2 p-3 w-64 bg-bg-elevated border border-border-default rounded-xl shadow-2xl z-50 text-xs pointer-events-none">
                 <div v-if="!tooltipInfo" class="flex items-center gap-2 text-text-tertiary">
-                  <div class="w-3 h-3 rounded-full border-2 border-accent border-t-transparent animate-spin"></div>
+                  <LogoLoader :size="14" />
                   Đang tải thông tin API...
                 </div>
                 <div v-else class="space-y-1.5">
@@ -904,7 +905,7 @@ function getChartData(symbol: string) {
 
       <!-- Loading -->
       <div v-if="fundStore.loading" class="text-center py-10">
-        <div class="h-6 w-6 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto"></div>
+        <LogoLoader :size="32" :showGlow="true" class="mx-auto" />
       </div>
 
       <!-- Empty -->

@@ -3,6 +3,7 @@ import { ref, watch, nextTick } from 'vue'
 import { ShieldCheck, X } from 'lucide-vue-next'
 import { httpClient } from '@/shared/api/httpClient'
 import { useI18n } from 'vue-i18n'
+import LogoLoader from '@/components/ui/LogoLoader.vue'
 
 const { t } = useI18n()
 
@@ -169,10 +170,7 @@ async function verifyPin() {
             :disabled="loading || filledPin().length < pinLength"
             class="btn-primary w-full justify-center py-3 disabled:opacity-40"
           >
-            <span
-              v-if="loading"
-              class="h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-l-black"
-            ></span>
+            <LogoLoader v-if="loading" :size="16" />
             <span v-else>{{ t('pin.confirm') }}</span>
           </button>
         </div>

@@ -7,6 +7,7 @@ import { httpClient } from '@/shared/api/httpClient'
 import { Plus, Trash2, Edit3, X, Check, GripVertical, Link, Upload, Image as ImageIcon } from 'lucide-vue-next'
 import PinDialog from '@/components/PinDialog.vue'
 import CurrencyInput from '@/components/ui/CurrencyInput.vue'
+import LogoLoader from '@/components/ui/LogoLoader.vue'
 import { useUiStore } from '@/stores/ui'
 import { useI18n } from 'vue-i18n'
 import type { Wallet } from '@/types'
@@ -239,8 +240,8 @@ function getWalletBrandConfig(w: Wallet) {
     <div class="mb-6 flex items-center justify-between">
       <div class="flex items-center gap-3">
         <h1 class="text-2xl font-bold tracking-tight">{{ t('wallets.title') }}</h1>
-        <span v-if="isDraggingSaving" class="text-text-disabled flex items-center gap-1 text-xs">
-          <span class="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
+        <span v-if="isDraggingSaving" class="text-text-disabled flex items-center gap-1.5 text-xs">
+          <LogoLoader :size="12" />
           {{ t('common.saving') }}
         </span>
       </div>

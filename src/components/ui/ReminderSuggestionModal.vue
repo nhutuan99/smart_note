@@ -4,8 +4,8 @@ import { useI18n } from 'vue-i18n'
 import { useReminderStore } from '@/stores/reminders'
 import { useUiStore } from '@/stores/ui'
 import type { ReminderSuggestion } from '@/types'
-import CreateReminderModal from './CreateReminderModal.vue'
 import { Sparkles, Bell, X, ChevronRight, Loader, Link } from 'lucide-vue-next'
+import LogoLoader from '@/components/ui/LogoLoader.vue'
 
 const props = defineProps<{
   suggestions: ReminderSuggestion[]
@@ -153,7 +153,7 @@ async function handleBatchCreate() {
               :disabled="creating === s.title"
               class="quick-create-btn"
             >
-              <Loader v-if="creating === s.title" :size="13" class="animate-spin" />
+              <LogoLoader v-if="creating === s.title" :size="13" />
               <template v-else>+ {{ t('reminders.quickAdd') }}</template>
             </button>
           </div>
@@ -193,7 +193,7 @@ async function handleBatchCreate() {
                 :disabled="batchOffsets.length === 0 || batchCreating"
                 class="flex-1 py-2 rounded-lg bg-accent text-white text-xs font-semibold hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                <Loader v-if="batchCreating" :size="14" class="animate-spin" />
+                <LogoLoader v-if="batchCreating" :size="14" />
                 Xác nhận thêm
               </button>
             </div>

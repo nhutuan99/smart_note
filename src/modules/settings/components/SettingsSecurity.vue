@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
 import { httpClient } from '@/shared/api/httpClient'
 import { Lock, Eye, EyeOff, KeyRound, Shield } from 'lucide-vue-next'
+import LogoLoader from '@/components/ui/LogoLoader.vue'
 
 const { t } = useI18n()
 const ui = useUiStore()
@@ -347,10 +348,7 @@ function cancelForgotPin() {
                       :disabled="forgotPinLoading || !forgotPinPassword"
                       class="btn-primary w-full justify-center py-2.5 disabled:opacity-50"
                     >
-                      <span
-                        v-if="forgotPinLoading"
-                        class="h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-l-black"
-                      ></span>
+                      <LogoLoader v-if="forgotPinLoading" :size="16" />
                       <span v-else>{{ t('common.confirm') }}</span>
                     </button>
 
@@ -427,10 +425,7 @@ function cancelForgotPin() {
                         :disabled="forgotPinLoading || !forgotPinNew || !forgotPinConfirm"
                         class="btn-primary flex-1 justify-center py-2 disabled:opacity-50"
                       >
-                        <span
-                          v-if="forgotPinLoading"
-                          class="h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-l-black"
-                        ></span>
+                        <LogoLoader v-if="forgotPinLoading" :size="16" />
                         <span v-else>{{ t('settings.savePin') }}</span>
                       </button>
                     </div>

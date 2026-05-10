@@ -219,7 +219,7 @@ function handleApplyTags(aiTags: string[]) {
           @click="handleExtractEvents"
           :disabled="extractingEvents"
         >
-          <Loader v-if="extractingEvents" :size="15" class="animate-spin" />
+          <LogoLoader v-if="extractingEvents" :size="15" />
           <Bell v-else :size="15" />
           <span class="hidden sm:inline">Quét sự kiện</span>
         </button>

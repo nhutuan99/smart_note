@@ -2,8 +2,8 @@
 import { ref, watch } from 'vue'
 import { useUiStore } from '@/stores/ui'
 import { useAuthStore } from '@/stores/auth'
-import CatMascot from '@/components/ui/CatMascot.vue'
 import { Sparkles, ChevronRight, Loader2, X } from 'lucide-vue-next'
+import LogoLoader from '@/components/ui/LogoLoader.vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { httpClient } from '@/shared/api/httpClient'
@@ -108,7 +108,7 @@ function skip() {
               alt="event"
             />
             <div v-else class="event-card__hero-skeleton">
-              <Loader2 :size="32" class="animate-spin text-white/40" />
+              <LogoLoader :size="32" :showGlow="true" class="opacity-70" />
             </div>
 
             <!-- Top bar: badge left + close right -->

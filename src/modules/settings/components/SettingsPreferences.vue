@@ -6,6 +6,7 @@ import { setLocale, currentLocale } from '@/i18n'
 import { useCurrency, type CurrencyCode } from '@/composables/useCurrency'
 import { useNotesStore } from '@/stores/notes'
 import { useUiStore } from '@/stores/ui'
+import LogoLoader from '@/components/ui/LogoLoader.vue'
 
 const { t } = useI18n()
 const notesStore = useNotesStore()
@@ -108,7 +109,7 @@ function changeCurrency(code: CurrencyCode) {
               "
               @click="changeCurrency('USD')"
             >
-              <span v-if="rateLoading" class="border-text-disabled border-l-accent mr-1 inline-block h-3 w-3 animate-spin rounded-full border-2"></span>
+              <LogoLoader v-if="rateLoading" :size="12" class="mr-1" />
               🇺🇸 USD ($)
             </button>
           </div>

@@ -7,6 +7,7 @@ import { useUiStore } from '@/stores/ui'
 import { useI18n } from 'vue-i18n'
 import { Shield, LogOut, Trash2, AlertTriangle, Lock, Eye, EyeOff } from 'lucide-vue-next'
 import { httpClient } from '@/shared/api/httpClient'
+import LogoLoader from '@/components/ui/LogoLoader.vue'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -133,7 +134,7 @@ async function confirmDeleteAccount() {
                   {{ t('common.cancel') }}
                 </button>
                 <button @click="confirmDeleteAccount" :disabled="deleteLoading" class="btn-danger flex-1 py-2.5 shadow-lg shadow-red-500/30 disabled:opacity-50">
-                  <span v-if="deleteLoading" class="inline-block h-5 w-5 animate-spin rounded-full border-2 border-white/20 border-l-white"></span>
+                  <LogoLoader v-if="deleteLoading" :size="20" class="mr-1" />
                   <span v-else>{{ t('settings.deleteConfirmBtn') }}</span>
                 </button>
               </div>

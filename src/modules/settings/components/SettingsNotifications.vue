@@ -2,6 +2,7 @@
 import { useI18n } from 'vue-i18n'
 import { Bell } from 'lucide-vue-next'
 import { usePushNotifications } from '@/composables/usePushNotifications'
+import LogoLoader from '@/components/ui/LogoLoader.vue'
 
 const { t } = useI18n()
 
@@ -50,10 +51,7 @@ const {
             :disabled="pushLoading || !pushSupported"
             class="btn-secondary shrink-0 whitespace-nowrap"
           >
-            <span
-              v-if="pushLoading"
-              class="border-text-disabled border-l-accent h-4 w-4 animate-spin rounded-full border-2"
-            ></span>
+            <LogoLoader v-if="pushLoading" :size="16" />
             <Bell v-else :size="16" />
             {{ pushSubscribed ? t('settings.pushDisable') : t('settings.pushEnable') }}
           </button>

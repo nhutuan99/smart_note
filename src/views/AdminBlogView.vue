@@ -5,6 +5,7 @@ import { useBlogStore } from '@/stores/blog'
 import { useUiStore } from '@/stores/ui'
 import { useI18n } from 'vue-i18n'
 import { marked } from 'marked'
+import LogoLoader from '@/components/ui/LogoLoader.vue'
 import {
   Trash2,
   Plus,
@@ -573,7 +574,7 @@ const formatDate = (dateStr: string) => {
 
     <!-- Timeline Blog List -->
     <div v-if="blogStore.isLoading && !blogStore.blogs.length" class="text-center py-12 text-text-disabled card-premium">
-      <Loader2 :size="24" class="mx-auto animate-spin mb-2 opacity-50" />
+      <LogoLoader :size="24" :showGlow="true" class="mx-auto mb-2 opacity-50" />
       {{ t('common.loading') }}
     </div>
     
@@ -795,7 +796,7 @@ const formatDate = (dateStr: string) => {
                       }"
                     >
                       <CheckCircle2 v-if="stepStatus(step.key) === 'done'" :size="16" />
-                      <Loader2 v-else-if="stepStatus(step.key) === 'active'" :size="16" class="animate-spin" />
+                      <LogoLoader v-else-if="stepStatus(step.key) === 'active'" :size="16" />
                       <component :is="step.icon" v-else :size="16" />
                     </div>
                     <!-- Label -->

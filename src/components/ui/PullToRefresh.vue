@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { Loader2 } from 'lucide-vue-next'
+import LogoLoader from '@/components/ui/LogoLoader.vue'
 
 const emit = defineEmits<{
   (e: 'refresh', done: () => void): void
@@ -116,9 +117,10 @@ onBeforeUnmount(() => {
         class="w-8 h-8 rounded-full bg-bg-elevated shadow-lg flex items-center justify-center text-text-secondary transition-transform duration-200"
         :class="{ 'rotate-180': distance >= THRESHOLD && !refreshing, 'text-accent': distance >= THRESHOLD }"
       >
-        <Loader2 
-          class="w-5 h-5 transition-all duration-300"
-          :class="{ 'animate-spin text-accent': refreshing }" 
+        <LogoLoader 
+          :size="20"
+          class="transition-all duration-300"
+          :class="{ 'opacity-50 grayscale': !refreshing }"
           :style="{ transform: refreshing ? 'none' : `rotate(${distance * 2}deg)` }"
         />
       </div>

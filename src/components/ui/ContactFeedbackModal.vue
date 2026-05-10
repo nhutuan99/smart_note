@@ -4,6 +4,7 @@ import { X, Send, Loader2, MessageSquare } from 'lucide-vue-next'
 import { httpClient } from '@/shared/api/httpClient'
 import { useUiStore } from '@/stores/ui'
 import { useI18n } from 'vue-i18n'
+import LogoLoader from '@/components/ui/LogoLoader.vue'
 
 const props = defineProps<{
   show: boolean
@@ -132,7 +133,7 @@ async function submitFeedback() {
             class="btn-primary"
             :disabled="!canSubmit"
           >
-            <Loader2 v-if="loading" class="h-4 w-4 animate-spin mr-2" />
+            <LogoLoader v-if="loading" :size="16" class="mr-2" />
             <Send v-else class="h-4 w-4 mr-2" />
             {{ t('contact.submitBtn') }}
           </button>

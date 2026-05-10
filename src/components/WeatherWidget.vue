@@ -18,6 +18,7 @@ import { useI18n } from 'vue-i18n'
 
 // 6. Icons
 import { RefreshCw, MapPin, Wind, Droplets, Zap, Car, Leaf, ChevronDown } from 'lucide-vue-next'
+import LogoLoader from '@/components/ui/LogoLoader.vue'
 
 // ── State ──────────────────────────────────────────────────────────────────────
 
@@ -180,11 +181,11 @@ const trafficBg = computed(() => {
 
             <button
               class="w-8 h-8 flex items-center justify-center rounded-full bg-bg-elevated border border-border-default text-text-tertiary cursor-pointer transition-all duration-150 shadow-[0_1px_2px_rgba(0,0,0,0.1)] hover:text-accent hover:border-accent hover:bg-accent-subtle"
-              :class="{ '[&_svg]:animate-spin': loading }"
               :title="$t('weather.refresh')"
               @click="fetchWeather"
             >
-              <RefreshCw :size="14" />
+              <LogoLoader v-if="loading" :size="14" />
+              <RefreshCw v-else :size="14" />
             </button>
             <button
               class="w-8 h-8 flex items-center justify-center rounded-full bg-bg-elevated border border-border-default text-text-tertiary cursor-pointer transition-all duration-150 shadow-[0_1px_2px_rgba(0,0,0,0.1)] hover:text-accent hover:border-accent hover:bg-accent-subtle"

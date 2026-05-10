@@ -6,6 +6,7 @@ import { httpClient } from '@/shared/api/httpClient'
 import type { User } from '@/types'
 import { useI18n } from 'vue-i18n'
 import { User as UserIcon, Camera, Trash2, Save } from 'lucide-vue-next'
+import LogoLoader from '@/components/ui/LogoLoader.vue'
 
 const { t } = useI18n()
 const auth = useAuthStore()
@@ -135,10 +136,7 @@ async function saveProfile() {
             {{ t('common.cancel') }}
           </button>
           <button @click="saveProfile" :disabled="profileLoading || !profileForm.name" class="btn-primary">
-            <span
-              v-if="profileLoading"
-              class="h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-l-black"
-            ></span>
+            <LogoLoader v-if="profileLoading" :size="16" />
             <Save v-else :size="14" />
             <span>{{ t('settings.saveChanges') }}</span>
           </button>

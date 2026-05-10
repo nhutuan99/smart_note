@@ -8,6 +8,7 @@ import { Mail, Lock, User, Eye, EyeOff, ArrowRight, KeyRound, RotateCcw, CheckCi
 import { useI18n } from 'vue-i18n'
 import { setLocale, currentLocale } from '@/i18n'
 import { useEventListener } from '@/composables/useEventListener'
+import LogoLoader from '@/components/ui/LogoLoader.vue'
 
 // ── Interactive Mouse Glow ────────────────────────────────────────────────────
 const mouseX = ref(0)
@@ -439,7 +440,7 @@ watch(
             :disabled="!isValid || loading"
             class="btn-primary w-full justify-center py-3 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <span v-if="loading" class="h-[1.125rem] w-[1.125rem] animate-spin rounded-full border-2 border-black/20 border-l-black"></span>
+            <LogoLoader v-if="loading" :size="18" />
             <template v-else>
               <span>{{ isLogin ? t('login.signIn') : t('login.signUp') }}</span>
               <ArrowRight :size="16" />
@@ -464,7 +465,7 @@ watch(
           class="border-border-default bg-bg-elevated hover:bg-bg-hover text-text-primary flex w-full items-center justify-center gap-2.5 rounded-lg border py-2.5 text-sm font-medium transition-all duration-150 disabled:opacity-50"
           @click="startGoogleSignIn"
         >
-          <span v-if="googleLoading" class="h-4 w-4 animate-spin rounded-full border-2 border-text-disabled border-l-accent"></span>
+          <LogoLoader v-if="googleLoading" :size="16" />
           <template v-else>
             <svg viewBox="0 0 24 24" class="h-[1.125rem] w-[1.125rem]">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
@@ -537,7 +538,7 @@ watch(
             :disabled="fpLoading || !fpEmail"
             class="btn-primary w-full justify-center py-3 disabled:opacity-50"
           >
-            <span v-if="fpLoading" class="h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-l-black"></span>
+            <LogoLoader v-if="fpLoading" :size="16" />
             <template v-else>
               <!-- Google icon -->
               <svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor">
@@ -564,7 +565,7 @@ watch(
           <h2 class="mb-2 text-xl font-bold">{{ t('forgot.googleVerifying') }}</h2>
           <p class="text-text-tertiary mb-6 text-sm">{{ t('forgot.googleVerifyingDesc') }}</p>
           <div class="flex justify-center">
-            <span class="h-8 w-8 animate-spin rounded-full border-3 border-accent/20 border-l-accent"></span>
+            <LogoLoader :size="32" :showGlow="true" />
           </div>
         </template>
 
@@ -642,7 +643,7 @@ watch(
             :disabled="fpLoading || !fpNewPass || !fpConfirmPass"
             class="btn-primary w-full justify-center py-3 disabled:opacity-50"
           >
-            <span v-if="fpLoading" class="h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-l-black"></span>
+            <LogoLoader v-if="fpLoading" :size="16" />
             <template v-else>
               <span>{{ t('forgot.resetPassword') }}</span>
               <ArrowRight :size="16" />

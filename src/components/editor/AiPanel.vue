@@ -6,6 +6,7 @@ import {
   AlignLeft, PenLine, Wand2, Tag, MessageSquare, Loader2
 } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
+import LogoLoader from '@/components/ui/LogoLoader.vue'
 
 const props = defineProps<{
   title: string
@@ -142,7 +143,7 @@ const hasResult = computed(() => ai.streamText.value.length > 0 || suggestedTags
 
       <!-- Loading (only before first chunk arrives) -->
       <div v-if="ai.loading.value && !ai.streamText.value && !suggestedTags.length" class="ai-loading">
-        <Loader2 :size="16" class="animate-spin" />
+        <LogoLoader :size="16" />
         <span>{{ t('notes.ai.processing') }}</span>
       </div>
 
@@ -407,9 +408,7 @@ const hasResult = computed(() => ai.streamText.value.length > 0 || suggestedTags
   transform: translateY(8px);
 }
 
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
+
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
