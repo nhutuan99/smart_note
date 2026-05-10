@@ -138,29 +138,32 @@ async function onReminderSaved() {
     </div>
 
     <!-- AI Chat Input -->
-    <div class="ai-input-card">
-      <div class="ai-input-row">
-        <Sparkles :size="18" class="ai-input-icon" />
-        <textarea
-          v-model="prompt"
-          :placeholder="t('aiTodo.placeholder')"
-          class="ai-textarea"
-          rows="2"
-          @keydown.enter.exact.prevent="handleGenerate"
-        />
-        <button
-          class="ai-send-btn"
-          :disabled="!prompt.trim() || generating"
-          @click="handleGenerate"
-        >
-          <Loader2 v-if="generating" :size="18" class="animate-spin" />
-          <Send v-else :size="18" />
-        </button>
-      </div>
-      <p v-if="generating" class="ai-status">
-        <Loader2 :size="14" class="animate-spin" />
+    <div 
+      class="relative bg-bg-surface border border-border-default rounded-[1.5rem] p-2 pl-5 mb-8 flex items-end gap-3 transition-all duration-300 shadow-sm focus-within:border-accent/60 focus-within:ring-4 focus-within:ring-accent/10 focus-within:-translate-y-0.5 group"
+    >
+      <Sparkles :size="20" class="text-accent shrink-0 animate-pulse mb-3" />
+      <textarea
+        v-model="prompt"
+        :placeholder="t('aiTodo.placeholder')"
+        class="flex-1 bg-transparent border-none outline-none resize-none text-[0.9375rem] text-text-primary placeholder:text-text-tertiary py-3 min-h-[48px] max-h-[120px] scrollbar-thin"
+        rows="1"
+        @keydown.enter.exact.prevent="handleGenerate"
+        @input="(e: Event) => { const t = e.target as HTMLTextAreaElement; t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px' }"
+      />
+      <button
+        :disabled="!prompt.trim() || generating"
+        @click="handleGenerate"
+        class="shrink-0 flex items-center justify-center w-11 h-11 rounded-full bg-accent text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-bg-elevated disabled:text-text-disabled hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(6,182,212,0.3)] hover:scale-105"
+      >
+        <Loader2 v-if="generating" :size="18" class="animate-spin" />
+        <Send v-else :size="18" class="-ml-0.5 mt-0.5" />
+      </button>
+
+      <!-- Absolute Status -->
+      <div v-if="generating" class="absolute -bottom-6 left-5 flex items-center gap-1.5 text-[0.75rem] font-medium text-accent animate-pulse">
+        <Loader2 :size="12" class="animate-spin" />
         {{ t('aiTodo.processing') }}
-      </p>
+      </div>
     </div>
 
     <!-- Filter Tabs -->
@@ -347,68 +350,6 @@ async function onReminderSaved() {
 .ring-pct { font-size: 1.25rem; font-weight: 800; color: #06b6d4; }
 .ring-sub { font-size: 0.5625rem; color: var(--text-tertiary); margin-top: 0.125rem; white-space: nowrap; }
 
-/* ═════════════════════════════════════════
-   AI Input Card
-   ═════════════════════════════════════════ */
-.ai-input-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-default);
-  border-radius: 1.25rem;
-  padding: 1rem 1.25rem;
-  margin-bottom: 1.25rem;
-  transition: border-color 0.2s;
-}
-.ai-input-card:focus-within {
-  border-color: rgba(6,182,212,0.4);
-  box-shadow: 0 0 0 3px rgba(6,182,212,0.08);
-}
-.ai-input-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-}
-.ai-input-icon { color: #06b6d4; margin-top: 0.375rem; flex-shrink: 0; }
-.ai-textarea {
-  flex: 1;
-  background: none;
-  border: none;
-  outline: none;
-  font-size: 0.875rem;
-  color: var(--text-primary);
-  resize: none;
-  line-height: 1.5;
-  font-family: inherit;
-}
-.ai-textarea::placeholder { color: var(--text-disabled); }
-.ai-send-btn {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 0.75rem;
-  background: #06b6d4;
-  color: white;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 12px rgba(6,182,212,0.25);
-}
-.ai-send-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(6,182,212,0.35);
-}
-.ai-send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.ai-status {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 0.75rem;
-  font-size: 0.75rem;
-  color: #06b6d4;
-  font-weight: 500;
-}
 
 /* ═════════════════════════════════════════
    Filter Bar
