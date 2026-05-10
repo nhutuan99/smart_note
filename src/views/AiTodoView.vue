@@ -3,8 +3,9 @@ import { ref, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useTodoStore } from '@/stores/todos'
 import { useUiStore } from '@/stores/ui'
-import type { TodoSuggestion } from '@/types'
+import type { TodoSuggestion, Reminder } from '@/types'
 import TodoSuggestionModal from '@/components/ui/TodoSuggestionModal.vue'
+import CreateReminderModal from '@/components/ui/CreateReminderModal.vue'
 import {
   Sparkles, Send, Clock, BellRing, Check, Trash2, ListTodo,
   CalendarDays, Loader2, CheckCircle2, Circle, LayoutList
@@ -19,7 +20,11 @@ const generating = ref(false)
 const suggestions = ref<TodoSuggestion[]>([])
 const showSuggestions = ref(false)
 const deletingId = ref<string | null>(null)
-const pushingId = ref<string | null>(null)
+
+// Reminder modal state
+const showReminderModal = ref(false)
+const reminderTodoId = ref<string | null>(null)
+const reminderPrefill = ref<Partial<Reminder> | null>(null)
 
 onMounted(() => store.fetch())
 
@@ -73,11 +78,30 @@ async function handleDelete(id: string) {
   deletingId.value = null
 }
 
-async function handlePushReminder(id: string) {
-  pushingId.value = id
-  const ok = await store.pushToReminder(id)
-  if (ok) ui.showToast('success', t('aiTodo.pushedToReminder'))
-  pushingId.value = null
+function openReminderModal(todoId: string) {
+  const todo = store.todos.find(t => t.id === todoId)
+  if (!todo) return
+  reminderTodoId.value = todoId
+  // Pre-fill the reminder modal with todo data
+  reminderPrefill.value = {
+    title: todo.title,
+    description: todo.description || '',
+    eventDate: todo.time,
+    sourceType: 'manual',
+  } as Partial<Reminder>
+  showReminderModal.value = true
+}
+
+async function onReminderSaved() {
+  showReminderModal.value = false
+  // After reminder created, link it back to the todo
+  if (reminderTodoId.value) {
+    // Mark as having reminder (the store.create in modal already saved it)
+    await store.update(reminderTodoId.value, { reminderId: 'linked' })
+    ui.showToast('success', t('aiTodo.pushedToReminder'))
+  }
+  reminderTodoId.value = null
+  reminderPrefill.value = null
 }
 </script>
 
@@ -218,12 +242,10 @@ async function handlePushReminder(id: string) {
               <button
                 v-if="!todo.reminderId && todo.status !== 'done'"
                 class="action-btn action-btn--reminder"
-                :disabled="pushingId === todo.id"
-                @click.stop="handlePushReminder(todo.id)"
+                @click.stop="openReminderModal(todo.id)"
                 :title="t('aiTodo.pushReminder')"
               >
-                <Loader2 v-if="pushingId === todo.id" :size="14" class="animate-spin" />
-                <BellRing v-else :size="14" />
+                <BellRing :size="14" />
               </button>
               <span v-else-if="todo.reminderId" class="reminder-badge" :title="t('aiTodo.alreadyReminder')">
                 <Check :size="12" />
@@ -248,6 +270,14 @@ async function handlePushReminder(id: string) {
       :suggestions="suggestions"
       @close="showSuggestions = false"
       @created="onSuggestionsCreated"
+    />
+
+    <!-- Reminder Modal — full customization -->
+    <CreateReminderModal
+      v-if="showReminderModal"
+      :reminder="reminderPrefill as any"
+      @close="showReminderModal = false; reminderTodoId = null; reminderPrefill = null"
+      @saved="onReminderSaved"
     />
   </div>
 </template>
