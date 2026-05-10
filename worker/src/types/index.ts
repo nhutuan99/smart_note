@@ -61,6 +61,7 @@ export interface WalletData {
   icon: string
   color: string
   order: number
+  customLogoUrl?: string
 }
 
 export interface NotificationData {

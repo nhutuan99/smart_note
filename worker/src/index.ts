@@ -90,7 +90,7 @@ import {
   handleUploadImage,
 } from './controllers/blog.controller'
 
-import { handleProxyLocation, handleProxyWeather, handleProxyExchangeRate, handleProxyStockPrice, handleProxyStockHistory, handleProxyLogo } from './controllers/proxy.controller'
+import { handleProxyLocation, handleProxyWeather, handleProxyExchangeRate, handleProxyStockPrice, handleProxyStockHistory, handleProxyLogo, handleProxyFundNav, handleProxyFundHistory, handleProxyFundList } from './controllers/proxy.controller'
 
 import {
   handleListStocks,
@@ -101,6 +101,13 @@ import {
   handleDeleteStockAlert,
   handleResetStockAlert
 } from './controllers/stock.controller'
+
+import {
+  handleListFunds,
+  handleCreateFund,
+  handleUpdateFund,
+  handleDeleteFund,
+} from './controllers/fund.controller'
 
 import {
   handleListReminders,
@@ -154,7 +161,17 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
       return handleProxyLogo(request)
     }
 
-    // Auth routes (no token needed)
+    // Fmarket Fund Proxy (public, no auth)
+    if (path === '/api/proxy/fund-nav' && request.method === 'GET') {
+      return handleProxyFundNav(request, env)
+    }
+    if (path === '/api/proxy/fund-history' && request.method === 'GET') {
+      return handleProxyFundHistory(request, env)
+    }
+    if (path === '/api/proxy/fund-list' && request.method === 'GET') {
+      return handleProxyFundList(request, env)
+    }
+
       if (path === '/api/auth/register' && request.method === 'POST') {
         return handleRegister(request, env)
       }
@@ -447,7 +464,22 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
         if (request.method === 'DELETE') return handleDeleteStock(userId, stockId, env)
       }
 
+      // Fund Positions (Chứng chỉ quỹ)
+      if (path === '/api/funds' && request.method === 'GET') {
+        return handleListFunds(userId, env)
+      }
+      if (path === '/api/funds' && request.method === 'POST') {
+        return handleCreateFund(userId, request, env)
+      }
+      const fundMatch = path.match(/^\/api\/funds\/([^\/]+)$/)
+      if (fundMatch) {
+        const fundId = fundMatch[1]
+        if (request.method === 'PUT') return handleUpdateFund(userId, fundId, request, env)
+        if (request.method === 'DELETE') return handleDeleteFund(userId, fundId, env)
+      }
+
       // Push Notifications
+
       if (path === '/api/push/subscribe' && request.method === 'POST') {
         return handlePushSubscribe(userId, request, env)
       }

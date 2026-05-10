@@ -28,7 +28,8 @@ export async function handleCreateWallet(
     currency: body.currency || 'VND',
     icon: body.icon || '💰',
     color: body.color || '#10b981',
-    order: wallets.length
+    order: wallets.length,
+    customLogoUrl: typeof body.customLogoUrl === 'string' ? body.customLogoUrl.substring(0, 5000) : undefined
   }
 
   wallets.push(wallet)
@@ -55,6 +56,7 @@ export async function handleUpdateWallet(
   if (body.color !== undefined) wallets[idx].color = body.color
   if (typeof body.order === 'number') wallets[idx].order = body.order
   if (typeof body.balance === 'number') wallets[idx].balance = body.balance
+  if (body.customLogoUrl !== undefined) wallets[idx].customLogoUrl = typeof body.customLogoUrl === 'string' ? body.customLogoUrl.substring(0, 5000) : undefined
   await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`, wallets)
   return jsonResponse({ success: true, data: wallets[idx] })
 }

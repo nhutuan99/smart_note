@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useFinanceStore } from '@/stores/finance'
 import { formatVND } from '@/constants/finance'
 import { getWalletBrand } from '@/constants/walletBrands'
 import { httpClient } from '@/shared/api/httpClient'
-import { Plus, Trash2, Edit3, X, GripVertical } from 'lucide-vue-next'
+import { Plus, Trash2, Edit3, X, GripVertical, Link, Upload, Image as ImageIcon } from 'lucide-vue-next'
 import PinDialog from '@/components/PinDialog.vue'
 import { useUiStore } from '@/stores/ui'
 import { useI18n } from 'vue-i18n'
@@ -18,7 +18,13 @@ onMounted(() => finance.fetchWallets())
 
 const showAdd = ref(false)
 const editId = ref<string | null>(null)
-const newWallet = ref({ name: '', icon: '💰', color: '#10b981' })
+const newWallet = ref({ name: '', icon: '💰', color: '#10b981', customLogoUrl: '' })
+
+// Custom logo mode: 'url' | 'upload'
+const logoMode = ref<'url' | 'upload'>('url')
+const uploadPreview = ref<string>('')
+const isUploadLoading = ref(false)
+const urlPreviewError = ref(false)
 
 // PIN state
 const hasPin = ref(false)
@@ -38,7 +44,56 @@ const COLORS = [
   '#006838', '#1e3765', '#00529b', '#d11f26', '#003c7d'
 ]
 
+/** Whether the current name has an auto-detected brand logo */
+const hasBrandLogo = computed(() => !!getWalletBrand(newWallet.value.name))
+
+/** The effective logo URL to use when adding the wallet */
+const effectiveLogoUrl = computed(() => {
+  if (hasBrandLogo.value) return '' // brand takes priority, don't save custom
+  if (logoMode.value === 'upload') return uploadPreview.value
+  return newWallet.value.customLogoUrl.trim()
+})
+
 const isAdding = ref(false)
+
+/** Handle file upload → base64 */
+async function handleFileUpload(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file) return
+
+  // Limit to 300KB to stay within KV value size sanity
+  if (file.size > 300 * 1024) {
+    ui.showToast('error', 'Ảnh quá lớn. Vui lòng chọn ảnh dưới 300KB.')
+    return
+  }
+  if (!file.type.startsWith('image/')) {
+    ui.showToast('error', 'Chỉ chấp nhận file ảnh (PNG, JPG, SVG, WEBP).')
+    return
+  }
+
+  isUploadLoading.value = true
+  try {
+    const base64 = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+    uploadPreview.value = base64
+    logoMode.value = 'upload'
+  } catch {
+    ui.showToast('error', 'Không thể đọc file. Thử lại.')
+  } finally {
+    isUploadLoading.value = false
+  }
+}
+
+function clearCustomLogo() {
+  uploadPreview.value = ''
+  newWallet.value.customLogoUrl = ''
+  urlPreviewError.value = false
+  logoMode.value = 'url'
+}
 
 async function addWallet() {
   if (!newWallet.value.name.trim() || isAdding.value) return
@@ -51,9 +106,12 @@ async function addWallet() {
       currency: 'VND',
       icon: newWallet.value.icon,
       color: brand?.bgColor || newWallet.value.color,
-      order: finance.wallets.length
+      order: finance.wallets.length,
+      customLogoUrl: effectiveLogoUrl.value || undefined
     })
-    newWallet.value = { name: '', icon: '💰', color: '#10b981' }
+    newWallet.value = { name: '', icon: '💰', color: '#10b981', customLogoUrl: '' }
+    uploadPreview.value = ''
+    urlPreviewError.value = false
     showAdd.value = false
   } finally {
     isAdding.value = false
@@ -132,13 +190,11 @@ async function onDrop(e: DragEvent, targetWallet: Wallet) {
 
   if (fromIdx === -1 || toIdx === -1) { draggedId.value = null; return }
 
-  // Reorder locally first (optimistic)
   const [moved] = wallets.splice(fromIdx, 1)
   wallets.splice(toIdx, 0, moved)
   wallets.forEach((w, i) => { w.order = i })
   finance.wallets = wallets
 
-  // Persist to backend sequentially to prevent Cloudflare KV race conditions
   isDraggingSaving.value = true
   try {
     for (let i = 0; i < wallets.length; i++) {
@@ -157,6 +213,18 @@ async function onDrop(e: DragEvent, targetWallet: Wallet) {
 function onDragEnd() {
   draggedId.value = null
   dragOverId.value = null
+}
+
+/** Resolve the logo URL for an existing wallet in the list */
+function getWalletLogo(w: Wallet) {
+  if (w.customLogoUrl) return w.customLogoUrl
+  const brand = getWalletBrand(w.name)
+  return brand?.logoUrl || null
+}
+
+function getWalletBrandConfig(w: Wallet) {
+  if (w.customLogoUrl) return null  // custom logo wins
+  return getWalletBrand(w.name)
 }
 </script>
 
@@ -206,17 +274,87 @@ function onDragEnd() {
           <div v-if="newWallet.name.trim()">
             <span class="text-text-tertiary mb-2 block text-[0.6875rem]">{{ t('common.preview') }}</span>
             <div class="flex items-center gap-3">
-              <div
-                v-if="getWalletBrand(newWallet.name)"
-                class="flex h-10 w-10 items-center justify-center rounded-xl text-xs font-bold"
-                :style="{ backgroundColor: getWalletBrand(newWallet.name)!.bgColor, color: getWalletBrand(newWallet.name)!.textColor }"
-              >
+              <!-- Custom logo preview -->
+              <div v-if="!hasBrandLogo && effectiveLogoUrl" class="flex h-10 w-10 overflow-hidden rounded-xl border border-border-default bg-white dark:bg-bg-elevated shadow-sm p-1">
+                <img :src="effectiveLogoUrl" class="h-full w-full object-contain" alt="logo" />
+              </div>
+              <!-- Brand logo -->
+              <div v-else-if="hasBrandLogo && getWalletBrand(newWallet.name)?.logoUrl" class="flex h-10 w-10 overflow-hidden rounded-xl bg-white border border-border-default shadow-sm p-1.5">
+                <img :src="getWalletBrand(newWallet.name)!.logoUrl" class="h-full w-full object-contain" alt="logo" />
+              </div>
+              <div v-else-if="hasBrandLogo" class="flex h-10 w-10 items-center justify-center rounded-xl text-xs font-bold" :style="{ backgroundColor: getWalletBrand(newWallet.name)!.bgColor, color: getWalletBrand(newWallet.name)!.textColor }">
                 {{ getWalletBrand(newWallet.name)!.abbr }}
               </div>
               <div v-else class="flex h-10 w-10 items-center justify-center rounded-xl text-lg" :style="{ backgroundColor: newWallet.color + '30' }">
                 {{ newWallet.icon }}
               </div>
               <span class="text-sm font-medium">{{ newWallet.name }}</span>
+            </div>
+          </div>
+
+          <!-- ── Custom Logo Section (only shown when no brand match) ── -->
+          <div v-if="newWallet.name.trim() && !hasBrandLogo" class="rounded-xl border border-border-default bg-bg-elevated p-4">
+            <div class="flex items-center gap-2 mb-3">
+              <ImageIcon :size="14" class="text-accent" />
+              <span class="text-[0.6875rem] font-semibold text-text-secondary uppercase tracking-wider">Logo tuỳ chỉnh</span>
+              <span class="text-[0.6875rem] text-text-disabled">(không bắt buộc)</span>
+            </div>
+
+            <!-- Mode tabs -->
+            <div class="flex gap-1 p-1 bg-bg-surface rounded-lg border border-border-default mb-3">
+              <button
+                @click="logoMode = 'url'; uploadPreview = ''"
+                class="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs font-medium transition-all"
+                :class="logoMode === 'url' ? 'bg-accent text-white shadow-sm' : 'text-text-tertiary hover:text-text-primary'"
+              >
+                <Link :size="12" /> Dán link URL
+              </button>
+              <button
+                @click="logoMode = 'upload'"
+                class="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs font-medium transition-all"
+                :class="logoMode === 'upload' ? 'bg-accent text-white shadow-sm' : 'text-text-tertiary hover:text-text-primary'"
+              >
+                <Upload :size="12" /> Upload ảnh
+              </button>
+            </div>
+
+            <!-- URL mode -->
+            <div v-if="logoMode === 'url'" class="flex gap-2">
+              <input
+                v-model="newWallet.customLogoUrl"
+                type="url"
+                placeholder="https://example.com/logo.png"
+                @input="urlPreviewError = false"
+                class="border-border-default bg-bg-surface text-text-primary placeholder:text-text-disabled focus:border-accent w-full rounded-lg border px-3 py-2 text-xs transition-all focus:outline-none focus:ring-1 focus:ring-accent"
+              />
+              <button v-if="newWallet.customLogoUrl" @click="clearCustomLogo" class="text-text-disabled hover:text-error transition-colors p-1 shrink-0">
+                <X :size="16" />
+              </button>
+            </div>
+
+            <!-- URL Preview error hint -->
+            <p v-if="logoMode === 'url' && urlPreviewError" class="text-[10px] text-error mt-1">Không load được ảnh từ URL này. Thử URL khác.</p>
+
+            <!-- Upload mode -->
+            <div v-if="logoMode === 'upload'" class="flex items-center gap-3">
+              <label class="flex-1 cursor-pointer">
+                <div class="flex items-center justify-center gap-2 border-2 border-dashed border-border-default rounded-lg py-3 px-4 hover:border-accent hover:bg-accent/5 transition-all text-xs text-text-tertiary">
+                  <Upload :size="14" />
+                  <span>{{ isUploadLoading ? 'Đang tải...' : 'Chọn file ảnh (PNG, JPG, SVG, WEBP, max 300KB)' }}</span>
+                </div>
+                <input type="file" accept="image/*" class="hidden" @change="handleFileUpload" :disabled="isUploadLoading" />
+              </label>
+              <button v-if="uploadPreview" @click="clearCustomLogo" class="text-text-disabled hover:text-error transition-colors p-1 shrink-0">
+                <X :size="16" />
+              </button>
+            </div>
+
+            <!-- Upload Preview -->
+            <div v-if="uploadPreview" class="mt-2 flex items-center gap-2">
+              <div class="h-8 w-8 rounded-lg border border-border-default overflow-hidden bg-white p-1 shrink-0">
+                <img :src="uploadPreview" class="h-full w-full object-contain" alt="preview" />
+              </div>
+              <span class="text-[10px] text-success">✓ Ảnh đã được tải lên</span>
             </div>
           </div>
 
@@ -279,11 +417,17 @@ function onDragEnd() {
             <GripVertical :size="18" />
           </div>
 
-          <!-- Brand Logo -->
+          <!-- Wallet Logo: customLogoUrl > brandLogoUrl > brandAbbr > emoji -->
           <div class="flex h-12 w-12 shrink-0 items-center justify-center">
-            <div v-if="getWalletBrand(w.name)?.logoUrl" class="flex h-12 w-12 overflow-hidden rounded-xl bg-white border border-border-default shadow-sm p-1.5">
+            <!-- Custom logo (user-uploaded or URL) -->
+            <div v-if="w.customLogoUrl" class="flex h-12 w-12 overflow-hidden rounded-xl bg-white dark:bg-bg-elevated border border-border-default shadow-sm p-1.5">
+              <img :src="w.customLogoUrl" :alt="w.name" class="h-full w-full object-contain object-center" loading="lazy" />
+            </div>
+            <!-- Auto brand logo (image) -->
+            <div v-else-if="getWalletBrand(w.name)?.logoUrl" class="flex h-12 w-12 overflow-hidden rounded-xl bg-white border border-border-default shadow-sm p-1.5">
               <img :src="getWalletBrand(w.name)!.logoUrl" :alt="w.name" class="h-full w-full object-contain object-center" loading="lazy" />
             </div>
+            <!-- Auto brand abbr -->
             <div
               v-else-if="getWalletBrand(w.name)"
               class="flex h-12 w-12 items-center justify-center rounded-xl text-sm font-bold shadow-sm"
@@ -291,6 +435,7 @@ function onDragEnd() {
             >
               {{ getWalletBrand(w.name)!.abbr }}
             </div>
+            <!-- Emoji fallback -->
             <div v-else class="flex h-12 w-12 items-center justify-center rounded-xl text-2xl" :style="{ backgroundColor: w.color + '20' }">
               {{ w.icon }}
             </div>
@@ -383,7 +528,7 @@ function onDragEnd() {
 }
 .slide-enter-to,
 .slide-leave-from {
-  max-height: 37.5rem;
+  max-height: 60rem;
   opacity: 1;
 }
 </style>

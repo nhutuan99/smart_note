@@ -43,6 +43,7 @@ export interface Wallet {
   icon: string
   color: string
   order: number
+  customLogoUrl?: string
 }
 
 // ── Finance: Transactions ──
@@ -135,6 +136,7 @@ export type { RecurringTransaction, RecurringFrequency } from './recurring'
 export type { BudgetGoal, CategoryBudget } from './budget'
 export type { SavingsGoal } from './savings'
 export type { Debt, DebtType, DebtStatus } from './debt'
+export type { FundPosition } from './fund'
 
 export interface StockAlert {
   id: string

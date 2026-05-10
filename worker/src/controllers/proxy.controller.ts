@@ -321,3 +321,207 @@ export async function handleProxyLogo(request: Request): Promise<Response> {
 
   return new Response('Not found', { status: 404 })
 }
+
+// ─────────────────────────────────────────────────────────────────
+// Fmarket Fund Proxy (no auth required for public NAV data)
+// ─────────────────────────────────────────────────────────────────
+
+const FMARKET_HEADERS = {
+  'Content-Type': 'application/json',
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+  'Origin': 'https://fmarket.vn',
+  'Referer': 'https://fmarket.vn/',
+}
+
+/**
+ * GET /api/proxy/fund-nav?symbol=SSISCA
+ * Fetch current NAV for one fund symbol from Fmarket.
+ * Cache: 4 hours (NAV is published daily at T+1)
+ */
+export async function handleProxyFundNav(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url)
+  const symbol = url.searchParams.get('symbol')?.toUpperCase()
+
+  if (!symbol) return errorResponse('Missing symbol', 400)
+
+  const cacheKey = `public/funds/nav/${symbol}`
+  const now = Date.now()
+
+  try {
+    // Cache for 4 hours — NAV updates once a day
+    const cached = await env.SMART_NOTE_KV.get(cacheKey)
+    if (cached) {
+      const parsed = JSON.parse(cached)
+      if (now - parsed.timestamp < 4 * 60 * 60 * 1000) {
+        return jsonResponse({ success: true, data: { nav: parsed.nav, symbol } })
+      }
+    }
+
+    // POST to Fmarket filter with exact symbol search
+    const res = await fetch('https://api.fmarket.vn/res/products/filter', {
+      method: 'POST',
+      headers: FMARKET_HEADERS,
+      body: JSON.stringify({
+        types: ['NEW_FUND', 'TRADING_FUND'],
+        issuerIds: [],
+        sortOrder: 'DESC',
+        sortField: 'navTo6Months',
+        page: 1,
+        pageSize: 10,
+        isIpo: false,
+        fundAssetTypes: [],
+        bondRemainPeriods: [],
+        searchField: symbol,
+        isBuyByReward: false,
+        thirdAppIds: []
+      })
+    })
+
+    if (!res.ok) return errorResponse(`Fmarket API HTTP ${res.status}`, 502)
+
+    const data = await res.json() as any
+    const fund = data?.data?.rows?.find((f: any) =>
+      f.shortName?.toUpperCase() === symbol || f.name?.toUpperCase().includes(symbol)
+    )
+
+    if (!fund) return errorResponse('Fund not found', 404)
+
+    const nav = fund.nav || fund.navCurrent || 0
+    await env.SMART_NOTE_KV.put(cacheKey, JSON.stringify({ nav, timestamp: now }), { expirationTtl: 14400 })
+
+    return jsonResponse({ success: true, data: { nav, symbol, fundName: fund.name, productId: fund.id } })
+  } catch (err: any) {
+    return errorResponse(err.message, 500)
+  }
+}
+
+/**
+ * GET /api/proxy/fund-history?symbol=SSISCA&days=7
+ * Fetch historical NAV for a fund from Fmarket.
+ * Cache: 6 hours
+ */
+export async function handleProxyFundHistory(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url)
+  const symbol = url.searchParams.get('symbol')?.toUpperCase()
+  const days = parseInt(url.searchParams.get('days') || '7', 10)
+  const productIdParam = url.searchParams.get('productId')
+
+  if (!symbol) return errorResponse('Missing symbol', 400)
+
+  const cacheKey = `public/funds/history/${symbol}/${days}`
+  const now = Date.now()
+
+  try {
+    const cached = await env.SMART_NOTE_KV.get(cacheKey)
+    if (cached) {
+      const parsed = JSON.parse(cached)
+      if (now - parsed.timestamp < 6 * 60 * 60 * 1000) {
+        return jsonResponse({ success: true, data: { history: parsed.history, symbol } })
+      }
+    }
+
+    // Need productId — either from query param or look it up
+    let productId = productIdParam ? parseInt(productIdParam, 10) : null
+
+    if (!productId) {
+      // Quick lookup via filter
+      const searchRes = await fetch('https://api.fmarket.vn/res/products/filter', {
+        method: 'POST',
+        headers: FMARKET_HEADERS,
+        body: JSON.stringify({
+          types: ['NEW_FUND', 'TRADING_FUND'],
+          issuerIds: [], sortOrder: 'DESC', sortField: 'navTo6Months',
+          page: 1, pageSize: 5, isIpo: false, fundAssetTypes: [],
+          bondRemainPeriods: [], searchField: symbol, isBuyByReward: false, thirdAppIds: []
+        })
+      })
+      if (searchRes.ok) {
+        const sData = await searchRes.json() as any
+        const found = sData?.data?.rows?.find((f: any) => f.shortName?.toUpperCase() === symbol)
+        productId = found?.id || null
+      }
+    }
+
+    if (!productId) return errorResponse('Cannot find fund productId', 404)
+
+    // Fetch NAV history
+    const toDate = new Date().toISOString().split('T')[0].replace(/-/g, '')
+    const fromDate = new Date(Date.now() - days * 3 * 86400 * 1000).toISOString().split('T')[0].replace(/-/g, '') // 3x buffer
+
+    const histRes = await fetch('https://api.fmarket.vn/res/product/get-nav-history', {
+      method: 'POST',
+      headers: FMARKET_HEADERS,
+      body: JSON.stringify({ isAllData: 0, productId, fromDate, toDate })
+    })
+
+    if (!histRes.ok) return errorResponse(`Fmarket history API HTTP ${histRes.status}`, 502)
+
+    const histData = await histRes.json() as any
+    const rows = histData?.data?.navHistories || histData?.data || []
+
+    const history = rows
+      .slice(-days)
+      .map((row: any) => ({
+        nav: row.nav || row.navCurrent || 0,
+        time: new Date(row.navDate || row.date || row.time).getTime()
+      }))
+      .filter((h: any) => h.nav > 0)
+
+    await env.SMART_NOTE_KV.put(cacheKey, JSON.stringify({ history, timestamp: now }), { expirationTtl: 21600 })
+
+    return jsonResponse({ success: true, data: { history, symbol } })
+  } catch (err: any) {
+    return errorResponse(err.message, 500)
+  }
+}
+
+/**
+ * GET /api/proxy/fund-list?q=SSI
+ * Search funds from Fmarket (for autocomplete). Cache: 24 hours.
+ */
+export async function handleProxyFundList(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url)
+  const query = (url.searchParams.get('q') || '').trim()
+
+  const cacheKey = `public/funds/list/${query.toUpperCase()}`
+  const now = Date.now()
+
+  try {
+    const cached = await env.SMART_NOTE_KV.get(cacheKey)
+    if (cached) {
+      const parsed = JSON.parse(cached)
+      if (now - parsed.timestamp < 24 * 60 * 60 * 1000) {
+        return jsonResponse({ success: true, data: { funds: parsed.funds } })
+      }
+    }
+
+    const res = await fetch('https://api.fmarket.vn/res/products/filter', {
+      method: 'POST',
+      headers: FMARKET_HEADERS,
+      body: JSON.stringify({
+        types: ['NEW_FUND', 'TRADING_FUND'],
+        issuerIds: [], sortOrder: 'DESC', sortField: 'navTo6Months',
+        page: 1, pageSize: 50, isIpo: false, fundAssetTypes: [],
+        bondRemainPeriods: [], searchField: query, isBuyByReward: false, thirdAppIds: []
+      })
+    })
+
+    if (!res.ok) return errorResponse(`Fmarket API HTTP ${res.status}`, 502)
+
+    const data = await res.json() as any
+    const funds = (data?.data?.rows || []).map((f: any) => ({
+      symbol: f.shortName || '',
+      name: f.name || '',
+      type: f.type || '',
+      productId: f.id || 0,
+      nav: f.nav || f.navCurrent || 0,
+      issuer: f.managementFee?.name || ''
+    }))
+
+    await env.SMART_NOTE_KV.put(cacheKey, JSON.stringify({ funds, timestamp: now }), { expirationTtl: 86400 })
+
+    return jsonResponse({ success: true, data: { funds } })
+  } catch (err: any) {
+    return errorResponse(err.message, 500)
+  }
+}

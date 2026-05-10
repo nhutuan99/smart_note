@@ -2,16 +2,18 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { Wallet, TrendingUp, TrendingDown, Plus, Eye, EyeOff, ChevronLeft, ChevronRight, Sparkles } from 'lucide-vue-next'
+import { Wallet, TrendingUp, TrendingDown, Plus, Eye, EyeOff, ChevronLeft, ChevronRight, LineChart, Landmark } from 'lucide-vue-next'
 import { useFinancePolling } from '@/composables/useFinancePolling'
+import { usePortfolioSummary } from '@/composables/usePortfolioSummary'
 import { useUiStore } from '@/stores/ui'
-import { formatVND } from '@/constants/finance'
+import { formatVND, formatVNDShort } from '@/constants/finance'
 import WeatherWidget from '@/components/WeatherWidget.vue'
 
 const { t, tm } = useI18n()
 const router = useRouter()
 const finance = useFinancePolling()
 const ui = useUiStore()
+const portfolio = usePortfolioSummary()
 const greeting = computed(() => {
   const h = new Date().getHours()
   return h < 12 ? t('dashboard.greetingMorning') : h < 18 ? t('dashboard.greetingAfternoon') : t('dashboard.greetingEvening')
@@ -134,8 +136,35 @@ const isCurrentMonth = computed(() => {
           </button>
         </div>
         <div v-if="finance.loading" class="skeleton h-8 w-40 mt-1 relative z-10"></div>
-        <div v-else class="text-3xl font-bold tracking-tight text-text-primary relative z-10">
-          {{ formatVND(finance.totalBalance) }}
+        <div v-else class="relative z-10">
+          <!-- Primary: Net Worth when investments exist -->
+          <template v-if="portfolio.hasInvestments.value">
+            <div class="text-3xl font-bold tracking-tight text-text-primary">
+              {{ ui.hideBalances ? '••••••' : formatVND(portfolio.totalNetWorth.value) }}
+            </div>
+            <div class="mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
+              <!-- Wallet balance breakdown -->
+              <span class="text-[11px] text-text-disabled flex items-center gap-1">
+                <Wallet :size="10" /> {{ ui.hideBalances ? '•••' : formatVNDShort(finance.totalBalance) }}
+              </span>
+              <!-- Stock P&L -->
+              <span v-if="portfolio.hasStocks.value" class="text-[11px] flex items-center gap-1"
+                :class="portfolio.stockProfit.value >= 0 ? 'text-success' : 'text-error'">
+                <LineChart :size="10" />
+                {{ portfolio.stockProfit.value >= 0 ? '+' : '' }}{{ ui.hideBalances ? '•••' : formatVNDShort(portfolio.stockProfit.value) }}
+              </span>
+              <!-- Fund P&L -->
+              <span v-if="portfolio.hasFunds.value" class="text-[11px] flex items-center gap-1"
+                :class="portfolio.fundProfit.value >= 0 ? 'text-success' : 'text-error'">
+                <Landmark :size="10" />
+                {{ portfolio.fundProfit.value >= 0 ? '+' : '' }}{{ ui.hideBalances ? '•••' : formatVNDShort(portfolio.fundProfit.value) }}
+              </span>
+            </div>
+          </template>
+          <!-- Fallback: just wallet balance (no investments) -->
+          <div v-else class="text-3xl font-bold tracking-tight text-text-primary">
+            {{ ui.hideBalances ? '••••••' : formatVND(finance.totalBalance) }}
+          </div>
         </div>
       </div>
 

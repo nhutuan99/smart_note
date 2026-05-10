@@ -6,6 +6,7 @@ import { useUiStore } from '@/stores/ui'
 import { useFinanceStore } from '@/stores/finance'
 import { useNotesStore } from '@/stores/notes'
 import { useDevice } from '@/composables/useDevice'
+import { usePortfolioSummary } from '@/composables/usePortfolioSummary'
 import { formatVNDShort } from '@/constants/finance'
 import { getWalletBrand } from '@/constants/walletBrands'
 import { useI18n } from 'vue-i18n'
@@ -36,6 +37,7 @@ const ui = useUiStore()
 const finance = useFinanceStore()
 const notesStore = useNotesStore()
 const { isMobileOrTablet } = useDevice()
+const portfolio = usePortfolioSummary()
 
 const navItems = computed(() => {
   const items = [
@@ -297,7 +299,11 @@ function onDragEnd() {
               @click="navigateWallet(w.id)"
             >
               <span class="flex items-center gap-2 min-w-0">
-                <template v-if="getWalletBrand(w.name)">
+                <!-- Custom logo (user-uploaded or URL) -->
+                <div v-if="w.customLogoUrl" class="wallet-logo bg-white">
+                  <img :src="w.customLogoUrl" class="h-full w-full object-contain" :alt="w.name" loading="lazy" />
+                </div>
+                <template v-else-if="getWalletBrand(w.name)">
                   <div v-if="getWalletBrand(w.name)?.logoUrl" class="wallet-logo">
                     <img :src="getWalletBrand(w.name)!.logoUrl" class="h-full w-full object-contain" />
                   </div>
@@ -319,11 +325,13 @@ function onDragEnd() {
                 {{ formatVNDShort(w.balance) }}
               </span>
             </div>
-            <!-- Total balance footer -->
+            <!-- Total footer: Net Worth when investments exist, else wallet total -->
             <div class="wallet-total">
-              <span class="text-text-disabled text-[0.6875rem]">{{ t('nav.totalBalance') }}</span>
+              <span class="text-text-disabled text-[0.6875rem]">
+                {{ portfolio.hasInvestments.value ? 'Net Worth' : t('nav.totalBalance') }}
+              </span>
               <span class="text-accent text-[0.6875rem] font-bold tabular-nums">
-                {{ formatVNDShort(finance.totalBalance) }}
+                {{ formatVNDShort(portfolio.hasInvestments.value ? portfolio.totalNetWorth.value : finance.totalBalance) }}
               </span>
             </div>
           </div>

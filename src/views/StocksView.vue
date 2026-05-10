@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, computed, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Plus, Trash2, LineChart, TrendingUp, TrendingDown, Bell, BellRing, RotateCcw, X } from 'lucide-vue-next'
+import { Plus, Trash2, LineChart, TrendingUp, TrendingDown, Bell, BellRing, RotateCcw, X, Landmark } from 'lucide-vue-next'
 import { useStockStore } from '@/stores/stock'
+import { useFundStore } from '@/stores/fund'
 import { useUiStore } from '@/stores/ui'
 import { formatVNDShort } from '@/constants/finance'
-import type { StockPosition, StockAlert } from '@/types'
+import type { StockPosition, StockAlert, FundPosition } from '@/types'
 import stocksList from '@/constants/stocks.json'
+import fundsList from '@/constants/funds.json'
 
 // Chart.js
 import { Line } from 'vue-chartjs'
@@ -24,7 +26,11 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, 
 
 const { t } = useI18n()
 const stockStore = useStockStore()
+const fundStore = useFundStore()
 const ui = useUiStore()
+
+// ── Tab State ──
+const activeTab = ref<'stocks' | 'funds'>('stocks')
 
 const getLogoUrls = (symbol: string) => [
   `https://smart-note-api.smart-note.workers.dev/api/proxy/logo?symbol=${symbol.toUpperCase()}`,
@@ -102,6 +108,7 @@ const searchResults = computed(() => {
 onMounted(() => {
   stockStore.fetchPositions()
   stockStore.startPolling()
+  fundStore.fetchPositions()
 })
 
 onUnmounted(() => {
@@ -121,6 +128,112 @@ const totalProfit = computed(() => {
     return acc + ((currentPrice - pos.buyPrice) * pos.quantity * 1000)
   }, 0)
 })
+
+// ── Fund Computed ──
+const fundTotalValue = computed(() => {
+  return fundStore.positions.reduce((acc, pos) => {
+    const nav = fundStore.navs[pos.symbol] || pos.buyPrice
+    return acc + (nav * pos.quantity)
+  }, 0)
+})
+
+const fundTotalProfit = computed(() => {
+  return fundStore.positions.reduce((acc, pos) => {
+    const nav = fundStore.navs[pos.symbol] || pos.buyPrice
+    return acc + ((nav - pos.buyPrice) * pos.quantity)
+  }, 0)
+})
+
+// ── Fund Add Modal ──
+const showFundAddModal = ref(false)
+const newFund = ref({ symbol: '', buyPrice: '', quantity: '', fundName: '', productId: 0 })
+const isFundSymbolFocused = ref(false)
+const fundAddModalRef = ref<HTMLElement | null>(null)
+
+watch(showFundAddModal, (open) => {
+  if (open) {
+    lockScroll()
+    nextTick(() => fundAddModalRef.value?.scrollIntoView({ block: 'center', behavior: 'instant' }))
+  } else {
+    unlockScroll()
+  }
+})
+
+const fundSearchResults = computed(() => {
+  const query = newFund.value.symbol.trim().toUpperCase()
+  if (!query) return []
+  return fundsList
+    .filter(f => f.symbol.includes(query) || f.name.toUpperCase().includes(query))
+    .slice(0, 6)
+})
+
+function handleFundSymbolBlur() {
+  setTimeout(() => isFundSymbolFocused.value = false, 200)
+}
+
+function selectFund(fund: typeof fundsList[0]) {
+  newFund.value.symbol = fund.symbol
+  newFund.value.fundName = fund.name
+  newFund.value.productId = fund.productId
+  isFundSymbolFocused.value = false
+}
+
+async function handleFundAdd() {
+  if (!newFund.value.symbol || !newFund.value.buyPrice || !newFund.value.quantity) {
+    ui.showToast('error', t('common.fillRequiredFields'))
+    return
+  }
+  await fundStore.addPosition({
+    symbol: newFund.value.symbol.toUpperCase(),
+    buyPrice: Number(newFund.value.buyPrice),
+    quantity: Number(newFund.value.quantity),
+    fundName: newFund.value.fundName || undefined,
+    productId: newFund.value.productId || undefined,
+  })
+  showFundAddModal.value = false
+  newFund.value = { symbol: '', buyPrice: '', quantity: '', fundName: '', productId: 0 }
+}
+
+async function removeFund(id: string, symbol: string) {
+  const isConfirmed = await ui.requestConfirm({
+    title: 'Xoá chứng chỉ quỹ',
+    message: `Bạn có chắc muốn xoá ${symbol} khỏi danh mục?`,
+    confirmText: 'Xoá',
+    cancelText: t('common.cancel'),
+    danger: true
+  })
+  if (!isConfirmed) return
+  try {
+    await fundStore.deletePosition(id)
+    ui.showToast('success', `Đã xoá ${symbol}`)
+  } catch (e) {}
+}
+
+function getFundChartData(symbol: string) {
+  const history = fundStore.histories[symbol]
+  if (!history || history.length === 0) return { labels: [], datasets: [] }
+  const navs = history.map(h => h.nav)
+  const isUp = navs[navs.length - 1] >= navs[0]
+  const color = isUp ? '#34d399' : '#fb7185'
+  return {
+    labels: history.map(h => new Date(h.time).toLocaleDateString()),
+    datasets: [{
+      data: navs,
+      borderColor: color,
+      backgroundColor: (ctx: any) => {
+        const chart = ctx.chart
+        const { ctx: c, chartArea } = chart
+        if (!chartArea) return color + '1a'
+        const gradient = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom)
+        gradient.addColorStop(0, color + '33')
+        gradient.addColorStop(1, color + '00')
+        return gradient
+      },
+      borderWidth: 2.5, pointRadius: 1, hitRadius: 20,
+      tension: 0.35, fill: true
+    }]
+  }
+}
 
 async function handleAdd() {
   if (!newPosition.value.symbol || !newPosition.value.buyPrice || !newPosition.value.quantity) {
@@ -399,6 +512,29 @@ function getChartData(symbol: string) {
 
 <template>
   <div class="space-y-6">
+
+    <!-- ── Tab Switcher ── -->
+    <div class="flex p-1 rounded-2xl bg-bg-surface border border-border-default">
+      <button
+        class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
+        :class="activeTab === 'stocks' ? 'bg-accent text-white shadow-sm' : 'text-text-tertiary hover:text-text-primary'"
+        @click="activeTab = 'stocks'"
+      >
+        <LineChart :size="16" />
+        Cổ phiếu
+      </button>
+      <button
+        class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
+        :class="activeTab === 'funds' ? 'bg-accent text-white shadow-sm' : 'text-text-tertiary hover:text-text-primary'"
+        @click="activeTab = 'funds'"
+      >
+        <Landmark :size="16" />
+        Chứng chỉ quỹ
+      </button>
+    </div>
+
+    <!-- ══════════ STOCKS TAB ══════════ -->
+    <template v-if="activeTab === 'stocks'">
     <div class="flex items-center justify-between">
       <div>
         <h1 class="text-xl font-bold">{{ t('settings.stocks') }}</h1>
@@ -743,6 +879,170 @@ function getChartData(symbol: string) {
         </div>
       </div>
     </transition>
+    </template>
+    <!-- END STOCKS TAB -->
+
+    <!-- ══════════ FUNDS TAB ══════════ -->
+    <template v-if="activeTab === 'funds'">
+      <!-- Header -->
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-xl font-bold flex items-center gap-2">
+            <Landmark :size="20" class="text-accent" /> Chứng chỉ quỹ
+          </h1>
+          <p class="text-text-tertiary text-sm mt-1">
+            Tổng NAV: <span class="text-accent font-semibold">{{ formatVNDShort(fundTotalValue) }}</span>
+            <span :class="fundTotalProfit > 0 ? 'text-success' : (fundTotalProfit < 0 ? 'text-error' : 'text-text-primary')" class="ml-2 font-medium">
+              ({{ fundTotalProfit > 0 ? '+' : '' }}{{ formatVNDShort(fundTotalProfit) }})
+            </span>
+          </p>
+        </div>
+        <button @click="showFundAddModal = true" class="btn-primary">
+          <Plus :size="18" /> Thêm quỹ
+        </button>
+      </div>
+
+      <!-- Loading -->
+      <div v-if="fundStore.loading" class="text-center py-10">
+        <div class="h-6 w-6 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto"></div>
+      </div>
+
+      <!-- Empty -->
+      <div v-else-if="fundStore.positions.length === 0" class="card-premium p-8 text-center flex flex-col items-center">
+        <div class="h-12 w-12 rounded-full bg-accent-subtle flex items-center justify-center text-accent mb-3">
+          <Landmark :size="24" />
+        </div>
+        <p class="text-text-secondary font-medium">Chưa có chứng chỉ quỹ nào</p>
+        <p class="text-text-disabled text-xs mt-1">Thêm quỹ để theo dõi NAV & lợi nhuận</p>
+      </div>
+
+      <!-- Fund Grid -->
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div v-for="pos in fundStore.positions" :key="pos.id" class="card-premium p-5 flex flex-col relative group">
+          <!-- Delete button -->
+          <div class="absolute top-4 right-4 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+            <button @click="removeFund(pos.id, pos.symbol)" class="p-1.5 text-text-disabled hover:text-error hover:bg-error/10 rounded-lg transition-colors">
+              <Trash2 :size="16" />
+            </button>
+          </div>
+
+          <!-- Header -->
+          <div class="flex items-center justify-between mb-4 pr-10">
+            <div>
+              <p class="font-bold text-lg text-accent">{{ pos.symbol }}</p>
+              <p class="text-xs text-text-tertiary truncate max-w-[180px]" :title="pos.fundName">{{ pos.fundName || '—' }}</p>
+              <p class="text-[10px] text-text-disabled mt-0.5">{{ pos.quantity.toLocaleString() }} CCQ</p>
+            </div>
+            <div class="text-right">
+              <p class="text-xs text-text-tertiary">NAV hiện tại</p>
+              <p class="font-semibold text-lg">
+                {{ fundStore.navs[pos.symbol] ? fundStore.navs[pos.symbol].toLocaleString('vi-VN') : '---' }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Stats -->
+          <div class="grid grid-cols-2 gap-3 mb-4">
+            <div class="bg-bg-surface p-3 rounded-xl border border-border-default">
+              <p class="text-xs text-text-disabled">Giá mua / CCQ</p>
+              <p class="font-medium text-sm mt-0.5">{{ pos.buyPrice.toLocaleString('vi-VN') }}</p>
+            </div>
+            <div class="bg-bg-surface p-3 rounded-xl border border-border-default text-right">
+              <p class="text-xs text-text-disabled">Lợi nhuận</p>
+              <template v-if="fundStore.navs[pos.symbol]">
+                <p :class="(fundStore.navs[pos.symbol] - pos.buyPrice) > 0 ? 'text-success' : ((fundStore.navs[pos.symbol] - pos.buyPrice) < 0 ? 'text-error' : 'text-text-primary')"
+                   class="font-medium text-sm mt-0.5 flex items-center justify-end gap-1">
+                  <TrendingUp v-if="(fundStore.navs[pos.symbol] - pos.buyPrice) > 0" :size="14" />
+                  <TrendingDown v-else-if="(fundStore.navs[pos.symbol] - pos.buyPrice) < 0" :size="14" />
+                  {{ (((fundStore.navs[pos.symbol] - pos.buyPrice) / pos.buyPrice) * 100).toFixed(2) }}%
+                </p>
+              </template>
+              <p v-else class="font-medium text-sm mt-0.5">---</p>
+            </div>
+          </div>
+
+          <!-- Sparkline -->
+          <div v-if="fundStore.histories[pos.symbol]?.length > 0" class="h-16 mb-4 -mx-2">
+            <Line :data="getFundChartData(pos.symbol)" :options="chartOptions" />
+          </div>
+
+          <!-- Total value -->
+          <div class="mt-auto pt-3 border-t border-border-subtle flex items-center justify-between">
+            <span class="text-xs text-text-disabled">Giá trị danh mục</span>
+            <span class="font-bold text-sm text-accent">
+              {{ formatVNDShort((fundStore.navs[pos.symbol] || pos.buyPrice) * pos.quantity) }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Fund Modal -->
+      <transition name="fade">
+        <div v-if="showFundAddModal" class="stock-modal-overlay" @click.self="showFundAddModal = false">
+          <div ref="fundAddModalRef" class="stock-modal-panel card-premium" @click.stop>
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-accent to-accent-hover rounded-t-2xl"></div>
+            <h3 class="mb-5 text-lg font-bold flex items-center gap-2"><Landmark :size="18" class="text-accent" /> Thêm chứng chỉ quỹ</h3>
+
+            <div class="space-y-4">
+              <!-- Symbol search -->
+              <div class="relative">
+                <label class="mb-1.5 block text-sm font-medium text-text-secondary">Mã quỹ</label>
+                <input
+                  v-model="newFund.symbol"
+                  type="text"
+                  class="uppercase border-border-default bg-bg-surface text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-2.5 text-sm transition-all focus:ring-2 focus:outline-none"
+                  placeholder="SSISCA"
+                  @focus="isFundSymbolFocused = true"
+                  @blur="handleFundSymbolBlur"
+                />
+                <!-- Autocomplete -->
+                <div v-if="isFundSymbolFocused && fundSearchResults.length > 0" class="absolute z-10 mt-1 w-full max-h-[260px] overflow-y-auto custom-scrollbar bg-bg-elevated border border-border-default rounded-xl shadow-lg">
+                  <div
+                    v-for="fund in fundSearchResults"
+                    :key="fund.symbol"
+                    @click="selectFund(fund)"
+                    class="flex items-center gap-3 p-3 hover:bg-bg-hover cursor-pointer transition-colors"
+                  >
+                    <div class="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
+                      <Landmark :size="14" class="text-accent" />
+                    </div>
+                    <div class="overflow-hidden flex-1">
+                      <div class="font-bold text-sm text-accent">{{ fund.symbol }}</div>
+                      <div class="text-xs text-text-tertiary truncate">{{ fund.name }}</div>
+                    </div>
+                    <div class="text-[10px] px-1.5 py-0.5 rounded border border-border-subtle text-text-disabled shrink-0"
+                         :class="fund.type === 'STOCK' ? 'text-success border-success/30' : (fund.type === 'BOND' ? 'text-blue-400 border-blue-400/30' : 'text-orange-400 border-orange-400/30')">
+                      {{ fund.type === 'STOCK' ? 'Cổ phiếu' : fund.type === 'BOND' ? 'Trái phiếu' : 'Cân bằng' }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Buy price + Quantity -->
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="mb-1.5 block text-sm font-medium text-text-secondary">Số lượng CCQ</label>
+                  <input v-model="newFund.quantity" type="number" min="0" step="1"
+                    class="border-border-default bg-bg-surface text-text-primary focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-2.5 text-sm transition-all focus:ring-2 focus:outline-none" />
+                </div>
+                <div>
+                  <label class="mb-1.5 block text-sm font-medium text-text-secondary">Giá mua / CCQ (VND)</label>
+                  <input v-model="newFund.buyPrice" type="number" min="0" step="100"
+                    class="border-border-default bg-bg-surface text-text-primary focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-2.5 text-sm transition-all focus:ring-2 focus:outline-none" />
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-8 flex gap-3">
+              <button @click="showFundAddModal = false" class="btn-secondary flex-1">{{ t('common.cancel') }}</button>
+              <button @click="handleFundAdd" class="btn-primary flex-1">{{ t('common.save') }}</button>
+            </div>
+          </div>
+        </div>
+      </transition>
+    </template>
+    <!-- END FUNDS TAB -->
+
   </div>
 </template>
 
