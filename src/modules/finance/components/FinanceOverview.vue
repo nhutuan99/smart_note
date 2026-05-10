@@ -1,12 +1,30 @@
 <script setup lang="ts">
+// 1. Vue core
 import { computed } from 'vue'
+// 2. Vue ecosystem
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { Wallet, TrendingUp, TrendingDown, Plus, Eye, EyeOff, ChevronLeft, ChevronRight, LineChart, Landmark } from 'lucide-vue-next'
+// 3. Composables / Stores
 import { useFinancePolling } from '@/composables/useFinancePolling'
 import { usePortfolioSummary } from '@/composables/usePortfolioSummary'
 import { useUiStore } from '@/stores/ui'
-import { formatVND, formatVNDShort } from '@/constants/finance'
+// 4. Utils
+import { formatVNDShort } from '@/constants/finance'
+// 5. Components & icons
+import {
+  Wallet,
+  TrendingUp,
+  TrendingDown,
+  Plus,
+  Eye,
+  EyeOff,
+  ChevronLeft,
+  ChevronRight,
+  LineChart,
+  Landmark,
+  ArrowUpRight,
+  ArrowDownRight
+} from 'lucide-vue-next'
 import WeatherWidget from '@/components/WeatherWidget.vue'
 
 const { t, tm } = useI18n()
@@ -14,10 +32,8 @@ const router = useRouter()
 const finance = useFinancePolling()
 const ui = useUiStore()
 const portfolio = usePortfolioSummary()
-const greeting = computed(() => {
-  const h = new Date().getHours()
-  return h < 12 ? t('dashboard.greetingMorning') : h < 18 ? t('dashboard.greetingAfternoon') : t('dashboard.greetingEvening')
-})
+
+// ── Month navigation ──
 
 const monthLabel = computed(() => {
   const [y, m] = finance.selectedMonth.split('-')
@@ -25,34 +41,11 @@ const monthLabel = computed(() => {
   return `${months[parseInt(m) - 1]}, ${y}`
 })
 
-function dayLabel(dateStr: string) {
-  const d = new Date(dateStr)
-  const days = tm('days.short') as string[]
-  return days[d.getDay()]
-}
-
-function formatDateShort(dateStr: string) {
-  const d = new Date(dateStr)
-  return `${d.getDate()}/${d.getMonth() + 1}`
-}
-
-function timeSince(dateStr: string) {
-  const diff = Date.now() - new Date(dateStr).getTime()
-  const m = Math.floor(diff / 60000)
-  if (m < 60) return t('time.minutesAgo', { n: m })
-  const h = Math.floor(m / 60)
-  if (h < 24) return t('time.hoursAgo', { n: h })
-  return t('time.daysAgo', { n: Math.floor(h / 24) })
-}
-
 function prevMonth() {
   const [y, m] = finance.selectedMonth.split('-').map(Number)
   let newM = m - 1
   let newY = y
-  if (newM < 1) {
-    newM = 12
-    newY--
-  }
+  if (newM < 1) { newM = 12; newY-- }
   finance.selectedMonth = `${newY}-${String(newM).padStart(2, '0')}`
 }
 
@@ -60,152 +53,203 @@ function nextMonth() {
   const [y, m] = finance.selectedMonth.split('-').map(Number)
   let newM = m + 1
   let newY = y
-  if (newM > 12) {
-    newM = 1
-    newY++
-  }
+  if (newM > 12) { newM = 1; newY++ }
   finance.selectedMonth = `${newY}-${String(newM).padStart(2, '0')}`
 }
 
 const isCurrentMonth = computed(() => {
   const d = new Date()
-  const currentMonthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-  return finance.selectedMonth === currentMonthStr
+  return finance.selectedMonth === `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
 })
 
+/** The big number: Net Worth when investments exist, wallet balance otherwise */
+const primaryBalance = computed(() =>
+  portfolio.hasInvestments.value ? portfolio.totalNetWorth.value : finance.totalBalance
+)
 </script>
+
 <template>
-    <!-- Weather Widget (Acts as Hero) -->
-    <div class="relative mb-6">
-      <WeatherWidget>
-        <template #actions>
+  <!-- ── Weather hero ── -->
+  <div class="relative mb-6">
+    <WeatherWidget>
+      <template #actions>
+        <button @click="router.push('/transactions/add')" class="btn-primary">
+          <Plus :size="16" />
+          <span class="hidden sm:inline">{{ t('dashboard.addTransaction') }}</span>
+        </button>
+      </template>
+    </WeatherWidget>
+  </div>
 
-          <button
-            @click="router.push('/transactions/add')"
-            class="btn-primary"
-          >
-            <Plus :size="16" />
-            <span class="hidden sm:inline">{{ t('dashboard.addTransaction') }}</span>
-          </button>
-        </template>
-      </WeatherWidget>
+  <!-- ── Month selector ── -->
+  <div class="mb-5 flex items-center justify-center gap-2">
+    <button
+      @click="prevMonth"
+      class="flex h-8 w-8 items-center justify-center rounded-lg text-text-secondary hover:bg-bg-hover hover:text-text-primary transition-colors"
+    >
+      <ChevronLeft :size="18" />
+    </button>
+    <span class="text-sm font-bold text-text-primary min-w-[10rem] text-center">
+      {{ monthLabel }}
+    </span>
+    <button
+      @click="nextMonth"
+      :disabled="isCurrentMonth"
+      class="flex h-8 w-8 items-center justify-center rounded-lg transition-colors"
+      :class="isCurrentMonth ? 'text-text-disabled cursor-not-allowed' : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary'"
+    >
+      <ChevronRight :size="18" />
+    </button>
+  </div>
+
+  <!-- ── Overview cards grid ── -->
+  <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+
+    <!-- ★ Total Balance / Net Worth ── -->
+    <div
+      class="relative overflow-hidden rounded-2xl border p-5 flex flex-col gap-0 sm:col-span-1"
+      style="border-color: color-mix(in srgb, var(--accent) 30%, transparent); background: color-mix(in srgb, var(--accent) 4%, var(--bg-surface)); box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 8%, transparent);"
+    >
+      <!-- glow decor -->
+      <div
+        class="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full blur-3xl"
+        style="background: color-mix(in srgb, var(--accent) 18%, transparent);"
+      />
+
+      <!-- Label row -->
+      <div class="relative z-10 mb-3 flex items-center gap-2">
+        <div
+          class="flex h-9 w-9 items-center justify-center rounded-lg shrink-0"
+          style="background: color-mix(in srgb, var(--accent) 12%, transparent);"
+        >
+          <Wallet :size="18" class="text-accent" />
+        </div>
+        <span class="text-text-tertiary text-sm">
+          {{ portfolio.hasInvestments.value ? 'Tổng tài sản' : t('dashboard.totalBalance') }}
+        </span>
+        <button
+          @click="ui.toggleHideBalances()"
+          class="ml-auto text-text-tertiary hover:text-accent flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-bg-hover"
+          :title="t('dashboard.toggleBalance')"
+        >
+          <EyeOff v-if="ui.hideBalances" :size="16" />
+          <Eye v-else :size="16" />
+        </button>
+      </div>
+
+      <!-- Primary balance number -->
+      <div v-if="finance.loading" class="skeleton h-9 w-44 mt-1 relative z-10" />
+      <div v-else class="relative z-10 text-3xl font-bold tracking-tight text-text-primary leading-none">
+        {{ ui.hideBalances ? '••••••' : formatVNDShort(primaryBalance) }}
+      </div>
+
+      <!-- Breakdown rows (only when investments exist) -->
+      <template v-if="portfolio.hasInvestments.value && !finance.loading">
+        <div class="relative z-10 mt-3 space-y-1.5 border-t pt-3" style="border-color: color-mix(in srgb, var(--border-subtle) 80%, transparent);">
+
+          <!-- Wallet row -->
+          <div class="flex items-center gap-2">
+            <Wallet :size="12" class="text-text-disabled shrink-0" />
+            <span class="flex-1 text-xs text-text-disabled">Số dư ví</span>
+            <span class="text-xs tabular-nums text-text-secondary font-medium">
+              {{ ui.hideBalances ? '•••' : formatVNDShort(finance.totalBalance) }}
+            </span>
+          </div>
+
+          <!-- Stocks P&L -->
+          <div v-if="portfolio.hasStocks.value" class="flex items-center gap-2">
+            <LineChart
+              :size="12"
+              class="shrink-0"
+              :class="portfolio.stockProfit.value >= 0 ? 'text-success' : 'text-error'"
+            />
+            <span class="flex-1 text-xs text-text-disabled">Cổ phiếu</span>
+            <span
+              class="text-xs tabular-nums font-bold flex items-center gap-0.5"
+              :class="portfolio.stockProfit.value >= 0 ? 'text-success' : 'text-error'"
+            >
+              <component
+                :is="portfolio.stockProfit.value >= 0 ? ArrowUpRight : ArrowDownRight"
+                :size="11"
+              />
+              {{ ui.hideBalances ? '•••' : formatVNDShort(Math.abs(portfolio.stockProfit.value)) }}
+            </span>
+          </div>
+
+          <!-- Funds P&L -->
+          <div v-if="portfolio.hasFunds.value" class="flex items-center gap-2">
+            <Landmark
+              :size="12"
+              class="shrink-0"
+              :class="portfolio.fundProfit.value >= 0 ? 'text-success' : 'text-error'"
+            />
+            <span class="flex-1 text-xs text-text-disabled">Chứng chỉ quỹ</span>
+            <span
+              class="text-xs tabular-nums font-bold flex items-center gap-0.5"
+              :class="portfolio.fundProfit.value >= 0 ? 'text-success' : 'text-error'"
+            >
+              <component
+                :is="portfolio.fundProfit.value >= 0 ? ArrowUpRight : ArrowDownRight"
+                :size="11"
+              />
+              {{ ui.hideBalances ? '•••' : formatVNDShort(Math.abs(portfolio.fundProfit.value)) }}
+            </span>
+          </div>
+        </div>
+      </template>
     </div>
 
-    <!-- Month Selector -->
-    <div class="mb-5 flex items-center justify-center gap-2">
-      <button
-        @click="prevMonth"
-        class="flex h-8 w-8 items-center justify-center rounded-lg text-text-secondary hover:bg-bg-hover hover:text-text-primary transition-colors"
+    <!-- Monthly Income ── -->
+    <div class="relative overflow-hidden rounded-2xl border border-border-default bg-bg-surface p-5 flex flex-col gap-0">
+      <div class="mb-3 flex items-center gap-2">
+        <div class="bg-success/10 flex h-9 w-9 items-center justify-center rounded-lg shrink-0">
+          <TrendingUp :size="18" class="text-success" />
+        </div>
+        <span class="text-text-tertiary text-sm">{{ t('dashboard.monthIncome') }}</span>
+      </div>
+      <div v-if="finance.loading" class="skeleton h-8 w-32 mt-1" />
+      <div
+        v-else
+        class="text-2xl font-bold tracking-tight"
+        :class="finance.monthIncome > 0 ? 'text-success' : 'text-text-primary'"
       >
-        <ChevronLeft :size="18" />
-      </button>
-      <span class="text-sm font-bold text-text-primary min-w-[10rem] text-center">
-        {{ monthLabel }}
-      </span>
-      <button
-        @click="nextMonth"
-        :disabled="isCurrentMonth"
-        class="flex h-8 w-8 items-center justify-center rounded-lg transition-colors"
-        :class="isCurrentMonth ? 'text-text-disabled cursor-not-allowed' : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary'"
+        {{ finance.monthIncome > 0 ? '+' : '' }}{{ formatVNDShort(finance.monthIncome) }}
+      </div>
+      <!-- Net savings hint -->
+      <div
+        v-if="!finance.loading && finance.monthNet !== 0"
+        class="mt-2 flex items-center gap-1 text-[11px]"
+        :class="finance.monthNet >= 0 ? 'text-success' : 'text-error'"
       >
-        <ChevronRight :size="18" />
-      </button>
-    </div>
-
-    <!-- Balance + Income/Expense Cards -->
-    <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-      <!-- Total Balance -->
-      <div class="card-premium p-5 sm:col-span-1 border-accent/40 bg-accent/5 shadow-md shadow-accent/10 relative overflow-hidden">
-        <!-- Decorative subtle glow -->
-        <div class="absolute -right-8 -top-8 w-32 h-32 bg-accent/20 rounded-full blur-3xl pointer-events-none"></div>
-        <div class="mb-3 flex items-center gap-2 relative z-10">
-          <div class="flex h-9 w-9 items-center justify-center rounded-lg" style="background: rgba(124, 111, 247, 0.12);">
-            <Wallet
-              :size="18"
-              class="text-accent"
-            />
-          </div>
-          <span class="text-text-tertiary text-sm">{{ t('dashboard.totalBalance') }}</span>
-          <button 
-            @click="ui.toggleHideBalances()" 
-            class="ml-auto text-text-tertiary hover:text-accent flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-bg-hover"
-            :title="t('dashboard.toggleBalance')"
-          >
-            <EyeOff v-if="ui.hideBalances" :size="16" />
-            <Eye v-else :size="16" />
-          </button>
-        </div>
-        <div v-if="finance.loading" class="skeleton h-8 w-40 mt-1 relative z-10"></div>
-        <div v-else class="relative z-10">
-          <!-- Primary: Net Worth when investments exist -->
-          <template v-if="portfolio.hasInvestments.value">
-            <div class="text-3xl font-bold tracking-tight text-text-primary">
-              {{ ui.hideBalances ? '••••••' : formatVNDShort(portfolio.totalNetWorth.value) }}
-            </div>
-            <div class="mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
-              <!-- Wallet balance breakdown -->
-              <span class="text-[11px] text-text-disabled flex items-center gap-1">
-                <Wallet :size="10" /> {{ ui.hideBalances ? '•••' : formatVNDShort(finance.totalBalance) }}
-              </span>
-              <!-- Stock P&L -->
-              <span v-if="portfolio.hasStocks.value" class="text-[11px] flex items-center gap-1"
-                :class="portfolio.stockProfit.value >= 0 ? 'text-success' : 'text-error'">
-                <LineChart :size="10" />
-                {{ portfolio.stockProfit.value >= 0 ? '+' : '' }}{{ ui.hideBalances ? '•••' : formatVNDShort(portfolio.stockProfit.value) }}
-              </span>
-              <!-- Fund P&L -->
-              <span v-if="portfolio.hasFunds.value" class="text-[11px] flex items-center gap-1"
-                :class="portfolio.fundProfit.value >= 0 ? 'text-success' : 'text-error'">
-                <Landmark :size="10" />
-                {{ portfolio.fundProfit.value >= 0 ? '+' : '' }}{{ ui.hideBalances ? '•••' : formatVNDShort(portfolio.fundProfit.value) }}
-              </span>
-            </div>
-          </template>
-          <!-- Fallback: just wallet balance (no investments) -->
-          <div v-else class="text-3xl font-bold tracking-tight text-text-primary">
-            {{ ui.hideBalances ? '••••••' : formatVNDShort(finance.totalBalance) }}
-          </div>
-        </div>
-      </div>
-
-      <!-- Month Income -->
-      <div class="card-premium p-5">
-        <div class="mb-3 flex items-center gap-2">
-          <div class="bg-success/10 flex h-9 w-9 items-center justify-center rounded-lg">
-            <TrendingUp
-              :size="18"
-              class="text-success"
-            />
-          </div>
-          <span class="text-text-tertiary text-sm">{{ t('dashboard.monthIncome') }}</span>
-        </div>
-        <div v-if="finance.loading" class="skeleton h-8 w-32 mt-1"></div>
-        <div v-else :class="finance.monthIncome > 0 ? 'text-success' : 'text-text-primary'" class="text-2xl font-bold tracking-tight">
-          {{ finance.monthIncome > 0 ? '+' : '' }}{{ formatVNDShort(finance.monthIncome) }}
-        </div>
-      </div>
-
-      <!-- Month Expense -->
-      <div class="card-premium p-5">
-        <div class="mb-3 flex items-center gap-2">
-          <div class="bg-error/10 flex h-9 w-9 items-center justify-center rounded-lg">
-            <TrendingDown
-              :size="18"
-              class="text-error"
-            />
-          </div>
-          <span class="text-text-tertiary text-sm">{{ t('dashboard.monthExpense') }}</span>
-        </div>
-        <div v-if="finance.loading" class="skeleton h-8 w-32 mt-1"></div>
-        <div v-else :class="finance.monthExpense > 0 ? 'text-error' : 'text-text-primary'" class="text-2xl font-bold tracking-tight">
-          {{ finance.monthExpense > 0 ? '-' : '' }}{{ formatVNDShort(finance.monthExpense) }}
-        </div>
+        <component :is="finance.monthNet >= 0 ? ArrowUpRight : ArrowDownRight" :size="12" />
+        <span>Tiết kiệm {{ formatVNDShort(Math.abs(finance.monthNet)) }}</span>
       </div>
     </div>
+
+    <!-- Monthly Expense ── -->
+    <div class="relative overflow-hidden rounded-2xl border border-border-default bg-bg-surface p-5 flex flex-col gap-0">
+      <div class="mb-3 flex items-center gap-2">
+        <div class="bg-error/10 flex h-9 w-9 items-center justify-center rounded-lg shrink-0">
+          <TrendingDown :size="18" class="text-error" />
+        </div>
+        <span class="text-text-tertiary text-sm">{{ t('dashboard.monthExpense') }}</span>
+      </div>
+      <div v-if="finance.loading" class="skeleton h-8 w-32 mt-1" />
+      <div
+        v-else
+        class="text-2xl font-bold tracking-tight"
+        :class="finance.monthExpense > 0 ? 'text-error' : 'text-text-primary'"
+      >
+        {{ finance.monthExpense > 0 ? '-' : '' }}{{ formatVNDShort(finance.monthExpense) }}
+      </div>
+      <!-- Expense rate -->
+      <div
+        v-if="!finance.loading && finance.monthIncome > 0 && finance.monthExpense > 0"
+        class="mt-2 text-[11px] text-text-disabled"
+      >
+        {{ Math.round((finance.monthExpense / finance.monthIncome) * 100) }}% thu nhập
+      </div>
+    </div>
+
+  </div>
 </template>
-
-<style scoped>
-.animate-spin-slow {
-  animation: spin 4s linear infinite;
-}
-</style>
