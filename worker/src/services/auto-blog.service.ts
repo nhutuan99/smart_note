@@ -328,7 +328,7 @@ Trả về ĐÚNG JSON format:
   "seoKeywords": "keyword1, keyword2, keyword3",
   "youtubeQuery": "từ khóa tìm video YouTube liên quan (tiếng Việt, 3-5 từ)",
   "imagePrompt": "Mô tả ngắn gọn bằng tiếng Anh cho hình ảnh banner minh họa bài viết",
-  "content": "Bài viết markdown đầy đủ (tối thiểu 1200 từ). KHÔNG bao gồm tiêu đề H1. Bắt đầu bằng đoạn mở bài, chia H2/H3 rõ ràng, phân tích sâu, kết luận rút ra bài học đầu tư/quản lý tài chính, CTA về FinNote."
+  "content": "Bài viết markdown đầy đủ (tối thiểu 1200 từ). KHÔNG bao gồm tiêu đề H1. Bắt đầu bằng đoạn mở bài, chia H2/H3 rõ ràng, phân tích sâu, kết luận rút ra bài học, CTA về FinNote. CUỐI CÙNG PHẢI GHI RÕ NGUỒN GỐC TÁC GIẢ/BÁO (ví dụ: *Nguồn tham khảo: Tác Giả - VnExpress*)."
 }
 
 QUY TẮC CHUNG & TAGS (BẮT BUỘC):
@@ -349,6 +349,7 @@ Bài viết cần:
 - Cung cấp số liệu, ví dụ thực tế hoặc bối cảnh thị trường.
 - Đưa ra bài học hoặc lời khuyên quản lý vốn/đầu tư hợp lý.
 - Kết bài giới thiệu FinNote app như một công cụ đắc lực để theo dõi danh mục và ghi chép tài chính.
+- CUỐI CÙNG, BẮT BUỘC TRÍCH DẪN NGUỒN (VD: *Nguồn: Tên Tác Giả - VnExpress*).
 - KHÔNG bịa email liên hệ.
 - Đề xuất youtubeQuery để tìm video YouTube liên quan đến đầu tư/tài chính (bằng tiếng Việt)`
 
@@ -418,6 +419,7 @@ Yêu cầu:
 - Tối thiểu 1000 từ
 - Tập trung hoàn toàn vào tài chính, kinh tế, đầu tư.
 - Kết bài CTA giới thiệu app quản lý tài chính FinNote.
+- CUỐI CÙNG, BẮT BUỘC TRÍCH DẪN NGUỒN (VD: *Nguồn: VnExpress*).
 - TUYỆT ĐỐI KHÔNG bịa email liên hệ.
 - Chỉ trả về Markdown, không bọc JSON hay code block`
 

@@ -15,7 +15,14 @@ const showTooltip = ref(false)
 const activeTags = ref<string[]>([])
 const tagScrollContainer = ref<HTMLElement | null>(null)
 
-// Tag scroll function removed as we now use flex-wrap
+function handleWheelScroll(e: WheelEvent) {
+  if (tagScrollContainer.value) {
+    if (e.deltaY !== 0) {
+      e.preventDefault()
+      tagScrollContainer.value.scrollLeft += e.deltaY * 1.5
+    }
+  }
+}
 
 onMounted(() => {
   blogStore.fetchBlogs()
@@ -93,9 +100,16 @@ const formatDate = (dateStr: string) => {
     </div>
     <p class="text-text-tertiary text-sm mb-6">{{ t('blog.listDesc') }}</p>
 
-    <!-- Tag Filter Bar (Flex Wrap for better visibility) -->
-    <div v-if="allTags.length > 0" class="mb-8">
-      <div class="flex flex-wrap gap-2 pb-3">
+    <!-- Tag Filter Bar (Modern 2026 Horizontal Scroll UI) -->
+    <div v-if="allTags.length > 0" class="mb-8 relative group">
+      <!-- Gradient Fade Edge Indicator -->
+      <div class="absolute -right-4 md:right-0 top-0 bottom-0 w-12 md:w-20 bg-gradient-to-l from-[var(--color-bg-base)] to-transparent pointer-events-none z-10 opacity-100 transition-opacity" />
+      
+      <div 
+        ref="tagScrollContainer"
+        class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 -mx-4 px-4 md:mx-0 md:px-0"
+        @wheel="handleWheelScroll"
+      >
         <button
           class="blog-filter-tag shrink-0"
           :class="{ 'blog-filter-tag--active': activeTags.length === 0 }"
@@ -240,6 +254,16 @@ const formatDate = (dateStr: string) => {
 </template>
 
 <style scoped>
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
 .blog-list-tag {
   display: inline-flex;
   align-items: center;
