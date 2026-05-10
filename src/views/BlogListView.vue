@@ -4,6 +4,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useBlogStore } from '@/stores/blog'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
+import { useEventListener } from '@/composables/useEventListener'
 import { Calendar, ChevronRight, ChevronLeft, Hash, Zap, BrainCircuit, LayoutDashboard, ArrowRight, Sparkles, X, Eye } from 'lucide-vue-next'
 
 const { t, locale } = useI18n()
@@ -57,8 +58,9 @@ onMounted(() => {
   
   // Initial scroll check
   setTimeout(checkScroll, 100)
-  window.addEventListener('resize', checkScroll)
 })
+
+useEventListener(window, 'resize', checkScroll)
 
 // All unique tags from all blogs
 const allTags = computed(() => {
