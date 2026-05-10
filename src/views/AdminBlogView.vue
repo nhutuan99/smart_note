@@ -141,6 +141,32 @@ const canPublish = computed(() => {
   return hasPreview.value && !!form.value.title && !!form.value.content
 })
 
+// ── Search & Filter ──
+const searchQuery = ref('')
+const sortBy = ref<'newest' | 'oldest' | 'views'>('newest')
+
+const filteredAndSortedBlogs = computed(() => {
+  let result = [...blogStore.blogs]
+  
+  if (searchQuery.value) {
+    const q = searchQuery.value.toLowerCase()
+    result = result.filter(b => b.title.toLowerCase().includes(q) || b.slug.toLowerCase().includes(q))
+  }
+  
+  result.sort((a, b) => {
+    if (sortBy.value === 'newest') {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    } else if (sortBy.value === 'oldest') {
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    } else if (sortBy.value === 'views') {
+      return (b.viewCount || 0) - (a.viewCount || 0)
+    }
+    return 0
+  })
+  
+  return result
+})
+
 // ── Actions ──
 function openModal() {
   editingSlug.value = null
@@ -459,6 +485,34 @@ const formatDate = (dateStr: string) => {
       </button>
     </div>
 
+    <!-- Filter & Search Bar -->
+    <div class="flex flex-col sm:flex-row gap-3 mb-6">
+      <div class="relative flex-1">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <Search :size="16" class="text-text-disabled" />
+        </div>
+        <input 
+          v-model="searchQuery" 
+          type="text" 
+          :placeholder="t('common.search')" 
+          class="w-full pl-10 pr-4 py-2 bg-bg-surface border border-border-default rounded-xl focus:outline-none focus:border-accent text-sm transition-colors text-text-primary"
+        >
+      </div>
+      <div class="flex-shrink-0 relative">
+        <select 
+          v-model="sortBy" 
+          class="w-full sm:w-auto bg-bg-surface border border-border-default rounded-xl pl-4 pr-8 py-2 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors appearance-none cursor-pointer"
+        >
+          <option value="newest">Mới nhất</option>
+          <option value="oldest">Cũ nhất</option>
+          <option value="views">Lượt xem cao nhất</option>
+        </select>
+        <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-text-tertiary">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+      </div>
+    </div>
+
     <!-- Blog List — Desktop Table -->
     <div class="card-premium overflow-hidden hidden md:block">
       <table class="w-full text-left text-sm">
@@ -474,10 +528,10 @@ const formatDate = (dateStr: string) => {
           <tr v-if="blogStore.isLoading && !blogStore.blogs.length">
             <td colspan="4" class="px-6 py-8 text-center text-text-disabled">{{ t('common.loading') }}</td>
           </tr>
-          <tr v-else-if="!blogStore.blogs.length">
-            <td colspan="4" class="px-6 py-8 text-center text-text-disabled">{{ t('blog.empty') }}</td>
+          <tr v-else-if="!filteredAndSortedBlogs.length">
+            <td colspan="4" class="px-6 py-8 text-center text-text-disabled">{{ searchQuery ? 'Không tìm thấy bài viết' : t('blog.empty') }}</td>
           </tr>
-          <tr v-for="blog in blogStore.blogs" :key="blog.id" class="hover:bg-bg-hover/50 transition-colors cursor-pointer" @click="openEditModal(blog)">
+          <tr v-for="blog in filteredAndSortedBlogs" :key="blog.id" class="hover:bg-bg-hover/50 transition-colors cursor-pointer" @click="openEditModal(blog)">
             <td class="px-6 py-4 font-medium">
               <div class="line-clamp-1">{{ blog.title }}</div>
               <div class="text-[0.6875rem] text-text-disabled mt-1">/blog/{{ blog.slug }}</div>
@@ -490,6 +544,9 @@ const formatDate = (dateStr: string) => {
               <span v-else class="blog-badge blog-badge--draft">
                 {{ t('blog.statusDraft') }}
               </span>
+              <div v-if="blog.viewCount" class="text-[0.6875rem] text-text-tertiary mt-1 flex items-center gap-1">
+                <Eye :size="10" /> {{ blog.viewCount }} lượt xem
+              </div>
             </td>
             <td class="px-6 py-4 text-text-tertiary text-[0.8125rem]">
               {{ formatDate(blog.createdAt) }}
@@ -509,8 +566,8 @@ const formatDate = (dateStr: string) => {
     <!-- Blog List — Mobile Cards -->
     <div class="md:hidden space-y-3">
       <div v-if="blogStore.isLoading && !blogStore.blogs.length" class="text-center py-8 text-text-disabled card-premium">{{ t('common.loading') }}</div>
-      <div v-else-if="!blogStore.blogs.length" class="text-center py-8 text-text-disabled card-premium">{{ t('blog.empty') }}</div>
-      <div v-for="blog in blogStore.blogs" :key="blog.id" class="blog-mobile-card" @click="openEditModal(blog)">
+      <div v-else-if="!filteredAndSortedBlogs.length" class="text-center py-8 text-text-disabled card-premium">{{ searchQuery ? 'Không tìm thấy bài viết' : t('blog.empty') }}</div>
+      <div v-for="blog in filteredAndSortedBlogs" :key="blog.id" class="blog-mobile-card" @click="openEditModal(blog)">
         <div class="flex items-start justify-between gap-3">
           <div class="min-w-0 flex-1">
             <div class="font-medium text-sm line-clamp-2 text-text-primary mb-1">{{ blog.title }}</div>
@@ -524,6 +581,9 @@ const formatDate = (dateStr: string) => {
         <div class="flex items-center gap-2 mt-3">
           <span v-if="blog.published" class="blog-badge blog-badge--published"><CheckCircle2 :size="12" /><span>{{ t('blog.statusPublished') }}</span></span>
           <span v-else class="blog-badge blog-badge--draft">{{ t('blog.statusDraft') }}</span>
+          <span v-if="blog.viewCount" class="flex items-center gap-1 text-[0.6875rem] text-text-tertiary ml-2">
+            <Eye :size="10" /> {{ blog.viewCount }}
+          </span>
           <span class="text-text-disabled text-[0.75rem] ml-auto">{{ formatDate(blog.createdAt) }}</span>
         </div>
       </div>
