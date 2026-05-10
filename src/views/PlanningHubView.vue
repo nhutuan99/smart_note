@@ -1,61 +1,84 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
-import { Target, PieChart, Repeat, CreditCard, PiggyBank, ArrowRight, HandCoins, Bell } from 'lucide-vue-next'
+import { useAuthStore } from '@/stores/auth'
+import { Target, PieChart, Repeat, CreditCard, PiggyBank, ArrowRight, HandCoins, Bell, ListTodo } from 'lucide-vue-next'
 
 const { t } = useI18n()
 const router = useRouter()
+const auth = useAuthStore()
 
-const features = [
-  {
-    id: 'budget',
-    key: 'nav.budget',
-    desc: 'budget.setupHint',
-    icon: PieChart,
-    color: '#3b82f6',
-    route: '/budget'
-  },
-  {
-    id: 'savings',
-    key: 'nav.savings',
-    desc: 'savings.emptyHint',
-    icon: PiggyBank,
-    color: '#10b981',
-    route: '/savings'
-  },
-  {
-    id: 'recurring',
-    key: 'nav.recurring',
-    desc: 'recurring.emptyHint',
-    icon: Repeat,
-    color: '#8b5cf6',
-    route: '/recurring'
-  },
-  {
-    id: 'subscriptions',
-    key: 'nav.subscriptions',
-    desc: 'subs.emptyHint',
-    icon: CreditCard,
-    color: '#f59e0b',
-    route: '/subscriptions'
-  },
-  {
-    id: 'debts',
-    key: 'debt.title',
-    desc: 'debt.emptyHint',
-    icon: HandCoins,
-    color: '#ef4444',
-    route: '/debts'
-  },
-  {
-    id: 'reminders',
-    key: 'reminders.title',
-    desc: 'reminders.emptyDesc',
-    icon: Bell,
-    color: '#8e7dfa',
-    route: '/reminders'
+const isAdmin = computed(() => auth.user?.email === 'tintphcm@gmail.com')
+
+const features = computed(() => {
+  const items = []
+  
+  // AI To-Do — VIP feature (admin only)
+  if (isAdmin.value) {
+    items.push({
+      id: 'ai-todo',
+      key: 'aiTodo.title',
+      desc: 'aiTodo.subtitle',
+      icon: ListTodo,
+      color: '#06b6d4',
+      route: '/ai-todo'
+    })
   }
-]
+
+  items.push(
+    {
+      id: 'budget',
+      key: 'nav.budget',
+      desc: 'budget.setupHint',
+      icon: PieChart,
+      color: '#3b82f6',
+      route: '/budget'
+    },
+    {
+      id: 'savings',
+      key: 'nav.savings',
+      desc: 'savings.emptyHint',
+      icon: PiggyBank,
+      color: '#10b981',
+      route: '/savings'
+    },
+    {
+      id: 'recurring',
+      key: 'nav.recurring',
+      desc: 'recurring.emptyHint',
+      icon: Repeat,
+      color: '#8b5cf6',
+      route: '/recurring'
+    },
+    {
+      id: 'subscriptions',
+      key: 'nav.subscriptions',
+      desc: 'subs.emptyHint',
+      icon: CreditCard,
+      color: '#f59e0b',
+      route: '/subscriptions'
+    },
+    {
+      id: 'debts',
+      key: 'debt.title',
+      desc: 'debt.emptyHint',
+      icon: HandCoins,
+      color: '#ef4444',
+      route: '/debts'
+    },
+    {
+      id: 'reminders',
+      key: 'reminders.title',
+      desc: 'reminders.emptyDesc',
+      icon: Bell,
+      color: '#8e7dfa',
+      route: '/reminders'
+    }
+  )
+
+  return items
+})
 </script>
 
 <template>

@@ -185,3 +185,24 @@ export interface ReminderSuggestion {
   description: string
   url?: string
 }
+
+export interface TodoItem {
+  id: string
+  title: string
+  description: string
+  time: string
+  priority: 'low' | 'medium' | 'high' | 'urgent'
+  status: 'pending' | 'in_progress' | 'done'
+  category?: string
+  reminderId?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface TodoSuggestion {
+  title: string
+  description: string
+  time: string
+  priority: 'low' | 'medium' | 'high' | 'urgent'
+  category?: string
+}

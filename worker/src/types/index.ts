@@ -177,3 +177,18 @@ export interface ReminderData {
   createdAt: string
   updatedAt: string
 }
+
+export interface TodoData {
+  id: string
+  title: string
+  description: string
+  /** The target datetime for this task (ISO string) */
+  time: string
+  priority: 'low' | 'medium' | 'high' | 'urgent'
+  status: 'pending' | 'in_progress' | 'done'
+  category?: string
+  /** Linked reminder ID when pushed to reminders */
+  reminderId?: string
+  createdAt: string
+  updatedAt: string
+}

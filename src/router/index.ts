@@ -87,6 +87,12 @@ const router = createRouter({
       meta: { parentRoute: '/planning' }
     },
     {
+      path: '/ai-todo',
+      name: 'ai-todo',
+      component: () => import('@/views/AiTodoView.vue'),
+      meta: { parentRoute: '/planning' }
+    },
+    {
       path: '/notes',
       name: 'notes',
       component: () => import('@/views/NotesView.vue')

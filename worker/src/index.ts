@@ -113,6 +113,15 @@ import {
   handleAiDetectReminders,
 } from './controllers/reminder.controller'
 
+import {
+  handleListTodos,
+  handleCreateTodo,
+  handleUpdateTodo,
+  handleDeleteTodo,
+  handleClearTodos,
+  handleAiGenerateTodos,
+} from './controllers/todo.controller'
+
 import { runAutoBlog } from './services/auto-blog.service'
 import { checkAllStockAlerts } from './services/stock-alert.service'
 import { checkAllReminders } from './services/reminder.service'
@@ -475,6 +484,26 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
       const reminderAckMatch = path.match(/^\/api\/reminders\/([^\/]+)\/acknowledge$/)
       if (reminderAckMatch && request.method === 'POST') {
         return handleAcknowledgeReminder(userId, reminderAckMatch[1], env)
+      }
+
+      // Todos
+      if (path === '/api/todos' && request.method === 'GET') {
+        return handleListTodos(userId, env)
+      }
+      if (path === '/api/todos' && request.method === 'POST') {
+        return handleCreateTodo(userId, request, env)
+      }
+      if (path === '/api/todos' && request.method === 'DELETE') {
+        return handleClearTodos(userId, request, env)
+      }
+      if (path === '/api/todos/ai-generate' && request.method === 'POST') {
+        return handleAiGenerateTodos(userId, request, env)
+      }
+      const todoMatch = path.match(/^\/api\/todos\/([^\/]+)$/)
+      if (todoMatch) {
+        const todoId = todoMatch[1]
+        if (request.method === 'PUT') return handleUpdateTodo(userId, todoId, request, env)
+        if (request.method === 'DELETE') return handleDeleteTodo(userId, todoId, env)
       }
 
       // AI

@@ -24,7 +24,8 @@ import {
   LineChart,
   Bell,
   GripVertical,
-  Coffee
+  Coffee,
+  ListTodo
 } from 'lucide-vue-next'
 
 const { t } = useI18n()
@@ -50,6 +51,14 @@ const navItems = computed(() => {
   
   items.push(
     { key: 'reminders.title',  icon: Bell,            route: '/reminders' },
+  )
+
+  // AI To-Do — VIP feature (admin only)
+  if (auth.user?.email === 'tintphcm@gmail.com') {
+    items.push({ key: 'aiTodo.title', icon: ListTodo, route: '/ai-todo' })
+  }
+  
+  items.push(
     { key: 'nav.notes',        icon: FileText,        route: '/notes' },
     { key: 'nav.blog',         icon: Newspaper,       route: '/blog' },
     { key: 'nav.settings',     icon: Settings,        route: '/settings' }
