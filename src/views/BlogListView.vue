@@ -140,7 +140,7 @@ const formatDate = (dateStr: string) => {
       <button 
         v-show="canScrollLeft"
         @click="scrollLeftBtn"
-        class="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-bg-surface border border-border-default flex items-center justify-center text-text-secondary hover:text-accent hover:border-accent/40 opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-lg -ml-2"
+        class="absolute left-0 md:left-2 top-0 bottom-[8px] my-auto z-20 w-8 h-8 rounded-full bg-bg-surface border border-border-default flex items-center justify-center text-text-secondary hover:text-accent hover:border-accent/40 opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-lg"
       >
         <ChevronLeft :size="16" />
       </button>
@@ -148,7 +148,7 @@ const formatDate = (dateStr: string) => {
       <button 
         v-show="canScrollRight"
         @click="scrollRightBtn"
-        class="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-bg-surface border border-border-default flex items-center justify-center text-text-secondary hover:text-accent hover:border-accent/40 opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-lg -mr-2"
+        class="absolute right-0 md:right-2 top-0 bottom-[8px] my-auto z-20 w-8 h-8 rounded-full bg-bg-surface border border-border-default flex items-center justify-center text-text-secondary hover:text-accent hover:border-accent/40 opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-lg"
       >
         <ChevronRight :size="16" />
       </button>

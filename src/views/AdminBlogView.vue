@@ -25,6 +25,10 @@ import {
   AlertTriangle,
   Cpu,
   Zap,
+  Filter,
+  ChevronDown,
+  Check,
+  Calendar,
   Image as ImageIcon
 } from 'lucide-vue-next'
 import type { Blog } from '@/types'
@@ -144,6 +148,7 @@ const canPublish = computed(() => {
 // ── Search & Filter ──
 const searchQuery = ref('')
 const sortBy = ref<'newest' | 'oldest' | 'views'>('newest')
+const showSortDropdown = ref(false)
 
 const filteredAndSortedBlogs = computed(() => {
   let result = [...blogStore.blogs]
@@ -516,28 +521,53 @@ const formatDate = (dateStr: string) => {
           class="w-full pl-10 pr-4 py-2.5 bg-bg-surface border border-border-default rounded-xl focus:outline-none focus:border-accent text-sm transition-colors text-text-primary placeholder:text-text-disabled"
         >
       </div>
-      <div class="flex items-center gap-1 w-full sm:w-auto overflow-x-auto no-scrollbar pb-1 sm:pb-0">
+      <div class="relative w-full sm:w-auto flex-shrink-0">
         <button 
-          @click="sortBy = 'newest'"
-          class="blog-sort-pill"
-          :class="{ 'blog-sort-pill--active': sortBy === 'newest' }"
+          @click="showSortDropdown = !showSortDropdown"
+          class="flex items-center justify-between gap-3 w-full sm:w-48 bg-bg-surface border border-border-default rounded-xl px-4 py-2.5 text-sm text-text-primary hover:border-accent/50 focus:outline-none focus:border-accent transition-colors shadow-sm"
         >
-          Mới nhất
+          <span class="flex items-center gap-2">
+            <Filter :size="16" class="text-text-tertiary" />
+            {{ sortBy === 'newest' ? 'Mới nhất' : sortBy === 'oldest' ? 'Cũ nhất' : 'Lượt xem cao' }}
+          </span>
+          <ChevronDown :size="16" class="text-text-tertiary transition-transform duration-200" :class="{ 'rotate-180': showSortDropdown }" />
         </button>
-        <button 
-          @click="sortBy = 'oldest'"
-          class="blog-sort-pill"
-          :class="{ 'blog-sort-pill--active': sortBy === 'oldest' }"
+
+        <!-- Dropdown Overlay -->
+        <div v-if="showSortDropdown" class="fixed inset-0 z-40" @click="showSortDropdown = false"></div>
+
+        <!-- Dropdown Menu -->
+        <div 
+          v-if="showSortDropdown"
+          class="absolute right-0 sm:left-0 sm:right-auto mt-2 w-full sm:w-48 bg-bg-surface border border-border-default rounded-xl shadow-xl z-50 overflow-hidden"
         >
-          Cũ nhất
-        </button>
-        <button 
-          @click="sortBy = 'views'"
-          class="blog-sort-pill"
-          :class="{ 'blog-sort-pill--active': sortBy === 'views' }"
-        >
-          Lượt xem cao
-        </button>
+          <div class="p-1 flex flex-col gap-0.5">
+            <button 
+              @click="sortBy = 'newest'; showSortDropdown = false"
+              class="flex items-center justify-between w-full px-3 py-2.5 text-sm text-left rounded-lg transition-colors hover:bg-bg-hover"
+              :class="{ 'text-accent bg-accent/5 font-medium': sortBy === 'newest', 'text-text-secondary': sortBy !== 'newest' }"
+            >
+              Mới nhất
+              <Check v-if="sortBy === 'newest'" :size="14" class="text-accent" />
+            </button>
+            <button 
+              @click="sortBy = 'oldest'; showSortDropdown = false"
+              class="flex items-center justify-between w-full px-3 py-2.5 text-sm text-left rounded-lg transition-colors hover:bg-bg-hover"
+              :class="{ 'text-accent bg-accent/5 font-medium': sortBy === 'oldest', 'text-text-secondary': sortBy !== 'oldest' }"
+            >
+              Cũ nhất
+              <Check v-if="sortBy === 'oldest'" :size="14" class="text-accent" />
+            </button>
+            <button 
+              @click="sortBy = 'views'; showSortDropdown = false"
+              class="flex items-center justify-between w-full px-3 py-2.5 text-sm text-left rounded-lg transition-colors hover:bg-bg-hover"
+              :class="{ 'text-accent bg-accent/5 font-medium': sortBy === 'views', 'text-text-secondary': sortBy !== 'views' }"
+            >
+              Lượt xem cao nhất
+              <Check v-if="sortBy === 'views'" :size="14" class="text-accent" />
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
