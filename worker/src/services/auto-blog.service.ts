@@ -20,10 +20,9 @@ const ADMIN_AUTHOR = { name: 'FinNote AI', email: 'tintphcm@gmail.com' }
 
 // ── VnExpress RSS category URLs ──
 const VNEXPRESS_FEEDS = [
-  'https://vnexpress.net/rss/tin-xem-nhieu.rss',      // Most viewed (Trending overall)
   'https://vnexpress.net/rss/kinh-doanh.rss',         // Finance / Business
-  'https://vnexpress.net/rss/so-hoa.rss',             // Technology / Digital
-  'https://vnexpress.net/rss/doi-song.rss',           // Lifestyle (GenZ)
+  'https://vnexpress.net/rss/so-hoa.rss',             // Technology / Digital (Crypto often here)
+  'https://vnexpress.net/rss/the-gioi.rss',           // World news (Macro economics)
 ]
 
 // ── Helpers ──
@@ -247,17 +246,17 @@ async function pickTopicWithAI(
     ? `\nĐã viết gần đây (TRÁNH trùng): ${previousTopics.join(', ')}`
     : ''
 
-  const prompt = `Bạn là biên tập viên Content cho GenZ Việt Nam.
-Dưới đây là danh sách tin tức hot hôm nay từ VnExpress (Bao gồm tin xem nhiều nhất, công nghệ, tài chính, đời sống):
+  const prompt = `Bạn là chuyên gia phân tích và biên tập viên nội dung Tài chính cá nhân, Đầu tư (Chứng khoán, Crypto) cho người dùng Việt Nam.
+Dưới đây là danh sách tin tức hot hôm nay:
 
 ${topicList}
 ${prevList}
 
-Hãy chọn 1 chủ đề THÚ VỊ VÀ ĐÁNG QUAN TÂM NHẤT (Tech, Tài chính, Xu hướng GenZ, Đời sống) để viết blog.
-Ưu tiên những tin tức mới lạ, có tính thảo luận cao, HOẶC kiến thức hữu ích cho giới trẻ.
-ĐẢM BẢO nội dung đa dạng, KHÔNG lặp lại các chủ đề cũ (như quản lý tiền nhàm chán hay Warren Buffett).
+Hãy chọn 1 chủ đề CÓ GIÁ TRỊ NHẤT VỀ TÀI CHÍNH (Đầu tư, Quản lý tài sản, Tiền mã hóa, Chứng khoán Việt Nam/Thế giới, Vĩ mô) để viết blog.
+TUYỆT ĐỐI BỎ QUA các tin tức về đời sống, bạo hành, xã hội, hay showbiz. Chỉ tập trung vào TÀI CHÍNH, ĐẦU TƯ và CÔNG NGHỆ (liên quan crypto/AI).
+ĐẢM BẢO nội dung đa dạng, KHÔNG lặp lại các chủ đề cũ.
 Trả về ĐÚNG JSON (không text khác):
-{"chosenTopic":"Tên chủ đề đã chọn","blogAngle":"Góc nhìn/tiêu đề bài blog độc đáo, giật tít, sáng tạo dành cho GenZ","category":"finance|tech|genz|lifestyle"}`
+{"chosenTopic":"Tên chủ đề đã chọn","blogAngle":"Góc nhìn/tiêu đề bài blog phân tích chuyên sâu, hữu ích, có tính ứng dụng thực tế","category":"finance|crypto|stocks"}`
 
   // Try Gemini first
   if (env.GEMINI_API_KEY) {
@@ -319,40 +318,39 @@ async function generateBlogContent(
   angle: string,
   env: Env
 ): Promise<{ title: string; excerpt: string; tags: string[]; seoKeywords: string; content: string; modelUsed: string; imagePrompt?: string }> {
-  const systemPrompt = `Bạn là một Content Creator đa năng chuyên viết blog cho GenZ Việt Nam về Công nghệ (Tech), Tài chính, Đời sống và Xu hướng nóng. Phong cách: hiện đại, giật tít, dễ đọc, dí dỏm, sử dụng ví dụ thực tế và góc nhìn độc đáo.
+  const systemPrompt = `Bạn là một Chuyên gia Tài chính và Đầu tư chuyên viết blog hướng dẫn, phân tích thị trường (Chứng khoán Việt Nam, Crypto, Quản lý tài chính cá nhân) cho cộng đồng FinNote. Phong cách: chuyên nghiệp, logic, súc tích, sử dụng số liệu/ví dụ thực tế, nhưng vẫn dễ hiểu và có tính ứng dụng cao.
 
 Trả về ĐÚNG JSON format:
 {
   "title": "Tiêu đề hấp dẫn (dưới 60 ký tự)",
-  "excerpt": "Mô tả SEO hấp dẫn (dưới 160 ký tự)",
+  "excerpt": "Mô tả SEO tóm tắt nội dung chính (dưới 160 ký tự)",
   "tags": ["tag1", "tag2", "tag3"],
   "seoKeywords": "keyword1, keyword2, keyword3",
   "youtubeQuery": "từ khóa tìm video YouTube liên quan (tiếng Việt, 3-5 từ)",
   "imagePrompt": "Mô tả ngắn gọn bằng tiếng Anh cho hình ảnh banner minh họa bài viết",
-  "content": "Bài viết markdown đầy đủ (tối thiểu 1200 từ). KHÔNG bao gồm tiêu đề H1. Bắt đầu bằng đoạn mở bài, chia H2/H3, bullet points, bold text, kết bài CTA về FinNote."
+  "content": "Bài viết markdown đầy đủ (tối thiểu 1200 từ). KHÔNG bao gồm tiêu đề H1. Bắt đầu bằng đoạn mở bài, chia H2/H3 rõ ràng, phân tích sâu, kết luận rút ra bài học đầu tư/quản lý tài chính, CTA về FinNote."
 }
 
 QUY TẮC CHUNG & TAGS (BẮT BUỘC):
-- NỘI DUNG MỚI MẺ: Bài viết phải khác biệt mỗi ngày (Tech, Tài chính, Giải trí, GenZ). KHÔNG nhắc đi nhắc lại về Warren Buffett hay các kiến thức tài chính sáo rỗng.
-- TAGS: Tối đa 3 tags, viết thường, bằng tiếng Việt. Phù hợp với chủ đề (VD: "công nghệ", "ai", "genz", "tài chính", "đầu tư", "đời sống", "xu hướng").
-- KHÔNG trùng lặp ("gen z" và "genz" là trùng — chỉ giữ 1)
+- NỘI DUNG CHUYÊN MÔN: Bài viết PHẢI xoay quanh Tài chính cá nhân, Đầu tư chứng khoán, Crypto, Vĩ mô, Tiết kiệm. TUYỆT ĐỐI KHÔNG viết về các vấn đề xã hội, bạo lực, showbiz.
+- TAGS: Tối đa 3 tags, viết thường. Phù hợp chủ đề (VD: "đầu tư", "crypto", "chứng khoán", "tài chính", "tiết kiệm").
+- KHÔNG trùng lặp ("crypto" và "tiền ảo" là trùng — chỉ giữ 1)
 
 QUY TẮC LIÊN HỆ (BẮT BUỘC):
-- TUYỆT ĐỐI KHÔNG bịa ra bất kỳ email liên hệ nào (info@finnote.vn, support@..., contact@... v.v.)
-- KHÔNG viết section "Liên hệ" với email hoặc địa chỉ bịa đặt
-- Nếu muốn mời người đọc góp ý/liên hệ, hãy viết: "Bạn có thể gửi ý kiến trực tiếp cho Admin qua mục **Cài đặt → Liên hệ & Góp ý** trong ứng dụng FinNote."
-- Chỉ dùng CTA hướng người dùng vào app FinNote, KHÔNG cung cấp email hay link bên ngoài nào khác`
+- TUYỆT ĐỐI KHÔNG bịa ra email liên hệ.
+- Chỉ dùng CTA hướng người dùng sử dụng ứng dụng quản lý tài chính FinNote.`
 
-  const userPrompt = `Chủ đề hot từ VnExpress: "${topic}"
-Góc nhìn blog: "${angle}"
+  const userPrompt = `Chủ đề tài chính hôm nay: "${topic}"
+Góc nhìn phân tích: "${angle}"
 
-Hãy viết 1 bài blog chuyên sâu, góc nhìn mới lạ, thu hút dành cho GenZ Việt Nam. Bài viết cần:
-- Khai thác sâu vào chủ đề hot, mang lại kiến thức hoặc giá trị giải trí/cập nhật xu hướng cao.
-- Có ví dụ thực tế, câu chuyện cụ thể hoặc phân tích logic.
-- Có checklist, bài học rút ra, hoặc hướng dẫn hành động (actionable advice) nếu phù hợp.
-- Kết bài giới thiệu FinNote app
-- KHÔNG bịa email liên hệ (info@finnote.vn, support@...). Nếu muốn mời liên hệ, hướng người đọc vào mục "Cài đặt → Liên hệ & Góp ý" trong FinNote app
-- Đề xuất youtubeQuery để tìm video YouTube liên quan (bằng tiếng Việt)`
+Hãy viết 1 bài blog phân tích chuyên sâu về chủ đề này dành cho nhà đầu tư và người dùng quan tâm đến tài chính cá nhân tại Việt Nam.
+Bài viết cần:
+- Khai thác sâu vào khía cạnh kinh tế, tài chính, đầu tư (như chứng khoán, crypto, lãi suất, lạm phát).
+- Cung cấp số liệu, ví dụ thực tế hoặc bối cảnh thị trường.
+- Đưa ra bài học hoặc lời khuyên quản lý vốn/đầu tư hợp lý.
+- Kết bài giới thiệu FinNote app như một công cụ đắc lực để theo dõi danh mục và ghi chép tài chính.
+- KHÔNG bịa email liên hệ.
+- Đề xuất youtubeQuery để tìm video YouTube liên quan đến đầu tư/tài chính (bằng tiếng Việt)`
 
   // Try Gemini first
   if (env.GEMINI_API_KEY) {
@@ -397,7 +395,7 @@ Hãy viết 1 bài blog chuyên sâu, góc nhìn mới lạ, thu hút dành cho 
     const metaRes = await env.AI.run('@cf/meta/llama-3.1-8b-instruct' as any, {
       messages: [
         { role: 'system', content: `Trả về ĐÚNG JSON: {"title":"...","excerpt":"...","tags":["..."],"seoKeywords":"..."}` },
-        { role: 'user', content: `Tạo tiêu đề + meta cho bài blog về: ${angle}` }
+        { role: 'user', content: `Tạo tiêu đề + meta cho bài blog tài chính về: ${angle}` }
       ],
       max_tokens: 400,
       temperature: 0.7
@@ -411,22 +409,22 @@ Hãy viết 1 bài blog chuyên sâu, góc nhìn mới lạ, thu hút dành cho 
   // Step B: Generate content (plain markdown, no JSON)
   let content = ''
   try {
-    const contentPrompt = `Viết bài blog đa chủ đề (Tech, Đời sống, Tài chính) bằng Markdown cho GenZ Việt Nam.
+    const contentPrompt = `Viết bài blog chuyên sâu về Tài chính / Đầu tư (Chứng khoán, Crypto) bằng Markdown.
 Chủ đề: ${angle}
 Yêu cầu:
 - KHÔNG có tiêu đề H1
-- Bắt đầu bằng đoạn mở bài hấp dẫn
-- Chia thành H2/H3 rõ ràng
+- Bắt đầu bằng đoạn mở bài thu hút
+- Chia thành H2/H3 rõ ràng để phân tích logic
 - Tối thiểu 1000 từ
-- Đa dạng nội dung, không lặp lại chủ đề cũ (không nhắc về Warren Buffett).
-- Kết bài CTA giới thiệu FinNote
-- TUYỆT ĐỐI KHÔNG bịa email liên hệ (info@finnote.vn, support@...). Nếu cần mời liên hệ, viết: "Gửi ý kiến qua mục Cài đặt → Liên hệ & Góp ý trong FinNote app"
+- Tập trung hoàn toàn vào tài chính, kinh tế, đầu tư.
+- Kết bài CTA giới thiệu app quản lý tài chính FinNote.
+- TUYỆT ĐỐI KHÔNG bịa email liên hệ.
 - Chỉ trả về Markdown, không bọc JSON hay code block`
 
     const contentRes = await env.AI.run('@cf/meta/llama-3.1-8b-instruct' as any, {
       messages: [
         { role: 'system', content: contentPrompt },
-        { role: 'user', content: `Viết bài blog chuyên sâu về: ${angle}` }
+        { role: 'user', content: `Viết bài blog phân tích tài chính/đầu tư chuyên sâu về: ${angle}` }
       ],
       max_tokens: 4096,
       temperature: 0.7

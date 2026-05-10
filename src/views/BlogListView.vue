@@ -15,14 +15,7 @@ const showTooltip = ref(false)
 const activeTags = ref<string[]>([])
 const tagScrollContainer = ref<HTMLElement | null>(null)
 
-function handleWheelScroll(e: WheelEvent) {
-  if (tagScrollContainer.value) {
-    if (e.deltaY !== 0) {
-      e.preventDefault()
-      tagScrollContainer.value.scrollLeft += e.deltaY
-    }
-  }
-}
+// Tag scroll function removed as we now use flex-wrap
 
 onMounted(() => {
   blogStore.fetchBlogs()
@@ -100,13 +93,9 @@ const formatDate = (dateStr: string) => {
     </div>
     <p class="text-text-tertiary text-sm mb-6">{{ t('blog.listDesc') }}</p>
 
-    <!-- Tag Filter Bar (Scrollable & Compact) -->
+    <!-- Tag Filter Bar (Flex Wrap for better visibility) -->
     <div v-if="allTags.length > 0" class="mb-8">
-      <div 
-        ref="tagScrollContainer"
-        class="flex items-center overflow-x-auto gap-2 pb-3 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-thin scrollbar-thumb-border-strong scrollbar-track-transparent"
-        @wheel="handleWheelScroll"
-      >
+      <div class="flex flex-wrap gap-2 pb-3">
         <button
           class="blog-filter-tag shrink-0"
           :class="{ 'blog-filter-tag--active': activeTags.length === 0 }"
