@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { useReminderStore } from '@/stores/reminders'
 import { useUiStore } from '@/stores/ui'
 import type { Reminder } from '@/types'
-import { X, Bell, CalendarDays, Clock, Save, Repeat, Plus, Link, ExternalLink } from 'lucide-vue-next'
+import { X, Bell, CalendarDays, Clock, Save, Repeat, Plus, Link, ExternalLink, Sparkles, Loader2 } from 'lucide-vue-next'
 import CustomDatePicker from './CustomDatePicker.vue'
 import CustomTimePicker from './CustomTimePicker.vue'
 
@@ -15,6 +15,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   close: []
   saved: []
+  suggestions: [suggestions: any[]]
 }>()
 
 const { t } = useI18n()
@@ -57,6 +58,26 @@ const timeOffsets = computed(() => offsetOptions.filter(o => o.group === 'time')
 const dayOffsets = computed(() => offsetOptions.filter(o => o.group === 'day'))
 
 const currentStep = ref(1)
+
+const aiInput = ref('')
+const processingAi = ref(false)
+
+async function handleAiSubmit() {
+  if (!aiInput.value.trim() || processingAi.value) return
+  processingAi.value = true
+  try {
+    const suggestions = await store.detectFromText(aiInput.value)
+    if (suggestions.length > 0) {
+      emit('suggestions', suggestions)
+    } else {
+      ui.showToast('info', t('reminders.noEventsFound') || 'Không tìm thấy sự kiện nào')
+    }
+  } catch {
+    ui.showToast('error', t('common.somethingWentWrong'))
+  } finally {
+    processingAi.value = false
+  }
+}
 
 function toggleOffset(key: string) {
   const idx = selectedOffsets.value.indexOf(key)
@@ -174,6 +195,35 @@ async function handleSave() {
         <!-- Body -->
         <div class="modal-body">
           <template v-if="currentStep === 1">
+            <!-- AI Quick Add -->
+            <div v-if="!isEditing" class="mb-6">
+              <label class="flex items-center gap-2 text-sm font-bold text-accent mb-2">
+                <Sparkles :size="16" /> Tạo nhanh bằng AI
+              </label>
+              <div class="relative group">
+                <textarea
+                  v-model="aiInput"
+                  rows="2"
+                  placeholder="vd: Hẹn gặp khách lúc 3h chiều mai, nhắc trước 1 tiếng..."
+                  class="w-full bg-bg-surface border border-border-default focus:border-accent focus:ring-2 focus:ring-accent/20 rounded-xl text-sm transition-all duration-200 outline-none text-text-primary placeholder:text-text-disabled shadow-sm resize-none p-3 pr-14"
+                  @keydown.enter.prevent="handleAiSubmit"
+                />
+                <button 
+                  @click="handleAiSubmit" 
+                  :disabled="!aiInput.trim() || processingAi"
+                  class="absolute bottom-2 right-2 p-1.5 bg-accent text-white rounded-lg hover:bg-accent-hover disabled:opacity-50 transition-all flex items-center justify-center"
+                >
+                  <Loader2 v-if="processingAi" :size="16" class="animate-spin" />
+                  <Sparkles v-else :size="16" />
+                </button>
+              </div>
+              <div class="flex items-center gap-3 my-5">
+                <div class="flex-1 h-px bg-border-default"></div>
+                <span class="text-[0.6875rem] text-text-tertiary uppercase font-bold tracking-wider">Hoặc điền thủ công</span>
+                <div class="flex-1 h-px bg-border-default"></div>
+              </div>
+            </div>
+
             <!-- Title -->
             <div class="field">
               <label class="field-label">{{ t('reminders.titleField') }} *</label>
