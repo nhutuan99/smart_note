@@ -167,6 +167,24 @@ const filteredAndSortedBlogs = computed(() => {
   return result
 })
 
+// ── Grouped Timeline ──
+const groupedBlogs = computed(() => {
+  const groups: { month: string; blogs: typeof filteredAndSortedBlogs.value }[] = []
+  
+  filteredAndSortedBlogs.value.forEach(blog => {
+    const d = new Date(blog.createdAt)
+    const monthKey = d.toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' })
+    let group = groups.find(g => g.month === monthKey)
+    if (!group) {
+      group = { month: monthKey, blogs: [] }
+      groups.push(group)
+    }
+    group.blogs.push(blog)
+  })
+  
+  return groups
+})
+
 // ── Actions ──
 function openModal() {
   editingSlug.value = null
@@ -485,9 +503,9 @@ const formatDate = (dateStr: string) => {
       </button>
     </div>
 
-    <!-- Filter & Search Bar -->
-    <div class="flex flex-col sm:flex-row gap-3 mb-6">
-      <div class="relative flex-1">
+    <!-- Filter & Sort Bar -->
+    <div class="flex flex-col sm:flex-row items-center gap-3 mb-8">
+      <div class="relative w-full sm:flex-1">
         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
           <Search :size="16" class="text-text-disabled" />
         </div>
@@ -495,96 +513,83 @@ const formatDate = (dateStr: string) => {
           v-model="searchQuery" 
           type="text" 
           :placeholder="t('common.search')" 
-          class="w-full pl-10 pr-4 py-2 bg-bg-surface border border-border-default rounded-xl focus:outline-none focus:border-accent text-sm transition-colors text-text-primary"
+          class="w-full pl-10 pr-4 py-2.5 bg-bg-surface border border-border-default rounded-xl focus:outline-none focus:border-accent text-sm transition-colors text-text-primary placeholder:text-text-disabled"
         >
       </div>
-      <div class="flex-shrink-0 relative">
-        <select 
-          v-model="sortBy" 
-          class="w-full sm:w-auto bg-bg-surface border border-border-default rounded-xl pl-4 pr-8 py-2 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors appearance-none cursor-pointer"
+      <div class="flex items-center gap-1 w-full sm:w-auto overflow-x-auto no-scrollbar pb-1 sm:pb-0">
+        <button 
+          @click="sortBy = 'newest'"
+          class="blog-sort-pill"
+          :class="{ 'blog-sort-pill--active': sortBy === 'newest' }"
         >
-          <option value="newest">Mới nhất</option>
-          <option value="oldest">Cũ nhất</option>
-          <option value="views">Lượt xem cao nhất</option>
-        </select>
-        <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-text-tertiary">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-        </div>
+          Mới nhất
+        </button>
+        <button 
+          @click="sortBy = 'oldest'"
+          class="blog-sort-pill"
+          :class="{ 'blog-sort-pill--active': sortBy === 'oldest' }"
+        >
+          Cũ nhất
+        </button>
+        <button 
+          @click="sortBy = 'views'"
+          class="blog-sort-pill"
+          :class="{ 'blog-sort-pill--active': sortBy === 'views' }"
+        >
+          Lượt xem cao
+        </button>
       </div>
     </div>
 
-    <!-- Blog List — Desktop Table -->
-    <div class="card-premium overflow-hidden hidden md:block">
-      <table class="w-full text-left text-sm">
-        <thead class="bg-bg-elevated text-text-tertiary whitespace-nowrap">
-          <tr>
-            <th class="px-6 py-4 font-medium">{{ t('blog.tableTitle') }}</th>
-            <th class="px-6 py-4 font-medium">{{ t('blog.tableStatus') }}</th>
-            <th class="px-6 py-4 font-medium">{{ t('blog.tableDate') }}</th>
-            <th class="px-6 py-4 font-medium text-right">{{ t('blog.tableActions') }}</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-border-subtle">
-          <tr v-if="blogStore.isLoading && !blogStore.blogs.length">
-            <td colspan="4" class="px-6 py-8 text-center text-text-disabled">{{ t('common.loading') }}</td>
-          </tr>
-          <tr v-else-if="!filteredAndSortedBlogs.length">
-            <td colspan="4" class="px-6 py-8 text-center text-text-disabled">{{ searchQuery ? 'Không tìm thấy bài viết' : t('blog.empty') }}</td>
-          </tr>
-          <tr v-for="blog in filteredAndSortedBlogs" :key="blog.id" class="hover:bg-bg-hover/50 transition-colors cursor-pointer" @click="openEditModal(blog)">
-            <td class="px-6 py-4 font-medium">
-              <div class="line-clamp-1">{{ blog.title }}</div>
-              <div class="text-[0.6875rem] text-text-disabled mt-1">/blog/{{ blog.slug }}</div>
-            </td>
-            <td class="px-6 py-4">
-              <span v-if="blog.published" class="blog-badge blog-badge--published">
-                <CheckCircle2 :size="12" />
-                <span>{{ t('blog.statusPublished') }}</span>
-              </span>
-              <span v-else class="blog-badge blog-badge--draft">
-                {{ t('blog.statusDraft') }}
-              </span>
-              <div v-if="blog.viewCount" class="text-[0.6875rem] text-text-tertiary mt-1 flex items-center gap-1">
-                <Eye :size="10" /> {{ blog.viewCount }} lượt xem
-              </div>
-            </td>
-            <td class="px-6 py-4 text-text-tertiary text-[0.8125rem]">
-              {{ formatDate(blog.createdAt) }}
-            </td>
-            <td class="px-6 py-4 text-right" @click.stop>
-              <div class="flex items-center justify-end gap-1">
-                <button class="blog-action-btn" title="Chỉnh sửa" @click="openEditModal(blog)"><Pencil :size="15" /></button>
-                <a :href="`/blog/${blog.slug}`" target="_blank" class="blog-action-btn" title="Xem bài viết"><ExternalLink :size="15" /></a>
-                <button class="blog-action-btn blog-action-btn--danger" @click="handleDelete(blog.slug)"><Trash2 :size="15" /></button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <!-- Timeline Blog List -->
+    <div v-if="blogStore.isLoading && !blogStore.blogs.length" class="text-center py-12 text-text-disabled card-premium">
+      <Loader2 :size="24" class="mx-auto animate-spin mb-2 opacity-50" />
+      {{ t('common.loading') }}
+    </div>
+    
+    <div v-else-if="!groupedBlogs.length" class="text-center py-16 text-text-disabled card-premium">
+      <div class="mb-3"><Calendar :size="40" class="mx-auto opacity-30" /></div>
+      {{ searchQuery ? 'Không tìm thấy bài viết' : t('blog.empty') }}
     </div>
 
-    <!-- Blog List — Mobile Cards -->
-    <div class="md:hidden space-y-3">
-      <div v-if="blogStore.isLoading && !blogStore.blogs.length" class="text-center py-8 text-text-disabled card-premium">{{ t('common.loading') }}</div>
-      <div v-else-if="!filteredAndSortedBlogs.length" class="text-center py-8 text-text-disabled card-premium">{{ searchQuery ? 'Không tìm thấy bài viết' : t('blog.empty') }}</div>
-      <div v-for="blog in filteredAndSortedBlogs" :key="blog.id" class="blog-mobile-card" @click="openEditModal(blog)">
-        <div class="flex items-start justify-between gap-3">
-          <div class="min-w-0 flex-1">
-            <div class="font-medium text-sm line-clamp-2 text-text-primary mb-1">{{ blog.title }}</div>
-            <div class="text-[0.6875rem] text-text-disabled">/blog/{{ blog.slug }}</div>
-          </div>
-          <div class="flex items-center gap-0.5" @click.stop>
-            <a :href="`/blog/${blog.slug}`" target="_blank" class="blog-action-btn"><ExternalLink :size="15" /></a>
-            <button class="blog-action-btn blog-action-btn--danger" @click="handleDelete(blog.slug)"><Trash2 :size="15" /></button>
-          </div>
+    <div v-else class="space-y-8">
+      <div v-for="group in groupedBlogs" :key="group.month" class="relative">
+        <!-- Month Label & Line -->
+        <div class="sticky top-[70px] z-10 flex items-center gap-3 mb-4 bg-bg-base/90 backdrop-blur-sm py-2 -mx-2 px-2">
+          <div class="w-2 h-2 rounded-full bg-accent ring-4 ring-accent/20"></div>
+          <h2 class="text-sm font-bold text-text-primary tracking-wider uppercase opacity-80">{{ group.month }}</h2>
+          <div class="flex-1 h-px bg-border-subtle"></div>
         </div>
-        <div class="flex items-center gap-2 mt-3">
-          <span v-if="blog.published" class="blog-badge blog-badge--published"><CheckCircle2 :size="12" /><span>{{ t('blog.statusPublished') }}</span></span>
-          <span v-else class="blog-badge blog-badge--draft">{{ t('blog.statusDraft') }}</span>
-          <span v-if="blog.viewCount" class="flex items-center gap-1 text-[0.6875rem] text-text-tertiary ml-2">
-            <Eye :size="10" /> {{ blog.viewCount }}
-          </span>
-          <span class="text-text-disabled text-[0.75rem] ml-auto">{{ formatDate(blog.createdAt) }}</span>
+
+        <!-- Group Items -->
+        <div class="ml-1 pl-5 sm:pl-6 border-l-2 border-border-subtle/50 space-y-4">
+          <div 
+            v-for="blog in group.blogs" 
+            :key="blog.id" 
+            class="group relative card-premium p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 cursor-pointer hover:border-accent/40 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
+            @click="openEditModal(blog)"
+          >
+            <!-- Timeline Dot connecting card to line -->
+            <div class="absolute -left-[1.35rem] sm:-left-[1.6rem] top-8 sm:top-1/2 w-2.5 h-2.5 rounded-full bg-border-strong border-2 border-bg-base group-hover:bg-accent transition-colors -translate-y-1/2"></div>
+            
+            <div class="flex-1 min-w-0 pr-4">
+              <h3 class="font-bold text-base text-text-primary mb-1 line-clamp-2 group-hover:text-accent transition-colors">{{ blog.title }}</h3>
+              <div class="text-[0.6875rem] text-text-disabled mb-2 font-mono">/blog/{{ blog.slug }}</div>
+              <div class="flex flex-wrap items-center gap-3 text-[0.75rem] text-text-tertiary">
+                <span class="flex items-center gap-1.5 opacity-80"><Calendar :size="12" /> {{ formatDate(blog.createdAt) }}</span>
+                <span v-if="blog.viewCount" class="flex items-center gap-1.5 opacity-80"><Eye :size="12" /> {{ blog.viewCount }} lượt xem</span>
+                <span v-if="blog.published" class="text-success flex items-center gap-1 opacity-90"><CheckCircle2 :size="12" /> Đã xuất bản</span>
+                <span v-else class="text-warning flex items-center gap-1 opacity-90"><AlertTriangle :size="12" /> Bản nháp</span>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex items-center gap-2 sm:opacity-0 group-hover:opacity-100 transition-opacity mt-2 sm:mt-0" @click.stop>
+              <button class="blog-action-btn" title="Chỉnh sửa" @click="openEditModal(blog)"><Pencil :size="16" /></button>
+              <a :href="`/blog/${blog.slug}`" target="_blank" class="blog-action-btn" title="Xem bài viết"><ExternalLink :size="16" /></a>
+              <button class="blog-action-btn blog-action-btn--danger" @click="handleDelete(blog.slug)"><Trash2 :size="16" /></button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

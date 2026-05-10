@@ -12,6 +12,7 @@ export default {
     saving: 'Đang lưu...',
     today: 'Hôm nay',
     yesterday: 'Hôm qua',
+    search: 'Tìm kiếm...',
     all: 'Tất cả',
     menu: 'MENU',
     preview: 'Xem trước',

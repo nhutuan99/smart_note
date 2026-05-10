@@ -12,6 +12,7 @@ export default {
     saving: 'Saving...',
     today: 'Today',
     yesterday: 'Yesterday',
+    search: 'Search...',
     all: 'All',
     menu: 'MENU',
     preview: 'Preview',

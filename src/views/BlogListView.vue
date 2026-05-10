@@ -4,7 +4,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useBlogStore } from '@/stores/blog'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
-import { Calendar, ChevronRight, Hash, Zap, BrainCircuit, LayoutDashboard, ArrowRight, Sparkles, X, Eye } from 'lucide-vue-next'
+import { Calendar, ChevronRight, ChevronLeft, Hash, Zap, BrainCircuit, LayoutDashboard, ArrowRight, Sparkles, X, Eye } from 'lucide-vue-next'
 
 const { t, locale } = useI18n()
 const router = useRouter()
@@ -15,12 +15,35 @@ const showTooltip = ref(false)
 const activeTags = ref<string[]>([])
 const tagScrollContainer = ref<HTMLElement | null>(null)
 
+const canScrollLeft = ref(false)
+const canScrollRight = ref(true)
+
+function checkScroll() {
+  if (tagScrollContainer.value) {
+    const { scrollLeft, scrollWidth, clientWidth } = tagScrollContainer.value
+    canScrollLeft.value = scrollLeft > 0
+    canScrollRight.value = Math.ceil(scrollLeft + clientWidth) < scrollWidth
+  }
+}
+
 function handleWheelScroll(e: WheelEvent) {
   if (tagScrollContainer.value) {
     if (e.deltaY !== 0) {
       e.preventDefault()
       tagScrollContainer.value.scrollLeft += e.deltaY * 1.5
     }
+  }
+}
+
+function scrollLeftBtn() {
+  if (tagScrollContainer.value) {
+    tagScrollContainer.value.scrollBy({ left: -200, behavior: 'smooth' })
+  }
+}
+
+function scrollRightBtn() {
+  if (tagScrollContainer.value) {
+    tagScrollContainer.value.scrollBy({ left: 200, behavior: 'smooth' })
   }
 }
 
@@ -31,6 +54,10 @@ onMounted(() => {
   if (tagsParam) {
     activeTags.value = tagsParam.split(',').filter(Boolean)
   }
+  
+  // Initial scroll check
+  setTimeout(checkScroll, 100)
+  window.addEventListener('resize', checkScroll)
 })
 
 // All unique tags from all blogs
@@ -102,13 +129,33 @@ const formatDate = (dateStr: string) => {
 
     <!-- Tag Filter Bar (Modern 2026 Horizontal Scroll UI) -->
     <div v-if="allTags.length > 0" class="mb-8 relative group">
-      <!-- Gradient Fade Edge Indicator -->
-      <div class="absolute -right-4 md:right-0 top-0 bottom-0 w-12 md:w-20 bg-gradient-to-l from-[var(--color-bg-base)] to-transparent pointer-events-none z-10 opacity-100 transition-opacity" />
+      <!-- Gradient Fade Edge Indicator (Right) -->
+      <div v-show="canScrollRight" class="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-[#0b0c10] to-transparent pointer-events-none z-10 transition-opacity duration-300" />
+      <!-- Gradient Fade Edge Indicator (Left) -->
+      <div v-show="canScrollLeft" class="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-[#0b0c10] to-transparent pointer-events-none z-10 transition-opacity duration-300" />
       
+      <!-- Scroll Buttons -->
+      <button 
+        v-show="canScrollLeft"
+        @click="scrollLeftBtn"
+        class="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-bg-surface border border-border-default flex items-center justify-center text-text-secondary hover:text-accent hover:border-accent/40 opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-lg -ml-2"
+      >
+        <ChevronLeft :size="16" />
+      </button>
+
+      <button 
+        v-show="canScrollRight"
+        @click="scrollRightBtn"
+        class="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-bg-surface border border-border-default flex items-center justify-center text-text-secondary hover:text-accent hover:border-accent/40 opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-lg -mr-2"
+      >
+        <ChevronRight :size="16" />
+      </button>
+
       <div 
         ref="tagScrollContainer"
-        class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 -mx-4 px-4 md:mx-0 md:px-0"
+        class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 relative z-0 scroll-smooth"
         @wheel="handleWheelScroll"
+        @scroll="checkScroll"
       >
         <button
           class="blog-filter-tag shrink-0"
