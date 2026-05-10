@@ -140,7 +140,7 @@ const isCurrentMonth = computed(() => {
           <!-- Primary: Net Worth when investments exist -->
           <template v-if="portfolio.hasInvestments.value">
             <div class="text-3xl font-bold tracking-tight text-text-primary">
-              {{ ui.hideBalances ? '••••••' : formatVND(portfolio.totalNetWorth.value) }}
+              {{ ui.hideBalances ? '••••••' : formatVNDShort(portfolio.totalNetWorth.value) }}
             </div>
             <div class="mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
               <!-- Wallet balance breakdown -->
@@ -163,7 +163,7 @@ const isCurrentMonth = computed(() => {
           </template>
           <!-- Fallback: just wallet balance (no investments) -->
           <div v-else class="text-3xl font-bold tracking-tight text-text-primary">
-            {{ ui.hideBalances ? '••••••' : formatVND(finance.totalBalance) }}
+            {{ ui.hideBalances ? '••••••' : formatVNDShort(finance.totalBalance) }}
           </div>
         </div>
       </div>
@@ -181,7 +181,7 @@ const isCurrentMonth = computed(() => {
         </div>
         <div v-if="finance.loading" class="skeleton h-8 w-32 mt-1"></div>
         <div v-else :class="finance.monthIncome > 0 ? 'text-success' : 'text-text-primary'" class="text-2xl font-bold tracking-tight">
-          {{ finance.monthIncome > 0 ? '+' : '' }}{{ formatVND(finance.monthIncome) }}
+          {{ finance.monthIncome > 0 ? '+' : '' }}{{ formatVNDShort(finance.monthIncome) }}
         </div>
       </div>
 
@@ -198,7 +198,7 @@ const isCurrentMonth = computed(() => {
         </div>
         <div v-if="finance.loading" class="skeleton h-8 w-32 mt-1"></div>
         <div v-else :class="finance.monthExpense > 0 ? 'text-error' : 'text-text-primary'" class="text-2xl font-bold tracking-tight">
-          {{ finance.monthExpense > 0 ? '-' : '' }}{{ formatVND(finance.monthExpense) }}
+          {{ finance.monthExpense > 0 ? '-' : '' }}{{ formatVNDShort(finance.monthExpense) }}
         </div>
       </div>
     </div>

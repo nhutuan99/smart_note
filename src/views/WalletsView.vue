@@ -4,8 +4,9 @@ import { useFinanceStore } from '@/stores/finance'
 import { formatVND } from '@/constants/finance'
 import { getWalletBrand } from '@/constants/walletBrands'
 import { httpClient } from '@/shared/api/httpClient'
-import { Plus, Trash2, Edit3, X, GripVertical, Link, Upload, Image as ImageIcon } from 'lucide-vue-next'
+import { Plus, Trash2, Edit3, X, Check, GripVertical, Link, Upload, Image as ImageIcon } from 'lucide-vue-next'
 import PinDialog from '@/components/PinDialog.vue'
+import CurrencyInput from '@/components/ui/CurrencyInput.vue'
 import { useUiStore } from '@/stores/ui'
 import { useI18n } from 'vue-i18n'
 import type { Wallet } from '@/types'
@@ -141,10 +142,15 @@ async function onPinConfirmed() {
   }
 }
 
-function startEdit(id: string) { editId.value = id }
+const editBalances = ref<Record<string, number>>({})
 
-async function saveEdit(id: string, newBalance: string) {
-  const bal = parseInt(newBalance.replace(/[^0-9-]/g, '') || '0')
+function startEdit(id: string, currentBalance: number) { 
+  editId.value = id
+  editBalances.value[id] = currentBalance
+}
+
+async function saveEdit(id: string) {
+  const bal = editBalances.value[id] ?? 0
   await finance.updateWallet(id, { balance: bal })
   editId.value = null
 }
@@ -448,13 +454,16 @@ function getWalletBrandConfig(w: Wallet) {
 
           <!-- Edit mode -->
           <div v-if="editId === w.id" class="flex items-center gap-2">
-            <input
-              :value="w.balance"
-              @keydown.enter="saveEdit(w.id, ($event.target as HTMLInputElement).value)"
-              type="text"
-              class="border-accent bg-bg-elevated text-text-primary w-[8rem] rounded-lg border px-2 py-1 text-right text-sm focus:outline-none"
-              autofocus
+            <CurrencyInput
+              :modelValue="editBalances[w.id] ?? w.balance"
+              @update:modelValue="editBalances[w.id] = $event"
+              @keydown.enter="saveEdit(w.id)"
+              :allowNegative="true"
+              className="border-accent bg-bg-elevated text-text-primary w-[8rem] rounded-lg border px-2 py-1 text-right text-sm focus:outline-none"
             />
+            <button @click="saveEdit(w.id)" class="text-success hover:text-success p-1">
+              <Check :size="14" />
+            </button>
             <button @click="editId = null" class="text-text-tertiary hover:text-text-primary p-1">
               <X :size="14" />
             </button>
@@ -465,7 +474,7 @@ function getWalletBrandConfig(w: Wallet) {
             <span class="text-base font-bold" :class="w.balance >= 0 ? 'text-text-primary' : 'text-error'">
               {{ formatVND(w.balance) }}
             </span>
-            <button @click="startEdit(w.id)" class="text-text-tertiary hover:text-text-primary hover:bg-bg-hover rounded p-2 transition-all duration-150 touch-target" :title="t('wallets.editBalance')">
+            <button @click="startEdit(w.id, w.balance)" class="text-text-tertiary hover:text-text-primary hover:bg-bg-hover rounded p-2 transition-all duration-150 touch-target" :title="t('wallets.editBalance')">
               <Edit3 :size="16" />
             </button>
             <button @click="requestDelete(w.id)" class="text-text-tertiary hover:text-error hover:bg-bg-hover rounded p-2 transition-all duration-150 touch-target" :title="t('wallets.deleteWallet')">
