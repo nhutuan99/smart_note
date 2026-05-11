@@ -215,6 +215,66 @@ export async function handleUpdateTradingConfig(userId: string, request: Request
 
 export async function handleListTradingCheckins(userId: string, env: Env): Promise<Response> {
   const checkins = (await getJSON<TradingCheckinData[]>(env.SMART_NOTE_KV, TRADING_CHECKINS_KEY(userId))) || []
+
+  // Auto-sync existing checkins to wallet balances and transactions
+  // This handles old data created before the sync logic was added
+  try {
+    const txs = (await getJSON<TransactionData[]>(env.SMART_NOTE_KV, `users/${userId}/finance/transactions`)) || []
+    const wallets = (await getJSON<WalletData[]>(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`)) || []
+    let needSync = false
+
+    for (const checkin of checkins) {
+      for (const e of checkin.entries) {
+        if (e.pnlAmount === 0 && e.depositAmount === 0) continue
+
+        const pnlSynced = e.pnlAmount === 0 || txs.some(t => t.walletId === e.walletId && t.date === checkin.date && t.category === 'investment' && t.note.includes('Trading P&L'))
+        const depSynced = e.depositAmount === 0 || txs.some(t => t.walletId === e.walletId && t.date === checkin.date && t.category === 'bank_receive' && t.note.includes('Trading Deposit'))
+
+        if (!pnlSynced || !depSynced) {
+          needSync = true
+          const wIdx = wallets.findIndex(w => w.id === e.walletId)
+          if (wIdx !== -1) {
+            if (!pnlSynced) {
+              wallets[wIdx].balance += e.pnlAmount
+              txs.push({
+                id: generateId(),
+                type: e.pnlAmount > 0 ? 'income' : 'expense',
+                amount: Math.abs(e.pnlAmount),
+                category: 'investment',
+                note: `Trading P&L - ${checkin.date}`,
+                walletId: e.walletId,
+                source: 'manual',
+                date: checkin.date,
+                createdAt: checkin.createdAt
+              })
+            }
+            if (!depSynced) {
+              wallets[wIdx].balance += e.depositAmount
+              txs.push({
+                id: generateId(),
+                type: e.depositAmount > 0 ? 'income' : 'expense',
+                amount: Math.abs(e.depositAmount),
+                category: 'bank_receive',
+                note: `Trading Deposit - ${checkin.date}`,
+                walletId: e.walletId,
+                source: 'manual',
+                date: checkin.date,
+                createdAt: checkin.createdAt
+              })
+            }
+          }
+        }
+      }
+    }
+
+    if (needSync) {
+      await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`, wallets)
+      await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/transactions`, txs)
+    }
+  } catch (error) {
+    console.error('Auto-sync failed:', error)
+  }
+
   return jsonResponse({ success: true, data: checkins })
 }
 
