@@ -126,6 +126,20 @@ export const useNotesStore = defineStore('notes', () => {
     }
   }
 
+  async function updateNoteShare(id: string, isPublic: boolean, sharedWith: string[]): Promise<boolean> {
+    try {
+      const data = await httpClient.post<Note>(`/api/notes/${id}/share`, { isPublic, sharedWith })
+      if (data && currentNote.value?.id === id) {
+        currentNote.value.isPublic = data.isPublic
+        currentNote.value.sharedWith = data.sharedWith
+      }
+      return true
+    } catch (err) {
+      console.error('Failed to update share settings:', err)
+      return false
+    }
+  }
+
   async function deleteNote(id: string): Promise<boolean> {
     try {
       await httpClient.del(`/api/notes/${id}`)
@@ -164,6 +178,7 @@ export const useNotesStore = defineStore('notes', () => {
     fetchNote,
     createNote,
     updateNote,
+    updateNoteShare,
     deleteNote,
     togglePin,
     obsidian

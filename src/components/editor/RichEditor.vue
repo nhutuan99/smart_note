@@ -20,6 +20,7 @@ import {
 
 const props = defineProps<{
   modelValue: string
+  readonly?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -40,6 +41,7 @@ const imageInput = ref<HTMLInputElement | null>(null)
 
 const editor = useEditor({
   content: props.modelValue,
+  editable: !props.readonly,
   extensions: [
     StarterKit.configure({
       codeBlock: false,
@@ -132,7 +134,7 @@ const charCount = () => editor.value?.storage.characterCount.characters() ?? 0
 <template>
   <div class="rich-editor-wrapper">
     <!-- Toolbar -->
-    <div v-if="editor" class="editor-toolbar">
+    <div v-if="editor && !readonly" class="editor-toolbar">
       <!-- Headings -->
       <div class="toolbar-group">
         <button
@@ -261,7 +263,7 @@ const charCount = () => editor.value?.storage.characterCount.characters() ?? 0
     </div>
 
     <!-- Editor Area -->
-    <EditorContent :editor="editor" class="editor-content" />
+    <EditorContent :editor="editor" class="editor-content" :class="{ 'is-readonly': readonly }" />
 
     <!-- Link Dialog -->
     <Teleport to="body">
@@ -551,6 +553,9 @@ const charCount = () => editor.value?.storage.characterCount.characters() ?? 0
   border-radius: 8px;
   margin: 0.5rem 0;
   display: block;
+  resize: both;
+  overflow: hidden;
+  width: max-content;
 }
 
 /* ── Inline Dialog ── */

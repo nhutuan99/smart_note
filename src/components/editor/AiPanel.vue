@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { useAi } from '@/composables/useGemini'
 import {
   Sparkles, X, Copy, Check, ChevronDown,
-  AlignLeft, PenLine, Wand2, Tag, MessageSquare, Loader2
+  AlignLeft, PenLine, Wand2, Tag, MessageSquare, Loader2, ListChecks
 } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
 import LogoLoader from '@/components/ui/LogoLoader.vue'
@@ -18,12 +18,13 @@ const { t } = useI18n()
 
 const emit = defineEmits<{
   close: []
-  insertText: [text: string]
+  insertText: [text: string, isHtml?: boolean]
+  replaceText: [text: string]
   applyTags: [tags: string[]]
 }>()
 
 const ai = useAi()
-const activeMode = ref<'summarize' | 'continue' | 'improve' | 'tags' | 'ask' | null>(null)
+const activeMode = ref<'summarize' | 'continue' | 'improve' | 'tags' | 'ask' | 'rewrite' | null>(null)
 const question = ref('')
 const copied = ref(false)
 const suggestedTags = ref<string[]>([])
@@ -58,6 +59,12 @@ async function runImprove() {
   await ai.improveWriting(getPlainText())
 }
 
+async function runRewrite() {
+  activeMode.value = 'rewrite'
+  resetState()
+  await ai.rewriteNote(getPlainText())
+}
+
 async function runSuggestTags() {
   activeMode.value = 'tags'
   resetState()
@@ -73,7 +80,11 @@ async function runAsk() {
 }
 
 function insertResult() {
-  if (ai.streamText.value) emit('insertText', ai.streamText.value)
+  if (ai.streamText.value) emit('insertText', ai.streamText.value, activeMode.value === 'rewrite')
+}
+
+function replaceResult() {
+  if (ai.streamText.value) emit('replaceText', ai.streamText.value)
 }
 
 function applyTags() {
@@ -112,6 +123,10 @@ const hasResult = computed(() => ai.streamText.value.length > 0 || suggestedTags
         <button class="ai-action-btn" :class="{ active: activeMode === 'summarize' }" @click="runSummarize" :disabled="ai.loading.value || !hasContent">
           <AlignLeft :size="14" />
           {{ t('notes.ai.summarize') }}
+        </button>
+        <button class="ai-action-btn" :class="{ active: activeMode === 'rewrite' }" @click="runRewrite" :disabled="ai.loading.value || !hasContent">
+          <ListChecks :size="14" />
+          Clean & Format
         </button>
         <button class="ai-action-btn" :class="{ active: activeMode === 'continue' }" @click="runContinue" :disabled="ai.loading.value || !hasContent">
           <PenLine :size="14" />
@@ -180,10 +195,14 @@ const hasResult = computed(() => ai.streamText.value.length > 0 || suggestedTags
         <div class="ai-result-text">
           {{ ai.streamText.value }}<span v-if="ai.loading.value" class="ai-cursor">▋</span>
         </div>
-        <div v-if="!ai.loading.value" class="mt-3">
-          <button class="ai-insert-btn w-full" @click="insertResult">
+        <div v-if="!ai.loading.value" class="mt-3 flex gap-2">
+          <button class="ai-insert-btn flex-1" @click="insertResult">
             <ChevronDown :size="13" />
             {{ t('notes.ai.insert') }}
+          </button>
+          <button v-if="activeMode === 'rewrite'" class="ai-insert-btn flex-1 bg-warning text-white" @click="replaceResult">
+            <Check :size="13" />
+            Thay thế toàn bộ
           </button>
         </div>
       </div>

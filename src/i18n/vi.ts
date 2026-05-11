@@ -333,6 +333,28 @@ export default {
     tryDifferent: 'Thử từ khóa khác',
     createFirst: 'Tạo ghi chú đầu tiên của bạn',
     createNote: 'Tạo ghi chú',
+    createBlogBtn: 'Tạo Blog',
+    shareBtn: 'Chia sẻ',
+    share: {
+      title: 'Chia sẻ ghi chú',
+      access: 'Quyền truy cập',
+      private: 'Cá nhân',
+      privateDesc: 'Chỉ bạn và email được mời',
+      public: 'Công khai',
+      publicDesc: 'Ai có link cũng xem được',
+      inviteEmail: 'Mời qua Email',
+      emailPlaceholder: 'Nhập email...',
+      shareLink: 'Liên kết chia sẻ',
+      copySuccess: 'Đã sao chép',
+      copy: 'Sao chép',
+      updateSuccess: 'Đã cập nhật quyền chia sẻ',
+      updateError: 'Lỗi khi chia sẻ ghi chú'
+    },
+    blog: {
+      generating: 'AI đang viết Blog, vui lòng chờ...',
+      success: 'Đã tạo Blog thành công!',
+      error: 'Lỗi khi tạo blog'
+    },
     ai: {
       assistant: 'Trợ lý AI',
       summarize: 'Tóm tắt',

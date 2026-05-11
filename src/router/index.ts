@@ -104,6 +104,12 @@ const router = createRouter({
       meta: { parentRoute: '/notes' }
     },
     {
+      path: '/notes/shared/:id',
+      name: 'shared-note',
+      component: () => import('@/views/SharedNoteView.vue'),
+      meta: { isPublic: true }
+    },
+    {
       path: '/settings',
       name: 'settings',
       component: () => import('@/views/SettingsView.vue')

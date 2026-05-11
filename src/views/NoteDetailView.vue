@@ -7,21 +7,28 @@ import { useReminderStore } from '@/stores/reminders'
 import { useUiStore } from '@/stores/ui'
 import RichEditor from '@/components/editor/RichEditor.vue'
 import AiPanel from '@/components/editor/AiPanel.vue'
+import ShareNoteModal from '@/components/ui/ShareNoteModal.vue'
 import ReminderSuggestionModal from '@/components/ui/ReminderSuggestionModal.vue'
 import type { ReminderSuggestion } from '@/types'
-import { ArrowLeft, Save, Pin, Trash2, Tag, X, Plus, Check, Sparkles, Bell, Loader } from 'lucide-vue-next'
+import { ArrowLeft, Save, Pin, Trash2, Tag, X, Plus, Check, Sparkles, Bell, Loader, FileText, Share2 } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
+import { useAi } from '@/composables/useGemini'
+import { useBlogStore } from '@/stores/blog'
 
 const route = useRoute()
 const router = useRouter()
 const notesStore = useNotesStore()
 const ui = useUiStore()
+const ai = useAi()
+const blogsStore = useBlogStore()
 const { t } = useI18n()
 
 const title = ref('')
 const content = ref('')
 const tags = ref<string[]>([])
 const pinned = ref(false)
+const isPublic = ref(false)
+const sharedWith = ref<string[]>([])
 const newTag = ref('')
 const saving = ref(false)
 const lastSaved = ref('')
@@ -44,6 +51,8 @@ async function loadNote(id: string) {
     content.value = note.content
     tags.value = [...note.tags]
     pinned.value = note.pinned
+    isPublic.value = !!note.isPublic
+    sharedWith.value = note.sharedWith || []
     lastSaved.value = new Date(note.updatedAt).toLocaleTimeString()
   } else {
     ui.showToast('error', t('common.somethingWentWrong'))
@@ -139,10 +148,68 @@ function toggleAiPanel() {
   showAiPanel.value = !showAiPanel.value
 }
 
-function handleAiInsert(text: string) {
-  // Append the AI text to the existing HTML content
-  content.value += `\n<p>${text.replace(/\n/g, '</p><p>')}</p>`
+function handleAiInsert(text: string, isHtml = false) {
+  if (isHtml) {
+    content.value += `\n${text}`
+  } else {
+    content.value += `\n<p>${text.replace(/\n/g, '</p><p>')}</p>`
+  }
   ui.showToast('success', t('notes.ai.insert'))
+}
+
+function handleAiReplace(text: string) {
+  content.value = text
+  ui.showToast('success', t('notes.ai.insert'))
+  showAiPanel.value = false
+}
+
+const creatingBlog = ref(false)
+async function handleCreateBlog() {
+  if (!content.value.trim() || creatingBlog.value) return
+  creatingBlog.value = true
+  try {
+    const rawText = content.value.replace(/<[^>]*>?/gm, '\n').replace(/\n{2,}/g, '\n').trim()
+    ui.showToast('info', t('notes.blog.generating'))
+    const resultStr = await ai.createBlog(rawText)
+    if (!resultStr) throw new Error(t('notes.blog.error'))
+    
+    // Attempt to extract JSON from markdown code block if wrapped
+    let jsonStr = resultStr.trim()
+    if (jsonStr.startsWith('```')) {
+      jsonStr = jsonStr.replace(/^```[a-z]*\n/, '').replace(/\n```$/, '')
+    }
+    const result = JSON.parse(jsonStr)
+
+    // Create blog
+    await blogsStore.createBlog({
+      title: result.title || title.value || 'Untitled Blog',
+      content: result.content || rawText,
+      excerpt: result.excerpt || '',
+      tags: result.tags || [],
+      imageUrl: '',
+      published: true // user can edit later
+    })
+    ui.showToast('success', t('notes.blog.success'))
+    router.push('/admin/blog') // go to admin blog view
+  } catch (err: any) {
+    ui.showToast('error', err.message || t('notes.blog.error'))
+  } finally {
+    creatingBlog.value = false
+  }
+}
+
+// Sharing logic
+const showShareModal = ref(false)
+async function handleSaveShare(newIsPublic: boolean, newSharedWith: string[]) {
+  isPublic.value = newIsPublic
+  sharedWith.value = newSharedWith
+  const success = await notesStore.updateNoteShare(noteId.value, newIsPublic, newSharedWith)
+  if (success) {
+    ui.showToast('success', t('notes.share.updateSuccess'))
+  } else {
+    ui.showToast('error', t('notes.share.updateError'))
+  }
+  showShareModal.value = false
 }
 
 const reminderStore = useReminderStore()
@@ -222,6 +289,28 @@ function handleApplyTags(aiTags: string[]) {
           <LogoLoader v-if="extractingEvents" :size="15" />
           <Bell v-else :size="15" />
           <span class="hidden sm:inline">Quét sự kiện</span>
+        </button>
+
+        <button
+          id="create-blog-btn"
+          :title="t('notes.createBlogBtn')"
+          class="flex h-[2.125rem] items-center gap-1.5 rounded-lg px-2.5 text-sm font-medium transition-all duration-150 text-text-secondary hover:bg-bg-hover hover:text-text-primary"
+          @click="handleCreateBlog"
+          :disabled="creatingBlog"
+        >
+          <LogoLoader v-if="creatingBlog" :size="15" />
+          <FileText v-else :size="15" />
+          <span class="hidden sm:inline">{{ t('notes.createBlogBtn') }}</span>
+        </button>
+
+        <button
+          id="share-note-btn"
+          :title="t('notes.shareBtn')"
+          class="flex h-[2.125rem] items-center gap-1.5 rounded-lg px-2.5 text-sm font-medium transition-all duration-150 text-text-secondary hover:bg-bg-hover hover:text-text-primary"
+          @click="showShareModal = true"
+        >
+          <Share2 :size="15" />
+          <span class="hidden sm:inline">{{ t('notes.shareBtn') }}</span>
         </button>
 
         <!-- AI Button -->
@@ -326,6 +415,7 @@ function handleApplyTags(aiTags: string[]) {
         :content="content"
         @close="showAiPanel = false"
         @insert-text="handleAiInsert"
+        @replace-text="handleAiReplace"
         @apply-tags="handleApplyTags"
       />
 
@@ -338,6 +428,14 @@ function handleApplyTags(aiTags: string[]) {
       :suggestions="reminderSuggestions"
       @close="reminderSuggestions = []"
       @created="reminderSuggestions = []"
+    />
+    <ShareNoteModal
+      v-if="showShareModal"
+      :note-id="noteId"
+      :initial-is-public="isPublic"
+      :initial-shared-with="sharedWith"
+      @close="showShareModal = false"
+      @save="handleSaveShare"
     />
   </div>
 </template>

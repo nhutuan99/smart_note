@@ -17,6 +17,8 @@ export interface Note {
   content: string
   tags: string[]
   pinned: boolean
+  isPublic?: boolean
+  sharedWith?: string[]
   createdAt: string
   updatedAt: string
 }

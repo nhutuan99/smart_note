@@ -35,6 +35,8 @@ import {
   handleGetNote,
   handleUpdateNote,
   handleDeleteNote,
+  handleUpdateNoteShare,
+  handleGetSharedNote,
 } from './controllers/note.controller'
 
 import {
@@ -265,6 +267,12 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
         })
       }
 
+      // Public Shared Note Route
+      const sharedNoteMatch = path.match(/^\/api\/notes\/shared\/(.+)$/)
+      if (sharedNoteMatch && request.method === 'GET') {
+        return handleGetSharedNote(sharedNoteMatch[1], request, env)
+      }
+
       // Protected routes - verify JWT
       const authHeader = request.headers.get('Authorization')
       if (!authHeader?.startsWith('Bearer ')) {
@@ -350,6 +358,11 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
         if (request.method === 'GET') return handleGetNote(userId, noteId, env)
         if (request.method === 'PUT') return handleUpdateNote(userId, noteId, request, env)
         if (request.method === 'DELETE') return handleDeleteNote(userId, noteId, env)
+      }
+      
+      const shareNoteMatch = path.match(/^\/api\/notes\/(.+)\/share$/)
+      if (shareNoteMatch && request.method === 'POST') {
+        return handleUpdateNoteShare(userId, shareNoteMatch[1], request, env)
       }
 
       // Live Webhook Logs
