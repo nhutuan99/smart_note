@@ -45,20 +45,28 @@ function goToDashboard() {
 
 <template>
   <div class="flex h-full flex-col">
-    <div class="mb-4 flex items-center gap-3">
-      <button
-        class="text-text-tertiary hover:bg-bg-hover hover:text-text-primary rounded-lg p-2 transition-colors"
-        @click="goToDashboard"
-      >
-        <ArrowLeft :size="20" />
-      </button>
-      <h1 v-if="!loading && note" class="text-text-primary truncate text-xl font-bold">
-        {{ note.title || 'Untitled Note' }}
-      </h1>
-      <span v-if="note?.isPublic" class="bg-accent-subtle text-accent rounded-md px-2 py-0.5 text-xs font-semibold">Công khai</span>
-      <span v-else-if="note" class="bg-bg-elevated border-border-default text-text-secondary flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-semibold">
-        <Lock :size="12" /> Giới hạn
-      </span>
+    <div class="mb-4 flex items-center justify-between">
+      <div class="flex min-w-0 items-center gap-3">
+        <h1 v-if="!loading && note" class="text-text-primary truncate text-xl font-bold">
+          {{ note.title || 'Untitled Note' }}
+        </h1>
+        <span v-if="note?.isPublic" class="bg-accent-subtle text-accent shrink-0 rounded-md px-2 py-0.5 text-xs font-semibold">Công khai</span>
+        <span v-else-if="note" class="bg-bg-elevated border-border-default text-text-secondary shrink-0 flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-semibold">
+          <Lock :size="12" /> Giới hạn
+        </span>
+      </div>
+
+      <div class="group relative ml-4 flex shrink-0 cursor-pointer items-center justify-center" @click="goToDashboard">
+        <div class="flex h-9 w-9 items-center justify-center transition-transform duration-200 group-hover:scale-105">
+          <img src="/images/logo-512.png" alt="FinNote Logo" class="h-full w-full rounded-lg drop-shadow-[0_0_8px_rgba(124,111,247,0.35)] object-cover" />
+        </div>
+        
+        <div class="pointer-events-none absolute right-0 top-full z-50 mt-2 w-64 translate-y-2 rounded-xl border border-border-default bg-bg-surface p-4 text-sm opacity-0 shadow-xl transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100">
+          <h3 class="mb-1 font-bold text-accent">FinNote</h3>
+          <p class="text-text-secondary">Quản lý Tài chính cá nhân & Ghi chú thông minh, tích hợp AI.</p>
+          <p class="mt-2 text-xs font-medium text-accent">Click để khám phá ngay ✨</p>
+        </div>
+      </div>
     </div>
 
     <div v-if="loading" class="flex flex-1 items-center justify-center">
