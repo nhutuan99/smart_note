@@ -262,18 +262,50 @@ export async function handleCreateTradingCheckin(userId: string, request: Reques
   checkins.push(checkin)
   await putJSON(env.SMART_NOTE_KV, TRADING_CHECKINS_KEY(userId), checkins)
 
-  // Update wallet balances
+  // Update wallet balances and create transactions
   const wallets = (await getJSON<WalletData[]>(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`)) || []
+  const txs = (await getJSON<TransactionData[]>(env.SMART_NOTE_KV, `users/${userId}/finance/transactions`)) || []
   let walletsChanged = false
+
   entries.forEach((e) => {
     const wIdx = wallets.findIndex((w) => w.id === e.walletId)
     if (wIdx !== -1) {
       wallets[wIdx].balance += e.pnlAmount + e.depositAmount
       walletsChanged = true
+
+      if (e.pnlAmount !== 0) {
+        txs.push({
+          id: generateId(),
+          type: e.pnlAmount > 0 ? 'income' : 'expense',
+          amount: Math.abs(e.pnlAmount),
+          category: 'investment',
+          note: `Trading P&L - ${today}`,
+          walletId: e.walletId,
+          source: 'manual',
+          date: today,
+          createdAt: now
+        })
+      }
+
+      if (e.depositAmount !== 0) {
+        txs.push({
+          id: generateId(),
+          type: e.depositAmount > 0 ? 'income' : 'expense',
+          amount: Math.abs(e.depositAmount),
+          category: 'bank_receive',
+          note: `Trading Deposit - ${today}`,
+          walletId: e.walletId,
+          source: 'manual',
+          date: today,
+          createdAt: now
+        })
+      }
     }
   })
+
   if (walletsChanged) {
     await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`, wallets)
+    await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/transactions`, txs)
   }
 
   return jsonResponse({ success: true, data: checkin }, 201)
@@ -312,9 +344,13 @@ export async function handleUpdateTradingCheckin(
     checkins[idx].totalPnl = entries.reduce((s, e) => s + e.pnlAmount, 0)
     checkins[idx].totalDeposit = entries.reduce((s, e) => s + e.depositAmount, 0)
 
-    // Update wallet balances with the diff
+    // Update wallet balances with the diff and create diff transactions
     const wallets = (await getJSON<WalletData[]>(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`)) || []
+    const txs = (await getJSON<TransactionData[]>(env.SMART_NOTE_KV, `users/${userId}/finance/transactions`)) || []
     let walletsChanged = false
+    const nowIso = new Date().toISOString()
+    const todayStr = nowIso.substring(0, 10)
+
     entries.forEach((e) => {
       const prevEntry = prevEntries.find((p) => p.walletId === e.walletId)
       const diffPnl = e.pnlAmount - (prevEntry?.pnlAmount || 0)
@@ -325,6 +361,34 @@ export async function handleUpdateTradingCheckin(
         if (wIdx !== -1) {
           wallets[wIdx].balance += diffPnl + diffDeposit
           walletsChanged = true
+
+          if (diffPnl !== 0) {
+            txs.push({
+              id: generateId(),
+              type: diffPnl > 0 ? 'income' : 'expense',
+              amount: Math.abs(diffPnl),
+              category: 'investment',
+              note: `Trading P&L Update - ${date}`,
+              walletId: e.walletId,
+              source: 'manual',
+              date: todayStr,
+              createdAt: nowIso
+            })
+          }
+
+          if (diffDeposit !== 0) {
+            txs.push({
+              id: generateId(),
+              type: diffDeposit > 0 ? 'income' : 'expense',
+              amount: Math.abs(diffDeposit),
+              category: 'bank_receive',
+              note: `Trading Deposit Update - ${date}`,
+              walletId: e.walletId,
+              source: 'manual',
+              date: todayStr,
+              createdAt: nowIso
+            })
+          }
         }
       }
     })
@@ -336,12 +400,40 @@ export async function handleUpdateTradingCheckin(
         if (wIdx !== -1) {
           wallets[wIdx].balance -= (p.pnlAmount + p.depositAmount)
           walletsChanged = true
+
+          if (p.pnlAmount !== 0) {
+            txs.push({
+              id: generateId(),
+              type: p.pnlAmount > 0 ? 'expense' : 'income', // Reverse action
+              amount: Math.abs(p.pnlAmount),
+              category: 'investment',
+              note: `Trading P&L Revert - ${date}`,
+              walletId: p.walletId,
+              source: 'manual',
+              date: todayStr,
+              createdAt: nowIso
+            })
+          }
+          if (p.depositAmount !== 0) {
+            txs.push({
+              id: generateId(),
+              type: p.depositAmount > 0 ? 'expense' : 'income', // Reverse action
+              amount: Math.abs(p.depositAmount),
+              category: 'bank_receive',
+              note: `Trading Deposit Revert - ${date}`,
+              walletId: p.walletId,
+              source: 'manual',
+              date: todayStr,
+              createdAt: nowIso
+            })
+          }
         }
       }
     })
 
     if (walletsChanged) {
       await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`, wallets)
+      await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/transactions`, txs)
     }
   }
 

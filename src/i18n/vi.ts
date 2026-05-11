@@ -189,11 +189,14 @@ export default {
     viewSummary: 'Xem tổng kết',
     backToEdit: '← Sửa',
     confirm: 'Xác nhận check-in',
+    update: 'Cập nhật',
     saving: 'Đang lưu...',
 
     // Toast
     successCheckin: 'Check-in thành công! 🎯',
-    errorCheckin: 'Không thể lưu check-in. Vui lòng thử lại.'
+    successUpdate: 'Cập nhật thành công! ✅',
+    errorCheckin: 'Không thể lưu check-in. Vui lòng thử lại.',
+    errorUpdate: 'Không thể cập nhật check-in. Vui lòng thử lại.'
   },
 
   // ── Planning Hub ──
