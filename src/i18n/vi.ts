@@ -80,8 +80,18 @@ export default {
 
   // ── Months ──
   months: [
-    'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
-    'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'
+    'Tháng 1',
+    'Tháng 2',
+    'Tháng 3',
+    'Tháng 4',
+    'Tháng 5',
+    'Tháng 6',
+    'Tháng 7',
+    'Tháng 8',
+    'Tháng 9',
+    'Tháng 10',
+    'Tháng 11',
+    'Tháng 12'
   ],
 
   // ── Navigation ──
@@ -201,7 +211,8 @@ export default {
 
   // ── Planning Hub ──
   planning: {
-    description: 'Trung tâm kiểm soát tài chính nâng cao. Lên kế hoạch, theo dõi mục tiêu và làm chủ dòng tiền của bạn.'
+    description:
+      'Trung tâm kiểm soát tài chính nâng cao. Lên kế hoạch, theo dõi mục tiêu và làm chủ dòng tiền của bạn.'
   },
 
   // ── Debt/Loan ──
@@ -244,7 +255,8 @@ export default {
     step3Title: 'Ngân sách tháng',
     step3Desc: 'Đặt mục tiêu chi tiêu (có thể bỏ qua)',
     step4Title: 'Trợ lý AI sẵn sàng!',
-    step4Desc: 'FinNote có AI phân tích tài chính, tự động ghi nhận giao dịch từ SMS ngân hàng, và ghi chú thông minh.',
+    step4Desc:
+      'FinNote có AI phân tích tài chính, tự động ghi nhận giao dịch từ SMS ngân hàng, và ghi chú thông minh.',
     skip: 'Bỏ qua',
     next: 'Tiếp tục',
     back: 'Quay lại',
@@ -334,7 +346,8 @@ export default {
     aiPlanDate: '*Ngày: {date}*',
     aiTooltip: 'Meow! {name} có thể giúp gì không? 👋',
     aiReadyToHelp: 'Sẵn sàng hỗ trợ tài chính',
-    aiGreeting: 'Chào bạn! 👋 Mình là {name}. Mình có thể giúp bạn phân tích chi tiêu, đưa ra lời khuyên hoặc giải đáp thắc mắc về tài chính tháng này. Bạn muốn hỏi gì nào?'
+    aiGreeting:
+      'Chào bạn! 👋 Mình là {name}. Mình có thể giúp bạn phân tích chi tiêu, đưa ra lời khuyên hoặc giải đáp thắc mắc về tài chính tháng này. Bạn muốn hỏi gì nào?'
   },
 
   // ── Transactions ──
@@ -476,19 +489,24 @@ export default {
     // App Installation (PWA)
     appDownload: 'Cài đặt Ứng dụng',
     pwaInstallTitle: 'Cài đặt FinNote (PWA)',
-    pwaInstallDesc: 'Trải nghiệm ứng dụng toàn màn hình, mượt mà hơn và không cần tải qua App Store/CH Play.',
+    pwaInstallDesc:
+      'Trải nghiệm ứng dụng toàn màn hình, mượt mà hơn và không cần tải qua App Store/CH Play.',
     pwaIosTarget: '📱 Trên iOS (Safari):',
-    pwaIosStep: 'Nhấn nút <strong>Chia sẻ (Share)</strong> ở thanh dưới > Chọn <strong>Thêm vào Màn hình chính</strong>.',
+    pwaIosStep:
+      'Nhấn nút <strong>Chia sẻ (Share)</strong> ở thanh dưới > Chọn <strong>Thêm vào Màn hình chính</strong>.',
     pwaAndroidTarget: '🤖 Trên Android (Chrome):',
-    pwaAndroidStep: 'Nhấn nút <strong>Menu (3 chấm)</strong> ở góc phải > Chọn <strong>Thêm vào Màn hình chính</strong>.',
+    pwaAndroidStep:
+      'Nhấn nút <strong>Menu (3 chấm)</strong> ở góc phải > Chọn <strong>Thêm vào Màn hình chính</strong>.',
     pwaDesktopTarget: '💻 Trên Desktop (Chrome/Edge):',
-    pwaDesktopStep: 'Nhấn vào biểu tượng <strong>Cài đặt (Install)</strong> ở góc phải thanh địa chỉ trình duyệt.',
+    pwaDesktopStep:
+      'Nhấn vào biểu tượng <strong>Cài đặt (Install)</strong> ở góc phải thanh địa chỉ trình duyệt.',
     // Language
     language: 'Ngôn ngữ',
     languageDesc: 'Chọn ngôn ngữ hiển thị',
     stocks: 'Chứng khoán',
     enableStocks: 'Bật module Chứng khoán',
-    enableStocksDesc: 'Quản lý danh mục đầu tư và theo dõi giá cổ phiếu (Chỉ hỗ trợ thị trường Việt Nam)',
+    enableStocksDesc:
+      'Quản lý danh mục đầu tư và theo dõi giá cổ phiếu (Chỉ hỗ trợ thị trường Việt Nam)',
     // Currency
     currency: 'Tiền tệ',
     currencyDisplay: 'Đơn vị tiền tệ',
@@ -543,7 +561,8 @@ export default {
     deleteAccount: 'Xóa tài khoản',
     deleteAccountDesc: 'Xóa vĩnh viễn tài khoản và toàn bộ dữ liệu',
     deleteAccountTitle: 'Xóa tài khoản',
-    deleteAccountWarning: 'Hành động này <strong>không thể hoàn tác</strong>. Mọi dữ liệu (ví, giao dịch, ghi chú) sẽ bị xóa vĩnh viễn.',
+    deleteAccountWarning:
+      'Hành động này <strong>không thể hoàn tác</strong>. Mọi dữ liệu (ví, giao dịch, ghi chú) sẽ bị xóa vĩnh viễn.',
     confirmPassword: 'Mật khẩu xác nhận',
     passwordPlaceholder: 'Nhập mật khẩu của bạn',
     deleteForever: 'Xóa vĩnh viễn',
@@ -561,7 +580,8 @@ export default {
     pushDisabled: 'Nhận thông báo giao dịch như một ứng dụng thực thụ',
     pushNotSupported: 'Trình duyệt không hỗ trợ thông báo',
     pushDenied: 'Quyền thông báo đã bị từ chối. Vui lòng vào Cài đặt thiết bị để bật lại.',
-    pushInstallHint: '📱 Để nhận thông báo trên iOS, bạn cần cài FinNote lên Màn hình chính trước (Add to Home Screen)',
+    pushInstallHint:
+      '📱 Để nhận thông báo trên iOS, bạn cần cài FinNote lên Màn hình chính trước (Add to Home Screen)',
     pushPermissionDenied: 'Quyền thông báo bị từ chối',
     pushSubscribeSuccess: '🔔 Đã bật thông báo!',
     pushSubscribeFailed: 'Không thể bật thông báo',
@@ -574,7 +594,7 @@ export default {
     notConnected: 'Chưa kết nối. Chỉ hỗ trợ trên Chrome/Edge (Desktop).',
     connected: 'Đã kết nối với thư mục vault',
     connectVault: 'Kết nối Vault',
-    disconnectVault: 'Ngắt kết nối',
+    disconnectVault: 'Ngắt kết nối'
   },
 
   // ── Login ──
@@ -604,8 +624,9 @@ export default {
     // Forgot Password
     title: 'Quên mật khẩu',
     desc: 'Nhập email đăng ký để xác minh qua Google và đặt lại mật khẩu.',
-    emailPlaceholder: 'you{\'@\'}example.com',
-    googleOAuthHint: 'Bạn sẽ được chuyển đến Google để xác minh quyền sở hữu email. Vui lòng đăng nhập đúng tài khoản Google đã đăng ký.',
+    emailPlaceholder: "you{'@'}example.com",
+    googleOAuthHint:
+      'Bạn sẽ được chuyển đến Google để xác minh quyền sở hữu email. Vui lòng đăng nhập đúng tài khoản Google đã đăng ký.',
     verifyWithGoogle: 'Xác minh bằng Google',
     googleVerifying: 'Đang xác minh...',
     googleVerifyingDesc: 'Vui lòng chờ trong khi chúng tôi xác minh tài khoản Google của bạn.',
@@ -645,24 +666,31 @@ export default {
     free: '<strong>Miễn phí:</strong> Không cần qua trung gian bên thứ 3 nào.',
     instant: '<strong>Tức thì:</strong> SMS biến động số dư → tự động ghi vào FinNote (~30 giây).',
     step1Title: '1. Đường dẫn Webhook của bạn',
-    step1Desc: 'Đường dẫn này chứa mã định danh duy nhất của bạn. Tuyệt đối không chia sẻ cho người khác.',
+    step1Desc:
+      'Đường dẫn này chứa mã định danh duy nhất của bạn. Tuyệt đối không chia sẻ cho người khác.',
     step2Title: '2. Hướng dẫn thiết lập trên iPhone',
     s1Title: 'Tạo Tự động hóa mới',
-    s1Desc: 'Mở ứng dụng <strong>Phím tắt (Shortcuts)</strong> trên iPhone → tab <strong>Tự động hóa</strong> ở dưới cùng → bấm <strong>+</strong> góc trên phải.',
+    s1Desc:
+      'Mở ứng dụng <strong>Phím tắt (Shortcuts)</strong> trên iPhone → tab <strong>Tự động hóa</strong> ở dưới cùng → bấm <strong>+</strong> góc trên phải.',
     s2Title: 'Chọn điều kiện kích hoạt',
     s2Desc: 'Cuộn xuống chọn mục <strong>Tin nhắn</strong>. Cấu hình như sau:',
     s2Li1: '<strong>Người gửi:</strong> Để mặc định <em>Bất kỳ người gửi nào</em>.',
-    s2Li2: '<strong>Tin nhắn chứa:</strong> Nhập tên ngân hàng trong ngoặc, VD: <code>(TPBank)</code>, <code>Techcombank</code>, <code>BIDV</code>. Mỗi ngân hàng cần tạo <strong>1 automation riêng</strong>.',
-    s2Next: 'Chọn <strong>Chạy ngay lập tức</strong> → bấm <strong>Tiếp</strong> → chọn <strong>Tạo tự động hóa trống</strong>.',
+    s2Li2:
+      '<strong>Tin nhắn chứa:</strong> Nhập tên ngân hàng trong ngoặc, VD: <code>(TPBank)</code>, <code>Techcombank</code>, <code>BIDV</code>. Mỗi ngân hàng cần tạo <strong>1 automation riêng</strong>.',
+    s2Next:
+      'Chọn <strong>Chạy ngay lập tức</strong> → bấm <strong>Tiếp</strong> → chọn <strong>Tạo tự động hóa trống</strong>.',
     s3Title: 'Gắn đường dẫn Webhook',
-    s3Desc: 'Bấm <strong>Thêm hành động</strong> → tìm <strong>"URL"</strong> → chọn <strong>Lấy nội dung URL (Get Contents of URL)</strong>. Dán đường dẫn Webhook ở Bước 1 vào ô URL.',
+    s3Desc:
+      'Bấm <strong>Thêm hành động</strong> → tìm <strong>"URL"</strong> → chọn <strong>Lấy nội dung URL (Get Contents of URL)</strong>. Dán đường dẫn Webhook ở Bước 1 vào ô URL.',
     s4Title: 'Cấu hình gửi dữ liệu',
     s4Desc: 'Bấm vào mũi tên nhỏ <strong>⌄</strong> (Hiển thị thêm) ở hành động vừa thêm:',
     s4Li1: 'Đổi Phương thức thành <strong>POST</strong>.',
-    s4Li2: 'Kéo xuống phần <strong>Nội dung yêu cầu</strong> → thêm trường mới dạng <strong>Văn bản</strong>.',
+    s4Li2:
+      'Kéo xuống phần <strong>Nội dung yêu cầu</strong> → thêm trường mới dạng <strong>Văn bản</strong>.',
     s4Li3: 'Nhập Khóa (Key): <kbd>text</kbd>',
     s4Li4: 'Phần Giá trị (Value): chọn <strong>Đầu vào phím tắt (Shortcut Input)</strong>.',
-    s4Done: 'Bấm <strong>Xong</strong> để lưu. Từ giờ mỗi khi nhận SMS biến động số dư từ ngân hàng, giao dịch sẽ tự động được ghi nhận!',
+    s4Done:
+      'Bấm <strong>Xong</strong> để lưu. Từ giờ mỗi khi nhận SMS biến động số dư từ ngân hàng, giao dịch sẽ tự động được ghi nhận!',
     copySuccess: 'Đã copy đường dẫn thành công!',
     copyFailed: 'Không thể copy, vui lòng thử lại.',
     revealUrl: 'Hiển thị URL',
@@ -677,7 +705,8 @@ export default {
     wrong: 'PIN không đúng',
     confirm: 'Xác nhận',
     requireTitle: 'Yêu cầu mã PIN',
-    requireMessage: 'Để bảo vệ dữ liệu, bạn cần thiết lập Mã PIN trước khi thực hiện các thao tác quan trọng.',
+    requireMessage:
+      'Để bảo vệ dữ liệu, bạn cần thiết lập Mã PIN trước khi thực hiện các thao tác quan trọng.',
     setupNow: 'Thiết lập PIN ngay'
   },
 
@@ -694,9 +723,9 @@ export default {
     retry: 'Thử lại',
     cities: {
       'Ho Chi Minh City': 'TP. Hồ Chí Minh',
-      'Hanoi': 'Hà Nội',
+      Hanoi: 'Hà Nội',
       'Hà Nội': 'Hà Nội',
-      'Danang': 'Đà Nẵng',
+      Danang: 'Đà Nẵng',
       'Đà Nẵng': 'Đà Nẵng'
     }
   },
@@ -790,7 +819,8 @@ export default {
   // ── Guide ──
   guide: {
     syncTitle: 'Bạn có biết?',
-    syncMessage: 'FinNote hỗ trợ đồng bộ giao dịch ngân hàng tự động qua iOS Shortcuts mà không cần đăng nhập tài khoản ngân hàng.',
+    syncMessage:
+      'FinNote hỗ trợ đồng bộ giao dịch ngân hàng tự động qua iOS Shortcuts mà không cần đăng nhập tài khoản ngân hàng.',
     syncAction: 'Tìm hiểu ngay'
   },
 
@@ -802,7 +832,8 @@ export default {
     step2: 'Chọn <strong>"Thêm vào Màn hình chính"</strong>',
     iosNativeOption: 'Hoặc cài đặt Native App:',
     downloadIpa: 'Tải file .IPA',
-    ipaInstruction: '*Yêu cầu sử dụng máy tính cài qua <strong>AltStore</strong>, <strong>Sideloadly</strong>, hoặc dùng thiết bị đã có <strong>TrollStore</strong>.'
+    ipaInstruction:
+      '*Yêu cầu sử dụng máy tính cài qua <strong>AltStore</strong>, <strong>Sideloadly</strong>, hoặc dùng thiết bị đã có <strong>TrollStore</strong>.'
   },
 
   // ── Blog ──
@@ -856,7 +887,8 @@ export default {
     minRead: 'phút đọc',
     // App Intro CTA
     appIntroTitle: 'FinNote — Quản lý tài chính thông minh',
-    appIntroDesc: 'Theo dõi thu chi, đồng bộ giao dịch ngân hàng tự động, AI phân tích tài chính cá nhân — tất cả trong một ứng dụng miễn phí.',
+    appIntroDesc:
+      'Theo dõi thu chi, đồng bộ giao dịch ngân hàng tự động, AI phân tích tài chính cá nhân — tất cả trong một ứng dụng miễn phí.',
     appIntroFeature1: 'Tự động ghi nhận giao dịch qua SMS',
     appIntroFeature2: 'AI phân tích & tư vấn chi tiêu',
     appIntroFeature3: 'Dashboard trực quan, dễ sử dụng',
@@ -933,7 +965,8 @@ export default {
     detected: 'lần phát hiện',
     soon: 'Sắp tới',
     empty: 'Chưa phát hiện đăng ký',
-    emptyHint: 'Thêm giao dịch để hệ thống tự động phát hiện các khoản chi định kỳ (Netflix, Spotify, gym...)'
+    emptyHint:
+      'Thêm giao dịch để hệ thống tự động phát hiện các khoản chi định kỳ (Netflix, Spotify, gym...)'
   },
 
   // ── Weekly Event ──
@@ -945,18 +978,22 @@ export default {
     generatingImage: 'AI đang vẽ ảnh minh họa...',
     topics: {
       t1_title: 'Thử thách Tiết kiệm 500k',
-      t1_desc: 'Tuần này, hãy thử cắt giảm những chi tiêu không cần thiết như trà sữa, cà phê ngoài để tiết kiệm 500k nhé!',
+      t1_desc:
+        'Tuần này, hãy thử cắt giảm những chi tiêu không cần thiết như trà sữa, cà phê ngoài để tiết kiệm 500k nhé!',
       t2_title: 'Dọn dẹp Tài chính',
-      t2_desc: 'Dành 15 phút tuần này để rà soát lại các khoản chi tiêu nhỏ lẻ tuần qua. Bạn sẽ bất ngờ đấy!',
+      t2_desc:
+        'Dành 15 phút tuần này để rà soát lại các khoản chi tiêu nhỏ lẻ tuần qua. Bạn sẽ bất ngờ đấy!',
       t3_title: 'Quy tắc 50/30/20',
-      t3_desc: 'Bạn đã áp dụng quy tắc 50/30/20 chưa? Hãy chia thu nhập của bạn cho Nhu cầu, Mong muốn và Tiết kiệm nhé.'
+      t3_desc:
+        'Bạn đã áp dụng quy tắc 50/30/20 chưa? Hãy chia thu nhập của bạn cho Nhu cầu, Mong muốn và Tiết kiệm nhé.'
     }
   },
 
   // ── Reminders ──
   reminders: {
     title: 'Lời nhắc',
-    subtitle: 'AI tự động phát hiện sự kiện từ ghi chú. Nhắc trước deadline để không bỏ lỡ điều gì.',
+    subtitle:
+      'AI tự động phát hiện sự kiện từ ghi chú. Nhắc trước deadline để không bỏ lỡ điều gì.',
     create: 'Tạo lời nhắc',
     edit: 'Sửa lời nhắc',
     titleField: 'Tiêu đề',
@@ -976,7 +1013,8 @@ export default {
     repeatDaily: 'Hàng ngày',
     repeatWeekly: 'Hàng tuần',
     repeatMonthly: 'Hàng tháng',
-    lastChanceInfo: 'Nếu bạn chưa xác nhận "Đã nhớ", hệ thống sẽ tự động gửi thông báo lần cuối trước deadline 1 giờ.',
+    lastChanceInfo:
+      'Nếu bạn chưa xác nhận "Đã nhớ", hệ thống sẽ tự động gửi thông báo lần cuối trước deadline 1 giờ.',
     all: 'Tất cả',
     active: 'Đang hoạt động',
     completed: 'Đã hoàn thành',

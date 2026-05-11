@@ -362,32 +362,50 @@ export async function handleUpdateTradingCheckin(
           wallets[wIdx].balance += diffPnl + diffDeposit
           walletsChanged = true
 
-          if (diffPnl !== 0) {
-            txs.push({
-              id: generateId(),
-              type: diffPnl > 0 ? 'income' : 'expense',
-              amount: Math.abs(diffPnl),
-              category: 'investment',
-              note: `Trading P&L Update - ${date}`,
-              walletId: e.walletId,
-              source: 'manual',
-              date: todayStr,
-              createdAt: nowIso
-            })
+          if (e.pnlAmount !== 0) {
+            const txIdx = txs.findIndex(t => t.walletId === e.walletId && t.date === date && t.category === 'investment' && t.note.includes('Trading P&L'))
+            if (txIdx !== -1) {
+              txs[txIdx].amount = Math.abs(e.pnlAmount)
+              txs[txIdx].type = e.pnlAmount > 0 ? 'income' : 'expense'
+            } else {
+              txs.push({
+                id: generateId(),
+                type: e.pnlAmount > 0 ? 'income' : 'expense',
+                amount: Math.abs(e.pnlAmount),
+                category: 'investment',
+                note: `Trading P&L - ${date}`,
+                walletId: e.walletId,
+                source: 'manual',
+                date: date,
+                createdAt: nowIso
+              })
+            }
+          } else {
+            const txIdx = txs.findIndex(t => t.walletId === e.walletId && t.date === date && t.category === 'investment' && t.note.includes('Trading P&L'))
+            if (txIdx !== -1) txs.splice(txIdx, 1)
           }
 
-          if (diffDeposit !== 0) {
-            txs.push({
-              id: generateId(),
-              type: diffDeposit > 0 ? 'income' : 'expense',
-              amount: Math.abs(diffDeposit),
-              category: 'bank_receive',
-              note: `Trading Deposit Update - ${date}`,
-              walletId: e.walletId,
-              source: 'manual',
-              date: todayStr,
-              createdAt: nowIso
-            })
+          if (e.depositAmount !== 0) {
+            const txIdx = txs.findIndex(t => t.walletId === e.walletId && t.date === date && t.category === 'bank_receive' && t.note.includes('Trading Deposit'))
+            if (txIdx !== -1) {
+              txs[txIdx].amount = Math.abs(e.depositAmount)
+              txs[txIdx].type = e.depositAmount > 0 ? 'income' : 'expense'
+            } else {
+              txs.push({
+                id: generateId(),
+                type: e.depositAmount > 0 ? 'income' : 'expense',
+                amount: Math.abs(e.depositAmount),
+                category: 'bank_receive',
+                note: `Trading Deposit - ${date}`,
+                walletId: e.walletId,
+                source: 'manual',
+                date: date,
+                createdAt: nowIso
+              })
+            }
+          } else {
+            const txIdx = txs.findIndex(t => t.walletId === e.walletId && t.date === date && t.category === 'bank_receive' && t.note.includes('Trading Deposit'))
+            if (txIdx !== -1) txs.splice(txIdx, 1)
           }
         }
       }
@@ -401,32 +419,11 @@ export async function handleUpdateTradingCheckin(
           wallets[wIdx].balance -= (p.pnlAmount + p.depositAmount)
           walletsChanged = true
 
-          if (p.pnlAmount !== 0) {
-            txs.push({
-              id: generateId(),
-              type: p.pnlAmount > 0 ? 'expense' : 'income', // Reverse action
-              amount: Math.abs(p.pnlAmount),
-              category: 'investment',
-              note: `Trading P&L Revert - ${date}`,
-              walletId: p.walletId,
-              source: 'manual',
-              date: todayStr,
-              createdAt: nowIso
-            })
-          }
-          if (p.depositAmount !== 0) {
-            txs.push({
-              id: generateId(),
-              type: p.depositAmount > 0 ? 'expense' : 'income', // Reverse action
-              amount: Math.abs(p.depositAmount),
-              category: 'bank_receive',
-              note: `Trading Deposit Revert - ${date}`,
-              walletId: p.walletId,
-              source: 'manual',
-              date: todayStr,
-              createdAt: nowIso
-            })
-          }
+          const pnlTxIdx = txs.findIndex(t => t.walletId === p.walletId && t.date === date && t.category === 'investment' && t.note.includes('Trading P&L'))
+          if (pnlTxIdx !== -1) txs.splice(pnlTxIdx, 1)
+
+          const depTxIdx = txs.findIndex(t => t.walletId === p.walletId && t.date === date && t.category === 'bank_receive' && t.note.includes('Trading Deposit'))
+          if (depTxIdx !== -1) txs.splice(depTxIdx, 1)
         }
       }
     })
