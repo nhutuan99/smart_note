@@ -64,10 +64,27 @@ async function handleTogglePin(id: string, e: Event) {
   await notesStore.togglePin(id)
 }
 
-function stripHtml(html: string) {
+function formatExcerpt(html: string) {
   if (!html) return ''
-  const doc = new DOMParser().parseFromString(html, 'text/html')
-  return doc.body.textContent || ''
+  
+  let text = html.replace(/<br\s*\/?>/gi, ' ')
+  text = text.replace(/<\/?(p|div|h[1-6]|li|ul|ol|table|tr|th|td|blockquote)[^>]*>/gi, ' ')
+  
+  const doc = new DOMParser().parseFromString(text, 'text/html')
+  text = doc.body.textContent || ''
+  
+  text = text.replace(/(?:^|\s)#{1,6}\s+(.*)/g, ' $1 ') 
+  text = text.replace(/(\*\*|__)(.*?)\1/g, '$2') 
+  text = text.replace(/(\*|_)(.*?)\1/g, '$2') 
+  text = text.replace(/!\[(.*?)\]\(.*?\)/g, '$1') 
+  text = text.replace(/\[(.*?)\]\(.*?\)/g, '$1') 
+  text = text.replace(/`(.*?)`/g, '$1') 
+  text = text.replace(/```[\s\S]*?```/g, ' ') 
+  
+  text = text.replace(/[\n\r]+/g, ' ')
+  text = text.replace(/\s{2,}/g, ' ')
+  
+  return text.trim()
 }
 </script>
 
@@ -230,7 +247,7 @@ function stripHtml(html: string) {
             class="text-text-tertiary line-clamp-2 flex-1 text-sm leading-relaxed break-words"
             :class="notesStore.viewMode === 'list' ? 'line-clamp-1' : ''"
           >
-            {{ stripHtml(note.excerpt) || t('notes.noContent') }}
+            {{ formatExcerpt(note.excerpt) || t('notes.noContent') }}
           </p>
           <div
             class="border-border-subtle mt-3 flex items-center justify-between border-t pt-3"

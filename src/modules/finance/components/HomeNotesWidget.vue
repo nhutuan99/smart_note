@@ -39,9 +39,28 @@ function timeAgo(dateStr: string): string {
 }
 
 /** Strip HTML tags + truncate for safe excerpt display */
-function safeExcerpt(text: string, maxLen = 60): string {
-  const stripped = text.replace(/<[^>]+>/g, '').trim()
-  return stripped.length > maxLen ? stripped.slice(0, maxLen) + '…' : stripped
+function safeExcerpt(html: string, maxLen = 60): string {
+  if (!html) return ''
+  
+  let text = html.replace(/<br\s*\/?>/gi, ' ')
+  text = text.replace(/<\/?(p|div|h[1-6]|li|ul|ol|table|tr|th|td|blockquote)[^>]*>/gi, ' ')
+  
+  const doc = new DOMParser().parseFromString(text, 'text/html')
+  text = doc.body.textContent || ''
+  
+  text = text.replace(/(?:^|\s)#{1,6}\s+(.*)/g, ' $1 ') 
+  text = text.replace(/(\*\*|__)(.*?)\1/g, '$2') 
+  text = text.replace(/(\*|_)(.*?)\1/g, '$2') 
+  text = text.replace(/!\[(.*?)\]\(.*?\)/g, '$1') 
+  text = text.replace(/\[(.*?)\]\(.*?\)/g, '$1') 
+  text = text.replace(/`(.*?)`/g, '$1') 
+  text = text.replace(/```[\s\S]*?```/g, ' ') 
+  
+  text = text.replace(/[\n\r]+/g, ' ')
+  text = text.replace(/\s{2,}/g, ' ')
+  text = text.trim()
+
+  return text.length > maxLen ? text.slice(0, maxLen) + '…' : text
 }
 </script>
 
