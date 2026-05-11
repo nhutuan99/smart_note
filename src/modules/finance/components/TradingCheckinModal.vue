@@ -151,7 +151,15 @@ async function submit() {
   isSubmitting.value = false
 
   if (ok) {
-    // Refresh wallets so balances reflect the P&L update
+    // Eagerly update wallet balances to bypass KV eventual consistency
+    summaryEntries.value.forEach(e => {
+      const w = financeStore.wallets.find(w => w.id === e.walletId)
+      if (w) {
+        w.balance = e.balanceAfter
+      }
+    })
+
+    // Refresh wallets from backend
     financeStore.fetchAll()
     ui.showToast('success', isEditMode.value ? t('trading.successUpdate') : t('trading.successCheckin'))
     emit('update:modelValue', false)

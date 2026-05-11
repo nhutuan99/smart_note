@@ -275,11 +275,19 @@ export const useFinanceStore = defineStore('finance', () => {
       const tx = await httpClient.post<Transaction>('/api/transactions', data)
       if (tx) {
         transactions.value.push(tx)
-        // Refresh wallets to get updated balance from server
-        await fetchWallets()
-        _lastFetchTime = Date.now()
+        
+        // Eagerly update local wallet balance to bypass KV eventual consistency delay
+        const wIdx = wallets.value.findIndex(w => w.id === tx.walletId)
+        if (wIdx !== -1) {
+          wallets.value[wIdx].balance += tx.type === 'income' ? tx.amount : -tx.amount
+        }
+        
+        // Refresh wallets from server in background
+        fetchWallets().then(() => {
+          _lastFetchTime = Date.now()
+        })
+        return tx
       }
-      return tx
     } catch (err) {
       console.error('Failed to add transaction:', err)
       return null
@@ -288,11 +296,21 @@ export const useFinanceStore = defineStore('finance', () => {
 
   async function deleteTransaction(id: string) {
     try {
+      const txToDelete = transactions.value.find(t => t.id === id)
+      if (txToDelete) {
+        const wIdx = wallets.value.findIndex(w => w.id === txToDelete.walletId)
+        if (wIdx !== -1) {
+          wallets.value[wIdx].balance -= txToDelete.type === 'income' ? txToDelete.amount : -txToDelete.amount
+        }
+      }
+      
       await httpClient.del(`/api/transactions/${id}`)
       transactions.value = transactions.value.filter((t) => t.id !== id)
-      // Refresh wallets to get reverted balance from server
-      await fetchWallets()
-      _lastFetchTime = Date.now()
+      
+      // Refresh wallets from server in background
+      fetchWallets().then(() => {
+        _lastFetchTime = Date.now()
+      })
     } catch (err) {
       console.error('Failed to delete transaction:', err)
     }
