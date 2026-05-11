@@ -87,8 +87,8 @@ const navGroups = computed<NavGroup[]>(() => {
 
   return [
     { items: financeItems }, // No label for the primary group to save space
-    { labelKey: 'common.workspace', items: workspaceItems },
-    { labelKey: 'common.system', items: systemItems }
+    { labelKey: 'nav.workspace', items: workspaceItems },
+    { labelKey: 'nav.system', items: systemItems }
   ]
 })
 

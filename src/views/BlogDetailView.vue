@@ -9,6 +9,7 @@ import DOMPurify from 'dompurify'
 import { useSeoMeta, useHead } from '@unhead/vue'
 import { ArrowLeft, Calendar, Hash, User as UserIcon, Clock, BookOpen, ArrowRight, Zap, BrainCircuit, LayoutDashboard, Share2, Facebook, Twitter, Linkedin, Link, MessageCircle, Send, Eye } from 'lucide-vue-next'
 import { useUiStore } from '@/stores/ui'
+import AppIntroCta from '@/components/ui/AppIntroCta.vue'
 
 const { t, locale } = useI18n()
 const route = useRoute()
@@ -302,52 +303,7 @@ const formatDate = (dateStr: string) => {
       </footer>
     </article>
 
-    <!-- Floating CTA (Desktop Tooltip + Mobile Anim) -->
-    <div class="cta-float" @mouseenter="showTooltip = true" @mouseleave="showTooltip = false">
-      <Transition name="tooltip">
-        <div v-if="showTooltip" class="cta-tooltip" @click.stop>
-          <div class="cta-tooltip__glow"></div>
-          <div class="cta-tooltip__glow2"></div>
-          <div class="relative z-[1]">
-            <div class="flex items-center gap-3 mb-3">
-              <div class="cta-tooltip__logo">
-                <img src="/images/logo-512.png" alt="FinNote" class="w-full h-full object-contain rounded-md" />
-              </div>
-              <div>
-                <h3 class="text-sm font-bold text-text-primary leading-tight">{{ t('blog.appIntroTitle') }}</h3>
-                <p class="text-[0.6875rem] text-text-tertiary mt-0.5">PWA • {{ t('blog.appIntroNote') }}</p>
-              </div>
-            </div>
-            <div class="space-y-2 mb-4">
-              <div class="cta-tooltip__feature">
-                <div class="cta-tooltip__feature-icon"><Zap :size="11" /></div>
-                <span>{{ t('blog.appIntroFeature1') }}</span>
-              </div>
-              <div class="cta-tooltip__feature">
-                <div class="cta-tooltip__feature-icon cta-tooltip__feature-icon--purple"><BrainCircuit :size="11" /></div>
-                <span>{{ t('blog.appIntroFeature2') }}</span>
-              </div>
-              <div class="cta-tooltip__feature">
-                <div class="cta-tooltip__feature-icon cta-tooltip__feature-icon--green"><LayoutDashboard :size="11" /></div>
-                <span>{{ t('blog.appIntroFeature3') }}</span>
-              </div>
-            </div>
-            <a href="/login" class="cta-tooltip__action group">
-              <span>{{ t('blog.appIntroCta') }}</span>
-              <ArrowRight :size="14" class="transition-transform group-hover:translate-x-1" />
-            </a>
-          </div>
-        </div>
-      </Transition>
-
-      <button class="cta-float__btn group" @click="router.push('/login')">
-        <div class="cta-float__pulse"></div>
-        <div class="cta-float__spin-border"></div>
-        <div class="cta-float__inner">
-          <img src="/images/logo-512.png" alt="FinNote Logo" class="w-full h-full object-cover" />
-        </div>
-      </button>
-    </div>
+    <AppIntroCta />
   </div>
 </template>
 
