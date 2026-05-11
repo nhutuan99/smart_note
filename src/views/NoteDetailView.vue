@@ -169,21 +169,23 @@ async function handleCreateBlog() {
   creatingBlog.value = true
   try {
     const rawText = content.value.replace(/<[^>]*>?/gm, '\n').replace(/\n{2,}/g, '\n').trim()
-    ui.showToast('info', t('notes.blog.generating'))
-    const resultStr = await ai.createBlog(rawText)
-    if (!resultStr) throw new Error(t('notes.blog.error'))
-    
-    // Attempt to extract JSON from markdown code block if wrapped
-    let jsonStr = resultStr.trim()
-    if (jsonStr.startsWith('```')) {
-      jsonStr = jsonStr.replace(/^```[a-z]*\n/, '').replace(/\n```$/, '')
+    const imgMatch = content.value.match(/<img[^>]+src="([^">]+)"/)
+    const firstImageBase64 = imgMatch ? imgMatch[1] : undefined
+
+    if (!rawText && !firstImageBase64) {
+      throw new Error(t('notes.blog.error'))
     }
-    const result = JSON.parse(jsonStr)
+
+    ui.showToast('info', t('notes.blog.generating'))
+    
+    // Using blogsStore.generateContent which uses Gemini (supports multimodal)
+    const result = await blogsStore.generateContent(rawText, firstImageBase64)
+    if (!result) throw new Error(t('notes.blog.error'))
 
     // Create blog
     await blogsStore.createBlog({
       title: result.title || title.value || 'Untitled Blog',
-      content: result.content || rawText,
+      content: result.content || rawText || '![Image blog](' + firstImageBase64 + ')',
       excerpt: result.excerpt || '',
       tags: result.tags || [],
       imageUrl: '',
