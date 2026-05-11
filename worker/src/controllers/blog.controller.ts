@@ -448,12 +448,42 @@ ${images.length > 0 ? `QUAN TRỌNG: Người dùng đã cung cấp ${images.len
     if (!useGemini || !text) {
       if (!env.AI) return errorResponse('AI binding not configured', 503)
 
+      let extractedImageText = ''
+      if (images.length > 0) {
+        console.log(`[BlogGen] Extracting text from ${images.length} images using CF Vision...`)
+        for (let i = 0; i < images.length; i++) {
+          const img = images[i]
+          const match = img.match(/^data:image\/([a-zA-Z]+);base64,(.+)$/)
+          if (match) {
+            try {
+              const base64Data = match[2]
+              const binaryString = atob(base64Data)
+              const bytes = new Uint8Array(binaryString.length)
+              for (let j = 0; j < binaryString.length; j++) {
+                  bytes[j] = binaryString.charCodeAt(j)
+              }
+              const visionRes = await env.AI.run('@cf/meta/llama-3.2-11b-vision-instruct' as any, {
+                image: [...bytes],
+                prompt: "Trích xuất toàn bộ văn bản và mô tả nội dung trong hình ảnh này. Chỉ trả về văn bản hữu ích."
+              }) as any
+              if (visionRes && visionRes.response) {
+                extractedImageText += `\n--- Chi tiết hình ảnh [IMAGE_${i}] ---\n${visionRes.response}\n`
+              }
+            } catch (err: any) {
+              console.warn('[BlogGen] CF Vision failed for image', i, err.message)
+            }
+          }
+        }
+      }
+
+      const finalTopic = extractedImageText ? `Chủ đề gốc: ${topic}\n\nDữ liệu từ hình ảnh đính kèm:\n${extractedImageText}` : topic
+
       const metaPrompt = `Bạn là chuyên gia SEO blog đa chủ đề. Trả về ĐÚNG JSON (không có text thêm):
 {"title":"Tiêu đề hấp dẫn dưới 60 ký tự","excerpt":"Mô tả SEO dưới 160 ký tự","tags":["tag1","tag2","tag3"],"seoKeywords":"keyword1, keyword2","imagePrompts":["mô tả ảnh 1","mô tả ảnh 2"]}`
       const metaResponse = await env.AI.run('@cf/meta/llama-3.1-8b-instruct' as any, {
         messages: [
           { role: 'system', content: metaPrompt },
-          { role: 'user', content: `Chủ đề: ${topic}` }
+          { role: 'user', content: `Chủ đề: ${finalTopic}` }
         ],
         max_tokens: 512,
         temperature: 0.7
@@ -464,17 +494,18 @@ ${images.length > 0 ? `QUAN TRỌNG: Người dùng đã cung cấp ${images.len
       if (metaMatch) metaText = metaMatch[0]
 
       let meta: any = {}
-      try { meta = JSON.parse(metaText) } catch { meta = { title: topic, excerpt: '', tags: [], seoKeywords: '', imagePrompts: [] } }
+      try { meta = JSON.parse(metaText) } catch { meta = { title: finalTopic, excerpt: '', tags: [], seoKeywords: '', imagePrompts: [] } }
 
       const contentPrompt = `Bạn là chuyên gia viết blog đa chủ đề. Viết bài blog hấp dẫn bằng Markdown cho chủ đề dưới đây.
 ${researchContext ? `Thông tin nghiên cứu: ${researchContext.substring(0, 1500)}` : ''}
 Yêu cầu: KHÔNG bao gồm tiêu đề H1. Bắt đầu trực tiếp với đoạn mở bài, thân bài chia H2/H3, bullet points, bold text, kết bài CTA giới thiệu FinNote.
+${images.length > 0 ? `QUAN TRỌNG: Hãy chèn các hình ảnh gốc vào bài viết tại các vị trí phù hợp bằng cú pháp: [IMAGE_0], [IMAGE_1], v.v.` : ''}
 Viết tối thiểu 1500 từ, chi tiết và chuyên sâu.
 Chỉ trả về nội dung Markdown, không bọc trong JSON hay code block.`
       const contentResponse = await env.AI.run('@cf/meta/llama-3.1-8b-instruct' as any, {
         messages: [
           { role: 'system', content: contentPrompt },
-          { role: 'user', content: `Tiêu đề: ${meta.title || topic}\nChủ đề: ${topic}` }
+          { role: 'user', content: `Tiêu đề: ${meta.title || finalTopic}\nChủ đề: ${finalTopic}` }
         ],
         max_tokens: 4096,
         temperature: 0.7
