@@ -238,7 +238,7 @@ export async function handleCreateTradingCheckin(userId: string, request: Reques
     .map((e) => ({
       walletId: typeof e.walletId === 'string' ? e.walletId : '',
       walletName: typeof e.walletName === 'string' ? e.walletName : '',
-      inputMode: e.inputMode === 'percent' ? 'percent' : 'amount',
+      inputMode: (e.inputMode === 'percent' ? 'percent' : 'amount') as 'percent' | 'amount',
       inputValue: typeof e.inputValue === 'number' ? e.inputValue : 0,
       pnlAmount: typeof e.pnlAmount === 'number' ? e.pnlAmount : 0,
       depositAmount: typeof e.depositAmount === 'number' ? Math.max(0, e.depositAmount) : 0,
