@@ -90,6 +90,11 @@ export default {
     transactions: 'Transactions',
     wallets: 'Wallets',
     stocks: 'Stocks',
+    success: 'Success',
+    error: 'Error',
+    warning: 'Warning',
+    workspace: 'Workspace',
+    system: 'System',
     notes: 'Notes',
     blog: 'Blog',
     settings: 'Settings',
@@ -104,6 +109,94 @@ export default {
     subscriptions: 'Subscriptions',
     planning: 'Financial Hub',
     trading: 'Trading Journal'
+  },
+
+  // ── Trading Journal ──
+  trading: {
+    // Page
+    title: 'Trading Journal',
+    subtitle: 'Track daily P&L · Performance analytics',
+    checkinToday: 'Check-in today',
+    editCheckinToday: 'Edit today\'s check-in',
+
+    // Period tabs
+    day: 'Day',
+    month: 'Month',
+    year: 'Year',
+    last30Days: '30 days',
+    last12Months: '12 months',
+    last10Years: '10 years',
+
+    // Stats cards
+    totalPnl: 'Total P&L',
+    winRate: 'Win Rate',
+    allTimePnl: 'All-time P&L',
+    totalSessions: 'Total Sessions',
+    wl: '{w}W / {l}L',
+    wrAllTime: 'WR {wr}% all-time',
+
+    // Chart
+    chartTitle: 'P&L Chart',
+    profit: 'Profit',
+    loss: 'Loss',
+    noData: 'No data yet. Start by doing your first check-in!',
+
+    // History list
+    historyTitle: 'Check-in History',
+    noHistory: 'No check-ins yet',
+    wallets: '{n} wallets',
+    deposit: '+{amount} deposit',
+
+    // FinanceOverview widget
+    widgetTitle: 'Trading Journal',
+    notCheckedIn: 'Not checked in today',
+    viewEdit: 'View / Edit',
+    checkinCta: '+ Check-in',
+
+    // Modal — general
+    modalTitle: 'Trading Check-in',
+    stepSetup: 'Select wallets',
+    stepInput: 'Enter today\'s result',
+    stepSummary: 'Confirm check-in',
+
+    // Modal — step 1 setup
+    setupDesc: 'Choose wallets to track P&L daily. You can change this later.',
+    noWallets: 'No wallets found. Please create a wallet first.',
+    walletRequired: 'Select at least 1 wallet to track.',
+
+    // Modal — step 2 input
+    noWalletsSelected: 'No wallets selected.',
+    balanceBefore: 'Balance: {amount}',
+    pnlLabel: 'Profit / Loss',
+    pnlHint: '(negative = loss)',
+    depositLabel: 'Add capital',
+    depositHint: '(optional)',
+    balanceAfter: 'Balance after:',
+    noteLabel: 'Session note (optional)',
+    notePlaceholder: 'Brief notes about today\'s trading session...',
+    inputRequired: 'Enter P&L or deposit for at least 1 wallet.',
+
+    // Modal — step 3 summary
+    summaryTotal: 'Total P&L today',
+    summaryDeposit: '+ {amount} deposited',
+    summaryNote: 'Note',
+    balanceChange: '{before} → {after}',
+
+    // Modal — footer buttons
+    cancel: 'Cancel',
+    next: 'Next',
+    backToWallets: '← Wallets',
+    viewSummary: 'View Summary',
+    backToEdit: '← Edit',
+    confirm: 'Confirm check-in',
+    update: 'Update check-in',
+    saving: 'Saving...',
+
+    // Toast
+    successCheckin: 'Check-in saved! 🎯',
+    successUpdate: 'Check-in updated! ✅',
+    errorCheckin: 'Failed to save check-in. Please try again.',
+    errorUpdate: 'Failed to update check-in. Please try again.'
   },
 
   // ── Planning Hub ──

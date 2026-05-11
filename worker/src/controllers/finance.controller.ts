@@ -261,6 +261,21 @@ export async function handleCreateTradingCheckin(userId: string, request: Reques
 
   checkins.push(checkin)
   await putJSON(env.SMART_NOTE_KV, TRADING_CHECKINS_KEY(userId), checkins)
+
+  // Update wallet balances
+  const wallets = (await getJSON<WalletData[]>(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`)) || []
+  let walletsChanged = false
+  entries.forEach((e) => {
+    const wIdx = wallets.findIndex((w) => w.id === e.walletId)
+    if (wIdx !== -1) {
+      wallets[wIdx].balance += e.pnlAmount + e.depositAmount
+      walletsChanged = true
+    }
+  })
+  if (walletsChanged) {
+    await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`, wallets)
+  }
+
   return jsonResponse({ success: true, data: checkin }, 201)
 }
 
@@ -292,9 +307,42 @@ export async function handleUpdateTradingCheckin(
       }))
       .filter((e) => e.walletId !== '')
 
+    const prevEntries = checkins[idx].entries || []
     checkins[idx].entries = entries
     checkins[idx].totalPnl = entries.reduce((s, e) => s + e.pnlAmount, 0)
     checkins[idx].totalDeposit = entries.reduce((s, e) => s + e.depositAmount, 0)
+
+    // Update wallet balances with the diff
+    const wallets = (await getJSON<WalletData[]>(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`)) || []
+    let walletsChanged = false
+    entries.forEach((e) => {
+      const prevEntry = prevEntries.find((p) => p.walletId === e.walletId)
+      const diffPnl = e.pnlAmount - (prevEntry?.pnlAmount || 0)
+      const diffDeposit = e.depositAmount - (prevEntry?.depositAmount || 0)
+      
+      if (diffPnl !== 0 || diffDeposit !== 0) {
+        const wIdx = wallets.findIndex((w) => w.id === e.walletId)
+        if (wIdx !== -1) {
+          wallets[wIdx].balance += diffPnl + diffDeposit
+          walletsChanged = true
+        }
+      }
+    })
+    
+    // Also revert balances for wallets that were removed from the check-in
+    prevEntries.forEach((p) => {
+      if (!entries.some(e => e.walletId === p.walletId)) {
+        const wIdx = wallets.findIndex((w) => w.id === p.walletId)
+        if (wIdx !== -1) {
+          wallets[wIdx].balance -= (p.pnlAmount + p.depositAmount)
+          walletsChanged = true
+        }
+      }
+    })
+
+    if (walletsChanged) {
+      await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`, wallets)
+    }
   }
 
   if (typeof body.note === 'string') {

@@ -93,6 +93,11 @@ export default {
     notes: 'Ghi chú',
     blog: 'Blog',
     settings: 'Cài đặt',
+    success: 'Thành công',
+    error: 'Lỗi',
+    warning: 'Cảnh báo',
+    workspace: 'Công việc',
+    system: 'Hệ thống',
     addTransaction: 'Thêm giao dịch',
     walletSection: 'VÍ',
     totalBalance: 'Tổng ví',
@@ -104,6 +109,91 @@ export default {
     subscriptions: 'Đăng ký dịch vụ',
     planning: 'Kế hoạch tài chính',
     trading: 'Trading Journal'
+  },
+
+  // ── Trading Journal ──
+  trading: {
+    // Page
+    title: 'Trading Journal',
+    subtitle: 'Theo dõi lãi/lỗ theo ngày · Phân tích hiệu suất',
+    checkinToday: 'Check-in hôm nay',
+    editCheckinToday: 'Sửa check-in hôm nay',
+
+    // Period tabs
+    day: 'Ngày',
+    month: 'Tháng',
+    year: 'Năm',
+    last30Days: '30 ngày',
+    last12Months: '12 tháng',
+    last10Years: '10 năm',
+
+    // Stats cards
+    totalPnl: 'Tổng lãi/lỗ',
+    winRate: 'Tỉ lệ thắng',
+    allTimePnl: 'Tổng mọi thời',
+    totalSessions: 'Tổng phiên',
+    wl: '{w}W / {l}L',
+    wrAllTime: 'WR {wr}% all-time',
+
+    // Chart
+    chartTitle: 'Biểu đồ lãi/lỗ',
+    profit: 'Lãi',
+    loss: 'Lỗ',
+    noData: 'Chưa có dữ liệu. Hãy check-in ngày đầu tiên!',
+
+    // History list
+    historyTitle: 'Lịch sử check-in',
+    noHistory: 'Chưa có check-in nào',
+    wallets: '{n} ví',
+    deposit: '+{amount} nạp',
+
+    // FinanceOverview widget
+    widgetTitle: 'Trading Journal',
+    notCheckedIn: 'Chưa check-in hôm nay',
+    viewEdit: 'Xem / Sửa',
+    checkinCta: '+ Check-in',
+
+    // Modal — general
+    modalTitle: 'Trading Check-in',
+    stepSetup: 'Chọn ví theo dõi',
+    stepInput: 'Nhập kết quả hôm nay',
+    stepSummary: 'Xác nhận check-in',
+
+    // Modal — step 1 setup
+    setupDesc: 'Chọn các ví bạn muốn theo dõi lãi/lỗ mỗi ngày. Bạn có thể thay đổi sau.',
+    noWallets: 'Chưa có ví nào. Hãy tạo ví trước.',
+    walletRequired: 'Chọn ít nhất 1 ví để theo dõi.',
+
+    // Modal — step 2 input
+    noWalletsSelected: 'Chưa có ví nào được chọn.',
+    balanceBefore: 'Số dư: {amount}',
+    pnlLabel: 'Lãi / Lỗ',
+    pnlHint: '(âm = lỗ)',
+    depositLabel: 'Nạp thêm vốn',
+    depositHint: '(tuỳ chọn)',
+    balanceAfter: 'Số dư sau:',
+    noteLabel: 'Ghi chú phiên (tuỳ chọn)',
+    notePlaceholder: 'Nhận xét ngắn về phiên giao dịch hôm nay...',
+    inputRequired: 'Nhập lãi/lỗ hoặc nạp tiền cho ít nhất 1 ví.',
+
+    // Modal — step 3 summary
+    summaryTotal: 'Tổng lãi / lỗ hôm nay',
+    summaryDeposit: '+ {amount} nạp thêm',
+    summaryNote: 'Ghi chú',
+    balanceChange: '{before} → {after}',
+
+    // Modal — footer buttons
+    cancel: 'Huỷ',
+    next: 'Tiếp theo',
+    backToWallets: '← Ví',
+    viewSummary: 'Xem tổng kết',
+    backToEdit: '← Sửa',
+    confirm: 'Xác nhận check-in',
+    saving: 'Đang lưu...',
+
+    // Toast
+    successCheckin: 'Check-in thành công! 🎯',
+    errorCheckin: 'Không thể lưu check-in. Vui lòng thử lại.'
   },
 
   // ── Planning Hub ──

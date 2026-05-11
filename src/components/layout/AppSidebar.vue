@@ -40,8 +40,15 @@ const notesStore = useNotesStore()
 const { isMobileOrTablet } = useDevice()
 const portfolio = usePortfolioSummary()
 
-const navItems = computed(() => {
-  const items = [
+// ── Grouped Navigation ──
+interface NavGroup {
+  labelKey?: string;
+  items: { key: string; icon: any; route: string }[];
+}
+
+const navGroups = computed<NavGroup[]>(() => {
+  // 1. Finance & Core
+  const financeItems = [
     { key: 'nav.dashboard',    icon: LayoutDashboard, route: '/' },
     { key: 'nav.transactions', icon: ArrowLeftRight,  route: '/transactions' },
     { key: 'nav.wallets',      icon: Wallet,          route: '/wallets' },
@@ -49,26 +56,40 @@ const navItems = computed(() => {
   ]
   
   if (ui.enableStocks) {
-    items.push({ key: 'nav.stocks', icon: LineChart, route: '/stocks' })
+    financeItems.push({ key: 'nav.stocks', icon: LineChart, route: '/stocks' })
   }
-  
-  items.push(
-    { key: 'reminders.title',  icon: Bell,            route: '/reminders' },
-  )
 
-  // AI To-Do — VIP feature (admin only)
   if (auth.user?.email === 'tintphcm@gmail.com') {
-    items.push({ key: 'aiTodo.title', icon: ListTodo, route: '/ai-todo' })
-    items.push({ key: 'nav.trading', icon: BookOpen, route: '/trading' })
+    financeItems.push({ key: 'trading.title', icon: BookOpen, route: '/trading' })
+  }
+
+  // 2. Workspace & Tools
+  const workspaceItems = [
+    { key: 'reminders.title',  icon: Bell,            route: '/reminders' },
+  ]
+
+  if (auth.user?.email === 'tintphcm@gmail.com') {
+    workspaceItems.push({ key: 'aiTodo.title', icon: ListTodo, route: '/ai-todo' })
   }
   
-  items.push(
-    { key: 'nav.notes',        icon: FileText,        route: '/notes' },
+  workspaceItems.push({ key: 'nav.notes', icon: FileText, route: '/notes' })
+
+  // 3. Other & System
+  const systemItems = [
     { key: 'nav.blog',         icon: Newspaper,       route: '/blog' },
-    { key: 'nav.settings',     icon: Settings,        route: '/settings' }
-  )
-  
-  return items
+  ]
+
+  if (auth.user?.email === 'tintphcm@gmail.com') {
+    systemItems.push({ key: 'blog.manageTitle', icon: PenLine, route: '/admin/blog' })
+  }
+
+  systemItems.push({ key: 'nav.settings', icon: Settings, route: '/settings' })
+
+  return [
+    { items: financeItems }, // No label for the primary group to save space
+    { labelKey: 'common.workspace', items: workspaceItems },
+    { labelKey: 'common.system', items: systemItems }
+  ]
 })
 
 // ── Collapsible Section State (persisted) ──
@@ -225,45 +246,34 @@ function onDragEnd() {
 
       <!-- ── Navigation section ── -->
       <nav class="flex flex-col gap-0.5 mt-1">
-        <div
-          v-if="ui.sidebarOpen"
-          class="section-label"
-        >
-          {{ t('common.menu') }}
-        </div>
-        <div v-else class="section-divider-icon" />
+        <template v-for="(group, gIdx) in navGroups" :key="'group-'+gIdx">
+          
+          <!-- Group Label or Divider -->
+          <template v-if="group.labelKey">
+            <div v-if="ui.sidebarOpen" class="section-label mt-2">
+              {{ t(group.labelKey) }}
+            </div>
+            <div v-else class="section-divider-icon mt-2" />
+          </template>
 
-        <router-link
-          v-for="item in navItems"
-          :key="item.route"
-          :to="item.route"
-          class="nav-item"
-          :class="[
-            isActive(item.route) ? 'nav-item--active' : '',
-            !ui.sidebarOpen ? 'nav-item--icon' : ''
-          ]"
-          :title="ui.sidebarOpen ? '' : t(item.key)"
-          @click="closeSidebarOnMobile"
-        >
-          <component :is="item.icon" :size="ui.sidebarOpen ? 17 : 20" class="shrink-0" />
-          <span v-if="ui.sidebarOpen" class="truncate">{{ t(item.key) }}</span>
-        </router-link>
+          <!-- Group Items -->
+          <router-link
+            v-for="item in group.items"
+            :key="item.route"
+            :to="item.route"
+            class="nav-item"
+            :class="[
+              isActive(item.route) ? 'nav-item--active' : '',
+              !ui.sidebarOpen ? 'nav-item--icon' : ''
+            ]"
+            :title="ui.sidebarOpen ? '' : t(item.key)"
+            @click="closeSidebarOnMobile"
+          >
+            <component :is="item.icon" :size="ui.sidebarOpen ? 17 : 20" class="shrink-0" />
+            <span v-if="ui.sidebarOpen" class="truncate">{{ t(item.key) }}</span>
+          </router-link>
 
-        <!-- Admin Blog Button -->
-        <router-link
-          v-if="auth.user?.email === 'tintphcm@gmail.com'"
-          to="/admin/blog"
-          class="admin-blog-btn mt-1.5"
-          :class="[
-            isActive('/admin/blog') ? 'admin-blog-btn--active' : '',
-            !ui.sidebarOpen ? 'nav-item--icon' : ''
-          ]"
-          :title="ui.sidebarOpen ? '' : t('blog.manageTitle')"
-          @click="closeSidebarOnMobile"
-        >
-          <PenLine :size="ui.sidebarOpen ? 15 : 20" class="shrink-0" />
-          <span v-if="ui.sidebarOpen" class="truncate">{{ t('blog.manageTitle') }}</span>
-        </router-link>
+        </template>
       </nav>
 
       <!-- ── Separator ── -->

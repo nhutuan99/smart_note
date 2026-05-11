@@ -261,47 +261,83 @@ const primaryBalance = computed(() =>
     </div>
 
     <!-- ── Trading Journal Widget ── -->
-    <div
-      class="relative overflow-hidden rounded-2xl border border-border-default bg-bg-surface p-5 flex flex-col gap-0 sm:col-span-3"
-    >
-      <div class="mb-3 flex items-center gap-2">
-        <div class="bg-accent/10 flex h-9 w-9 items-center justify-center rounded-lg shrink-0">
-          <BookOpen :size="18" class="text-accent" />
+    <div class="relative overflow-hidden rounded-2xl border border-border-default bg-bg-surface p-5 sm:col-span-3">
+      <!-- Subtle glow when checked in -->
+      <div
+        v-if="trading.hasDoneCheckinToday && trading.todayCheckin"
+        class="pointer-events-none absolute inset-0 opacity-[0.04]"
+        :class="trading.todayCheckin.totalPnl >= 0 ? 'bg-success' : 'bg-error'"
+      />
+
+      <!-- Header row -->
+      <div class="flex items-center gap-2 mb-3">
+        <div class="bg-accent/10 flex h-8 w-8 items-center justify-center rounded-lg shrink-0">
+          <BookOpen :size="16" class="text-accent" />
         </div>
-        <span class="text-text-tertiary text-sm flex-1">Trading Journal</span>
+        <span class="text-text-tertiary text-xs font-medium flex-1">{{ t('trading.widgetTitle') }}</span>
         <button
           @click="showCheckinModal = true"
-          class="text-xs font-semibold px-3 py-1 rounded-lg transition-all"
+          class="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
           :class="trading.hasDoneCheckinToday
             ? 'text-text-tertiary hover:bg-bg-hover border border-border-default'
             : 'bg-accent text-white hover:bg-accent/90 shadow-sm shadow-accent/20'"
         >
-          {{ trading.hasDoneCheckinToday ? 'Xem / Sửa' : '+ Check-in' }}
+          {{ trading.hasDoneCheckinToday ? t('trading.viewEdit') : t('trading.checkinCta') }}
         </button>
       </div>
 
-      <!-- Not checked in yet -->
-      <div v-if="!trading.hasDoneCheckinToday" class="flex items-center gap-2 mt-1">
-        <AlertCircle :size="14" class="text-warning shrink-0" />
-        <span class="text-xs text-text-tertiary">Chưa check-in hôm nay</span>
+      <!-- Not checked in -->
+      <div v-if="!trading.hasDoneCheckinToday" class="flex items-center gap-2">
+        <AlertCircle :size="13" class="text-warning shrink-0" />
+        <span class="text-xs text-text-tertiary">{{ t('trading.notCheckedIn') }}</span>
       </div>
 
       <!-- Today's result -->
       <template v-else-if="trading.todayCheckin">
-        <div
-          class="text-2xl font-bold tracking-tight tabular-nums flex items-center gap-1.5"
-          :class="trading.todayCheckin.totalPnl >= 0 ? 'text-success' : 'text-error'"
-        >
-          <TrendingUp v-if="trading.todayCheckin.totalPnl >= 0" :size="20" />
-          <TrendingDown v-else :size="20" />
-          {{ trading.todayCheckin.totalPnl >= 0 ? '+' : '' }}{{ formatVNDShort(trading.todayCheckin.totalPnl) }}
+        <div class="flex items-end gap-3">
+          <!-- Big P&L number -->
+          <div
+            class="text-2xl font-bold tracking-tight tabular-nums flex items-center gap-1.5 leading-none"
+            :class="trading.todayCheckin.totalPnl >= 0 ? 'text-success' : 'text-error'"
+          >
+            <TrendingUp v-if="trading.todayCheckin.totalPnl >= 0" :size="20" />
+            <TrendingDown v-else :size="20" />
+            {{ trading.todayCheckin.totalPnl >= 0 ? '+' : '' }}{{ formatVNDShort(trading.todayCheckin.totalPnl) }}
+          </div>
+          <!-- Win rate pill -->
+          <span class="mb-0.5 text-[11px] text-text-disabled">WR {{ trading.winRate }}%</span>
         </div>
-        <div class="mt-1 text-[11px] text-text-disabled">
-          {{ trading.todayCheckin.entries.length }} ví ·
-          WR {{ trading.winRate }}% all-time
+
+        <!-- Per-wallet mini rows -->
+        <div class="mt-2.5 space-y-1.5">
+          <div
+            v-for="e in trading.todayCheckin.entries"
+            :key="e.walletId"
+            class="flex items-center gap-2"
+          >
+            <div class="h-1.5 flex-1 rounded-full bg-bg-elevated overflow-hidden">
+              <div
+                class="h-full rounded-full transition-all"
+                :class="e.pnlAmount >= 0 ? 'bg-success/60' : 'bg-error/60'"
+                :style="{
+                  width: trading.todayCheckin!.totalPnl !== 0
+                    ? `${Math.min(100, Math.abs(e.pnlAmount / trading.todayCheckin!.totalPnl) * 100)}%`
+                    : '0%'
+                }"
+              />
+            </div>
+            <span class="text-[10px] text-text-disabled w-24 text-right truncate">{{ e.walletName }}</span>
+            <span
+              class="text-[10px] font-semibold tabular-nums w-16 text-right"
+              :class="e.pnlAmount >= 0 ? 'text-success' : 'text-error'"
+            >
+              {{ e.pnlAmount >= 0 ? '+' : '' }}{{ formatVNDShort(e.pnlAmount) }}
+            </span>
+          </div>
         </div>
       </template>
     </div>
+
 
   </div>
 

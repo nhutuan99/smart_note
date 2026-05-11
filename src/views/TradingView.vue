@@ -1,18 +1,20 @@
 <script setup lang="ts">
 // 1. Vue core
 import { ref, onMounted } from 'vue'
-// 2. Composables / Stores
+// 2. Vue ecosystem
+import { useI18n } from 'vue-i18n'
+// 3. Composables / Stores
 import { useTradingCheckin } from '@/composables/useTradingCheckin'
-// 3. Components & icons
+// 4. Components & icons
 import TradingCheckinModal from '@/modules/finance/components/TradingCheckinModal.vue'
 import TradingHistoryView from '@/modules/finance/components/TradingHistoryView.vue'
 import { BookOpen, Plus, Edit2 } from 'lucide-vue-next'
 
+const { t } = useI18n()
 const { trading } = useTradingCheckin()
 const showCheckinModal = ref(false)
 
 onMounted(() => {
-  // Ensure data is always fresh when navigating to this page
   trading.fetchAll()
 })
 </script>
@@ -26,23 +28,17 @@ onMounted(() => {
           <BookOpen :size="20" class="text-accent" />
         </div>
         <div>
-          <h1 class="text-xl font-bold text-text-primary">Trading Journal</h1>
-          <p class="text-xs text-text-tertiary mt-0.5">Theo dõi lãi/lỗ theo ngày · Phân tích hiệu suất</p>
+          <h1 class="text-xl font-bold text-text-primary">{{ t('trading.title') }}</h1>
+          <p class="text-xs text-text-tertiary mt-0.5">{{ t('trading.subtitle') }}</p>
         </div>
       </div>
-      <button
-        @click="showCheckinModal = true"
-        class="btn-primary gap-2"
-      >
+      <button @click="showCheckinModal = true" class="btn-primary gap-2">
         <component :is="trading.hasDoneCheckinToday ? Edit2 : Plus" :size="15" />
-        {{ trading.hasDoneCheckinToday ? 'Sửa check-in hôm nay' : 'Check-in hôm nay' }}
+        {{ trading.hasDoneCheckinToday ? t('trading.editCheckinToday') : t('trading.checkinToday') }}
       </button>
     </div>
 
-    <!-- History & Charts -->
     <TradingHistoryView />
-
-    <!-- Modal -->
     <TradingCheckinModal v-model="showCheckinModal" />
   </div>
 </template>
