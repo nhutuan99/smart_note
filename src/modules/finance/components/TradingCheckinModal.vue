@@ -11,7 +11,6 @@ import { formatVND } from '@/constants/finance'
 import { getWalletBrand } from '@/constants/walletBrands'
 // 5. Components & icons
 import CurrencyInput from '@/components/ui/CurrencyInput.vue'
-import LogoLoader from '@/components/ui/LogoLoader.vue'
 import { X, TrendingUp, TrendingDown, DollarSign, Percent, Check, ChevronRight, BookOpen } from 'lucide-vue-next'
 
 // ── Props / Emits ──
@@ -59,6 +58,7 @@ async function confirmSetup() {
 interface EntryDraft {
   walletId: string
   walletName: string
+  customLogoUrl: string   // wallet logo URL (custom upload or brand)
   inputMode: 'percent' | 'amount'
   inputValue: number      // raw user input
   depositAmount: number
@@ -77,7 +77,8 @@ watch(
     drafts.value = wallets.map((w) => ({
       walletId: w.id,
       walletName: w.name,
-      inputMode: 'percent',
+      customLogoUrl: w.customLogoUrl ?? getWalletBrand(w.name)?.logoUrl ?? '',
+      inputMode: 'percent' as const,
       inputValue: 0,
       depositAmount: 0,
       balanceBefore: w.balance
@@ -274,8 +275,8 @@ function close() {
                 <div class="flex items-center gap-2.5">
                   <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg overflow-hidden bg-white border border-border-default/30">
                     <img
-                      v-if="getWalletLogo(draft.walletName)"
-                      :src="getWalletLogo(draft.walletName)"
+                      v-if="draft.customLogoUrl"
+                      :src="draft.customLogoUrl"
                       :alt="draft.walletName"
                       class="h-5 w-5 object-contain"
                       loading="lazy"
@@ -416,8 +417,8 @@ function close() {
                 >
                   <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg overflow-hidden bg-white border border-border-default/30">
                     <img
-                      v-if="getWalletLogo(e.walletName)"
-                      :src="getWalletLogo(e.walletName)"
+                      v-if="drafts.find(d => d.walletId === e.walletId)?.customLogoUrl"
+                      :src="drafts.find(d => d.walletId === e.walletId)!.customLogoUrl"
                       :alt="e.walletName"
                       class="h-5 w-5 object-contain"
                       loading="lazy"
@@ -465,9 +466,14 @@ function close() {
                 :disabled="isSavingConfig || pendingWalletIds.length === 0"
                 class="flex-1 btn-primary justify-center py-2.5 disabled:opacity-40"
               >
-                <LogoLoader v-if="isSavingConfig" :size="14" />
-                <span v-else>Tiếp theo</span>
-                <ChevronRight v-if="!isSavingConfig" :size="14" />
+                <span
+                  v-if="isSavingConfig"
+                  class="inline-block h-3.5 w-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin"
+                />
+                <template v-else>
+                  <span>Tiếp theo</span>
+                  <ChevronRight :size="14" />
+                </template>
               </button>
             </div>
 
@@ -501,9 +507,14 @@ function close() {
                 :disabled="isSubmitting"
                 class="flex-1 btn-primary justify-center py-2.5 disabled:opacity-40"
               >
-                <LogoLoader v-if="isSubmitting" :size="14" />
-                <Check v-else :size="14" />
-                <span>{{ isSubmitting ? 'Đang lưu...' : 'Xác nhận check-in' }}</span>
+                <span
+                  v-if="isSubmitting"
+                  class="inline-block h-3.5 w-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin"
+                />
+                <template v-else>
+                  <Check :size="14" />
+                  <span>Xác nhận check-in</span>
+                </template>
               </button>
             </div>
           </div>
