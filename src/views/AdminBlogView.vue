@@ -285,7 +285,7 @@ async function handleGenerate() {
       setStep('analyzing')
       const data = await blogStore.generateContent(
         `Phân tích bài viết markdown sau và trả về JSON. Nội dung:\n\n${inputContent.value}`,
-        ''
+        []
       )
       if (data) {
         form.value.title = data.title || ''
@@ -313,7 +313,7 @@ async function handleGenerate() {
       await new Promise(r => setTimeout(r, 500))
 
       setStep('drafting')
-      const draftData = await blogStore.generateContent(inputContent.value, aiImageBase64.value)
+      const draftData = await blogStore.generateContent(inputContent.value, aiImageBase64.value ? [aiImageBase64.value] : [])
 
       if (draftData) {
         // Auto-switch: if Gemini failed and CF AI was used, surface the error
