@@ -510,6 +510,43 @@ export const WALLET_BRANDS: Record<string, BrandConfig> = {
     logoUrl: '/images/wallets/mastercard.png'
   },
 
+  // ── Crypto Exchanges ──
+  binance: {
+    abbr: 'BIN',
+    bgColor: '#fcd535',
+    textColor: '#1e2329',
+    fullName: 'Binance',
+    logoUrl: 'https://cryptologos.cc/logos/bnb-bnb-logo.png'
+  },
+  okx: {
+    abbr: 'OKX',
+    bgColor: '#000000',
+    textColor: '#ffffff',
+    fullName: 'OKX',
+    logoUrl: 'https://cryptologos.cc/logos/okb-okb-logo.png'
+  },
+  mexc: {
+    abbr: 'MEXC',
+    bgColor: '#16b979',
+    textColor: '#ffffff',
+    fullName: 'MEXC Global',
+    logoUrl: 'https://s2.coinmarketcap.com/static/img/coins/64x64/11189.png'
+  },
+  bybit: {
+    abbr: 'BYB',
+    bgColor: '#ffb11a',
+    textColor: '#000000',
+    fullName: 'Bybit',
+    logoUrl: 'https://cryptologos.cc/logos/bitdao-bit-logo.png'
+  },
+  remitano: {
+    abbr: 'REMI',
+    bgColor: '#5d3cf5',
+    textColor: '#ffffff',
+    fullName: 'Remitano',
+    logoUrl: 'https://s2.coinmarketcap.com/static/img/coins/64x64/10948.png'
+  },
+
   // ── Cash ──
   'tiền mặt': {
     abbr: '₫',

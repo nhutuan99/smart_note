@@ -282,7 +282,7 @@ function close() { emit('update:modelValue', false) }
                 <!-- Wallet header -->
                 <div class="flex items-center gap-2.5">
                   <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg overflow-hidden bg-white border border-border-default/30">
-                    <img v-if="draft.customLogoUrl" :src="draft.customLogoUrl" :alt="draft.walletName" class="h-5 w-5 object-contain" loading="lazy" />
+                    <img v-if="getWalletLogo(draft.walletName, draft.customLogoUrl)" :src="getWalletLogo(draft.walletName, draft.customLogoUrl)" :alt="draft.walletName" class="h-5 w-5 object-contain" loading="lazy" />
                     <span v-else class="text-xs font-bold text-text-secondary">{{ draft.walletName.substring(0,2) }}</span>
                   </div>
                   <div class="flex-1 min-w-0">
@@ -407,8 +407,8 @@ function close() { emit('update:modelValue', false) }
                 >
                   <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg overflow-hidden bg-white border border-border-default/30">
                     <img
-                      v-if="drafts.find(d => d.walletId === e.walletId)?.customLogoUrl"
-                      :src="drafts.find(d => d.walletId === e.walletId)!.customLogoUrl"
+                      v-if="getWalletLogo(e.walletName, drafts.find(d => d.walletId === e.walletId)?.customLogoUrl)"
+                      :src="getWalletLogo(e.walletName, drafts.find(d => d.walletId === e.walletId)?.customLogoUrl)"
                       :alt="e.walletName"
                       class="h-5 w-5 object-contain"
                       loading="lazy"

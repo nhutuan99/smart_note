@@ -204,7 +204,7 @@ const expenseByWallet = computed<WalletStat[]>(() => {
         total: amount,
         percentage: total > 0 ? (amount / total) * 100 : 0,
         color: brand?.bgColor && brand.bgColor !== '#ffffff' ? brand.bgColor : (wallet?.color || '#6366f1'),
-        logoUrl: brand?.logoUrl || ''
+        logoUrl: wallet?.customLogoUrl || brand?.logoUrl || ''
       }
     })
     .sort((a, b) => b.total - a.total)
@@ -232,7 +232,7 @@ const incomeByWallet = computed<WalletStat[]>(() => {
         total: amount,
         percentage: total > 0 ? (amount / total) * 100 : 0,
         color: brand?.bgColor && brand.bgColor !== '#ffffff' ? brand.bgColor : (wallet?.color || '#10b981'),
-        logoUrl: brand?.logoUrl || ''
+        logoUrl: wallet?.customLogoUrl || brand?.logoUrl || ''
       }
     })
     .sort((a, b) => b.total - a.total)
