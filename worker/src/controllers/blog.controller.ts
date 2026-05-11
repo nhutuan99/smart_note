@@ -241,8 +241,9 @@ export async function handleGenerateBlogContent(userId: string, request: Request
   const url = new URL(request.url)
   const forceCloudflare = url.searchParams.get('model') === 'cf'
 
-  const { topic, imageBase64 } = (await request.json()) as { topic: string; imageBase64?: string }
-  if (!topic && !imageBase64) return errorResponse('Missing topic or image', 400)
+  const { topic, imageBase64, imagesBase64 } = (await request.json()) as { topic: string; imageBase64?: string; imagesBase64?: string[] }
+  const images = imagesBase64 || (imageBase64 ? [imageBase64] : [])
+  if (!topic && images.length === 0) return errorResponse('Missing topic or images', 400)
 
   function stripLeadingH1(md: string): string {
     return md.replace(/^\s*#\s+[^\n]+\n*/m, '').trim()
@@ -380,25 +381,27 @@ QUY TẮC TAGS (BẮT BUỘC):
 - Tối đa 3 tags, viết thường, bằng tiếng Việt
 - Phù hợp với nội dung bài viết (Ví dụ: "công nghệ", "genz", "tài chính", "xu hướng", "đầu tư")
 - KHÔNG dùng tên thương hiệu (Google, Anthropic, Warren Buffett, v.v.)
-- KHÔNG trùng lặp`
+- KHÔNG trùng lặp
+
+${images.length > 0 ? `QUAN TRỌNG: Người dùng đã cung cấp ${images.length} hình ảnh đính kèm. Bạn CÓ THỂ chèn chúng vào vị trí thích hợp trong bài viết Markdown bằng cú pháp: [IMAGE_0], [IMAGE_1], v.v.` : ''}`
 
     let text = ''
 
     if (useGemini) {
       try {
-        let inlineData = undefined
-        if (imageBase64) {
-          const match = imageBase64.match(/^data:(image\/[a-zA-Z]+);base64,(.+)$/)
-          if (match) {
-            inlineData = { mime_type: match[1], data: match[2] }
-          } else {
-            inlineData = { mime_type: "image/jpeg", data: imageBase64 }
-          }
-        }
-
         const promptParts: any[] = []
         if (topic) promptParts.push({ text: `Yêu cầu / Chủ đề: ${topic}` })
-        if (inlineData) promptParts.push({ inline_data: inlineData })
+        
+        images.forEach((img, idx) => {
+          const match = img.match(/^data:(image\/[a-zA-Z]+);base64,(.+)$/)
+          if (match) {
+            promptParts.push({ inline_data: { mime_type: match[1], data: match[2] } })
+          } else {
+            promptParts.push({ inline_data: { mime_type: "image/jpeg", data: img } })
+          }
+          promptParts.push({ text: `Đây là hình ảnh [IMAGE_${idx}].` })
+        })
+
         if (promptParts.length === 0) promptParts.push({ text: "Hãy viết 1 bài blog thú vị dành cho GenZ." })
 
         console.log('[BlogGen] Phase 2: Generating content with Gemini...')

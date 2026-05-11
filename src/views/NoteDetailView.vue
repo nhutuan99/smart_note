@@ -169,23 +169,43 @@ async function handleCreateBlog() {
   creatingBlog.value = true
   try {
     const rawText = content.value.replace(/<[^>]*>?/gm, '\n').replace(/\n{2,}/g, '\n').trim()
-    const imgMatch = content.value.match(/<img[^>]+src="([^">]+)"/)
-    const firstImageBase64 = imgMatch ? imgMatch[1] : undefined
+    
+    // Extract all images
+    const imgRegex = /<img[^>]+src="([^">]+)"/g
+    let match
+    const imagesBase64: string[] = []
+    while ((match = imgRegex.exec(content.value)) !== null) {
+      imagesBase64.push(match[1])
+    }
 
-    if (!rawText && !firstImageBase64) {
+    if (!rawText && imagesBase64.length === 0) {
       throw new Error(t('notes.blog.error'))
     }
 
     ui.showToast('info', t('notes.blog.generating'))
     
     // Using blogsStore.generateContent which uses Gemini (supports multimodal)
-    const result = await blogsStore.generateContent(rawText, firstImageBase64)
+    const result = await blogsStore.generateContent(rawText, imagesBase64)
     if (!result) throw new Error(t('notes.blog.error'))
+
+    let blogContent = result.content || rawText
+    
+    // Replace [IMAGE_X] markers in the output with markdown image tags
+    imagesBase64.forEach((img, idx) => {
+      const marker = `[IMAGE_${idx}]`
+      const replacement = `\n\n![Image ${idx}](${img})\n\n`
+      if (blogContent.includes(marker)) {
+        blogContent = blogContent.replace(marker, replacement)
+      } else {
+        // If AI didn't use it, append at the end
+        blogContent += replacement
+      }
+    })
 
     // Create blog
     await blogsStore.createBlog({
       title: result.title || title.value || 'Untitled Blog',
-      content: result.content || rawText || '![Image blog](' + firstImageBase64 + ')',
+      content: blogContent,
       excerpt: result.excerpt || '',
       tags: result.tags || [],
       imageUrl: '',

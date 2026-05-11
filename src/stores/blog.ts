@@ -81,9 +81,9 @@ export const useBlogStore = defineStore('blog', () => {
     }
   }
 
-  async function generateContent(topic: string, imageBase64?: string) {
+  async function generateContent(topic: string, imagesBase64?: string[]) {
     const model = useCloudflareAI.value ? '?model=cf' : ''
-    const response = await httpClient.post<any>(`/api/blogs/generate-content${model}`, { topic, imageBase64 })
+    const response = await httpClient.post<any>(`/api/blogs/generate-content${model}`, { topic, imagesBase64 })
     if (response) {
       lastModelUsed.value = response.modelUsed || null
       if (response.geminiError) {
