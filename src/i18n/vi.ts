@@ -102,7 +102,8 @@ export default {
     budget: 'Ngân sách',
     savings: 'Tiết kiệm',
     subscriptions: 'Đăng ký dịch vụ',
-    planning: 'Kế hoạch tài chính'
+    planning: 'Kế hoạch tài chính',
+    trading: 'Trading Journal'
   },
 
   // ── Planning Hub ──

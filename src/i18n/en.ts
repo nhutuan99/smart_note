@@ -102,7 +102,8 @@ export default {
     budget: 'Budget',
     savings: 'Savings',
     subscriptions: 'Subscriptions',
-    planning: 'Financial Hub'
+    planning: 'Financial Hub',
+    trading: 'Trading Journal'
   },
 
   // ── Planning Hub ──

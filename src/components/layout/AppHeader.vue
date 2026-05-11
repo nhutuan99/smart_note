@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
 import { useNotificationStore } from '@/stores/notifications'
 import { useFinanceStore } from '@/stores/finance'
+import { useTradingStore } from '@/stores/trading'
 import { useEventListener } from '@/composables/useEventListener'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -16,6 +17,7 @@ const auth = useAuthStore()
 const ui = useUiStore()
 const notiStore = useNotificationStore()
 const finance = useFinanceStore()
+const trading = useTradingStore()
 const router = useRouter()
 const route = useRoute()
 
@@ -63,7 +65,8 @@ useEventListener(document, 'click', handleOutsideClick as EventListener)
 
 // ─── Auth ───────────────────────────────────────────────────────────────────
 function handleLogout() {
-  finance.reset()  // clear cached transactions/wallets before leaving
+  finance.reset()   // clear cached transactions/wallets before leaving
+  trading.reset()   // clear trading journal data — prevent leakage between users
   auth.logout()
   router.push('/login')
 }

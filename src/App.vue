@@ -1,12 +1,13 @@
 <script setup lang="ts">
 // 1. Vue core
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 // 2. Vue ecosystem
 import { useRoute } from 'vue-router'
 
 // 3. Stores
 import { useAuthStore } from '@/stores/auth'
+import { useTradingStore } from '@/stores/trading'
 
 // 4. Composables
 import { useDevice } from '@/composables/useDevice'
@@ -15,14 +16,34 @@ import { useSwipeNavigation } from '@/composables/useSwipeNavigation'
 
 // 5. Components
 import AppLayout from '@/components/layout/AppLayout.vue'
+import TradingCheckinModal from '@/modules/finance/components/TradingCheckinModal.vue'
 import { ArrowLeft } from 'lucide-vue-next'
 
 const route  = useRoute()
 const auth   = useAuthStore()
+const trading = useTradingStore()
 const { deviceType, isMobileOrTablet } = useDevice()
 
 // Enable global edge-swipe navigation
 useSwipeNavigation()
+
+// ── Trading check-in auto-popup (once per calendar day) ──
+const CHECKIN_KEY = 'sn_last_trading_checkin'
+const showTradingCheckin = ref(false)
+
+function maybeTriggerCheckin() {
+  if (!auth.isAuthenticated) return
+  const today = new Date().toISOString().substring(0, 10)
+  const last = localStorage.getItem(CHECKIN_KEY)
+  if (last === today) return
+  // Only show if the user has configured wallets to track
+  if (!trading.hasWalletsConfigured) return
+  // Delay slightly to not block initial render
+  setTimeout(() => {
+    showTradingCheckin.value = true
+    localStorage.setItem(CHECKIN_KEY, today)
+  }, 2000)
+}
 
 /**
  * True when the current route should be rendered standalone (no AppLayout).
@@ -61,10 +82,10 @@ if (isMobileOrTablet.value) {
 }
 
 // ─── Clear PWA App Badge on open/focus ─────────────────────────────────────────
-onMounted(() => {
+onMounted(async () => {
   const clearBadge = () => {
     if (navigator && 'clearAppBadge' in navigator) {
-      ;(navigator as any).clearAppBadge().catch(() => {})
+      ;(navigator as Navigator & { clearAppBadge: () => Promise<void> }).clearAppBadge().catch(() => {})
     }
   }
 
@@ -75,6 +96,12 @@ onMounted(() => {
       clearBadge()
     }
   })
+
+  // Load trading data then check if popup should fire
+  if (auth.isAuthenticated) {
+    await trading.fetchAll()
+    maybeTriggerCheckin()
+  }
 })
 </script>
 
@@ -126,6 +153,9 @@ onMounted(() => {
       Authenticated app shell.
     -->
     <AppLayout v-else-if="showLayout" />
+
+    <!-- Global Trading Check-in popup (auto-trigger once per day) -->
+    <TradingCheckinModal v-model="showTradingCheckin" />
 
     <!-- While auth resolves — render nothing -->
   </div>

@@ -210,3 +210,42 @@ export interface TodoSuggestion {
   priority: 'low' | 'medium' | 'high' | 'urgent'
   category?: string
 }
+
+// ── Trading Journal ──
+
+/** User config: which wallets to include in the daily trading check-in */
+export interface TradingConfig {
+  selectedWalletIds: string[]
+  createdAt: string
+  updatedAt: string
+}
+
+/** P&L entry for one wallet within a daily check-in */
+export interface TradingCheckinEntry {
+  walletId: string
+  walletName: string
+  /** 'percent' = user typed %, 'amount' = user typed VND */
+  inputMode: 'percent' | 'amount'
+  /** Raw value: % (e.g. 2.5) or VND absolute (e.g. 250000) */
+  inputValue: number
+  /** Calculated VND P&L (positive = profit, negative = loss) */
+  pnlAmount: number
+  /** Additional capital deposited this session (≥ 0) */
+  depositAmount: number
+  balanceBefore: number
+  balanceAfter: number
+}
+
+/** One daily trading journal record */
+export interface TradingCheckin {
+  id: string
+  /** YYYY-MM-DD */
+  date: string
+  entries: TradingCheckinEntry[]
+  note: string
+  totalPnl: number
+  totalDeposit: number
+  createdAt: string
+  updatedAt: string
+}
+

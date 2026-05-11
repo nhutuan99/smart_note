@@ -1,4 +1,4 @@
-import { Env, UserData, NoteData, TransactionData, WalletData, NotificationData, PendingNotification, BudgetData } from '../types'
+import { Env, UserData, NoteData, TransactionData, WalletData, NotificationData, PendingNotification, BudgetData, TradingConfigData, TradingCheckinData, TradingCheckinEntry } from '../types'
 import { errorResponse, jsonResponse } from '../utils/response'
 import { generateId, hashPassword } from '../utils/crypto'
 import { createJWT } from '../utils/jwt'
@@ -171,7 +171,7 @@ export async function handleGetBudget(userId: string, env: Env): Promise<Respons
 }
 
 export async function handleUpdateBudget(userId: string, request: Request, env: Env): Promise<Response> {
-  const body = (await request.json()) as any
+  const body = (await request.json()) as Record<string, unknown>
   const budget: BudgetData = {
     amount: typeof body.amount === 'number' ? body.amount : 0,
     dismissed: !!body.dismissed,
@@ -180,4 +180,130 @@ export async function handleUpdateBudget(userId: string, request: Request, env: 
   await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/budget`, budget)
   return jsonResponse({ success: true, data: budget })
 }
+
+// ====== Trading Journal Handlers ======
+
+const TRADING_CONFIG_KEY = (userId: string) => `users/${userId}/trading/config`
+const TRADING_CHECKINS_KEY = (userId: string) => `users/${userId}/trading/checkins`
+
+export async function handleGetTradingConfig(userId: string, env: Env): Promise<Response> {
+  const config = await getJSON<TradingConfigData>(env.SMART_NOTE_KV, TRADING_CONFIG_KEY(userId))
+  return jsonResponse({ success: true, data: config || { selectedWalletIds: [], createdAt: '', updatedAt: '' } })
+}
+
+export async function handleUpdateTradingConfig(userId: string, request: Request, env: Env): Promise<Response> {
+  const body = (await request.json()) as Record<string, unknown>
+
+  if (!Array.isArray(body.selectedWalletIds)) {
+    return errorResponse('selectedWalletIds must be an array')
+  }
+
+  const ids = (body.selectedWalletIds as unknown[]).filter((id): id is string => typeof id === 'string')
+
+  const now = new Date().toISOString()
+  const existing = await getJSON<TradingConfigData>(env.SMART_NOTE_KV, TRADING_CONFIG_KEY(userId))
+
+  const config: TradingConfigData = {
+    selectedWalletIds: ids,
+    createdAt: existing?.createdAt || now,
+    updatedAt: now
+  }
+
+  await putJSON(env.SMART_NOTE_KV, TRADING_CONFIG_KEY(userId), config)
+  return jsonResponse({ success: true, data: config })
+}
+
+export async function handleListTradingCheckins(userId: string, env: Env): Promise<Response> {
+  const checkins = (await getJSON<TradingCheckinData[]>(env.SMART_NOTE_KV, TRADING_CHECKINS_KEY(userId))) || []
+  return jsonResponse({ success: true, data: checkins })
+}
+
+export async function handleCreateTradingCheckin(userId: string, request: Request, env: Env): Promise<Response> {
+  const body = (await request.json()) as Record<string, unknown>
+
+  const today = new Date().toISOString().substring(0, 10)
+  const checkins = (await getJSON<TradingCheckinData[]>(env.SMART_NOTE_KV, TRADING_CHECKINS_KEY(userId))) || []
+
+  // Prevent duplicate for the same day — use PUT to update instead
+  if (checkins.some((c) => c.date === today)) {
+    return errorResponse('Check-in for today already exists. Use PUT to update.', 409)
+  }
+
+  if (!Array.isArray(body.entries)) {
+    return errorResponse('entries must be an array')
+  }
+
+  const entries: TradingCheckinEntry[] = (body.entries as unknown[])
+    .filter((e): e is Record<string, unknown> => typeof e === 'object' && e !== null)
+    .map((e) => ({
+      walletId: typeof e.walletId === 'string' ? e.walletId : '',
+      walletName: typeof e.walletName === 'string' ? e.walletName : '',
+      inputMode: e.inputMode === 'percent' ? 'percent' : 'amount',
+      inputValue: typeof e.inputValue === 'number' ? e.inputValue : 0,
+      pnlAmount: typeof e.pnlAmount === 'number' ? e.pnlAmount : 0,
+      depositAmount: typeof e.depositAmount === 'number' ? Math.max(0, e.depositAmount) : 0,
+      balanceBefore: typeof e.balanceBefore === 'number' ? e.balanceBefore : 0,
+      balanceAfter: typeof e.balanceAfter === 'number' ? e.balanceAfter : 0
+    }))
+    .filter((e) => e.walletId !== '')
+
+  const now = new Date().toISOString()
+  const checkin: TradingCheckinData = {
+    id: generateId(),
+    date: today,
+    entries,
+    note: typeof body.note === 'string' ? body.note.substring(0, 500) : '',
+    totalPnl: entries.reduce((s, e) => s + e.pnlAmount, 0),
+    totalDeposit: entries.reduce((s, e) => s + e.depositAmount, 0),
+    createdAt: now,
+    updatedAt: now
+  }
+
+  checkins.push(checkin)
+  await putJSON(env.SMART_NOTE_KV, TRADING_CHECKINS_KEY(userId), checkins)
+  return jsonResponse({ success: true, data: checkin }, 201)
+}
+
+export async function handleUpdateTradingCheckin(
+  userId: string,
+  date: string,
+  request: Request,
+  env: Env
+): Promise<Response> {
+  const checkins = (await getJSON<TradingCheckinData[]>(env.SMART_NOTE_KV, TRADING_CHECKINS_KEY(userId))) || []
+  const idx = checkins.findIndex((c) => c.date === date)
+
+  if (idx === -1) return errorResponse('Check-in not found', 404)
+
+  const body = (await request.json()) as Record<string, unknown>
+
+  if (Array.isArray(body.entries)) {
+    const entries: TradingCheckinEntry[] = (body.entries as unknown[])
+      .filter((e): e is Record<string, unknown> => typeof e === 'object' && e !== null)
+      .map((e) => ({
+        walletId: typeof e.walletId === 'string' ? e.walletId : '',
+        walletName: typeof e.walletName === 'string' ? e.walletName : '',
+        inputMode: e.inputMode === 'percent' ? 'percent' : 'amount',
+        inputValue: typeof e.inputValue === 'number' ? e.inputValue : 0,
+        pnlAmount: typeof e.pnlAmount === 'number' ? e.pnlAmount : 0,
+        depositAmount: typeof e.depositAmount === 'number' ? Math.max(0, e.depositAmount) : 0,
+        balanceBefore: typeof e.balanceBefore === 'number' ? e.balanceBefore : 0,
+        balanceAfter: typeof e.balanceAfter === 'number' ? e.balanceAfter : 0
+      }))
+      .filter((e) => e.walletId !== '')
+
+    checkins[idx].entries = entries
+    checkins[idx].totalPnl = entries.reduce((s, e) => s + e.pnlAmount, 0)
+    checkins[idx].totalDeposit = entries.reduce((s, e) => s + e.depositAmount, 0)
+  }
+
+  if (typeof body.note === 'string') {
+    checkins[idx].note = body.note.substring(0, 500)
+  }
+
+  checkins[idx].updatedAt = new Date().toISOString()
+  await putJSON(env.SMART_NOTE_KV, TRADING_CHECKINS_KEY(userId), checkins)
+  return jsonResponse({ success: true, data: checkins[idx] })
+}
+
 

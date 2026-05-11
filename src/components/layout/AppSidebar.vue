@@ -26,7 +26,8 @@ import {
   Bell,
   GripVertical,
   Coffee,
-  ListTodo
+  ListTodo,
+  BookOpen
 } from 'lucide-vue-next'
 
 const { t } = useI18n()
@@ -58,6 +59,7 @@ const navItems = computed(() => {
   // AI To-Do — VIP feature (admin only)
   if (auth.user?.email === 'tintphcm@gmail.com') {
     items.push({ key: 'aiTodo.title', icon: ListTodo, route: '/ai-todo' })
+    items.push({ key: 'nav.trading', icon: BookOpen, route: '/trading' })
   }
   
   items.push(

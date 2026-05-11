@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // 1. Vue core
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 // 2. Vue ecosystem
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -8,6 +8,7 @@ import { useI18n } from 'vue-i18n'
 import { useFinancePolling } from '@/composables/useFinancePolling'
 import { usePortfolioSummary } from '@/composables/usePortfolioSummary'
 import { useUiStore } from '@/stores/ui'
+import { useTradingStore } from '@/stores/trading'
 // 4. Utils
 import { formatVNDShort } from '@/constants/finance'
 // 5. Components & icons
@@ -23,15 +24,23 @@ import {
   LineChart,
   Landmark,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  BookOpen,
+  AlertCircle
 } from 'lucide-vue-next'
 import WeatherWidget from '@/components/WeatherWidget.vue'
+import TradingCheckinModal from './TradingCheckinModal.vue'
 
 const { t, tm } = useI18n()
 const router = useRouter()
 const finance = useFinancePolling()
 const ui = useUiStore()
 const portfolio = usePortfolioSummary()
+const trading = useTradingStore()
+
+// Trading check-in modal (manual trigger from widget)
+const showCheckinModal = ref(false)
+
 
 // ── Month navigation ──
 
@@ -251,5 +260,51 @@ const primaryBalance = computed(() =>
       </div>
     </div>
 
+    <!-- ── Trading Journal Widget ── -->
+    <div
+      class="relative overflow-hidden rounded-2xl border border-border-default bg-bg-surface p-5 flex flex-col gap-0 sm:col-span-3"
+    >
+      <div class="mb-3 flex items-center gap-2">
+        <div class="bg-accent/10 flex h-9 w-9 items-center justify-center rounded-lg shrink-0">
+          <BookOpen :size="18" class="text-accent" />
+        </div>
+        <span class="text-text-tertiary text-sm flex-1">Trading Journal</span>
+        <button
+          @click="showCheckinModal = true"
+          class="text-xs font-semibold px-3 py-1 rounded-lg transition-all"
+          :class="trading.hasDoneCheckinToday
+            ? 'text-text-tertiary hover:bg-bg-hover border border-border-default'
+            : 'bg-accent text-white hover:bg-accent/90 shadow-sm shadow-accent/20'"
+        >
+          {{ trading.hasDoneCheckinToday ? 'Xem / Sửa' : '+ Check-in' }}
+        </button>
+      </div>
+
+      <!-- Not checked in yet -->
+      <div v-if="!trading.hasDoneCheckinToday" class="flex items-center gap-2 mt-1">
+        <AlertCircle :size="14" class="text-warning shrink-0" />
+        <span class="text-xs text-text-tertiary">Chưa check-in hôm nay</span>
+      </div>
+
+      <!-- Today's result -->
+      <template v-else-if="trading.todayCheckin">
+        <div
+          class="text-2xl font-bold tracking-tight tabular-nums flex items-center gap-1.5"
+          :class="trading.todayCheckin.totalPnl >= 0 ? 'text-success' : 'text-error'"
+        >
+          <TrendingUp v-if="trading.todayCheckin.totalPnl >= 0" :size="20" />
+          <TrendingDown v-else :size="20" />
+          {{ trading.todayCheckin.totalPnl >= 0 ? '+' : '' }}{{ formatVNDShort(trading.todayCheckin.totalPnl) }}
+        </div>
+        <div class="mt-1 text-[11px] text-text-disabled">
+          {{ trading.todayCheckin.entries.length }} ví ·
+          WR {{ trading.winRate }}% all-time
+        </div>
+      </template>
+    </div>
+
   </div>
+
+  <!-- Trading Check-in Modal (manual trigger) -->
+  <TradingCheckinModal v-model="showCheckinModal" />
 </template>

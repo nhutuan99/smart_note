@@ -49,6 +49,11 @@ import {
   handleDeleteTransaction,
   handleGetBudget,
   handleUpdateBudget,
+  handleGetTradingConfig,
+  handleUpdateTradingConfig,
+  handleListTradingCheckins,
+  handleCreateTradingCheckin,
+  handleUpdateTradingCheckin,
 } from './controllers/finance.controller'
 
 import {
@@ -405,6 +410,24 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
       }
       if (path === '/api/finance/budget' && request.method === 'PUT') {
         return handleUpdateBudget(userId, request, env)
+      }
+
+      // Trading Journal
+      if (path === '/api/trading/config' && request.method === 'GET') {
+        return handleGetTradingConfig(userId, env)
+      }
+      if (path === '/api/trading/config' && request.method === 'PUT') {
+        return handleUpdateTradingConfig(userId, request, env)
+      }
+      if (path === '/api/trading/checkins' && request.method === 'GET') {
+        return handleListTradingCheckins(userId, env)
+      }
+      if (path === '/api/trading/checkins' && request.method === 'POST') {
+        return handleCreateTradingCheckin(userId, request, env)
+      }
+      const tradingCheckinMatch = path.match(/^\/api\/trading\/checkins\/([\d-]+)$/)
+      if (tradingCheckinMatch && request.method === 'PUT') {
+        return handleUpdateTradingCheckin(userId, tradingCheckinMatch[1], request, env)
       }
 
       // PIN
