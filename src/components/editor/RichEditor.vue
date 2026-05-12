@@ -13,11 +13,11 @@ import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import Typography from '@tiptap/extension-typography'
 import Highlight from '@tiptap/extension-highlight'
 import { createLowlight, common } from 'lowlight'
-import { watch, onBeforeUnmount, ref } from 'vue'
+import { watch, onBeforeUnmount, ref, onMounted, onUnmounted, computed } from 'vue'
 import {
   Bold, Italic, Strikethrough, Code, Link2, Image as ImageIcon,
   List, ListOrdered, ListChecks, Quote, Minus, Undo, Redo,
-  Heading1, Heading2, Heading3, Highlighter, Code2, ImagePlus, X
+  Heading1, Heading2, Heading3, Highlighter, Code2, ImagePlus, X, ChevronLeft, ChevronRight
 } from 'lucide-vue-next'
 
 const props = defineProps<{
@@ -183,13 +183,64 @@ async function handleFileUpload(event: Event) {
 }
 
 // Image Zoom
-const zoomedImage = ref<string | null>(null)
+const zoomedImageIndex = ref<number | null>(null)
+const allImages = ref<string[]>([])
+const zoomedImage = computed(() => {
+  if (zoomedImageIndex.value !== null && allImages.value.length > 0) {
+    return allImages.value[zoomedImageIndex.value]
+  }
+  return null
+})
+
 function handleEditorClick(event: MouseEvent) {
   const target = event.target as HTMLElement
   if (target.tagName === 'IMG') {
-    zoomedImage.value = (target as HTMLImageElement).src
+    const src = (target as HTMLImageElement).src
+    const container = target.closest('.editor-content')
+    if (container) {
+      const imgs = Array.from(container.querySelectorAll('img'))
+      allImages.value = imgs.map(img => img.src)
+      const idx = allImages.value.indexOf(src)
+      zoomedImageIndex.value = idx !== -1 ? idx : 0
+    } else {
+      allImages.value = [src]
+      zoomedImageIndex.value = 0
+    }
   }
 }
+
+function closeZoom() {
+  zoomedImageIndex.value = null
+  allImages.value = []
+}
+
+function prevImage() {
+  if (zoomedImageIndex.value !== null && zoomedImageIndex.value > 0) {
+    zoomedImageIndex.value--
+  }
+}
+
+function nextImage() {
+  if (zoomedImageIndex.value !== null && zoomedImageIndex.value < allImages.value.length - 1) {
+    zoomedImageIndex.value++
+  }
+}
+
+function handleKeydown(e: KeyboardEvent) {
+  if (zoomedImageIndex.value !== null) {
+    if (e.key === 'Escape') closeZoom()
+    else if (e.key === 'ArrowLeft') prevImage()
+    else if (e.key === 'ArrowRight') nextImage()
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
 </script>
 
 <template>
@@ -393,9 +444,26 @@ function handleEditorClick(event: MouseEvent) {
     <!-- Zoom Overlay -->
     <Teleport to="body">
       <Transition name="fade-zoom">
-        <div v-if="zoomedImage" class="image-zoom-overlay" @click="zoomedImage = null">
+        <div v-if="zoomedImage" class="image-zoom-overlay" @click="closeZoom">
+          <div class="zoom-counter" v-if="allImages.length > 1" @click.stop>
+            {{ zoomedImageIndex! + 1 }} / {{ allImages.length }}
+          </div>
+          <button 
+            v-if="allImages.length > 1 && zoomedImageIndex! > 0" 
+            class="zoom-nav-btn zoom-prev-btn" 
+            @click.stop="prevImage"
+          >
+            <ChevronLeft :size="32" />
+          </button>
           <img :src="zoomedImage" class="zoomed-img" @click.stop />
-          <button class="zoom-close-btn" @click="zoomedImage = null">
+          <button 
+            v-if="allImages.length > 1 && zoomedImageIndex! < allImages.length - 1" 
+            class="zoom-nav-btn zoom-next-btn" 
+            @click.stop="nextImage"
+          >
+            <ChevronRight :size="32" />
+          </button>
+          <button class="zoom-close-btn" @click="closeZoom">
             <X :size="24" />
           </button>
         </div>
@@ -451,6 +519,45 @@ function handleEditorClick(event: MouseEvent) {
 }
 .zoom-close-btn:hover {
   background: rgba(255, 255, 255, 0.2);
+}
+.zoom-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+  z-index: 10000;
+}
+.zoom-nav-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+  transform: translateY(-50%) scale(1.1);
+}
+.zoom-prev-btn {
+  left: 2rem;
+}
+.zoom-next-btn {
+  right: 2rem;
+}
+.zoom-counter {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  pointer-events: none;
 }
 .fade-zoom-enter-active,
 .fade-zoom-leave-active {

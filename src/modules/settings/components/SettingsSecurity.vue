@@ -252,6 +252,7 @@ function cancelForgotPin() {
                   :disabled="pinLoading || !pinForm.newPin || !pinForm.confirmPin"
                   class="btn-primary flex-1 justify-center py-2 disabled:opacity-40"
                 >
+                  <Loader2 v-if="pinLoading" :size="16" class="animate-spin" />
                   {{ pinLoading ? t('settings.savingPin') : t('settings.savePin') }}
                 </button>
               </div>

@@ -53,7 +53,7 @@ const {
           >
             <Loader2 v-if="pushLoading" :size="16" class="animate-spin" />
             <Bell v-else :size="16" />
-            {{ pushSubscribed ? t('settings.pushDisable') : t('settings.pushEnable') }}
+            {{ pushLoading ? t('common.processing') : (pushSubscribed ? t('settings.pushDisable') : t('settings.pushEnable')) }}
           </button>
         </div>
       </div>
