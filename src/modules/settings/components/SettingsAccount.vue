@@ -5,7 +5,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useFinanceStore } from '@/stores/finance'
 import { useUiStore } from '@/stores/ui'
 import { useI18n } from 'vue-i18n'
-import { Shield, LogOut, Trash2, AlertTriangle, Lock, Eye, EyeOff, Loader2 } from 'lucide-vue-next'
+import { Shield, LogOut, Trash2, AlertTriangle, Lock, Eye, EyeOff } from 'lucide-vue-next'
 import { httpClient } from '@/shared/api/httpClient'
 import LogoLoader from '@/components/ui/LogoLoader.vue'
 
@@ -134,7 +134,7 @@ async function confirmDeleteAccount() {
                   {{ t('common.cancel') }}
                 </button>
                 <button @click="confirmDeleteAccount" :disabled="deleteLoading" class="btn-danger flex-1 py-2.5 shadow-lg shadow-red-500/30 disabled:opacity-50">
-                  <Loader2 v-if="deleteLoading" :size="20" class="animate-spin mr-2" />
+                  <AppSpinner v-if="deleteLoading" :size="20" class="mr-2" />
                   <span>{{ deleteLoading ? t('common.processing') : t('settings.deleteForever') }}</span>
                 </button>
               </div>

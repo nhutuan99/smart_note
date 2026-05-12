@@ -591,7 +591,7 @@ function getChartData(symbol: string) {
             <transition name="fade">
               <div v-if="activeTooltip === pos.symbol" class="absolute top-full left-0 mt-2 p-3 w-64 bg-bg-elevated border border-border-default rounded-xl shadow-2xl z-50 text-xs pointer-events-none">
                 <div v-if="!tooltipInfo" class="flex items-center gap-2 text-text-tertiary">
-                  <Loader2 :size="14" class="animate-spin" />
+                  <AppSpinner :size="14"  />
                   Đang tải thông tin API...
                 </div>
                 <div v-else class="space-y-1.5">

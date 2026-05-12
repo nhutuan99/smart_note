@@ -16,7 +16,6 @@ import {
   ArrowLeft,
   X,
   Hash,
-  Loader2,
   ImageUp,
   Pencil,
   ExternalLink,
@@ -796,7 +795,7 @@ const formatDate = (dateStr: string) => {
                       }"
                     >
                       <CheckCircle2 v-if="stepStatus(step.key) === 'done'" :size="16" />
-                      <Loader2 v-else-if="stepStatus(step.key) === 'active'" :size="16" class="animate-spin" />
+                      <AppSpinner v-else-if="stepStatus(step.key) === 'active'" :size="16"  />
                       <component :is="step.icon" v-else :size="16" />
                     </div>
                     <!-- Label -->

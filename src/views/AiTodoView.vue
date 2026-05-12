@@ -9,7 +9,7 @@ import CreateReminderModal from '@/components/ui/CreateReminderModal.vue'
 import LogoLoader from '@/components/ui/LogoLoader.vue'
 import {
   Sparkles, Send, Clock, BellRing, Check, Trash2, ListTodo,
-  CalendarDays, Loader2, CheckCircle2, Circle, LayoutList
+  CalendarDays, CheckCircle2, Circle, LayoutList
 } from 'lucide-vue-next'
 
 const { t } = useI18n()
@@ -156,13 +156,13 @@ async function onReminderSaved() {
         @click="handleGenerate"
         class="shrink-0 flex items-center justify-center w-11 h-11 rounded-full bg-accent text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-bg-elevated disabled:text-text-disabled hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(6,182,212,0.3)] hover:scale-105"
       >
-        <Loader2 v-if="generating" :size="18" class="animate-spin" />
+        <AppSpinner v-if="generating" :size="18"  />
         <Send v-else :size="18" class="-ml-0.5 mt-0.5" />
       </button>
 
       <!-- Absolute Status -->
       <div v-if="generating" class="absolute -bottom-6 left-5 flex items-center gap-1.5 text-[0.75rem] font-medium text-accent animate-pulse">
-        <Loader2 :size="12" class="animate-spin" />
+        <AppSpinner :size="12"  />
         {{ t('aiTodo.processing') }}
       </div>
     </div>

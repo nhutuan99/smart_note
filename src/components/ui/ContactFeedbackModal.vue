@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
-import { X, Send, Loader2, MessageSquare } from 'lucide-vue-next'
+import { X, Send, MessageSquare } from 'lucide-vue-next'
 import { httpClient } from '@/shared/api/httpClient'
 import { useUiStore } from '@/stores/ui'
 import { useI18n } from 'vue-i18n'
@@ -133,7 +133,7 @@ async function submitFeedback() {
             class="btn-primary"
             :disabled="!canSubmit"
           >
-            <Loader2 v-if="loading" :size="16" class="animate-spin mr-2" />
+            <AppSpinner v-if="loading" :size="16" class="mr-2" />
             <Send v-else class="h-4 w-4 mr-2" />
             {{ t('contact.submitBtn') }}
           </button>

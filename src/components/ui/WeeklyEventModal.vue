@@ -2,7 +2,7 @@
 import { ref, watch } from 'vue'
 import { useUiStore } from '@/stores/ui'
 import { useAuthStore } from '@/stores/auth'
-import { Sparkles, ChevronRight, Loader2, X } from 'lucide-vue-next'
+import { Sparkles, ChevronRight, X } from 'lucide-vue-next'
 import LogoLoader from '@/components/ui/LogoLoader.vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'

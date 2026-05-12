@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
-import { Loader2 } from 'lucide-vue-next'
+import { } from 'lucide-vue-next'
 import LogoLoader from '@/components/ui/LogoLoader.vue'
 
 const emit = defineEmits<{

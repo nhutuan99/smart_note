@@ -12,7 +12,7 @@ import { useCurrency } from '@/composables/useCurrency'
 import { getWalletBrand } from '@/constants/walletBrands'
 import { useI18n } from 'vue-i18n'
 import type { TransactionType } from '@/types'
-import { ArrowLeft, Check, ArrowUpRight, ArrowDownRight, Plus, Loader2, ChevronDown } from 'lucide-vue-next'
+import { ArrowLeft, Check, ArrowUpRight, ArrowDownRight, Plus, ChevronDown } from 'lucide-vue-next'
 import CurrencyInput from '@/components/ui/CurrencyInput.vue'
 import CustomDatePicker from '@/components/ui/CustomDatePicker.vue'
 
@@ -262,7 +262,7 @@ async function submit() {
           : 'bg-success text-white hover:opacity-90 disabled:opacity-40'
       "
     >
-      <Loader2 v-if="isSubmitting" :size="18" class="animate-spin" />
+      <AppSpinner v-if="isSubmitting" :size="18"  />
       <Check v-else :size="18" />
       {{ type === 'expense' ? t('addTx.submitExpense') : t('addTx.submitIncome') }}
     </button>

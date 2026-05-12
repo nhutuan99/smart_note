@@ -184,7 +184,7 @@ const trafficBg = computed(() => {
               :title="$t('weather.refresh')"
               @click="fetchWeather"
             >
-              <Loader2 v-if="loading" :size="14" class="animate-spin" />
+              <AppSpinner v-if="loading" :size="14"  />
               <RefreshCw v-else :size="14" />
             </button>
             <button

@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { useReminderStore } from '@/stores/reminders'
 import { useUiStore } from '@/stores/ui'
 import type { Reminder } from '@/types'
-import { X, Bell, CalendarDays, Clock, Save, Repeat, Plus, Link, ExternalLink, Sparkles, Loader2 } from 'lucide-vue-next'
+import { X, Bell, CalendarDays, Clock, Save, Repeat, Plus, Link, ExternalLink, Sparkles } from 'lucide-vue-next'
 import CustomTimePicker from './CustomTimePicker.vue'
 import LogoLoader from '@/components/ui/LogoLoader.vue'
 
@@ -218,7 +218,7 @@ async function handleSave() {
                   :disabled="!aiInput.trim() || processingAi"
                   class="absolute bottom-2 right-2 p-1.5 bg-accent text-white rounded-lg hover:bg-accent-hover disabled:opacity-50 transition-all flex items-center justify-center"
                 >
-                  <Loader2 v-if="processingAi" :size="16" class="animate-spin" />
+                  <AppSpinner v-if="processingAi" :size="16"  />
                   <Sparkles v-else :size="16" />
                 </button>
               </div>

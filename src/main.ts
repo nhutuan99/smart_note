@@ -7,7 +7,10 @@ import { createHead } from '@unhead/vue/client'
 import { setHttpClientRouter } from './shared/api/httpClient'
 import './assets/styles/base.css'
 
+import AppSpinner from '@/components/ui/AppSpinner.vue'
+
 const app = createApp(App)
+app.component('AppSpinner', AppSpinner)
 
 app.use(createPinia())
 app.use(router)

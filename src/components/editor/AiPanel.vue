@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { useAi } from '@/composables/useGemini'
 import {
   Sparkles, X, Copy, Check, ChevronDown,
-  AlignLeft, PenLine, Wand2, Tag, MessageSquare, Loader2, ListChecks
+  AlignLeft, PenLine, Wand2, Tag, MessageSquare, ListChecks
 } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
 import LogoLoader from '@/components/ui/LogoLoader.vue'
@@ -211,7 +211,7 @@ const hasResult = computed(() => ai.streamText.value.length > 0 || suggestedTags
 
       <!-- Loading (only before first chunk arrives) -->
       <div v-if="ai.loading.value && !ai.streamText.value && !suggestedTags.length" class="ai-loading">
-        <Loader2 :size="16" class="animate-spin" />
+        <AppSpinner :size="16"  />
         <span>{{ t('notes.ai.processing') }}</span>
       </div>
 

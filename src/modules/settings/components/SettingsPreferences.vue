@@ -109,7 +109,7 @@ function changeCurrency(code: CurrencyCode) {
               "
               @click="changeCurrency('USD')"
             >
-              <Loader2 v-if="rateLoading" :size="12" class="animate-spin mr-1" />
+              <AppSpinner v-if="rateLoading" :size="12" class="mr-1" />
               🇺🇸 USD ($)
             </button>
           </div>

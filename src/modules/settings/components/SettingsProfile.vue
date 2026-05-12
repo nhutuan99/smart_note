@@ -136,7 +136,7 @@ async function saveProfile() {
             {{ t('common.cancel') }}
           </button>
           <button @click="saveProfile" :disabled="profileLoading || !profileForm.name" class="btn-primary">
-            <Loader2 v-if="profileLoading" :size="16" class="animate-spin" />
+            <AppSpinner v-if="profileLoading" :size="16"  />
             <Save v-else :size="14" />
             <span>{{ profileLoading ? t('common.processing') : t('settings.saveChanges') }}</span>
           </button>

@@ -51,7 +51,7 @@ const {
             :disabled="pushLoading || !pushSupported"
             class="btn-secondary shrink-0 whitespace-nowrap"
           >
-            <Loader2 v-if="pushLoading" :size="16" class="animate-spin" />
+            <AppSpinner v-if="pushLoading" :size="16"  />
             <Bell v-else :size="16" />
             {{ pushLoading ? t('common.processing') : (pushSubscribed ? t('settings.pushDisable') : t('settings.pushEnable')) }}
           </button>
