@@ -28,55 +28,64 @@ export function useAppSeo(options: SeoOptions) {
     .filter(Boolean)
     .join(',')
 
-  // Standard Vue 3 way to handle SEO meta tags via @unhead/vue
-  useSeoMeta({
-    title,
-    description,
-    ogType: type,
-    ogUrl: options.url,
-    ogTitle: options.title, // raw title for OG
-    ogDescription: description,
-    ogImage: imageUrl,
-    ogSiteName: siteName,
-    ...(options.publishedAt ? { articlePublishedTime: options.publishedAt } : {}),
-    ...(options.updatedAt ? { articleModifiedTime: options.updatedAt } : {}),
-    ...(options.tags?.length ? { articleTag: options.tags } : {}),
-    twitterCard: 'summary_large_image',
-    twitterTitle: options.title,
-    twitterDescription: description,
-    twitterImage: imageUrl
-  })
+  try {
+    // Standard Vue 3 way to handle SEO meta tags via @unhead/vue
+    useSeoMeta({
+      title,
+      description,
+      ogType: type,
+      ogUrl: options.url,
+      ogTitle: options.title, // raw title for OG
+      ogDescription: description,
+      ogImage: imageUrl,
+      ogSiteName: siteName,
+      ...(options.publishedAt ? { articlePublishedTime: options.publishedAt } : {}),
+      ...(options.updatedAt ? { articleModifiedTime: options.updatedAt } : {}),
+      ...(options.tags?.length ? { articleTag: options.tags } : {}),
+      twitterCard: 'summary_large_image',
+      twitterTitle: options.title,
+      twitterDescription: description,
+      twitterImage: imageUrl
+    })
 
-  useHead({
-    meta: [
-      { name: 'keywords', content: keywords }
-    ],
-    link: [
-      { rel: 'canonical', href: options.url }
-    ],
-    script: [
-      {
-        type: 'application/ld+json',
-        innerHTML: JSON.stringify({
-          '@context': 'https://schema.org',
-          '@type': type === 'article' ? 'Article' : 'WebSite',
-          headline: options.title,
-          description: description,
-          image: imageUrl,
-          author: { '@type': 'Person', name: authorName },
-          publisher: { 
-            '@type': 'Organization', 
-            name: siteName, 
-            logo: { '@type': 'ImageObject', url: 'https://finnote-f4n.pages.dev/images/logo-512.png' } 
-          },
-          ...(options.publishedAt ? { datePublished: options.publishedAt } : {}),
-          ...(options.updatedAt ? { dateModified: options.updatedAt } : {}),
-          mainEntityOfPage: { '@type': 'WebPage', '@id:': options.url },
-          keywords: keywords
-        })
-      }
-    ]
-  })
+    useHead({
+      meta: [
+        { name: 'keywords', content: keywords }
+      ],
+      link: [
+        { rel: 'canonical', href: options.url }
+      ],
+      script: [
+        {
+          type: 'application/ld+json',
+          innerHTML: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': type === 'article' ? 'Article' : 'WebSite',
+            headline: options.title,
+            description: description,
+            image: imageUrl,
+            author: { '@type': 'Person', name: authorName },
+            publisher: { 
+              '@type': 'Organization', 
+              name: siteName, 
+              logo: { '@type': 'ImageObject', url: 'https://finnote-f4n.pages.dev/images/logo-512.png' } 
+            },
+            ...(options.publishedAt ? { datePublished: options.publishedAt } : {}),
+            ...(options.updatedAt ? { dateModified: options.updatedAt } : {}),
+            mainEntityOfPage: { '@type': 'WebPage', '@id': options.url },
+            keywords: keywords
+          })
+        }
+      ]
+    })
+  } catch (err) {
+    // Fallback when called outside of setup() (e.g., inside onMounted)
+    if (typeof document !== 'undefined') {
+      document.title = title
+      const metaDesc = document.querySelector('meta[name="description"]')
+      if (metaDesc) metaDesc.setAttribute('content', description)
+    }
+  }
 }
 
 /**

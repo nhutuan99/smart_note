@@ -42,6 +42,8 @@ const imageUrl = ref('')
 const imageInput = ref<HTMLInputElement | null>(null)
 
 const CustomImage = Image.extend({
+  inline: true,
+  group: 'inline',
   addNodeView() {
     return VueNodeViewRenderer(CustomImageNode)
   }
