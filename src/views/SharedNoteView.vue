@@ -7,6 +7,7 @@ import type { Note } from '@/types'
 import RichEditor from '@/components/editor/RichEditor.vue'
 import LogoLoader from '@/components/ui/LogoLoader.vue'
 import AppIntroCta from '@/components/ui/AppIntroCta.vue'
+import SocialShare from '@/components/ui/SocialShare.vue'
 import { ArrowLeft, Lock } from 'lucide-vue-next'
 import { useAppSeo, extractExcerpt, extractFirstImage } from '@/composables/useAppSeo'
 
@@ -59,7 +60,7 @@ function goToDashboard() {
 </script>
 
 <template>
-  <div class="flex h-full flex-col max-w-[52rem] mx-auto w-full pb-16">
+  <div class="flex h-full flex-col max-w-6xl mx-auto w-full pb-16 px-2 sm:px-4">
     <div class="mb-4 flex items-center justify-between">
       <div class="flex min-w-0 items-center gap-3">
         <h1 v-if="!loading && note" class="text-text-primary truncate text-xl font-bold">
@@ -86,8 +87,8 @@ function goToDashboard() {
     </div>
 
     <div v-else-if="note" class="bg-bg-surface border-border-default flex flex-1 flex-col overflow-hidden rounded-xl border shadow-sm">
-      <div class="border-border-default flex flex-wrap items-center gap-2 border-b px-4 py-3">
-        <div class="flex flex-1 flex-wrap gap-2">
+      <div class="border-border-default flex flex-wrap items-center justify-between gap-4 border-b px-4 py-3">
+        <div class="flex flex-1 flex-wrap items-center gap-2">
           <span
             v-for="tag in note.tags"
             :key="tag"
@@ -96,14 +97,21 @@ function goToDashboard() {
             {{ tag }}
           </span>
           <span v-if="note.tags.length === 0" class="text-text-tertiary text-xs italic">Không có thẻ</span>
+          
+          <span class="text-text-tertiary text-xs ml-2 hidden sm:inline-block">
+            Cập nhật: {{ new Date(note.updatedAt).toLocaleString() }}
+          </span>
         </div>
-        <span class="text-text-tertiary text-xs">
-          Cập nhật: {{ new Date(note.updatedAt).toLocaleString() }}
-        </span>
+        
+        <SocialShare 
+          :url="`https://finnote-f4n.pages.dev/notes/shared/${noteId}`"
+          :title="note.title || 'Untitled Note'"
+          :description="note.content.substring(0, 100).replace(/<[^>]+>/g, '')"
+        />
       </div>
 
       <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-        <div class="mx-auto max-w-4xl">
+        <div class="mx-auto w-full">
           <RichEditor v-model="note.content" :readonly="true" />
         </div>
       </div>

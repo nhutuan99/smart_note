@@ -692,8 +692,8 @@ function handleEditorClick(event: MouseEvent) {
   margin: 0.75rem 0;
 }
 .editor-content .tiptap p:has(> .custom-image-wrapper) > .custom-image-wrapper {
-  flex: 1 1 100%;
-  max-width: 100%;
+  flex: 0 1 calc(50% - 6px);
+  max-width: calc(50% - 6px);
   margin: 0; /* Override any margin from wrapper */
 }
 .editor-content .tiptap p:has(> .custom-image-wrapper:nth-child(2)) > .custom-image-wrapper {
