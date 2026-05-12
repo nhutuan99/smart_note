@@ -126,7 +126,6 @@ onMounted(async () => {
       <!-- Public Header for Unauthenticated Users to discover the app -->
       <header v-if="!auth.isAuthenticated" class="public-header">
         <div class="public-header__container">
-          <div class="public-header__left"></div>
           <router-link to="/" class="public-header__logo">
             <img src="/images/logo-512.png" alt="FinNote" class="w-8 h-8 object-contain" />
             <span class="font-bold text-[1.125rem] text-text-primary tracking-tight">FinNote</span>
@@ -211,9 +210,9 @@ onMounted(async () => {
   max-width: 72rem;
   margin: 0 auto;
   padding: 1rem 1rem;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  display: flex;
   align-items: center;
+  justify-content: space-between;
 }
 @media (min-width: 640px) {
   .public-header__container {
@@ -223,7 +222,6 @@ onMounted(async () => {
 .public-header__logo {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 0.75rem;
   text-decoration: none;
   transition: opacity 0.2s;
@@ -233,7 +231,7 @@ onMounted(async () => {
 }
 .public-header__right {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
 }
 .public-header__btn {
   background: var(--color-accent);
