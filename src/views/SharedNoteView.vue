@@ -45,7 +45,7 @@ function goToDashboard() {
 </script>
 
 <template>
-  <div class="flex h-full flex-col">
+  <div class="flex h-full flex-col max-w-[52rem] mx-auto w-full pb-16">
     <div class="mb-4 flex items-center justify-between">
       <div class="flex min-w-0 items-center gap-3">
         <h1 v-if="!loading && note" class="text-text-primary truncate text-xl font-bold">
@@ -71,7 +71,7 @@ function goToDashboard() {
       <button class="btn-primary" @click="goToDashboard">Về trang chủ</button>
     </div>
 
-    <div v-else-if="note" class="bg-bg-surface border-border-default flex flex-1 flex-col overflow-hidden rounded-xl border">
+    <div v-else-if="note" class="bg-bg-surface border-border-default flex flex-1 flex-col overflow-hidden rounded-xl border shadow-sm">
       <div class="border-border-default flex flex-wrap items-center gap-2 border-b px-4 py-3">
         <div class="flex flex-1 flex-wrap gap-2">
           <span
