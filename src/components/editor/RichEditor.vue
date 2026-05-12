@@ -199,7 +199,8 @@ function handleEditorClick(event: MouseEvent) {
     const container = target.closest('.editor-content')
     if (container) {
       const imgs = Array.from(container.querySelectorAll('img'))
-      allImages.value = imgs.map(img => img.src)
+      const uniqueSrcs = Array.from(new Set(imgs.map(img => img.src)))
+      allImages.value = uniqueSrcs
       const idx = allImages.value.indexOf(src)
       zoomedImageIndex.value = idx !== -1 ? idx : 0
     } else {
@@ -794,39 +795,46 @@ onUnmounted(() => {
 
 /* Images Grid Layout */
 .editor-content .tiptap p:has(> .custom-image-wrapper) {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
   gap: 12px;
-  align-items: flex-start;
+  align-items: start;
   margin: 0.75rem 0;
 }
+/* 1 image */
+.editor-content .tiptap p:has(> .custom-image-wrapper:nth-child(1):last-child) {
+  grid-template-columns: 1fr;
+}
+/* 2 images */
+.editor-content .tiptap p:has(> .custom-image-wrapper:nth-child(2):last-child) {
+  grid-template-columns: 1fr 1fr;
+}
+/* 3 images */
+.editor-content .tiptap p:has(> .custom-image-wrapper:nth-child(3):last-child) {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+/* 4 images */
+.editor-content .tiptap p:has(> .custom-image-wrapper:nth-child(4):last-child) {
+  grid-template-columns: 1fr 1fr;
+}
+/* 5+ images */
+.editor-content .tiptap p:has(> .custom-image-wrapper:nth-child(5)) {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+
 .editor-content .tiptap p:has(> .custom-image-wrapper) > .custom-image-wrapper {
-  flex: 0 1 calc(50% - 6px);
-  max-width: calc(50% - 6px);
-  margin: 0; /* Override any margin from wrapper */
-}
-.editor-content .tiptap p:has(> .custom-image-wrapper:nth-child(2)) > .custom-image-wrapper {
-  flex: 1 1 calc(50% - 6px);
-  max-width: calc(50% - 6px);
-}
-.editor-content .tiptap p:has(> .custom-image-wrapper:nth-child(3)) > .custom-image-wrapper {
-  flex: 1 1 calc(33.333% - 8px);
-  max-width: calc(33.333% - 8px);
+  margin: 0;
+  max-width: none;
+  flex: none;
+  width: 100%;
 }
 .editor-content .tiptap p:has(> .custom-image-wrapper) > .custom-image-wrapper img {
   width: 100%;
-  height: 100%;
+  height: auto;
   max-height: 500px;
-  object-fit: cover;
+  object-fit: contain;
   margin: 0;
-}
-.editor-content .tiptap p:has(> .custom-image-wrapper:nth-child(2)) > .custom-image-wrapper img {
-  max-height: 300px;
-  aspect-ratio: 4/3;
-}
-.editor-content .tiptap p:has(> .custom-image-wrapper:nth-child(3)) > .custom-image-wrapper img {
-  max-height: 220px;
-  aspect-ratio: 1/1;
+  border-radius: 8px;
+  background-color: var(--bg-surface);
 }
 
 /* ── Inline Dialog ── */
