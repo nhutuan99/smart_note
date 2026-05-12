@@ -1,6 +1,7 @@
 // Cloudflare Pages Function: Server-side meta injection for blog pages
 // This runs on the edge BEFORE the SPA loads, ensuring Google crawlers
 // see proper <title>, <meta>, Open Graph, and JSON-LD for each blog post
+import { injectMeta, escHtml } from '../_shared/seoUtils'
 
 // Type declaration for Cloudflare Pages Functions (globally available at runtime)
 type PagesFunction<Env = unknown> = (context: {
@@ -268,61 +269,4 @@ function buildArticleHtml(blog: BlogData): string {
   `
 }
 
-function injectMeta(html: string, meta: string, articleHtml: string | null): string {
-  // Strategy: Replace the existing <title> and primary SEO block with blog-specific meta
-  // The original index.html has:
-  //   <!-- Primary SEO -->
-  //   <title>FinNote - Quản Lý Tài Chính...</title>
-  //   <meta name="description" .../>
-  // We replace from <title> to the closing </title> and inject after
 
-  // Replace <title>...</title>
-  html = html.replace(/<title>[^<]*<\/title>/, '')
-
-  // Replace existing description
-  html = html.replace(/<meta\s+name="description"\s+content="[^"]*"\s*\/?>/i, '')
-
-  // Replace existing keywords
-  html = html.replace(/<meta\s+name="keywords"\s+content="[^"]*"\s*\/?>/i, '')
-
-  // Replace existing canonical
-  html = html.replace(/<link\s+rel="canonical"\s+href="[^"]*"\s*\/?>/i, '')
-
-  // Replace existing author (fix duplicate)
-  html = html.replace(/<meta\s+name="author"\s+content="[^"]*"\s*\/?>/gi, '')
-
-  // Replace existing OG tags
-  html = html.replace(/<meta\s+property="og:[^"]*"\s+content="[^"]*"\s*\/?>/gi, '')
-
-  // Replace existing Twitter tags
-  html = html.replace(/<meta\s+name="twitter:[^"]*"\s+content="[^"]*"\s*\/?>/gi, '')
-
-  // Replace existing JSON-LD (WebApplication schema)
-  html = html.replace(/<script\s+type="application\/ld\+json">[\s\S]*?<\/script>/i, '')
-
-  // Inject new meta right after <head> opening tags (after charset)
-  html = html.replace(
-    /<meta\s+charset="UTF-8"\s*\/?>/i,
-    `<meta charset="UTF-8" />\n    ${meta.trim()}`
-  )
-
-  // Inject article content into <div id="app"> for crawlers
-  // Vue will replace this when it mounts, so visual users won't see it
-  if (articleHtml) {
-    html = html.replace(
-      '<div id="app"></div>',
-      `<div id="app">${articleHtml}</div>`
-    )
-  }
-
-  return html
-}
-
-function escHtml(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-}

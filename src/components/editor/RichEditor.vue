@@ -683,37 +683,41 @@ function handleEditorClick(event: MouseEvent) {
   margin: 1.25rem 0;
 }
 
-/* Images */
-.editor-content .tiptap p:has(img) {
+/* Images Grid Layout */
+.editor-content .tiptap p:has(> .custom-image-wrapper) {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  align-items: center;
+  align-items: flex-start;
   margin: 0.75rem 0;
 }
-.editor-content .tiptap img {
-  flex: 1 1 auto;
+.editor-content .tiptap p:has(> .custom-image-wrapper) > .custom-image-wrapper {
+  flex: 1 1 100%;
   max-width: 100%;
-  max-height: 400px;
+  margin: 0; /* Override any margin from wrapper */
+}
+.editor-content .tiptap p:has(> .custom-image-wrapper:nth-child(2)) > .custom-image-wrapper {
+  flex: 1 1 calc(50% - 6px);
+  max-width: calc(50% - 6px);
+}
+.editor-content .tiptap p:has(> .custom-image-wrapper:nth-child(3)) > .custom-image-wrapper {
+  flex: 1 1 calc(33.333% - 8px);
+  max-width: calc(33.333% - 8px);
+}
+.editor-content .tiptap p:has(> .custom-image-wrapper) > .custom-image-wrapper img {
+  width: 100%;
+  height: 100%;
+  max-height: 500px;
   object-fit: cover;
-  border-radius: 12px;
   margin: 0;
-  display: block;
-  border: 1px solid var(--border-subtle);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  transition: all 0.2s ease;
 }
-.editor-content .tiptap img:hover {
-  transform: scale(1.01);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+.editor-content .tiptap p:has(> .custom-image-wrapper:nth-child(2)) > .custom-image-wrapper img {
+  max-height: 300px;
+  aspect-ratio: 4/3;
 }
-.editor-content .tiptap p:has(img:nth-child(2)) img {
-  flex: 1 1 calc(50% - 12px);
-  max-height: 250px;
-}
-.editor-content .tiptap p:has(img:nth-child(3)) img {
-  flex: 1 1 calc(33.333% - 12px);
-  max-height: 180px;
+.editor-content .tiptap p:has(> .custom-image-wrapper:nth-child(3)) > .custom-image-wrapper img {
+  max-height: 220px;
+  aspect-ratio: 1/1;
 }
 
 /* ── Inline Dialog ── */

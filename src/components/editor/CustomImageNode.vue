@@ -26,13 +26,39 @@ const props = defineProps(nodeViewProps)
   position: relative;
   display: inline-block;
   line-height: 0;
-  margin: 0.5rem 0;
+  margin: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  border: 1px solid var(--border-default);
 }
+
+.custom-image-wrapper:hover {
+  transform: scale(1.02);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+  z-index: 5;
+}
+
+.custom-image-wrapper::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: white;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.custom-image-wrapper:hover::after {
+  opacity: 0.05;
+}
+
 .custom-image-wrapper img {
   max-width: 100%;
-  border-radius: 8px;
+  display: block;
   cursor: pointer;
   transition: opacity 0.2s, outline 0.2s;
+  background-color: var(--bg-surface);
 }
 .custom-image-wrapper.is-selected img {
   outline: 2px solid var(--accent);

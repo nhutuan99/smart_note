@@ -7,6 +7,7 @@ import { useI18n } from 'vue-i18n'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import { useSeoMeta, useHead } from '@unhead/vue'
+import { useAppSeo } from '@/composables/useAppSeo'
 import { ArrowLeft, Calendar, Hash, User as UserIcon, Clock, BookOpen, ArrowRight, Zap, BrainCircuit, LayoutDashboard, Share2, Facebook, Twitter, Linkedin, Link, MessageCircle, Send, Eye } from 'lucide-vue-next'
 import { useUiStore } from '@/stores/ui'
 import AppIntroCta from '@/components/ui/AppIntroCta.vue'
@@ -89,51 +90,17 @@ onMounted(async () => {
       const seoDesc = blog.seoMeta?.description || blog.excerpt
       const blogUrl = `https://finnote-f4n.pages.dev/blog/${blog.slug}`
       
-      // Standard Vue 3 way to handle SEO meta tags via @unhead/vue
-      useSeoMeta({
-        title: `${seoTitle} | FinNote Blog`,
+      useAppSeo({
+        title: seoTitle,
         description: seoDesc,
-        ogType: 'article',
-        ogUrl: blogUrl,
-        ogTitle: seoTitle,
-        ogDescription: seoDesc,
-        ogImage: blog.imageUrl || '',
-        ogSiteName: 'FinNote Blog',
-        articlePublishedTime: blog.createdAt,
-        articleAuthor: [blog.author?.name || 'FinNote'],
-        articleTag: blog.tags || [],
-        twitterCard: 'summary_large_image',
-        twitterTitle: seoTitle,
-        twitterDescription: seoDesc,
-        twitterImage: blog.imageUrl || ''
-      })
-
-      // JSON-LD, Canonical link, and keywords
-      useHead({
-        meta: [
-          { name: 'keywords', content: (blog.seoMeta?.keywords || '') + ',' + (blog.tags || []).join(',') }
-        ],
-        link: [
-          { rel: 'canonical', href: blogUrl }
-        ],
-        script: [
-          {
-            type: 'application/ld+json',
-            innerHTML: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'Article',
-              headline: seoTitle,
-              description: seoDesc,
-              image: blog.imageUrl || '',
-              author: { '@type': 'Person', name: blog.author?.name || 'FinNote' },
-              publisher: { '@type': 'Organization', name: 'FinNote', logo: { '@type': 'ImageObject', url: 'https://finnote-f4n.pages.dev/images/logo-512.png' } },
-              datePublished: blog.createdAt,
-              dateModified: blog.updatedAt || blog.createdAt,
-              mainEntityOfPage: { '@type': 'WebPage', '@id': blogUrl },
-              keywords: (blog.tags || []).join(', ')
-            })
-          }
-        ]
+        url: blogUrl,
+        imageUrl: blog.imageUrl || '',
+        author: blog.author?.name || 'FinNote',
+        publishedAt: blog.createdAt,
+        updatedAt: blog.updatedAt || blog.createdAt,
+        tags: blog.tags || [],
+        type: 'article',
+        keywords: blog.seoMeta?.keywords || ''
       })
     } else {
       router.replace('/blog')

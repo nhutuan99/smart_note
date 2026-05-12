@@ -8,6 +8,7 @@ import RichEditor from '@/components/editor/RichEditor.vue'
 import LogoLoader from '@/components/ui/LogoLoader.vue'
 import AppIntroCta from '@/components/ui/AppIntroCta.vue'
 import { ArrowLeft, Lock } from 'lucide-vue-next'
+import { useAppSeo, extractExcerpt, extractFirstImage } from '@/composables/useAppSeo'
 
 const route = useRoute()
 const router = useRouter()
@@ -23,6 +24,19 @@ onMounted(async () => {
     const data = await httpClient.get<Note>(`/api/notes/shared/${noteId}`)
     if (data) {
       note.value = data
+      
+      useAppSeo({
+        title: data.title || 'Untitled Note',
+        description: extractExcerpt(data.content, 'Shared Note on FinNote'),
+        url: `https://finnote-f4n.pages.dev/notes/shared/${noteId}`,
+        imageUrl: extractFirstImage(data.content),
+        author: 'FinNote User',
+        publishedAt: data.createdAt,
+        updatedAt: data.updatedAt,
+        tags: data.tags || [],
+        type: 'article',
+        keywords: 'smart note,finnote,ghi chú'
+      })
     } else {
       error.value = 'Không tìm thấy ghi chú hoặc bạn không có quyền truy cập.'
     }
