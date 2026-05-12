@@ -19,8 +19,7 @@ FRONTEND_URL = "https://finnote-f4n.pages.dev"
 API_URL = "https://smart-note-api.smart-note.workers.dev"
 
 # Cron Triggers:
-# 1. Auto-blog generation daily at 9 AM VN (2 AM UTC)
-# 2. Stock alert checks every 30 min during trading hours 9-15h VN (2-8 UTC), Mon-Fri
-# 3. Reminder checks every 15 minutes (24/7)
+# 1. Stock alert checks every 30 min during trading hours 9-15h VN (2-8 UTC), Mon-Fri
+# 2. Reminder checks every 15 minutes (24/7)
 [triggers]
-crons = ["0 2 * * *", "*/30 2-8 * * 1-5", "*/15 * * * *"]
+crons = ["*/30 2-8 * * 1-5", "*/15 * * * *"]

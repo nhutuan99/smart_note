@@ -137,7 +137,6 @@ import {
   handleAiGenerateTodos,
 } from './controllers/todo.controller'
 
-import { runAutoBlog } from './services/auto-blog.service'
 import { checkAllStockAlerts } from './services/stock-alert.service'
 import { checkAllReminders } from './services/reminder.service'
 import { checkTradingReminders } from './services/trading-reminder.service'
@@ -322,24 +321,6 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
       }
       if (adminBlogMatch && request.method === 'DELETE') {
         return handleDeleteBlog(userId, adminBlogMatch[1], env)
-      }
-
-      // Manual Auto-Blog Trigger (admin only)
-      if (path === '/api/admin/auto-blog' && request.method === 'POST') {
-        // Reuse admin check from blog controller
-        const { getJSON: getJ } = await import('./services/kv.service')
-        const userProfile = await getJ<{ email: string }>(env.SMART_NOTE_KV, `users/${userId}/profile`)
-        if (userProfile?.email !== 'tintphcm@gmail.com') {
-          return errorResponse('Forbidden', 403)
-        }
-        try {
-          const result = await runAutoBlog(env)
-          return new Response(JSON.stringify({ success: true, message: result }), {
-            headers: { 'Content-Type': 'application/json', ...corsHeaders(env, request.headers.get('Origin')) }
-          })
-        } catch (err: any) {
-          return errorResponse(`AutoBlog failed: ${err.message}`, 500)
-        }
       }
 
       // Bug Report
@@ -624,8 +605,8 @@ export default {
   },
 
   // ── Cloudflare Cron Trigger ──
-  // Cron 1: 0 2 * * * = AutoBlog at 9 AM VN (daily)
-  // Cron 2: */30 2-8 * * 1-5 = Stock alerts every 30 min during trading hours (9-15h VN, Mon-Fri)
+  // Cron 1: */30 2-8 * * 1-5 = Stock alerts every 30 min during trading hours (9-15h VN, Mon-Fri)
+  // Cron 2: */15 * * * * = Reminders + Trading reminders every 15 minutes
   async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
     // Always check stock alerts during trading hours
     const cronTime = new Date(event.scheduledTime)
@@ -638,15 +619,6 @@ export default {
         checkAllStockAlerts(env)
           .then(result => console.log(`[Cron] StockAlerts: ${result}`))
           .catch(err => console.error('[Cron] StockAlerts failed:', err))
-      )
-    }
-
-    // AutoBlog only runs at 2:00 UTC (cron = "0 2 * * *")
-    if (hour === 2 && cronTime.getUTCMinutes() === 0) {
-      ctx.waitUntil(
-        runAutoBlog(env)
-          .then(result => console.log(`[Cron] AutoBlog completed: ${result}`))
-          .catch(err => console.error('[Cron] AutoBlog failed:', err))
       )
     }
 
