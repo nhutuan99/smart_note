@@ -348,7 +348,7 @@ function cancelForgotPin() {
                       :disabled="forgotPinLoading || !forgotPinPassword"
                       class="btn-primary w-full justify-center py-2.5 disabled:opacity-50"
                     >
-                      <LogoLoader v-if="forgotPinLoading" :size="16" />
+                      <Loader2 v-if="forgotPinLoading" :size="16" class="animate-spin" />
                       <span v-else>{{ t('common.confirm') }}</span>
                     </button>
 
@@ -425,7 +425,7 @@ function cancelForgotPin() {
                         :disabled="forgotPinLoading || !forgotPinNew || !forgotPinConfirm"
                         class="btn-primary flex-1 justify-center py-2 disabled:opacity-50"
                       >
-                        <LogoLoader v-if="forgotPinLoading" :size="16" />
+                        <Loader2 v-if="forgotPinLoading" :size="16" class="animate-spin" />
                         <span v-else>{{ t('settings.savePin') }}</span>
                       </button>
                     </div>

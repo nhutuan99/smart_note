@@ -241,7 +241,7 @@ function getWalletBrandConfig(w: Wallet) {
       <div class="flex items-center gap-3">
         <h1 class="text-2xl font-bold tracking-tight">{{ t('wallets.title') }}</h1>
         <span v-if="isDraggingSaving" class="text-text-disabled flex items-center gap-1.5 text-xs">
-          <LogoLoader :size="12" />
+          <Loader2 :size="12" class="animate-spin" />
           {{ t('common.saving') }}
         </span>
       </div>

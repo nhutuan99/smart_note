@@ -134,7 +134,7 @@ async function confirmDeleteAccount() {
                   {{ t('common.cancel') }}
                 </button>
                 <button @click="confirmDeleteAccount" :disabled="deleteLoading" class="btn-danger flex-1 py-2.5 shadow-lg shadow-red-500/30 disabled:opacity-50">
-                  <LogoLoader v-if="deleteLoading" :size="20" class="mr-1" />
+                  <Loader2 v-if="deleteLoading" :size="20" class="animate-spin mr-1" />
                   <span v-else>{{ t('settings.deleteConfirmBtn') }}</span>
                 </button>
               </div>

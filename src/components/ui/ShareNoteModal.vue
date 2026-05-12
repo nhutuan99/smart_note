@@ -166,7 +166,7 @@ async function copyLink() {
           @click="handleSave"
           :disabled="saving"
         >
-          <LogoLoader v-if="saving" :size="16" />
+          <Loader2 v-if="saving" :size="16" class="animate-spin" />
           {{ t('common.save') }}
         </button>
       </div>

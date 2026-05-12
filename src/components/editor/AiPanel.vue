@@ -211,7 +211,7 @@ const hasResult = computed(() => ai.streamText.value.length > 0 || suggestedTags
 
       <!-- Loading (only before first chunk arrives) -->
       <div v-if="ai.loading.value && !ai.streamText.value && !suggestedTags.length" class="ai-loading">
-        <LogoLoader :size="16" />
+        <Loader2 :size="16" class="animate-spin" />
         <span>{{ t('notes.ai.processing') }}</span>
       </div>
 

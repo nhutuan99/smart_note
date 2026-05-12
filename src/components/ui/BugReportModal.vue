@@ -268,7 +268,7 @@ async function submitReport() {
             class="btn-primary"
             :disabled="!canSubmit"
           >
-            <LogoLoader v-if="loading" :size="16" class="mr-2" />
+            <Loader2 v-if="loading" :size="16" class="animate-spin mr-2" />
             <Send v-else class="h-4 w-4 mr-2" />
             {{ t('bugReport.submitBtn') }}
           </button>

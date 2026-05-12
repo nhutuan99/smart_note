@@ -796,7 +796,7 @@ const formatDate = (dateStr: string) => {
                       }"
                     >
                       <CheckCircle2 v-if="stepStatus(step.key) === 'done'" :size="16" />
-                      <LogoLoader v-else-if="stepStatus(step.key) === 'active'" :size="16" />
+                      <Loader2 v-else-if="stepStatus(step.key) === 'active'" :size="16" class="animate-spin" />
                       <component :is="step.icon" v-else :size="16" />
                     </div>
                     <!-- Label -->

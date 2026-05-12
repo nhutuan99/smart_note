@@ -308,7 +308,7 @@ function handleApplyTags(aiTags: string[]) {
           @click="handleExtractEvents"
           :disabled="extractingEvents"
         >
-          <LogoLoader v-if="extractingEvents" :size="15" />
+          <Loader2 v-if="extractingEvents" :size="15" class="animate-spin" />
           <Bell v-else :size="15" />
           <span class="hidden sm:inline">{{ t('notes.scanEvents') }}</span>
         </button>
@@ -320,7 +320,7 @@ function handleApplyTags(aiTags: string[]) {
           @click="handleCreateBlog"
           :disabled="creatingBlog"
         >
-          <LogoLoader v-if="creatingBlog" :size="15" />
+          <Loader2 v-if="creatingBlog" :size="15" class="animate-spin" />
           <FileText v-else :size="15" />
           <span class="hidden sm:inline">{{ t('notes.createBlogBtn') }}</span>
         </button>

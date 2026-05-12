@@ -218,7 +218,7 @@ async function handleSave() {
                   :disabled="!aiInput.trim() || processingAi"
                   class="absolute bottom-2 right-2 p-1.5 bg-accent text-white rounded-lg hover:bg-accent-hover disabled:opacity-50 transition-all flex items-center justify-center"
                 >
-                  <LogoLoader v-if="processingAi" :size="16" />
+                  <Loader2 v-if="processingAi" :size="16" class="animate-spin" />
                   <Sparkles v-else :size="16" />
                 </button>
               </div>
