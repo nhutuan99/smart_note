@@ -330,3 +330,7 @@ input[type="number"] {
 .device--tablet .touch-bright {
   color: var(--color-text-secondary) !important;
 }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.animate-spin { animation: spin 1s linear infinite; }
+

@@ -5,6 +5,7 @@ import { computed, onMounted, ref } from 'vue'
 // 2. Vue ecosystem
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { setLocale } from '@/i18n'
 
 // 3. Stores
 import { useAuthStore } from '@/stores/auth'
@@ -23,7 +24,7 @@ import { ArrowLeft } from 'lucide-vue-next'
 const route  = useRoute()
 const auth   = useAuthStore()
 const trading = useTradingStore()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const { deviceType, isMobileOrTablet } = useDevice()
 
 // Enable global edge-swipe navigation
@@ -192,7 +193,9 @@ onMounted(async () => {
   padding-top: env(safe-area-inset-top, 0px);
 }
 .public-header__container {
-  max-width: 52rem;
+  max-width: 72rem;
+  padding: 1rem 1.5rem;
+
   margin: 0 auto;
   padding: 1rem 1.5rem;
   display: grid;

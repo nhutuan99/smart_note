@@ -121,25 +121,7 @@ const formatDate = (dateStr: string) => {
 <template>
   <div class="blog-detail-page max-w-[52rem] mx-auto pb-16">
     
-    <!-- Language Switcher (Fixed top-right like LoginView) -->
-    <div 
-      class="fixed right-4 z-50 flex items-center gap-1" 
-      :style="{ top: authStore.isAuthenticated ? 'max(env(safe-area-inset-top, 0px), 1rem)' : 'calc(max(env(safe-area-inset-top, 0px), 1rem) + 4rem)' }"
-    >
-      <button 
-        @click="locale = 'vi'"
-        :class="['text-sm font-semibold transition-colors rounded-lg px-3 py-2', locale === 'vi' ? 'text-accent bg-accent-subtle' : 'text-text-tertiary hover:text-text-primary hover:bg-bg-hover']"
-      >
-        VI
-      </button>
-      <span class="text-border-strong text-xs select-none">|</span>
-      <button 
-        @click="locale = 'en'"
-        :class="['text-sm font-semibold transition-colors rounded-lg px-3 py-2', locale === 'en' ? 'text-accent bg-accent-subtle' : 'text-text-tertiary hover:text-text-primary hover:bg-bg-hover']"
-      >
-        EN
-      </button>
-    </div>
+    
 
     <!-- Back Button -->
     <div class="mb-5">

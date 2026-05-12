@@ -170,8 +170,8 @@ async function verifyPin() {
             :disabled="loading || filledPin().length < pinLength"
             class="btn-primary w-full justify-center py-3 disabled:opacity-40"
           >
-            <Loader2 v-if="loading" :size="16" class="animate-spin" />
-            <span v-else>{{ t('pin.confirm') }}</span>
+            <Loader2 v-if="loading" :size="16" class="animate-spin mr-2" />
+                  <span>{{ loading ? 'Đang xử lý...' : t('pin.confirm') }}</span>
           </button>
         </div>
       </div>
