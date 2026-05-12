@@ -65,6 +65,7 @@ export default {
 
   // ── Time ──
   time: {
+    justNow: 'Just now',
     minutesAgo: '{n} minutes ago',
     hoursAgo: '{n} hours ago',
     daysAgo: '{n} days ago',
@@ -278,7 +279,9 @@ export default {
     tabUnread: 'Unread',
     emptyUnread: 'No unread notifications',
     empty: 'No notifications yet',
-    emptyHint: 'Connect your bank to receive automatic notifications'
+    emptyHint: 'Connect your bank to receive automatic notifications',
+    smsOut: '[SMS] Money transferred out',
+    smsIn: '[SMS] Money transferred in'
   },
 
   // ── Dashboard ──

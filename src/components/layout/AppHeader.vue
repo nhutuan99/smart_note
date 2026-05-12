@@ -262,7 +262,7 @@ function handleLogout() {
                       class="text-[0.8125rem] leading-tight block"
                       :class="!n.read ? 'text-text-primary font-semibold' : 'text-text-secondary font-medium'"
                     >
-                      {{ n.title }}
+                      {{ n.title === '[SMS] Tiền ra tài khoản' ? t('notifications.smsOut') : n.title === '[SMS] Tiền vào tài khoản' ? t('notifications.smsIn') : n.title }}
                     </span>
                     <!-- Wallet + Time row -->
                     <div class="flex items-center gap-2 mt-1">

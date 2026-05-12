@@ -65,6 +65,7 @@ export default {
 
   // ── Time ──
   time: {
+    justNow: 'Vừa xong',
     minutesAgo: '{n} phút trước',
     hoursAgo: '{n} giờ trước',
     daysAgo: '{n} ngày trước',
@@ -289,8 +290,11 @@ export default {
     tabAll: 'Tất cả',
     tabUnread: 'Chưa đọc',
     emptyUnread: 'Không có thông báo chưa đọc',
-    empty: 'Chưa có thông báo',
-    emptyHint: 'Kết nối ngân hàng để nhận thông báo tự động'
+    empty: 'Chưa có thông báo nào',
+    emptyHint: 'Kết nối ngân hàng để nhận thông báo tự động',
+    justNow: 'Vừa xong',
+    smsOut: '[SMS] Tiền ra tài khoản',
+    smsIn: '[SMS] Tiền vào tài khoản'
   },
 
   // ── Dashboard ──

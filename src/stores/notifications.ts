@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
 import { httpClient } from '@/shared/api/httpClient'
 import { AUTH_TOKEN_KEY } from '@/constants/auth'
+import i18n from '@/i18n'
 
 export interface AppNotification {
   id: string
@@ -85,14 +86,15 @@ export const useNotificationStore = defineStore('notifications', () => {
   }
 
   function timeSince(iso: string): string {
+    const { t } = i18n.global
     const diff = Date.now() - new Date(iso).getTime()
     const m = Math.floor(diff / 60000)
-    if (m < 1) return 'Vừa xong'
-    if (m < 60) return `${m} phút trước`
+    if (m < 1) return t('time.justNow')
+    if (m < 60) return t('time.minutesAgo', { n: m })
     const h = Math.floor(m / 60)
-    if (h < 24) return `${h} giờ trước`
+    if (h < 24) return t('time.hoursAgo', { n: h })
     const d = Math.floor(h / 24)
-    return `${d} ngày trước`
+    return t('time.daysAgo', { n: d })
   }
 
   return { notifications, loading, filter, unreadCount, filtered, fetch, markRead, markAllRead, clearAll, timeSince }

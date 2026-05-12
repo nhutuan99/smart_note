@@ -129,6 +129,8 @@ function buildHeaders(hasBody: boolean, isExternal: boolean = false): HeadersIni
     if (token) {
       headers['Authorization'] = `Bearer ${token}`
     }
+    const locale = localStorage.getItem('sn_locale') || 'vi'
+    headers['Accept-Language'] = locale
   }
 
   if (hasBody) {
