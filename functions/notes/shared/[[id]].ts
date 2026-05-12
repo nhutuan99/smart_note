@@ -17,11 +17,12 @@ interface NoteData {
   createdAt: string
   updatedAt: string
 }
+interface Env {
+  API_URL: string
+  SITE_URL: string
+}
 
-const SITE_URL = 'https://finnote-f4n.pages.dev'
-const API_URL = 'https://smart-note-api.smart-note.workers.dev'
-
-export const onRequest: PagesFunction = async (context) => {
+export const onRequest: PagesFunction<Env> = async (context) => {
   const url = new URL(context.request.url)
   const pathParts = url.pathname.split('/').filter(Boolean)
   const noteId = pathParts.length >= 3 ? pathParts[2] : null
@@ -30,9 +31,17 @@ export const onRequest: PagesFunction = async (context) => {
     return context.next()
   }
 
+  const apiUrl = context.env.API_URL as string
+  const siteUrl = (context.env.SITE_URL as string) || 'https://finnote-f4n.pages.dev'
+
+  if (!apiUrl) {
+    // Missing API_URL environment variable, fallback to SPA
+    return context.next()
+  }
+
   let note: NoteData | null = null
   try {
-    const apiRes = await fetch(`${API_URL}/api/notes/shared/${noteId}`)
+    const apiRes = await fetch(`${apiUrl}/api/notes/shared/${noteId}`)
     if (apiRes.ok) {
       note = (await apiRes.json()) as NoteData
     }
@@ -52,7 +61,7 @@ export const onRequest: PagesFunction = async (context) => {
     })
   }
 
-  const meta = buildNoteMeta(note, noteId)
+  const meta = buildNoteMeta(note, noteId, siteUrl)
   const articleHtml = buildArticleHtml(note)
   const injectedHtml = injectMeta(html, meta, articleHtml)
 
@@ -64,12 +73,12 @@ export const onRequest: PagesFunction = async (context) => {
   })
 }
 
-function buildNoteMeta(note: NoteData, noteId: string): string {
+function buildNoteMeta(note: NoteData, noteId: string, siteUrl: string): string {
   const title = note.title || 'Untitled Note'
   const desc = extractExcerpt(note.content, 'Shared Note on FinNote')
   const keywords = (note.tags || []).concat(['smart note', 'finnote', 'ghi chú']).join(',')
-  const noteUrl = `${SITE_URL}/notes/shared/${noteId}`
-  const image = extractFirstImage(note.content, `${SITE_URL}/images/og-cover.jpg`)
+  const noteUrl = `${siteUrl}/notes/shared/${noteId}`
+  const image = extractFirstImage(note.content, `${siteUrl}/images/og-cover.jpg`)
 
   const articleTags = (note.tags || [])
     .map((tag) => `<meta property="article:tag" content="${escHtml(tag)}" />`)
@@ -85,7 +94,7 @@ function buildNoteMeta(note: NoteData, noteId: string): string {
     publisher: {
       '@type': 'Organization',
       name: 'FinNote',
-      logo: { '@type': 'ImageObject', url: `${SITE_URL}/images/logo-512.png` },
+      logo: { '@type': 'ImageObject', url: `${siteUrl}/images/logo-512.png` },
     },
     datePublished: note.createdAt,
     dateModified: note.updatedAt || note.createdAt,

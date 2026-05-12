@@ -26,22 +26,31 @@ interface BlogData {
   updatedAt: string
 }
 
-const SITE_URL = 'https://finnote-f4n.pages.dev'
-const API_URL = 'https://smart-note-api.smart-note.workers.dev'
+interface Env {
+  API_URL: string
+  SITE_URL: string
+}
 
-export const onRequest: PagesFunction = async (context) => {
+export const onRequest: PagesFunction<Env> = async (context) => {
   const url = new URL(context.request.url)
   const pathParts = url.pathname.split('/').filter(Boolean) // ['blog', 'slug']
 
   // Only intercept blog detail pages (not /blog itself)
   const slug = pathParts.length >= 2 ? pathParts[1] : null
 
+  const apiUrl = context.env.API_URL as string
+  const siteUrl = (context.env.SITE_URL as string) || 'https://finnote-f4n.pages.dev'
+
+  if (!apiUrl) {
+    return context.next()
+  }
+
   if (!slug) {
     // Blog list page — just inject list-level meta and pass through
     const response = await context.next()
     const html = await response.text()
 
-    const listMeta = buildListMeta()
+    const listMeta = buildListMeta(siteUrl)
     const injectedHtml = injectMeta(html, listMeta, null)
 
     return new Response(injectedHtml, {
@@ -55,7 +64,7 @@ export const onRequest: PagesFunction = async (context) => {
   // Fetch blog data from API
   let blog: BlogData | null = null
   try {
-    const apiRes = await fetch(`${API_URL}/api/blogs/${slug}`)
+    const apiRes = await fetch(`${apiUrl}/api/blogs/${slug}`)
     if (apiRes.ok) {
       const json = (await apiRes.json()) as { success: boolean; data: BlogData }
       if (json.success && json.data) {
@@ -81,7 +90,7 @@ export const onRequest: PagesFunction = async (context) => {
   }
 
   // Build SEO meta for this blog post
-  const meta = buildBlogMeta(blog)
+  const meta = buildBlogMeta(blog, siteUrl)
   // Convert markdown to simple HTML for crawlers
   const articleHtml = buildArticleHtml(blog)
   const injectedHtml = injectMeta(html, meta, articleHtml)
@@ -94,34 +103,34 @@ export const onRequest: PagesFunction = async (context) => {
   })
 }
 
-function buildListMeta(): string {
+function buildListMeta(siteUrl: string): string {
   return `
     <title>Blog Tài Chính | FinNote — Mẹo Quản Lý Chi Tiêu & Đầu Tư</title>
     <meta name="description" content="Blog tài chính cá nhân từ FinNote. Chia sẻ kiến thức quản lý chi tiêu, tiết kiệm, đầu tư thông minh và mẹo tài chính hữu ích cho người Việt." />
     <meta name="keywords" content="blog tài chính, quản lý chi tiêu, tiết kiệm, đầu tư, finnote, tài chính cá nhân" />
-    <link rel="canonical" href="${SITE_URL}/blog" />
+    <link rel="canonical" href="${siteUrl}/blog" />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="${SITE_URL}/blog" />
+    <meta property="og:url" content="${siteUrl}/blog" />
     <meta property="og:title" content="Blog Tài Chính | FinNote" />
     <meta property="og:description" content="Blog tài chính cá nhân từ FinNote. Chia sẻ kiến thức quản lý chi tiêu, tiết kiệm, đầu tư thông minh." />
-    <meta property="og:image" content="${SITE_URL}/images/og-cover.jpg" />
+    <meta property="og:image" content="${siteUrl}/images/og-cover.jpg" />
     <meta property="og:site_name" content="FinNote" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Blog Tài Chính | FinNote" />
     <meta name="twitter:description" content="Blog tài chính cá nhân từ FinNote." />
-    <meta name="twitter:image" content="${SITE_URL}/images/og-cover.jpg" />
+    <meta name="twitter:image" content="${siteUrl}/images/og-cover.jpg" />
   `
 }
 
-function buildBlogMeta(blog: BlogData): string {
+function buildBlogMeta(blog: BlogData, siteUrl: string): string {
   const title = blog.seoMeta?.title || blog.title
   const desc = blog.seoMeta?.description || blog.excerpt
   const seoKeywords = (blog.seoMeta?.keywords || '').trim()
   const tagKeywords = (blog.tags || []).join(',')
   // Fix: avoid leading comma when seoKeywords is empty
   const keywords = [seoKeywords, tagKeywords].filter(Boolean).join(',')
-  const blogUrl = `${SITE_URL}/blog/${blog.slug}`
-  const image = blog.imageUrl || `${SITE_URL}/images/og-cover.jpg`
+  const blogUrl = `${siteUrl}/blog/${blog.slug}`
+  const image = blog.imageUrl || `${siteUrl}/images/og-cover.jpg`
   const authorName = blog.author?.name || 'FinNote'
 
   const articleTags = (blog.tags || [])
@@ -138,7 +147,7 @@ function buildBlogMeta(blog: BlogData): string {
     publisher: {
       '@type': 'Organization',
       name: 'FinNote',
-      logo: { '@type': 'ImageObject', url: `${SITE_URL}/images/logo-512.png` },
+      logo: { '@type': 'ImageObject', url: `${siteUrl}/images/logo-512.png` },
     },
     datePublished: blog.createdAt,
     dateModified: blog.updatedAt || blog.createdAt,
