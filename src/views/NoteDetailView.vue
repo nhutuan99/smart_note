@@ -303,14 +303,14 @@ function handleApplyTags(aiTags: string[]) {
       <div class="flex items-center gap-1">
         <button
           id="extract-events-btn"
-          title="Trích xuất sự kiện"
+          :title="t('notes.scanEvents')"
           class="flex h-[2.125rem] items-center gap-1.5 rounded-lg px-2.5 text-sm font-medium transition-all duration-150 text-text-secondary hover:bg-bg-hover hover:text-text-primary"
           @click="handleExtractEvents"
           :disabled="extractingEvents"
         >
           <LogoLoader v-if="extractingEvents" :size="15" />
           <Bell v-else :size="15" />
-          <span class="hidden sm:inline">Quét sự kiện</span>
+          <span class="hidden sm:inline">{{ t('notes.scanEvents') }}</span>
         </button>
 
         <button
@@ -400,14 +400,14 @@ function handleApplyTags(aiTags: string[]) {
           @click="showTagInput = true"
         >
           <Plus :size="12" />
-          {{ t('common.add') }} tag
+          {{ t('notes.addTag') }}
         </button>
         <input
           v-else
           v-model="newTag"
           autofocus
           class="border-accent bg-accent-subtle text-accent w-[6.25rem] rounded-full border px-2.5 py-0.5 text-[0.6875rem] focus:outline-none"
-          placeholder="Type tag..."
+          :placeholder="t('notes.typeTag')"
           @keydown="handleTagKeydown"
           @blur="showTagInput = false"
         />
@@ -426,7 +426,7 @@ function handleApplyTags(aiTags: string[]) {
       <input
         id="note-title-input"
         v-model="title"
-        placeholder="Untitled"
+        :placeholder="t('notes.untitledNote')"
         class="text-text-primary placeholder:text-text-disabled mb-4 w-full border-none bg-transparent py-2 text-[1.875rem] leading-tight font-bold tracking-tight focus:outline-none"
       />
 
