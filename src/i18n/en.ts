@@ -26,6 +26,7 @@ export default {
     scrollToTop: 'Scroll to top',
     toggleTheme: 'Toggle Theme',
     somethingWentWrong: 'Something went wrong',
+    processing: 'Processing...',
     unsavedChanges: 'Unsaved changes',
     saved: 'Saved {time}',
     tagsAdded: '{n} tag(s) added',
@@ -484,6 +485,18 @@ export default {
       success: 'Blog created successfully!',
       error: 'Error creating blog'
     }
+  },
+
+  // ── Shared Note ──
+  sharedNote: {
+    notFound: 'Note not found or you do not have access.',
+    loginRequired: 'You need to log in to view this note.',
+    noAccess: 'You do not have permission to access this note.',
+    cannotAccess: 'Cannot Access',
+    goHome: 'Go to Home',
+    noTags: 'No tags',
+    updated: 'Updated',
+    shareLabel: 'Share'
   },
 
   // ── Settings ──

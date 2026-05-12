@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
 import { httpClient } from '@/shared/api/httpClient'
-import { Lock, Eye, EyeOff, KeyRound, Shield } from 'lucide-vue-next'
+import { Lock, Eye, EyeOff, KeyRound, Shield, Loader2 } from 'lucide-vue-next'
 import LogoLoader from '@/components/ui/LogoLoader.vue'
 
 const { t } = useI18n()
@@ -349,7 +349,7 @@ function cancelForgotPin() {
                       class="btn-primary w-full justify-center py-2.5 disabled:opacity-50"
                     >
                       <Loader2 v-if="forgotPinLoading" :size="16" class="animate-spin mr-2" />
-                  <span>{{ forgotPinLoading ? 'Đang xử lý...' : t('common.confirm') }}</span>
+                  <span>{{ forgotPinLoading ? t('common.processing') : t('common.confirm') }}</span>
                     </button>
 
                     <button
@@ -426,7 +426,7 @@ function cancelForgotPin() {
                         class="btn-primary flex-1 justify-center py-2 disabled:opacity-50"
                       >
                         <Loader2 v-if="forgotPinLoading" :size="16" class="animate-spin mr-2" />
-                  <span>{{ forgotPinLoading ? 'Đang xử lý...' : t('settings.savePin') }}</span>
+                  <span>{{ forgotPinLoading ? t('common.processing') : t('settings.savePin') }}</span>
                       </button>
                     </div>
                   </div>

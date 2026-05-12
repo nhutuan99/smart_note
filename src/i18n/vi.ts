@@ -26,6 +26,7 @@ export default {
     scrollToTop: 'Lên đầu trang',
     toggleTheme: 'Đổi giao diện',
     somethingWentWrong: 'Đã xảy ra lỗi',
+    processing: 'Đang xử lý...',
     unsavedChanges: 'Chưa lưu',
     saved: 'Đã lưu {time}',
     tagsAdded: 'Đã thêm {n} tag',
@@ -497,6 +498,18 @@ export default {
       result: 'Kết quả:',
       insert: 'Chèn vào note'
     }
+  },
+
+  // ── Shared Note ──
+  sharedNote: {
+    notFound: 'Không tìm thấy ghi chú hoặc bạn không có quyền truy cập.',
+    loginRequired: 'Bạn cần đăng nhập để xem ghi chú này.',
+    noAccess: 'Bạn không có quyền truy cập ghi chú này.',
+    cannotAccess: 'Không thể truy cập',
+    goHome: 'Về trang chủ',
+    noTags: 'Không có thẻ',
+    updated: 'Cập nhật',
+    shareLabel: 'Chia sẻ'
   },
 
   // ── Settings ──

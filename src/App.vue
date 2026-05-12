@@ -131,8 +131,23 @@ onMounted(async () => {
             <img src="/images/logo-512.png" alt="FinNote" class="w-8 h-8 object-contain" />
             <span class="font-bold text-[1.125rem] text-text-primary tracking-tight">FinNote</span>
           </router-link>
-          <div class="public-header__right">
-            <router-link to="/login" class="public-header__btn">
+          <div class="public-header__right flex items-center gap-2 sm:gap-4">
+            <div class="flex items-center gap-1">
+              <button 
+                @click="setLocale('vi')"
+                :class="['text-[0.8125rem] font-semibold transition-colors rounded-lg px-2 py-1.5', locale === 'vi' ? 'text-accent bg-accent-subtle' : 'text-text-tertiary hover:text-text-primary hover:bg-bg-hover']"
+              >
+                VI
+              </button>
+              <span class="text-border-strong text-xs select-none">|</span>
+              <button 
+                @click="setLocale('en')"
+                :class="['text-[0.8125rem] font-semibold transition-colors rounded-lg px-2 py-1.5', locale === 'en' ? 'text-accent bg-accent-subtle' : 'text-text-tertiary hover:text-text-primary hover:bg-bg-hover']"
+              >
+                EN
+              </button>
+            </div>
+            <router-link to="/login" class="public-header__btn shrink-0">
               {{ t('common.login') }}
             </router-link>
           </div>
@@ -194,13 +209,16 @@ onMounted(async () => {
 }
 .public-header__container {
   max-width: 72rem;
-  padding: 1rem 1.5rem;
-
   margin: 0 auto;
-  padding: 1rem 1.5rem;
+  padding: 1rem 1rem;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
+}
+@media (min-width: 640px) {
+  .public-header__container {
+    padding: 1rem 2rem;
+  }
 }
 .public-header__logo {
   display: flex;

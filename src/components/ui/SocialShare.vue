@@ -6,7 +6,10 @@ const props = defineProps<{
   url: string
   title: string
   description?: string
+  shareLabel?: string
 }>()
+
+const shareLabel = props.shareLabel || 'Share'
 
 const copied = ref(false)
 
@@ -34,7 +37,7 @@ function shareLinkedin() {
 
 <template>
   <div class="flex items-center gap-2">
-    <span class="text-sm font-medium text-text-secondary mr-2">Chia sẻ:</span>
+    <span class="text-sm font-medium text-text-secondary mr-2">{{ shareLabel }}:</span>
     <button 
       @click="shareFacebook" 
       class="flex h-8 w-8 items-center justify-center rounded-full text-text-tertiary transition-colors hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/30"

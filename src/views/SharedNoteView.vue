@@ -39,15 +39,15 @@ onMounted(async () => {
         keywords: 'smart note,finnote,ghi chú'
       })
     } else {
-      error.value = 'Không tìm thấy ghi chú hoặc bạn không có quyền truy cập.'
+      error.value = t('sharedNote.notFound')
     }
   } catch (err: any) {
     if (err.message?.includes('401')) {
-      error.value = 'Bạn cần đăng nhập để xem ghi chú này.'
+      error.value = t('sharedNote.loginRequired')
     } else if (err.message?.includes('403')) {
-      error.value = 'Bạn không có quyền truy cập ghi chú này.'
+      error.value = t('sharedNote.noAccess')
     } else {
-      error.value = 'Không tìm thấy ghi chú.'
+      error.value = t('sharedNote.notFound')
     }
   } finally {
     loading.value = false
@@ -62,19 +62,17 @@ const shareUrl = computed(() => `${typeof window !== 'undefined' ? window.locati
 </script>
 
 <template>
-  <div class="flex h-full flex-col max-w-6xl mx-auto w-full pb-16 px-2 sm:px-4">
+  <div class="flex h-full flex-col max-w-6xl mx-auto w-full pb-16 px-2 sm:px-4 pt-4 sm:pt-6">
     <div class="mb-4 flex items-center justify-between">
       <div class="flex min-w-0 items-center gap-3">
         <h1 v-if="!loading && note" class="text-text-primary truncate text-xl font-bold">
           {{ note.title || 'Untitled Note' }}
         </h1>
-        <span v-if="note?.isPublic" class="bg-accent-subtle text-accent shrink-0 rounded-md px-2 py-0.5 text-xs font-semibold">Công khai</span>
+        <span v-if="note?.isPublic" class="bg-accent-subtle text-accent shrink-0 rounded-md px-2 py-0.5 text-xs font-semibold">{{ t('notes.share.public') }}</span>
         <span v-else-if="note" class="bg-bg-elevated border-border-default text-text-secondary shrink-0 flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-semibold">
-          <Lock :size="12" /> Giới hạn
+          <Lock :size="12" /> {{ t('notes.share.private') }}
         </span>
       </div>
-
-
     </div>
 
     <div v-if="loading" class="flex flex-1 items-center justify-center">
@@ -83,9 +81,9 @@ const shareUrl = computed(() => `${typeof window !== 'undefined' ? window.locati
 
     <div v-else-if="error" class="flex flex-1 flex-col items-center justify-center text-center">
       <Lock :size="48" class="text-text-tertiary mb-4" />
-      <h2 class="text-text-primary mb-2 text-xl font-bold">Không thể truy cập</h2>
+      <h2 class="text-text-primary mb-2 text-xl font-bold">{{ t('sharedNote.cannotAccess') }}</h2>
       <p class="text-text-secondary mb-6 text-sm">{{ error }}</p>
-      <button class="btn-primary" @click="goToDashboard">Về trang chủ</button>
+      <button class="btn-primary" @click="goToDashboard">{{ t('sharedNote.goHome') }}</button>
     </div>
 
     <div v-else-if="note" class="bg-bg-surface border-border-default flex flex-1 flex-col overflow-hidden rounded-xl border shadow-sm">
@@ -98,10 +96,10 @@ const shareUrl = computed(() => `${typeof window !== 'undefined' ? window.locati
           >
             {{ tag }}
           </span>
-          <span v-if="note.tags.length === 0" class="text-text-tertiary text-xs italic">Không có thẻ</span>
+          <span v-if="note.tags.length === 0" class="text-text-tertiary text-xs italic">{{ t('sharedNote.noTags') }}</span>
           
           <span class="text-text-tertiary text-xs ml-2 hidden sm:inline-block">
-            Cập nhật: {{ new Date(note.updatedAt).toLocaleString() }}
+            {{ t('sharedNote.updated') }}: {{ new Date(note.updatedAt).toLocaleString() }}
           </span>
         </div>
         
@@ -109,6 +107,7 @@ const shareUrl = computed(() => `${typeof window !== 'undefined' ? window.locati
           :url="shareUrl"
           :title="note.title || 'Untitled Note'"
           :description="note.content.substring(0, 100).replace(/<[^>]+>/g, '')"
+          :shareLabel="t('sharedNote.shareLabel')"
         />
       </div>
 
