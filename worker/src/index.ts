@@ -140,6 +140,29 @@ import {
 import { checkAllStockAlerts } from './services/stock-alert.service'
 import { checkAllReminders } from './services/reminder.service'
 import { checkTradingReminders } from './services/trading-reminder.service'
+import { checkFinanceReminders } from './services/finance-reminder.service'
+
+import {
+  handleListSavings,
+  handleCreateSavings,
+  handleUpdateSavings,
+  handleDeleteSavings,
+} from './controllers/savings.controller'
+
+import {
+  handleListDebts,
+  handleCreateDebt,
+  handleUpdateDebt,
+  handleDeleteDebt,
+} from './controllers/debt.controller'
+
+import {
+  handleListRecurring,
+  handleCreateRecurring,
+  handleUpdateRecurring,
+  handleDeleteRecurring,
+  handleExecuteRecurring,
+} from './controllers/recurring.controller'
 
 
 async function handleRequest(request: Request, env: Env): Promise<Response> {
@@ -415,8 +438,55 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
       if (tradingCheckinMatch && request.method === 'PUT') {
         return handleUpdateTradingCheckin(userId, tradingCheckinMatch[1], request, env)
       }
+      // Finance: Savings Goals
+      if (path === '/api/savings' && request.method === 'GET') {
+        return handleListSavings(userId, env)
+      }
+      if (path === '/api/savings' && request.method === 'POST') {
+        return handleCreateSavings(userId, request, env)
+      }
+      const savingsMatch = path.match(/^\/api\/savings\/([^\/]+)$/)
+      if (savingsMatch && request.method === 'PUT') {
+        return handleUpdateSavings(userId, savingsMatch[1], request, env)
+      }
+      if (savingsMatch && request.method === 'DELETE') {
+        return handleDeleteSavings(userId, savingsMatch[1], env)
+      }
 
-      // PIN
+      // Finance: Debts
+      if (path === '/api/debts' && request.method === 'GET') {
+        return handleListDebts(userId, env)
+      }
+      if (path === '/api/debts' && request.method === 'POST') {
+        return handleCreateDebt(userId, request, env)
+      }
+      const debtMatch = path.match(/^\/api\/debts\/([^\/]+)$/)
+      if (debtMatch && request.method === 'PUT') {
+        return handleUpdateDebt(userId, debtMatch[1], request, env)
+      }
+      if (debtMatch && request.method === 'DELETE') {
+        return handleDeleteDebt(userId, debtMatch[1], env)
+      }
+
+      // Finance: Recurring Transactions
+      if (path === '/api/recurring' && request.method === 'GET') {
+        return handleListRecurring(userId, env)
+      }
+      if (path === '/api/recurring' && request.method === 'POST') {
+        return handleCreateRecurring(userId, request, env)
+      }
+      const recurringMatch = path.match(/^\/api\/recurring\/([^\/]+)$/)
+      if (recurringMatch && request.method === 'PUT') {
+        return handleUpdateRecurring(userId, recurringMatch[1], request, env)
+      }
+      if (recurringMatch && request.method === 'DELETE') {
+        return handleDeleteRecurring(userId, recurringMatch[1], env)
+      }
+      const recurringExecuteMatch = path.match(/^\/api\/recurring\/([^\/]+)\/execute$/)
+      if (recurringExecuteMatch && request.method === 'POST') {
+        return handleExecuteRecurring(userId, recurringExecuteMatch[1], env)
+      }
+
       if (path === '/api/pin' && request.method === 'GET') {
         return handleCheckPin(userId, env)
       }
@@ -634,6 +704,13 @@ export default {
       checkTradingReminders(env)
         .then(result => console.log(result))
         .catch(err => console.error('[Cron] TradingReminder failed:', err))
+    )
+
+    // Finance plan reminders (savings, debt due dates, recurring transactions)
+    ctx.waitUntil(
+      checkFinanceReminders(env)
+        .then(result => console.log(result))
+        .catch(err => console.error('[Cron] FinanceReminder failed:', err))
     )
   }
 }
