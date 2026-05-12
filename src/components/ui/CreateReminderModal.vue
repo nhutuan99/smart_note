@@ -93,6 +93,11 @@ const isValid = computed(() => {
   return isStep1Valid.value && (selectedOffsets.value.length > 0 || (customDate.value && customTime.value))
 })
 
+function getLocalDateString(d: Date) {
+  const tz = d.getTimezoneOffset() * 60000
+  return new Date(d.getTime() - tz).toISOString().split('T')[0]
+}
+
 onMounted(() => {
   if (props.reminder) {
     title.value = props.reminder.title
@@ -101,13 +106,13 @@ onMounted(() => {
     repeatInterval.value = props.reminder.repeatInterval || 'none'
     const d = new Date(props.reminder.eventDate)
     if (!isNaN(d.getTime())) {
-      eventDate.value = d.toISOString().substring(0, 10)
+      eventDate.value = getLocalDateString(d)
       eventTime.value = d.toTimeString().substring(0, 5)
     }
     if (props.reminder.customRemindAt) {
       const cd = new Date(props.reminder.customRemindAt)
       if (!isNaN(cd.getTime())) {
-        customDate.value = cd.toISOString().substring(0, 10)
+        customDate.value = getLocalDateString(cd)
         customTime.value = cd.toTimeString().substring(0, 5)
         showCustomInput.value = true
       }
@@ -115,14 +120,14 @@ onMounted(() => {
   } else {
     const now = new Date()
     if (now.getHours() < 9) {
-      eventDate.value = now.toISOString().substring(0, 10)
+      eventDate.value = getLocalDateString(now)
       eventTime.value = '09:00'
     } else if (now.getHours() < 16) {
-      eventDate.value = now.toISOString().substring(0, 10)
+      eventDate.value = getLocalDateString(now)
       eventTime.value = '16:00'
     } else {
       now.setDate(now.getDate() + 1)
-      eventDate.value = now.toISOString().substring(0, 10)
+      eventDate.value = getLocalDateString(now)
       eventTime.value = '09:00'
     }
   }

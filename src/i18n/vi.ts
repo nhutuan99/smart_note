@@ -1060,6 +1060,8 @@ export default {
     timelineTomorrow: 'Ngày mai',
     timelineDaysAgo: '{n} ngày trước',
     timelineDaysLeft: '{n} ngày nữa',
+    timelineHoursLeft: '{n} giờ nữa',
+    timelineMinsLeft: '{n} phút nữa',
     widgetTitle: 'Nhắc nhở sắp tới'
   },
 

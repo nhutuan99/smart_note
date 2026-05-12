@@ -1022,6 +1022,8 @@ export default {
     timelineTomorrow: 'Tomorrow',
     timelineDaysAgo: '{n} days ago',
     timelineDaysLeft: '{n} days left',
+    timelineHoursLeft: '{n} hours left',
+    timelineMinsLeft: '{n} mins left',
     widgetTitle: 'Upcoming Reminders'
   },
 
@@ -1080,6 +1082,8 @@ export default {
     timelineTomorrow: 'Tomorrow',
     timelineDaysAgo: '{n} days ago',
     timelineDaysLeft: '{n} days left',
+    timelineHoursLeft: '{n} hours left',
+    timelineMinsLeft: '{n} mins left',
     timelineOverdue: 'Overdue'
   }
 }

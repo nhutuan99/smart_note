@@ -15,7 +15,7 @@ import { watch, onBeforeUnmount, ref } from 'vue'
 import {
   Bold, Italic, Strikethrough, Code, Link2, Image as ImageIcon,
   List, ListOrdered, ListChecks, Quote, Minus, Undo, Redo,
-  Heading1, Heading2, Heading3, Highlighter, Code2
+  Heading1, Heading2, Heading3, Highlighter, Code2, ImagePlus
 } from 'lucide-vue-next'
 
 const props = defineProps<{
@@ -131,6 +131,33 @@ function applyImage() {
 
 const wordCount = () => editor.value?.storage.characterCount.words() ?? 0
 const charCount = () => editor.value?.storage.characterCount.characters() ?? 0
+
+// Image upload from device
+const fileInputRef = ref<HTMLInputElement | null>(null)
+
+function triggerImageUpload() {
+  fileInputRef.value?.click()
+}
+
+function handleFileUpload(event: Event) {
+  const target = event.target as HTMLInputElement
+  const files = target.files
+  if (!files || files.length === 0) return
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i]
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const src = e.target?.result as string
+        editor.value?.chain().focus().setImage({ src }).run()
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+  // Reset input so the same file can be selected again
+  if (fileInputRef.value) fileInputRef.value.value = ''
+}
 </script>
 
 <template>
@@ -237,8 +264,11 @@ const charCount = () => editor.value?.storage.characterCount.characters() ?? 0
           :class="{ active: editor.isActive('link') }"
           @click="openLinkDialog"
         ><Link2 :size="15" /></button>
-        <button title="Insert Image" @click="openImageDialog">
+        <button title="Insert Image URL" @click="openImageDialog">
           <ImageIcon :size="15" />
+        </button>
+        <button title="Upload Image" @click="triggerImageUpload">
+          <ImagePlus :size="15" />
         </button>
       </div>
 
@@ -315,6 +345,16 @@ const charCount = () => editor.value?.storage.characterCount.characters() ?? 0
         </div>
       </Transition>
     </Teleport>
+
+    <!-- Hidden file input for image upload -->
+    <input
+      type="file"
+      ref="fileInputRef"
+      accept="image/*"
+      style="display: none"
+      @change="handleFileUpload"
+      multiple
+    />
   </div>
 </template>
 

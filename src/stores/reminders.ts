@@ -33,8 +33,8 @@ export const useReminderStore = defineStore('reminders', () => {
     if (days > 3) return { text: t('reminders.timelineDaysLeft', { n: days }), level: 'normal' }
     if (days > 1) return { text: t('reminders.timelineDaysLeft', { n: days }), level: 'warning' }
     if (days === 1) return { text: t('reminders.timelineDaysLeft', { n: 1 }), level: 'urgent' }
-    if (hours > 0) return { text: t('time.hAgo', { n: hours }), level: 'urgent' }
-    return { text: t('time.mAgo', { n: minutes }), level: 'urgent' }
+    if (hours > 0) return { text: t('reminders.timelineHoursLeft', { n: hours }), level: 'urgent' }
+    return { text: t('reminders.timelineMinsLeft', { n: minutes }), level: 'urgent' }
   }
 
   function getRepeatLabel(interval?: string): string {
@@ -50,8 +50,8 @@ export const useReminderStore = defineStore('reminders', () => {
     const mins = parseInt(interval, 10)
     if (!isNaN(mins)) {
       if (mins >= 1440) return t('reminders.timelineDaysLeft', { n: Math.floor(mins / 1440) })
-      if (mins >= 60) return t('time.hAgo', { n: Math.floor(mins / 60) })
-      return t('time.mAgo', { n: mins })
+      if (mins >= 60) return t('reminders.timelineHoursLeft', { n: Math.floor(mins / 60) })
+      return t('reminders.timelineMinsLeft', { n: mins })
     }
     return ''
   }
