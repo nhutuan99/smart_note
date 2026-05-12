@@ -360,7 +360,13 @@ export default {
     aiTooltip: 'Meow! {name} có thể giúp gì không? 👋',
     aiReadyToHelp: 'Sẵn sàng hỗ trợ tài chính',
     aiGreeting:
-      'Chào bạn! 👋 Mình là {name}. Mình có thể giúp bạn phân tích chi tiêu, đưa ra lời khuyên hoặc giải đáp thắc mắc về tài chính tháng này. Bạn muốn hỏi gì nào?'
+      'Chào bạn! 👋 Mình là {name}. Mình có thể giúp bạn phân tích chi tiêu, đưa ra lời khuyên hoặc giải đáp thắc mắc về tài chính tháng này. Bạn muốn hỏi gì nào?',
+    totalAssets: 'Tổng tài sản',
+    walletBalance: 'Số dư ví',
+    stocksLabel: 'Cổ phiếu',
+    fundsLabel: 'Chứng chỉ quỹ',
+    monthlySavings: 'Tiết kiệm',
+    incomePercent: '% thu nhập'
   },
 
   // ── Transactions ──
@@ -1053,7 +1059,8 @@ export default {
     timelineToday: 'Hôm nay',
     timelineTomorrow: 'Ngày mai',
     timelineDaysAgo: '{n} ngày trước',
-    timelineDaysLeft: '{n} ngày nữa'
+    timelineDaysLeft: '{n} ngày nữa',
+    widgetTitle: 'Nhắc nhở sắp tới'
   },
 
   // ── Coffee ──

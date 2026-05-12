@@ -347,7 +347,13 @@ export default {
     aiPlanDate: '*Date: {date}*',
     aiTooltip: 'Meow! Can {name} help you? 👋',
     aiReadyToHelp: 'Ready to assist',
-    aiGreeting: 'Hi there! 👋 I am {name}. I can help you analyze expenses, give advice, or answer questions about your finances this month. What would you like to ask?'
+    aiGreeting: 'Hi there! 👋 I am {name}. I can help you analyze expenses, give advice, or answer questions about your finances this month. What would you like to ask?',
+    totalAssets: 'Total Assets',
+    walletBalance: 'Wallet Balance',
+    stocksLabel: 'Stocks',
+    fundsLabel: 'Funds',
+    monthlySavings: 'Savings',
+    incomePercent: '% of income'
   },
 
   // ── Transactions ──
@@ -452,6 +458,28 @@ export default {
       applyTags: 'Apply tags',
       result: 'Result:',
       insert: 'Insert to note'
+    },
+    createBlogBtn: 'Create Blog',
+    shareBtn: 'Share',
+    share: {
+      title: 'Share note',
+      access: 'Access',
+      private: 'Private',
+      privateDesc: 'Only you and invited emails',
+      public: 'Public',
+      publicDesc: 'Anyone with the link can view',
+      inviteEmail: 'Invite by Email',
+      emailPlaceholder: 'Enter email...',
+      shareLink: 'Share link',
+      copySuccess: 'Copied',
+      copy: 'Copy',
+      updateSuccess: 'Share settings updated',
+      updateError: 'Error sharing note'
+    },
+    blog: {
+      generating: 'AI is writing the Blog, please wait...',
+      success: 'Blog created successfully!',
+      error: 'Error creating blog'
     }
   },
 
@@ -993,7 +1021,8 @@ export default {
     timelineToday: 'Today',
     timelineTomorrow: 'Tomorrow',
     timelineDaysAgo: '{n} days ago',
-    timelineDaysLeft: '{n} days left'
+    timelineDaysLeft: '{n} days left',
+    widgetTitle: 'Upcoming Reminders'
   },
 
   // ── Coffee ──

@@ -3,6 +3,7 @@
 import { computed, onMounted } from 'vue'
 // 2. Vue ecosystem
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 // 3. Stores
 import { useReminderStore } from '@/stores/reminders'
 // 4. Icons
@@ -10,6 +11,7 @@ import { Bell, ChevronRight, Clock, CalendarCheck2 } from 'lucide-vue-next'
 
 const router = useRouter()
 const reminderStore = useReminderStore()
+const { t, locale } = useI18n()
 
 onMounted(() => {
   if (!reminderStore.reminders.length) {
@@ -43,10 +45,11 @@ function formatEventDate(dateStr: string): string {
     d.getDate() === now.getDate() &&
     d.getMonth() === now.getMonth() &&
     d.getFullYear() === now.getFullYear()
+  const loc = locale.value === 'vi' ? 'vi-VN' : 'en-US'
   if (isToday) {
-    return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+    return d.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit' })
   }
-  return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })
+  return d.toLocaleDateString(loc, { day: '2-digit', month: '2-digit' })
 }
 </script>
 
@@ -60,7 +63,7 @@ function formatEventDate(dateStr: string): string {
         <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/15 text-accent">
           <Bell :size="15" />
         </div>
-        <h3 class="text-sm font-semibold text-text-primary">Nhắc nhở sắp tới</h3>
+        <h3 class="text-sm font-semibold text-text-primary">{{ t('reminders.widgetTitle') }}</h3>
         <span
           v-if="reminderStore.activeCount > 0"
           class="inline-flex items-center justify-center rounded-full text-[10px] font-bold px-1.5 py-0.5 min-w-[1.1rem] bg-accent/15 text-accent"
@@ -72,7 +75,7 @@ function formatEventDate(dateStr: string): string {
         class="flex items-center gap-0.5 text-accent text-xs font-medium hover:opacity-80 transition-opacity"
         @click="router.push('/reminders')"
       >
-        Xem tất cả
+        {{ t('dashboard.viewAll') }}
         <ChevronRight :size="14" />
       </button>
     </div>
@@ -85,9 +88,9 @@ function formatEventDate(dateStr: string): string {
     <!-- Empty state -->
     <div v-else-if="!upcomingReminders.length" class="flex flex-1 flex-col items-center justify-center gap-1 py-4">
       <CalendarCheck2 :size="28" class="text-text-disabled mb-2" />
-      <p class="text-text-disabled text-sm">Không có nhắc nhở nào</p>
+      <p class="text-text-disabled text-sm">{{ t('reminders.empty') }}</p>
       <button class="mt-1 text-xs text-accent hover:opacity-80 transition-opacity font-medium" @click="router.push('/reminders')">
-        + Tạo nhắc nhở
+        + {{ t('reminders.create') }}
       </button>
     </div>
 

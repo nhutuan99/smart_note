@@ -138,7 +138,7 @@ const primaryBalance = computed(() =>
           <Wallet :size="18" class="text-accent" />
         </div>
         <span class="text-text-tertiary text-sm">
-          {{ portfolio.hasInvestments.value ? 'Tổng tài sản' : t('dashboard.totalBalance') }}
+          {{ portfolio.hasInvestments.value ? t('dashboard.totalAssets') : t('dashboard.totalBalance') }}
         </span>
         <button
           @click="ui.toggleHideBalances()"
@@ -163,7 +163,7 @@ const primaryBalance = computed(() =>
           <!-- Wallet row -->
           <div class="flex items-center gap-2">
             <Wallet :size="12" class="text-text-disabled shrink-0" />
-            <span class="flex-1 text-xs text-text-disabled">Số dư ví</span>
+            <span class="flex-1 text-xs text-text-disabled">{{ t('dashboard.walletBalance') }}</span>
             <span class="text-xs tabular-nums text-text-secondary font-medium">
               {{ ui.hideBalances ? '•••' : formatVNDShort(finance.totalBalance) }}
             </span>
@@ -176,7 +176,7 @@ const primaryBalance = computed(() =>
               class="shrink-0"
               :class="portfolio.stockProfit.value >= 0 ? 'text-success' : 'text-error'"
             />
-            <span class="flex-1 text-xs text-text-disabled">Cổ phiếu</span>
+            <span class="flex-1 text-xs text-text-disabled">{{ t('dashboard.stocksLabel') }}</span>
             <span
               class="text-xs tabular-nums font-bold flex items-center gap-0.5"
               :class="portfolio.stockProfit.value >= 0 ? 'text-success' : 'text-error'"
@@ -196,7 +196,7 @@ const primaryBalance = computed(() =>
               class="shrink-0"
               :class="portfolio.fundProfit.value >= 0 ? 'text-success' : 'text-error'"
             />
-            <span class="flex-1 text-xs text-text-disabled">Chứng chỉ quỹ</span>
+            <span class="flex-1 text-xs text-text-disabled">{{ t('dashboard.fundsLabel') }}</span>
             <span
               class="text-xs tabular-nums font-bold flex items-center gap-0.5"
               :class="portfolio.fundProfit.value >= 0 ? 'text-success' : 'text-error'"
@@ -235,7 +235,7 @@ const primaryBalance = computed(() =>
         :class="finance.monthNet >= 0 ? 'text-success' : 'text-error'"
       >
         <component :is="finance.monthNet >= 0 ? ArrowUpRight : ArrowDownRight" :size="12" />
-        <span>Tiết kiệm {{ formatVNDShort(Math.abs(finance.monthNet)) }}</span>
+        <span>{{ t('dashboard.monthlySavings') }} {{ formatVNDShort(Math.abs(finance.monthNet)) }}</span>
       </div>
     </div>
 
@@ -260,7 +260,7 @@ const primaryBalance = computed(() =>
         v-if="!finance.loading && finance.monthIncome > 0 && finance.monthExpense > 0"
         class="mt-2 text-[11px] text-text-disabled"
       >
-        {{ Math.round((finance.monthExpense / finance.monthIncome) * 100) }}% thu nhập
+        {{ Math.round((finance.monthExpense / finance.monthIncome) * 100) }}{{ t('dashboard.incomePercent') }}
       </div>
     </div>
 
@@ -285,7 +285,7 @@ const primaryBalance = computed(() =>
           v-if="trading.reminderTime"
           @click="showReminderModal = true"
           class="flex items-center gap-1 text-[10px] font-semibold text-accent bg-accent/10 px-2 py-1 rounded-full hover:bg-accent/20 transition-colors"
-          title="Giờ nhắc nhở"
+          :title="t('trading.reminderActive', { time: trading.reminderTime })"
         >
           <Bell :size="10" />
           {{ trading.reminderTime }}
@@ -296,7 +296,7 @@ const primaryBalance = computed(() =>
           v-else
           @click="showReminderModal = true"
           class="flex items-center gap-1 text-[10px] font-medium text-text-disabled hover:text-accent transition-colors px-1.5 py-1 rounded-lg hover:bg-accent/5"
-          title="Đặt giờ nhắc hàng ngày"
+          :title="t('trading.reminderOff')"
         >
           <Bell :size="11" />
           {{ t('trading.reminderSetBtn') }}

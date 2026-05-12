@@ -8,6 +8,7 @@ interface AiPayload {
   content: string
   title?: string
   question?: string
+  imagesBase64?: string[]
 }
 
 // ── Non-streaming (for tags which need the full comma-separated result) ──
@@ -106,13 +107,13 @@ export function useAi() {
     return result.split(',').map(t => t.trim().toLowerCase()).filter(Boolean).slice(0, 5)
   }
 
-  const summarize       = (content: string) => runStream({ action: 'summarize', content })
-  const continueWriting = (content: string) => runStream({ action: 'continue',  content })
-  const improveWriting  = (content: string) => runStream({ action: 'improve',   content })
-  const askAbout        = (content: string, question: string) => runStream({ action: 'ask', content, question })
+  const summarize       = (content: string, imagesBase64?: string[]) => runStream({ action: 'summarize', content, imagesBase64 })
+  const continueWriting = (content: string, imagesBase64?: string[]) => runStream({ action: 'continue',  content, imagesBase64 })
+  const improveWriting  = (content: string, imagesBase64?: string[]) => runStream({ action: 'improve',   content, imagesBase64 })
+  const askAbout        = (content: string, question: string, imagesBase64?: string[]) => runStream({ action: 'ask', content, question, imagesBase64 })
 
-  const rewriteNote     = (content: string) => runStream({ action: 'rewrite_note', content })
-  const createBlog      = async (content: string) => run(() => callAi({ action: 'create_blog', content }))
+  const rewriteNote     = (content: string, imagesBase64?: string[]) => runStream({ action: 'rewrite_note', content, imagesBase64 })
+  const createBlog      = async (content: string, imagesBase64?: string[]) => run(() => callAi({ action: 'create_blog', content, imagesBase64 }))
 
   /**
    * Finance Advisor — dedicated action that tells the model it's a finance expert,

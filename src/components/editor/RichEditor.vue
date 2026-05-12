@@ -66,21 +66,23 @@ const editor = useEditor({
     handlePaste(view, event) {
       const items = event.clipboardData?.items
       if (!items) return false
+      
+      let hasImage = false
       for (const item of Array.from(items)) {
         if (item.type.startsWith('image/')) {
           const file = item.getAsFile()
           if (file) {
+            hasImage = true
             const reader = new FileReader()
             reader.onload = (e) => {
               const src = e.target?.result as string
               editor.value?.chain().focus().setImage({ src }).run()
             }
             reader.readAsDataURL(file)
-            return true
           }
         }
       }
-      return false
+      return hasImage
     }
   }
 })
@@ -548,14 +550,36 @@ const charCount = () => editor.value?.storage.characterCount.characters() ?? 0
 }
 
 /* Images */
+.editor-content .tiptap p:has(img) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin: 0.75rem 0;
+}
 .editor-content .tiptap img {
+  flex: 1 1 auto;
   max-width: 100%;
-  border-radius: 8px;
-  margin: 0.5rem 0;
+  max-height: 400px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin: 0;
   display: block;
-  resize: both;
-  overflow: hidden;
-  width: max-content;
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  transition: all 0.2s ease;
+}
+.editor-content .tiptap img:hover {
+  transform: scale(1.01);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+}
+.editor-content .tiptap p:has(img:nth-child(2)) img {
+  flex: 1 1 calc(50% - 12px);
+  max-height: 250px;
+}
+.editor-content .tiptap p:has(img:nth-child(3)) img {
+  flex: 1 1 calc(33.333% - 12px);
+  max-height: 180px;
 }
 
 /* ── Inline Dialog ── */

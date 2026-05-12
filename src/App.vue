@@ -4,6 +4,7 @@ import { computed, onMounted, ref } from 'vue'
 
 // 2. Vue ecosystem
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 
 // 3. Stores
 import { useAuthStore } from '@/stores/auth'
@@ -22,6 +23,7 @@ import { ArrowLeft } from 'lucide-vue-next'
 const route  = useRoute()
 const auth   = useAuthStore()
 const trading = useTradingStore()
+const { t } = useI18n()
 const { deviceType, isMobileOrTablet } = useDevice()
 
 // Enable global edge-swipe navigation
@@ -128,7 +130,7 @@ onMounted(async () => {
             <span class="font-bold text-[1.125rem] text-text-primary tracking-tight">FinNote</span>
           </router-link>
           <router-link to="/login" class="public-header__btn">
-            Mở ứng dụng
+            {{ t('common.login') }}
           </router-link>
         </div>
       </header>

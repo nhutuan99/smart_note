@@ -51,11 +51,41 @@ Yêu cầu bắt buộc:
 - Giọng văn: chuyên nghiệp, thu hút người đọc.`
 }
 
+async function extractTextFromImages(env: Env, imagesBase64?: string[]): Promise<string> {
+  if (!imagesBase64 || imagesBase64.length === 0) return ''
+  
+  let extractedImageText = ''
+  for (let i = 0; i < imagesBase64.length; i++) {
+    const img = imagesBase64[i]
+    const match = img.match(/^data:image\/([a-zA-Z]+);base64,(.+)$/)
+    if (match) {
+      try {
+        const base64Data = match[2]
+        const binaryString = atob(base64Data)
+        const bytes = new Uint8Array(binaryString.length)
+        for (let j = 0; j < binaryString.length; j++) {
+            bytes[j] = binaryString.charCodeAt(j)
+        }
+        const visionRes = await env.AI.run('@cf/meta/llama-3.2-11b-vision-instruct' as any, {
+          image: [...bytes],
+          prompt: "Trích xuất toàn bộ văn bản và mô tả nội dung trong hình ảnh này. Chỉ trả về văn bản hữu ích."
+        }) as any
+        if (visionRes && visionRes.response) {
+          extractedImageText += `\n--- Chi tiết hình ảnh [IMAGE_${i}] ---\n${visionRes.response}\n`
+        }
+      } catch (err: any) {
+        console.warn('[AI] CF Vision failed for image', i, err.message)
+      }
+    }
+  }
+  return extractedImageText
+}
+
 export async function handleAi(request: Request, env: Env): Promise<Response> {
   if (!env.AI) return errorResponse('AI binding not configured', 503)
 
   const body = (await request.json()) as any
-  const { action, content, question } = body
+  const { action, content, question, imagesBase64 } = body
 
   if (!action) return errorResponse('Missing action')
   if (!content && !['ask', 'cat_story', 'weekly_event'].includes(action)) return errorResponse('Note content is required')
@@ -64,25 +94,28 @@ export async function handleAi(request: Request, env: Env): Promise<Response> {
   const systemPrompt = AI_SYSTEM_PROMPTS[action]
   if (!systemPrompt) return errorResponse(`Unknown action: ${action}`)
 
+  const extractedImageText = await extractTextFromImages(env, imagesBase64)
+  const fullContent = extractedImageText ? `${content}\n\n[Dữ liệu từ hình ảnh đính kèm]:\n${extractedImageText}` : content
+
   let userMessage: string
   if (action === 'finance') {
-    userMessage = content
+    userMessage = fullContent
   } else if (action === 'ask') {
-    userMessage = content
-      ? `Note content:\n${content}\n\nQuestion: ${question}`
+    userMessage = fullContent
+      ? `Note content:\n${fullContent}\n\nQuestion: ${question}`
       : `Question: ${question}`
   } else if (action === 'tags') {
-    userMessage = `Title: ${body.title || ''}\nContent: ${content.substring(0, 600)}`
+    userMessage = `Title: ${body.title || ''}\nContent: ${fullContent.substring(0, 600)}`
   } else if (action === 'cat_story') {
     userMessage = `Tạo một câu chuyện mới. Phải trả về mảng JSON hợp lệ.`
   } else if (action === 'weekly_event') {
     userMessage = `Tạo một sự kiện tài chính mới lạ cho tuần này. Phải trả về JSON hợp lệ.`
   } else if (action === 'create_blog') {
-    userMessage = `Ghi chú gốc:\n${content}`
+    userMessage = `Ghi chú gốc:\n${fullContent}`
   } else if (action === 'rewrite_note') {
-    userMessage = content
+    userMessage = fullContent
   } else {
-    userMessage = content
+    userMessage = fullContent
   }
 
   try {
@@ -106,7 +139,7 @@ export async function handleAiStream(request: Request, env: Env): Promise<Respon
   if (!env.AI) return errorResponse('AI binding not configured', 503)
 
   const body = (await request.json()) as any
-  const { action, content, question } = body
+  const { action, content, question, imagesBase64 } = body
 
   if (!action) return errorResponse('Missing action')
   if (!content && !['ask', 'cat_story', 'weekly_event'].includes(action)) return errorResponse('Note content is required')
@@ -115,23 +148,26 @@ export async function handleAiStream(request: Request, env: Env): Promise<Respon
   const systemPrompt = AI_SYSTEM_PROMPTS[action]
   if (!systemPrompt) return errorResponse(`Unknown action: ${action}`)
 
+  const extractedImageText = await extractTextFromImages(env, imagesBase64)
+  const fullContent = extractedImageText ? `${content}\n\n[Dữ liệu từ hình ảnh đính kèm]:\n${extractedImageText}` : content
+
   let userMessage: string
   if (action === 'finance') {
     // Finance advisor: content already contains the full context + embedded question
     // Do NOT wrap with "Note content:" — that confuses the model about its role
-    userMessage = content
+    userMessage = fullContent
   } else if (action === 'ask') {
-    userMessage = content
-      ? `Note content:\n${content}\n\nQuestion: ${question}`
+    userMessage = fullContent
+      ? `Note content:\n${fullContent}\n\nQuestion: ${question}`
       : `Question: ${question}`
   } else if (action === 'tags') {
-    userMessage = `Title: ${body.title || ''}\nContent: ${content.substring(0, 600)}`
+    userMessage = `Title: ${body.title || ''}\nContent: ${fullContent.substring(0, 600)}`
   } else if (action === 'create_blog') {
-    userMessage = `Ghi chú gốc:\n${content}`
+    userMessage = `Ghi chú gốc:\n${fullContent}`
   } else if (action === 'rewrite_note') {
-    userMessage = content
+    userMessage = fullContent
   } else {
-    userMessage = content
+    userMessage = fullContent
   }
 
   try {

@@ -3,6 +3,7 @@
 import { computed, onMounted } from 'vue'
 // 2. Vue ecosystem
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 // 3. Stores
 import { useNotesStore } from '@/stores/notes'
 // 4. Icons
@@ -10,6 +11,7 @@ import { FileText, ChevronRight, Pin, NotebookPen } from 'lucide-vue-next'
 
 const router = useRouter()
 const notesStore = useNotesStore()
+const { t, locale } = useI18n()
 
 onMounted(() => {
   if (!notesStore.notes.length) {
@@ -30,12 +32,12 @@ const recentNotes = computed(() =>
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime()
   const m = Math.floor(diff / 60_000)
-  if (m < 60) return `${m}p trước`
+  if (m < 60) return t('time.mAgo', { n: m })
   const h = Math.floor(m / 60)
-  if (h < 24) return `${h}h trước`
+  if (h < 24) return t('time.hAgo', { n: h })
   const d = Math.floor(h / 24)
-  if (d < 30) return `${d}d trước`
-  return new Date(dateStr).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })
+  if (d < 30) return t('time.dAgo', { n: d })
+  return new Date(dateStr).toLocaleDateString(locale.value === 'vi' ? 'vi-VN' : 'en-US', { day: '2-digit', month: '2-digit' })
 }
 
 /** Strip HTML tags + truncate for safe excerpt display */
@@ -74,7 +76,7 @@ function safeExcerpt(html: string, maxLen = 60): string {
         <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-500/15 text-violet-400">
           <FileText :size="15" />
         </div>
-        <h3 class="text-sm font-semibold text-text-primary">Ghi chú gần đây</h3>
+        <h3 class="text-sm font-semibold text-text-primary">{{ t('nav.recentNotes') }}</h3>
         <span
           v-if="notesStore.totalNotes > 0"
           class="inline-flex items-center justify-center rounded-full text-[10px] font-bold px-1.5 py-0.5 min-w-[1.1rem] bg-violet-500/15 text-violet-400"
@@ -83,7 +85,7 @@ function safeExcerpt(html: string, maxLen = 60): string {
         </span>
       </div>
       <button class="flex items-center gap-0.5 text-accent text-xs font-medium hover:opacity-80 transition-opacity" @click="router.push('/notes')">
-        Xem tất cả
+        {{ t('dashboard.viewAll') }}
         <ChevronRight :size="14" />
       </button>
     </div>
@@ -96,9 +98,9 @@ function safeExcerpt(html: string, maxLen = 60): string {
     <!-- Empty state -->
     <div v-else-if="!recentNotes.length" class="flex flex-1 flex-col items-center justify-center gap-1 py-4">
       <NotebookPen :size="28" class="text-text-disabled mb-2" />
-      <p class="text-text-disabled text-sm">Chưa có ghi chú nào</p>
+      <p class="text-text-disabled text-sm">{{ t('notes.noNotes') }}</p>
       <button class="mt-1 text-xs text-accent hover:opacity-80 transition-opacity font-medium" @click="router.push('/notes')">
-        + Viết ghi chú
+        + {{ t('notes.newNote') }}
       </button>
     </div>
 

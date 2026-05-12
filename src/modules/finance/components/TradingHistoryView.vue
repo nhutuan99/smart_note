@@ -32,7 +32,7 @@ import TradingCheckinModal from './TradingCheckinModal.vue'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip, Legend)
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const { trading } = useTradingCheckin()
 const stockStore = useStockStore()
 const fundStore = useFundStore()
@@ -270,7 +270,7 @@ const recentCheckins = computed<TradingCheckin[]>(() => trading.sortedCheckins.s
 
 function formatDateLabel(dateStr: string): string {
   const d = new Date(dateStr)
-  return d.toLocaleDateString('vi-VN', { weekday: 'short', day: 'numeric', month: 'numeric' })
+  return d.toLocaleDateString(locale.value === 'vi' ? 'vi-VN' : 'en-US', { weekday: 'short', day: 'numeric', month: 'numeric' })
 }
 </script>
 
@@ -280,16 +280,16 @@ function formatDateLabel(dateStr: string): string {
     <!-- ── Period tabs ── -->
     <div class="flex items-center gap-1 p-1 bg-bg-surface rounded-xl border border-border-default w-fit">
       <button
-        v-for="(tab, key) in { day: 'Ngày', month: 'Tháng', year: 'Năm' }"
+        v-for="(key) in (['day', 'month', 'year'] as const)"
         :key="key"
-        @click="period = key as 'day' | 'month' | 'year'"
+        @click="period = key"
         class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200"
         :class="period === key ? 'bg-accent text-white shadow-sm' : 'text-text-tertiary hover:text-text-primary'"
       >
         <CalendarDays v-if="key === 'day'" :size="12" />
         <Calendar v-else-if="key === 'month'" :size="12" />
         <BarChart2 v-else :size="12" />
-        {{ tab }}
+        {{ t(`trading.${key}`) }}
       </button>
     </div>
 
@@ -302,7 +302,7 @@ function formatDateLabel(dateStr: string): string {
           class="absolute inset-0 opacity-5 pointer-events-none"
           :class="statsInPeriod.totalPnl >= 0 ? 'bg-success' : 'bg-error'"
         />
-        <p class="text-[11px] text-text-tertiary mb-1">Tổng lãi/lỗ</p>
+        <p class="text-[11px] text-text-tertiary mb-1">{{ t('trading.totalPnl') }}</p>
         <p
           class="text-lg font-bold tabular-nums"
           :class="statsInPeriod.totalPnl >= 0 ? 'text-success' : 'text-error'"
@@ -314,7 +314,7 @@ function formatDateLabel(dateStr: string): string {
       <!-- Win rate -->
       <div class="relative overflow-hidden rounded-xl border border-border-default bg-bg-surface p-4">
         <p class="text-[11px] text-text-tertiary mb-1 flex items-center gap-1">
-          <Trophy :size="11" /> Tỉ lệ thắng
+          <Trophy :size="11" /> {{ t('trading.winRate') }}
         </p>
         <p class="text-lg font-bold text-text-primary">
           {{ statsInPeriod.sessions > 0 ? Math.round((statsInPeriod.wins / statsInPeriod.sessions) * 100) : 0 }}%
@@ -325,7 +325,7 @@ function formatDateLabel(dateStr: string): string {
       <!-- All-time P&L -->
       <div class="relative overflow-hidden rounded-xl border border-border-default bg-bg-surface p-4">
         <p class="text-[11px] text-text-tertiary mb-1 flex items-center gap-1">
-          <Flame :size="11" /> Tổng mọi thời
+          <Flame :size="11" /> {{ t('trading.allTimePnl') }}
         </p>
         <p
           class="text-lg font-bold tabular-nums"
@@ -338,10 +338,10 @@ function formatDateLabel(dateStr: string): string {
       <!-- Sessions -->
       <div class="relative overflow-hidden rounded-xl border border-border-default bg-bg-surface p-4">
         <p class="text-[11px] text-text-tertiary mb-1 flex items-center gap-1">
-          <BookOpen :size="11" /> Tổng phiên
+          <BookOpen :size="11" /> {{ t('trading.totalSessions') }}
         </p>
         <p class="text-lg font-bold text-text-primary">{{ trading.checkins.length }}</p>
-        <p class="text-[10px] text-text-disabled mt-0.5">WR {{ trading.winRate }}% all-time</p>
+        <p class="text-[10px] text-text-disabled mt-0.5">{{ t('trading.wrAllTime', { wr: trading.winRate }) }}</p>
       </div>
     </div>
 
@@ -352,14 +352,14 @@ function formatDateLabel(dateStr: string): string {
           class="h-2 w-2 rounded-full"
           :class="overallProfit ? 'bg-success shadow-[0_0_8px_rgba(16,185,129,0.6)]' : 'bg-error shadow-[0_0_8px_rgba(239,68,68,0.6)]'"
         />
-        <h3 class="text-sm font-semibold">Biểu đồ lãi/lỗ</h3>
-        <span class="text-[11px] text-text-disabled ml-0.5">· {{ period === 'day' ? '30 ngày' : period === 'month' ? '12 tháng' : '10 năm' }}</span>
+        <h3 class="text-sm font-semibold">{{ t('trading.chartTitle') }}</h3>
+        <span class="text-[11px] text-text-disabled ml-0.5">· {{ period === 'day' ? t('trading.last30Days') : period === 'month' ? t('trading.last12Months') : t('trading.last10Years') }}</span>
         <div class="ml-auto flex items-center gap-3 text-[11px]">
           <span class="flex items-center gap-1.5 text-success">
-            <span class="inline-block h-[3px] w-4 rounded-full bg-success" /> Lãi
+            <span class="inline-block h-[3px] w-4 rounded-full bg-success" /> {{ t('trading.profit') }}
           </span>
           <span class="flex items-center gap-1.5 text-error">
-            <span class="inline-block h-[3px] w-4 rounded-full bg-error" /> Lỗ
+            <span class="inline-block h-[3px] w-4 rounded-full bg-error" /> {{ t('trading.loss') }}
           </span>
         </div>
       </div>
@@ -370,7 +370,7 @@ function formatDateLabel(dateStr: string): string {
         class="flex h-44 flex-col items-center justify-center gap-2 text-sm text-text-tertiary"
       >
         <BarChart2 :size="32" class="text-text-disabled" />
-        <span>Chưa có dữ liệu. Hãy check-in ngày đầu tiên!</span>
+        <span>{{ t('trading.noData') }}</span>
       </div>
       <div v-else class="h-44">
         <Line :data="chartData" :options="chartOptions" />
@@ -380,7 +380,7 @@ function formatDateLabel(dateStr: string): string {
     <!-- ── History list (daily view) ── -->
     <div v-if="period === 'day'" class="rounded-xl border border-border-default bg-bg-surface overflow-hidden">
       <div class="flex items-center justify-between px-5 py-3.5 border-b border-border-subtle">
-        <h3 class="text-sm font-semibold">Lịch sử check-in</h3>
+        <h3 class="text-sm font-semibold">{{ t('trading.historyTitle') }}</h3>
       </div>
 
       <div v-if="trading.loading" class="p-4 space-y-3">
@@ -389,7 +389,7 @@ function formatDateLabel(dateStr: string): string {
 
       <div v-else-if="recentCheckins.length === 0" class="flex flex-col items-center justify-center py-12 text-text-tertiary text-sm gap-2">
         <BookOpen :size="36" class="text-text-disabled" />
-        <p>Chưa có check-in nào</p>
+        <p>{{ t('trading.noHistory') }}</p>
       </div>
 
       <div v-else class="divide-y divide-border-subtle">
@@ -401,7 +401,7 @@ function formatDateLabel(dateStr: string): string {
           <!-- Date -->
           <div class="w-16 shrink-0">
             <div class="text-xs font-semibold text-text-primary">{{ formatDateLabel(c.date) }}</div>
-            <div class="text-[10px] text-text-disabled">{{ c.entries.length }} ví</div>
+            <div class="text-[10px] text-text-disabled">{{ t('trading.wallets', { n: c.entries.length }) }}</div>
           </div>
 
           <!-- P&L -->
@@ -419,7 +419,7 @@ function formatDateLabel(dateStr: string): string {
             v-if="c.totalDeposit > 0"
             class="hidden sm:block text-[10px] text-text-disabled bg-bg-elevated px-2 py-0.5 rounded-full border border-border-subtle"
           >
-            +{{ formatVND(c.totalDeposit) }} nạp
+            {{ t('trading.deposit', { amount: formatVND(c.totalDeposit) }) }}
           </div>
 
           <!-- Note snippet -->

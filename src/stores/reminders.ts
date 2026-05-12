@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import type { Reminder, ReminderSuggestion } from '@/types'
 import { httpClient } from '@/shared/api/httpClient'
 import { AUTH_TOKEN_KEY } from '@/constants/auth'
+import i18n from '@/i18n'
 
 export type ReminderFilter = 'all' | 'active' | 'completed'
 
@@ -22,34 +23,35 @@ export const useReminderStore = defineStore('reminders', () => {
   })
 
   function getCountdown(eventDate: string): { text: string; level: 'normal' | 'warning' | 'urgent' } {
+    const t = i18n.global.t
     const diff = new Date(eventDate).getTime() - Date.now()
-    if (diff <= 0) return { text: 'Đã qua hạn', level: 'urgent' }
+    if (diff <= 0) return { text: t('reminders.expired'), level: 'urgent' }
     const minutes = Math.floor(diff / 60_000)
     const hours = Math.floor(minutes / 60)
     const days = Math.floor(hours / 24)
-    
-    if (days > 3) return { text: `${days} ngày nữa`, level: 'normal' }
-    if (days > 1) return { text: `${days} ngày nữa`, level: 'warning' }
-    if (days === 1) return { text: `1 ngày nữa`, level: 'urgent' }
-    if (hours > 0) return { text: `${hours} giờ nữa`, level: 'urgent' }
-    return { text: `${minutes} phút nữa`, level: 'urgent' }
-  }
 
-  const repeatLabels: Record<string, string> = {
-    none: 'Không lặp',
-    daily: 'Hàng ngày',
-    weekly: 'Hàng tuần',
-    monthly: 'Hàng tháng',
+    if (days > 3) return { text: t('reminders.timelineDaysLeft', { n: days }), level: 'normal' }
+    if (days > 1) return { text: t('reminders.timelineDaysLeft', { n: days }), level: 'warning' }
+    if (days === 1) return { text: t('reminders.timelineDaysLeft', { n: 1 }), level: 'urgent' }
+    if (hours > 0) return { text: t('time.hAgo', { n: hours }), level: 'urgent' }
+    return { text: t('time.mAgo', { n: minutes }), level: 'urgent' }
   }
 
   function getRepeatLabel(interval?: string): string {
+    const t = i18n.global.t
     if (!interval || interval === 'none') return ''
-    if (repeatLabels[interval]) return repeatLabels[interval]
+    const labelMap: Record<string, string> = {
+      none: t('reminders.repeatNone'),
+      daily: t('reminders.repeatDaily'),
+      weekly: t('reminders.repeatWeekly'),
+      monthly: t('reminders.repeatMonthly'),
+    }
+    if (labelMap[interval]) return labelMap[interval]
     const mins = parseInt(interval, 10)
     if (!isNaN(mins)) {
-      if (mins >= 1440) return `Mỗi ${Math.floor(mins / 1440)} ngày`
-      if (mins >= 60) return `Mỗi ${Math.floor(mins / 60)} giờ`
-      return `Mỗi ${mins} phút`
+      if (mins >= 1440) return t('reminders.timelineDaysLeft', { n: Math.floor(mins / 1440) })
+      if (mins >= 60) return t('time.hAgo', { n: Math.floor(mins / 60) })
+      return t('time.mAgo', { n: mins })
     }
     return ''
   }

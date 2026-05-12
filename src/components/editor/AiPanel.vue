@@ -36,39 +36,75 @@ function getPlainText() {
   return el.textContent || ''
 }
 
+const originalImages = ref<string[]>([])
+
+function prepareContextForAi(mode: string) {
+  let text = mode === 'rewrite' ? props.content : getPlainText()
+  
+  const imgRegex = /<img[^>]+src="([^">]+)"([^>]*)>/g
+  let match
+  const imagesBase64: string[] = []
+  
+  if (mode === 'rewrite') {
+    text = text.replace(imgRegex, (fullMatch, src, rest) => {
+      if (src.startsWith('data:image') || src.startsWith('http')) {
+        const idx = imagesBase64.length
+        imagesBase64.push(src)
+        return `<img src="[IMAGE_${idx}]"${rest}>`
+      }
+      return fullMatch
+    })
+  } else {
+    while ((match = imgRegex.exec(props.content)) !== null) {
+      if (match[1].startsWith('data:image') || match[1].startsWith('http')) {
+        imagesBase64.push(match[1])
+      }
+    }
+  }
+
+  originalImages.value = imagesBase64
+  return { text, imagesBase64 }
+}
+
 function resetState() {
   suggestedTags.value = []
   ai.streamText.value = ''
+  originalImages.value = []
 }
 
 async function runSummarize() {
   activeMode.value = 'summarize'
   resetState()
-  await ai.summarize(getPlainText())
+  const ctx = prepareContextForAi('summarize')
+  await ai.summarize(ctx.text, ctx.imagesBase64)
 }
 
 async function runContinue() {
   activeMode.value = 'continue'
   resetState()
-  await ai.continueWriting(getPlainText())
+  const ctx = prepareContextForAi('continue')
+  await ai.continueWriting(ctx.text, ctx.imagesBase64)
 }
 
 async function runImprove() {
   activeMode.value = 'improve'
   resetState()
-  await ai.improveWriting(getPlainText())
+  const ctx = prepareContextForAi('improve')
+  await ai.improveWriting(ctx.text, ctx.imagesBase64)
 }
 
 async function runRewrite() {
   activeMode.value = 'rewrite'
   resetState()
-  await ai.rewriteNote(getPlainText())
+  const ctx = prepareContextForAi('rewrite')
+  await ai.rewriteNote(ctx.text, ctx.imagesBase64)
 }
 
 async function runSuggestTags() {
   activeMode.value = 'tags'
   resetState()
-  const result = await ai.suggestTags(props.title, getPlainText())
+  const ctx = prepareContextForAi('tags')
+  const result = await ai.suggestTags(props.title, ctx.text)
   if (result) suggestedTags.value = result
 }
 
@@ -76,15 +112,32 @@ async function runAsk() {
   if (!question.value.trim()) return
   activeMode.value = 'ask'
   resetState()
-  await ai.askAbout(getPlainText(), question.value)
+  const ctx = prepareContextForAi('ask')
+  await ai.askAbout(ctx.text, question.value, ctx.imagesBase64)
 }
 
 function insertResult() {
-  if (ai.streamText.value) emit('insertText', ai.streamText.value, activeMode.value === 'rewrite')
+  if (ai.streamText.value) {
+    let finalHtml = ai.streamText.value
+    if (activeMode.value === 'rewrite') {
+      originalImages.value.forEach((src, idx) => {
+        finalHtml = finalHtml.replace(`[IMAGE_${idx}]`, src)
+      })
+    }
+    emit('insertText', finalHtml, activeMode.value === 'rewrite')
+  }
 }
 
 function replaceResult() {
-  if (ai.streamText.value) emit('replaceText', ai.streamText.value)
+  if (ai.streamText.value) {
+    let finalHtml = ai.streamText.value
+    if (activeMode.value === 'rewrite') {
+      originalImages.value.forEach((src, idx) => {
+        finalHtml = finalHtml.replace(`[IMAGE_${idx}]`, src)
+      })
+    }
+    emit('replaceText', finalHtml)
+  }
 }
 
 function applyTags() {
@@ -97,7 +150,7 @@ async function copyResult() {
   setTimeout(() => copied.value = false, 1500)
 }
 
-const hasContent = computed(() => getPlainText().trim().length > 0)
+const hasContent = computed(() => getPlainText().trim().length > 0 || props.content.includes('<img'))
 const hasResult = computed(() => ai.streamText.value.length > 0 || suggestedTags.value.length > 0)
 </script>
 
