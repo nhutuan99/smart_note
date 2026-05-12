@@ -181,7 +181,7 @@ export async function handleAiStream(request: Request, env: Env): Promise<Respon
       stream: true
     }) as ReadableStream
 
-    const cors = corsHeaders()
+    const cors = corsHeaders(env, request.headers.get('Origin'))
     return new Response(stream, {
       headers: {
         ...cors,
@@ -206,7 +206,7 @@ export async function handleAiImage(request: Request, env: Env): Promise<Respons
       prompt: `A highly detailed 3d cute cartoon UI asset icon of ${prompt}, vibrant colors, neon accents, dark purple gradient background, high quality, 4k`
     })
 
-    const cors = corsHeaders()
+    const cors = corsHeaders(env, request.headers.get('Origin'))
     return new Response(response, {
       headers: {
         ...cors,

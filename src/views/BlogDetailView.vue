@@ -23,7 +23,7 @@ const contentHtml = ref('')
 const showTooltip = ref(false)
 
 const shareBlog = async () => {
-  const url = `https://finnote-f4n.pages.dev/blog/${blogStore.currentBlog?.slug}`
+  const url = `${window.location.origin}/blog/${blogStore.currentBlog?.slug}`
   const title = blogStore.currentBlog?.title || 'FinNote Blog'
   const text = blogStore.currentBlog?.excerpt || ''
   
@@ -40,7 +40,7 @@ const shareBlog = async () => {
 }
 
 const shareSocial = (platform: 'facebook' | 'twitter' | 'linkedin' | 'zalo' | 'messenger' | 'telegram') => {
-  const url = encodeURIComponent(`https://finnote-f4n.pages.dev/blog/${blogStore.currentBlog?.slug}`)
+  const url = encodeURIComponent(`${window.location.origin}/blog/${blogStore.currentBlog?.slug}`)
   const title = encodeURIComponent(blogStore.currentBlog?.title || 'FinNote Blog')
   let shareUrl = ''
   
@@ -88,7 +88,7 @@ onMounted(async () => {
 
       const seoTitle = blog.seoMeta?.title || blog.title
       const seoDesc = blog.seoMeta?.description || blog.excerpt
-      const blogUrl = `https://finnote-f4n.pages.dev/blog/${blog.slug}`
+      const blogUrl = `${window.location.origin}/blog/${blog.slug}`
       
       useAppSeo({
         title: seoTitle,

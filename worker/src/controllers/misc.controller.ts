@@ -3,6 +3,7 @@ import { errorResponse, jsonResponse } from '../utils/response'
 import { generateId, hashPassword } from '../utils/crypto'
 import { createJWT } from '../utils/jwt'
 import { getJSON, putJSON } from '../services/kv.service'
+import { RESEND_API_URL } from '../constants/api'
 
 // ====== Live Debug / Logs ======
 
@@ -101,7 +102,7 @@ export async function handleReportBug(userId: string, request: Request, env: Env
   </div>
 </div>`
 
-      await fetch('https://api.resend.com/emails', {
+      await fetch(RESEND_API_URL, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${env.RESEND_API_KEY}`,
@@ -173,7 +174,7 @@ export async function handleContactFeedback(userId: string, request: Request, en
   </div>
 </div>`
 
-      await fetch('https://api.resend.com/emails', {
+      await fetch(RESEND_API_URL, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${env.RESEND_API_KEY}`,

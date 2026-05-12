@@ -9,6 +9,7 @@ import { useI18n } from 'vue-i18n'
 import { setLocale, currentLocale } from '@/i18n'
 import { useEventListener } from '@/composables/useEventListener'
 import LogoLoader from '@/components/ui/LogoLoader.vue'
+import { GOOGLE_OAUTH_AUTH_URL } from '@/constants/api'
 
 // ── Interactive Mouse Glow ────────────────────────────────────────────────────
 const mouseX = ref(0)
@@ -88,7 +89,7 @@ function startGoogleSignIn() {
     state,
     prompt: 'select_account'
   })
-  window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
+  window.location.href = `${GOOGLE_OAUTH_AUTH_URL}?${params.toString()}`
 }
 
 /** Fallback: request OAuth URL from backend (re-uses google-oauth-url endpoint without email check) */
@@ -108,7 +109,7 @@ async function startGoogleSignInViaBackend() {
       state: btoa(JSON.stringify({ flow: 'signin' })),
       prompt: 'select_account'
     })
-    window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
+    window.location.href = `${GOOGLE_OAUTH_AUTH_URL}?${params.toString()}`
   } catch (err: any) {
     googleError.value = err.message || t('common.somethingWentWrong')
   } finally {

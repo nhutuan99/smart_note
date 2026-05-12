@@ -15,14 +15,15 @@ import { Env, BlogData, UserData } from '../types'
 import { generateId } from '../utils/crypto'
 import { getJSON, putJSON } from '../services/kv.service'
 import { sendPushToUser } from '../controllers/push.controller'
+import { GEMINI_API_BASE, VNEXPRESS_RSS, YOUTUBE_OEMBED_API, YOUTUBE_SEARCH_URL } from '../constants/api'
 
 const ADMIN_AUTHOR = { name: 'FinNote AI', email: 'tintphcm@gmail.com' }
 
 // ── VnExpress RSS category URLs ──
 const VNEXPRESS_FEEDS = [
-  'https://vnexpress.net/rss/kinh-doanh.rss',         // Finance / Business
-  'https://vnexpress.net/rss/so-hoa.rss',             // Technology / Digital (Crypto often here)
-  'https://vnexpress.net/rss/the-gioi.rss',           // World news (Macro economics)
+  VNEXPRESS_RSS.BUSINESS,         // Finance / Business
+  VNEXPRESS_RSS.TECH,             // Technology / Digital (Crypto often here)
+  VNEXPRESS_RSS.WORLD,           // World news (Macro economics)
 ]
 
 // ── Helpers ──
@@ -114,7 +115,7 @@ interface YouTubeVideo {
  */
 async function validateYouTubeEmbed(videoId: string): Promise<{ title: string } | null> {
   try {
-    const url = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`
+    const url = `${YOUTUBE_OEMBED_API}?url=https://www.youtube.com/watch?v=${videoId}&format=json`
     const res = await fetch(url, { headers: { 'User-Agent': 'FinNote-Bot/1.0' } })
     if (!res.ok) return null // 401/403 = not embeddable
     const data: any = await res.json()
@@ -130,7 +131,7 @@ async function validateYouTubeEmbed(videoId: string): Promise<{ title: string } 
  */
 async function searchYouTubeVideos(query: string, maxResults = 2): Promise<YouTubeVideo[]> {
   try {
-    const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}&sp=EgIQAQ%253D%253D`
+    const searchUrl = `${YOUTUBE_SEARCH_URL}?search_query=${encodeURIComponent(query)}&sp=EgIQAQ%253D%253D`
     const res = await fetch(searchUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -262,7 +263,7 @@ Trả về ĐÚNG JSON (không text khác):
   if (env.GEMINI_API_KEY) {
     try {
       const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${env.GEMINI_API_KEY}`,
+        `${GEMINI_API_BASE}/gemini-2.0-flash:generateContent?key=${env.GEMINI_API_KEY}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -357,7 +358,7 @@ Bài viết cần:
   if (env.GEMINI_API_KEY) {
     try {
       const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${env.GEMINI_API_KEY}`,
+        `${GEMINI_API_BASE}/gemini-2.0-flash:generateContent?key=${env.GEMINI_API_KEY}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -580,7 +581,7 @@ export async function runAutoBlog(env: Env): Promise<string> {
         let contentType = 'image/jpeg'
         if (imageBytes[0] === 0x89 && imageBytes[1] === 0x50) contentType = 'image/png'
         await env.SMART_NOTE_KV.put(`public/images/${imageId}`, imageBytes, { metadata: { contentType } })
-        imageUrl = `https://smart-note-api.smart-note.workers.dev/api/images/${imageId}`
+        imageUrl = `${env.API_URL}/api/images/${imageId}`
         console.log(`[AutoBlog] 🖼️ Banner image saved: ${imageId} (${imageBytes.length} bytes)`)
       }
     }

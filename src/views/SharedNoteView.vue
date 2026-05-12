@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { httpClient } from '@/shared/api/httpClient'
@@ -29,7 +29,7 @@ onMounted(async () => {
       useAppSeo({
         title: data.title || 'Untitled Note',
         description: extractExcerpt(data.content, 'Shared Note on FinNote'),
-        url: `https://finnote-f4n.pages.dev/notes/shared/${noteId}`,
+        url: `${window.location.origin}/notes/shared/${noteId}`,
         imageUrl: extractFirstImage(data.content),
         author: 'FinNote User',
         publishedAt: data.createdAt,
@@ -57,6 +57,8 @@ onMounted(async () => {
 function goToDashboard() {
   router.push('/')
 }
+
+const shareUrl = computed(() => `${typeof window !== 'undefined' ? window.location.origin : ''}/notes/shared/${noteId}`)
 </script>
 
 <template>
@@ -104,7 +106,7 @@ function goToDashboard() {
         </div>
         
         <SocialShare 
-          :url="`https://finnote-f4n.pages.dev/notes/shared/${noteId}`"
+          :url="shareUrl"
           :title="note.title || 'Untitled Note'"
           :description="note.content.substring(0, 100).replace(/<[^>]+>/g, '')"
         />

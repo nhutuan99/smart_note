@@ -3,6 +3,7 @@ import { errorResponse, jsonResponse } from '../utils/response'
 import { generateId, hashPassword } from '../utils/crypto'
 import { createJWT, createRefreshToken, verifyJWT } from '../utils/jwt'
 import { getJSON, putJSON } from '../services/kv.service'
+import { GOOGLE_OAUTH_AUTH_URL, GOOGLE_OAUTH_TOKEN_URL, GOOGLE_OAUTH_USERINFO_URL } from '../constants/api'
 
 const DEFAULT_WALLETS: Omit<WalletData, 'id'>[] = [
   { name: 'Ngân hàng', balance: 0, currency: 'VND', icon: '🏦', color: '#3b82f6', order: 0 },
@@ -183,7 +184,7 @@ export async function handleGoogleOAuthUrl(request: Request, env: Env): Promise<
     login_hint: email
   })
 
-  const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
+  const oauthUrl = `${GOOGLE_OAUTH_AUTH_URL}?${params.toString()}`
   return jsonResponse({ success: true, data: { url: oauthUrl } })
 }
 
@@ -208,7 +209,7 @@ export async function handleGoogleVerify(request: Request, env: Env): Promise<Re
     return errorResponse('Phiên xác minh đã hết hạn hoặc không hợp lệ. Vui lòng thử lại.', 400)
   }
 
-  const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+  const tokenResponse = await fetch(GOOGLE_OAUTH_TOKEN_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
@@ -226,7 +227,7 @@ export async function handleGoogleVerify(request: Request, env: Env): Promise<Re
   const accessToken = tokenData.access_token
   if (!accessToken) return errorResponse('No access token from Google', 400)
 
-  const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+  const userInfoResponse = await fetch(GOOGLE_OAUTH_USERINFO_URL, {
     headers: { Authorization: `Bearer ${accessToken}` }
   })
 
@@ -284,7 +285,7 @@ export async function handleGoogleSignIn(request: Request, env: Env): Promise<Re
 
   if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) return errorResponse('Google OAuth not configured', 503)
 
-  const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+  const tokenResponse = await fetch(GOOGLE_OAUTH_TOKEN_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
@@ -302,7 +303,7 @@ export async function handleGoogleSignIn(request: Request, env: Env): Promise<Re
   const accessToken = tokenData.access_token
   if (!accessToken) return errorResponse('No access token from Google', 400)
 
-  const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+  const userInfoResponse = await fetch(GOOGLE_OAUTH_USERINFO_URL, {
     headers: { Authorization: `Bearer ${accessToken}` }
   })
 

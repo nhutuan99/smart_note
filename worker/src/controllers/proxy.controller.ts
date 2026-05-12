@@ -1,5 +1,6 @@
 import { Env } from '../types'
 import { jsonResponse, errorResponse } from '../utils/response'
+import { FREE_IP_API, OPEN_METEO_FORECAST_API, OPEN_METEO_AQI_API, EXCHANGERATE_API, ENTRADE_CHART_API, FMARKET_API_BASE } from '../constants/api'
 
 /**
  * Handle /api/proxy/location
@@ -29,7 +30,7 @@ export async function handleProxyLocation(request: Request): Promise<Response> {
 
   // Fallback for local dev (wrangler dev might not populate cf)
   try {
-    const res = await fetch('https://freeipapi.com/api/json')
+    const res = await fetch(FREE_IP_API)
     const data = await res.json() as any
     if (data && data.latitude && data.longitude) {
       let city = data.cityName || 'Vị trí của bạn'
@@ -79,13 +80,13 @@ export async function handleProxyWeather(request: Request): Promise<Response> {
   try {
     const [weatherRes, aqiRes] = await Promise.allSettled([
       fetch(
-        `https://api.open-meteo.com/v1/forecast` +
+        `${OPEN_METEO_FORECAST_API}` +
         `?latitude=${lat}&longitude=${lon}` +
         `&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code,uv_index` +
         `&timezone=auto`
       ),
       fetch(
-        `https://air-quality-api.open-meteo.com/v1/air-quality` +
+        `${OPEN_METEO_AQI_API}` +
         `?latitude=${lat}&longitude=${lon}` +
         `&current=us_aqi,pm2_5` +
         `&timezone=auto`
@@ -129,7 +130,7 @@ export async function handleProxyWeather(request: Request): Promise<Response> {
  */
 export async function handleProxyExchangeRate(request: Request): Promise<Response> {
   try {
-    const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD', {
+    const res = await fetch(EXCHANGERATE_API, {
       headers: {
         'User-Agent': 'Cloudflare-Worker'
       }
@@ -188,7 +189,7 @@ export async function handleProxyStockPrice(request: Request, env: Env): Promise
     // Fetch new price
     const to = Math.floor(now / 1000)
     const from = to - 86400 * 15 // Last 15 days to handle holidays
-    const res = await fetch(`https://services.entrade.com.vn/chart-api/v2/ohlcs/stock?from=${from}&to=${to}&symbol=${symbol}&resolution=1D`)
+    const res = await fetch(`${ENTRADE_CHART_API}?from=${from}&to=${to}&symbol=${symbol}&resolution=1D`)
 
     if (!res.ok) {
       return errorResponse(`DNSE API HTTP ${res.status}`, 502)
@@ -241,7 +242,7 @@ export async function handleProxyStockHistory(request: Request, env: Env): Promi
     const to = Math.floor(now / 1000)
     // Add extra days to account for weekends/holidays where market is closed
     const from = to - 86400 * (days + 4) 
-    const res = await fetch(`https://services.entrade.com.vn/chart-api/v2/ohlcs/stock?from=${from}&to=${to}&symbol=${symbol}&resolution=1D`)
+    const res = await fetch(`${ENTRADE_CHART_API}?from=${from}&to=${to}&symbol=${symbol}&resolution=1D`)
 
     if (!res.ok) {
       return errorResponse(`DNSE API HTTP ${res.status}`, 502)
@@ -358,7 +359,7 @@ export async function handleProxyFundNav(request: Request, env: Env): Promise<Re
     }
 
     // POST to Fmarket filter with exact symbol search
-    const res = await fetch('https://api.fmarket.vn/res/products/filter', {
+    const res = await fetch(`${FMARKET_API_BASE}/products/filter`, {
       method: 'POST',
       headers: FMARKET_HEADERS,
       body: JSON.stringify({
@@ -425,7 +426,7 @@ export async function handleProxyFundHistory(request: Request, env: Env): Promis
 
     if (!productId) {
       // Quick lookup via filter
-      const searchRes = await fetch('https://api.fmarket.vn/res/products/filter', {
+      const searchRes = await fetch(`${FMARKET_API_BASE}/products/filter`, {
         method: 'POST',
         headers: FMARKET_HEADERS,
         body: JSON.stringify({
@@ -448,7 +449,7 @@ export async function handleProxyFundHistory(request: Request, env: Env): Promis
     const toDate = new Date().toISOString().split('T')[0].replace(/-/g, '')
     const fromDate = new Date(Date.now() - days * 3 * 86400 * 1000).toISOString().split('T')[0].replace(/-/g, '') // 3x buffer
 
-    const histRes = await fetch('https://api.fmarket.vn/res/product/get-nav-history', {
+    const histRes = await fetch(`${FMARKET_API_BASE}/product/get-nav-history`, {
       method: 'POST',
       headers: FMARKET_HEADERS,
       body: JSON.stringify({ isAllData: 0, productId, fromDate, toDate })
@@ -495,7 +496,7 @@ export async function handleProxyFundList(request: Request, env: Env): Promise<R
       }
     }
 
-    const res = await fetch('https://api.fmarket.vn/res/products/filter', {
+    const res = await fetch(`${FMARKET_API_BASE}/products/filter`, {
       method: 'POST',
       headers: FMARKET_HEADERS,
       body: JSON.stringify({

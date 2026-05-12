@@ -34,7 +34,7 @@ const ui = useUiStore()
 const activeTab = ref<'stocks' | 'funds'>('stocks')
 
 const getLogoUrls = (symbol: string) => [
-  `https://smart-note-api.smart-note.workers.dev/api/proxy/logo?symbol=${symbol.toUpperCase()}`,
+  `${import.meta.env.VITE_API_BASE_URL}/api/proxy/logo?symbol=${symbol.toUpperCase()}`,
   `https://ui-avatars.com/api/?name=${symbol}&background=1e293b&color=cbd5e1&bold=true&font-size=0.4`
 ]
 

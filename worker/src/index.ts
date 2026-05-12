@@ -235,7 +235,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
       if (path === '/api/sitemap.xml' && request.method === 'GET') {
         const blogsIndex = await env.SMART_NOTE_KV.get('public/blogs/_index', 'json') as { blogs: any[] } | null
         const blogs = (blogsIndex?.blogs || []).filter((b: any) => b.published !== false)
-        const siteUrl = 'https://finnote-f4n.pages.dev'
+        const siteUrl = env.FRONTEND_URL || 'https://finnote-f4n.pages.dev'
 
         let xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
@@ -268,7 +268,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
           headers: {
             'Content-Type': 'application/xml',
             'Cache-Control': 'public, max-age=3600',
-            ...corsHeaders(),
+            ...corsHeaders(env, request.headers.get('Origin')),
           },
         })
       }
@@ -334,7 +334,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
         try {
           const result = await runAutoBlog(env)
           return new Response(JSON.stringify({ success: true, message: result }), {
-            headers: { 'Content-Type': 'application/json', ...corsHeaders() }
+            headers: { 'Content-Type': 'application/json', ...corsHeaders(env, request.headers.get('Origin')) }
           })
         } catch (err: any) {
           return errorResponse(`AutoBlog failed: ${err.message}`, 500)
@@ -598,7 +598,7 @@ export default {
     const requestOrigin = request.headers.get('Origin')
 
     if (request.method === 'OPTIONS') {
-      return new Response(null, { headers: corsHeaders(requestOrigin) })
+      return new Response(null, { headers: corsHeaders(env, requestOrigin) })
     }
 
     const response = await handleRequest(request, env)
@@ -607,7 +607,7 @@ export default {
     // Ensures every response from the worker gets the correct dynamic CORS header
     // rather than the default ALLOWED_ORIGINS[0] that jsonResponse provides.
     const finalHeaders = new Headers(response.headers)
-    const cors = corsHeaders(requestOrigin)
+    const cors = corsHeaders(env, requestOrigin)
     for (const [key, value] of Object.entries(cors)) {
       finalHeaders.set(key, value as string)
     }

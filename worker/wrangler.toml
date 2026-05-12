@@ -15,6 +15,8 @@ binding = "AI"
 # Environment variables (set secrets via: npx wrangler secret put JWT_SECRET)
 [vars]
 ENVIRONMENT = "production"
+FRONTEND_URL = "https://finnote-f4n.pages.dev"
+API_URL = "https://smart-note-api.smart-note.workers.dev"
 
 # Cron Triggers:
 # 1. Auto-blog generation daily at 9 AM VN (2 AM UTC)

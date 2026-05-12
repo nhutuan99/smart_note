@@ -14,7 +14,8 @@ export interface SeoOptions {
 }
 
 export function useAppSeo(options: SeoOptions) {
-  const defaultImage = 'https://finnote-f4n.pages.dev/images/og-cover.jpg'
+  const siteUrl = typeof window !== 'undefined' ? window.location.origin : import.meta.env.VITE_FRONTEND_URL || ''
+  const defaultImage = `${siteUrl}/images/og-cover.jpg`
   const defaultAuthor = 'FinNote'
   const siteName = 'FinNote'
   
@@ -68,7 +69,7 @@ export function useAppSeo(options: SeoOptions) {
             publisher: { 
               '@type': 'Organization', 
               name: siteName, 
-              logo: { '@type': 'ImageObject', url: 'https://finnote-f4n.pages.dev/images/logo-512.png' } 
+              logo: { '@type': 'ImageObject', url: `${siteUrl}/images/logo-512.png` }
             },
             ...(options.publishedAt ? { datePublished: options.publishedAt } : {}),
             ...(options.updatedAt ? { dateModified: options.updatedAt } : {}),
@@ -100,8 +101,9 @@ export function extractExcerpt(html: string, fallback = 'FinNote'): string {
 /**
  * Extracts the first image URL from HTML content for SEO og:image
  */
-export function extractFirstImage(html: string, fallback = 'https://finnote-f4n.pages.dev/images/og-cover.jpg'): string {
-  if (!html) return fallback
+export function extractFirstImage(html: string, fallback?: string): string {
+  const finalFallback = fallback || `${typeof window !== 'undefined' ? window.location.origin : ''}/images/og-cover.jpg`
+  if (!html) return finalFallback
   // Check for <img> tags
   const imgMatch = html.match(/<img[^>]+src="([^">]+)"/i)
   if (imgMatch && imgMatch[1]) return imgMatch[1]
@@ -109,5 +111,5 @@ export function extractFirstImage(html: string, fallback = 'https://finnote-f4n.
   const mdMatch = html.match(/!\[[^\]]*\]\(([^)]+)\)/)
   if (mdMatch && mdMatch[1]) return mdMatch[1]
   
-  return fallback
+  return finalFallback
 }
