@@ -37,7 +37,8 @@ const categoryStats = computed<(CategoryBudget & { icon: string; color: string; 
   if (!budget.value) return []
   return budget.value.categoryBudgets.map(cb => {
     const cfg = getCategoryConfig(cb.category)
-    const actualSpent = finance.monthTransactions.filter(tx => tx.type === 'expense' && tx.category === cb.category).reduce((s, tx) => s + tx.amount, 0)
+    const stat = finance.expenseByCategoryThisMonth.find(c => c.category === cb.category)
+    const actualSpent = stat ? stat.total : 0
     return { ...cb, spent: actualSpent, icon: cfg.icon, color: cfg.color, pct: cb.limit > 0 ? Math.min((actualSpent / cb.limit) * 100, 100) : 0 }
   }).sort((a, b) => b.pct - a.pct)
 })

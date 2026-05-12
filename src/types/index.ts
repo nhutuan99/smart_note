@@ -90,6 +90,23 @@ export interface DailyStat {
   net: number
 }
 
+export interface WalletStat {
+  walletId: string
+  total: number
+  percentage: number
+}
+
+export interface FinanceStats {
+  monthIncome: number
+  monthExpense: number
+  monthNet: number
+  weeklyStats: DailyStat[]
+  expenseByCategory: CategoryStat[]
+  expenseByWallet: WalletStat[]
+  incomeByWallet: WalletStat[]
+  recentTransactions: Transaction[]
+}
+
 // ── Finance: Categories ──
 
 export interface CategoryConfig {

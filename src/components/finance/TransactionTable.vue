@@ -23,20 +23,22 @@ import {
 
 const props = defineProps<{
   transactions: Transaction[]
+  total: number
+  currentPage: number
+  pageSize: number
   loading?: boolean
 }>()
 
 const emit = defineEmits<{
   delete: [tx: Transaction]
   add: []
+  'update:page': [page: number]
 }>()
 
 const { t, tm } = useI18n()
 const finance = useFinancePolling()
 
 const selectedTx = ref<Transaction | null>(null)
-const currentPage = ref(1)
-const pageSize = 15
 
 // Format precise time for modal
 function formatDateTime(dateStr: string) {
@@ -70,16 +72,11 @@ function getSourceClass(source: string) {
 }
 
 // Reset pagination when data changes
-watch(() => props.transactions, () => {
-  currentPage.value = 1
-}, { deep: true })
+// Handled by parent now, this is just a dumb component
 
-const paginatedTransactions = computed(() => {
-  const start = (currentPage.value - 1) * pageSize
-  return props.transactions.slice(start, start + pageSize)
-})
+const paginatedTransactions = computed(() => props.transactions)
 
-const totalPages = computed(() => Math.ceil(props.transactions.length / pageSize))
+const totalPages = computed(() => Math.ceil(props.total / props.pageSize))
 
 const displayedPages = computed(() => {
   const pages: (number | string)[] = []
@@ -87,7 +84,7 @@ const displayedPages = computed(() => {
     if (
       i === 1 || 
       i === totalPages.value || 
-      (i >= currentPage.value - 1 && i <= currentPage.value + 1)
+      (i >= props.currentPage - 1 && i <= props.currentPage + 1)
     ) {
       pages.push(i)
     } else if (pages[pages.length - 1] !== '...') {
@@ -259,13 +256,13 @@ function dayTotal(txs: Transaction[]) {
       <!-- Pagination Footer -->
       <div v-if="totalPages > 1" class="flex items-center justify-between px-4 py-3 bg-bg-surface border-t border-border-default">
         <div class="text-xs text-text-secondary">
-          {{ t('transactions.pagination', { start: (currentPage - 1) * pageSize + 1, end: Math.min(currentPage * pageSize, transactions.length), total: transactions.length }) }}
+          {{ t('transactions.pagination', { start: (currentPage - 1) * pageSize + 1, end: Math.min(currentPage * pageSize, total), total: total }) }}
         </div>
         <div class="flex items-center gap-1">
           <button 
             class="p-1.5 rounded-md hover:bg-bg-hover text-text-secondary disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
             :disabled="currentPage === 1"
-            @click="currentPage--"
+            @click="emit('update:page', currentPage - 1)"
           >
             <ChevronLeft :size="16" />
           </button>
@@ -276,7 +273,7 @@ function dayTotal(txs: Transaction[]) {
               v-else
               class="min-w-[28px] h-7 px-2 text-xs font-medium rounded-md transition-colors"
               :class="currentPage === page ? 'bg-accent-subtle text-accent font-bold' : 'text-text-secondary hover:bg-bg-hover'"
-              @click="currentPage = page as number"
+              @click="emit('update:page', page as number)"
             >
               {{ page }}
             </button>
@@ -285,7 +282,7 @@ function dayTotal(txs: Transaction[]) {
           <button 
             class="p-1.5 rounded-md hover:bg-bg-hover text-text-secondary disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
             :disabled="currentPage === totalPages"
-            @click="currentPage++"
+            @click="emit('update:page', currentPage + 1)"
           >
             <ChevronRight :size="16" />
           </button>

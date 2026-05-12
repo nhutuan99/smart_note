@@ -18,12 +18,41 @@ import {
 
 import TransactionTable from '@/components/finance/TransactionTable.vue'
 import { useExportCsv } from '@/composables/useExportCsv'
+import { onMounted, watch } from 'vue'
 
 const { t, tm } = useI18n()
 const router = useRouter()
 const finance = useFinancePolling()
 const ui = useUiStore()
 const { exportTransactions } = useExportCsv()
+
+const isExporting = ref(false)
+async function doExport() {
+  if (finance.totalTransactions === 0) return
+  isExporting.value = true
+  try {
+    const data = await finance.getExportTransactions()
+    exportTransactions(data)
+  } finally {
+    isExporting.value = false
+  }
+}
+
+// Fetch initial page
+onMounted(() => {
+  finance.fetchPaginatedTransactions()
+})
+
+// Watch filter changes to reset page and fetch
+watch(() => finance.filter, () => {
+  finance.pagination.page = 1
+  finance.fetchPaginatedTransactions()
+}, { deep: true })
+
+function handlePageChange(page: number) {
+  finance.pagination.page = page
+  finance.fetchPaginatedTransactions()
+}
 
 const AUTO_SOURCES: Transaction['source'][] = ['sms', 'notification', 'telegram']
 
@@ -80,17 +109,18 @@ useEventListener(document, 'click', handleClickOutside)
       <div>
         <h1 class="text-2xl font-bold tracking-tight">{{ t('transactions.title') }}</h1>
         <p class="text-text-tertiary mt-1 text-sm">
-          {{ t('transactions.count', { n: finance.filteredTransactions.length }) }}
+          {{ t('transactions.count', { n: finance.totalTransactions }) }}
         </p>
       </div>
       <div class="flex items-center gap-2">
         <button
-          @click="exportTransactions(finance.filteredTransactions)"
+          @click="doExport"
           class="btn-secondary"
-          :disabled="finance.filteredTransactions.length === 0"
+          :disabled="finance.totalTransactions === 0 || isExporting"
         >
-          <Download :size="16" />
-          <span class="hidden sm:inline">{{ t('transactions.export') }}</span>
+          <Download v-if="!isExporting" :size="16" />
+          <AppSpinner v-else :size="16" />
+          <span class="hidden sm:inline">{{ isExporting ? t('common.loading') : t('transactions.export') }}</span>
         </button>
         <button
           @click="router.push('/transactions/add')"
@@ -249,10 +279,14 @@ useEventListener(document, 'click', handleClickOutside)
 
     <!-- Transaction Table Component -->
     <TransactionTable
-      :transactions="finance.filteredTransactions"
+      :transactions="finance.paginatedTransactions"
+      :total="finance.totalTransactions"
+      :current-page="finance.pagination.page"
+      :page-size="finance.pagination.limit"
       :loading="finance.loading"
       @delete="deleteTx"
       @add="router.push('/transactions/add')"
+      @update:page="handlePageChange"
     />
   </div>
 </template>

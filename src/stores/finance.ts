@@ -6,7 +6,8 @@ import type {
   TransactionType,
   TransactionFilter,
   CategoryStat,
-  DailyStat
+  DailyStat,
+  FinanceStats
 } from '@/types'
 import { getCategoryConfig } from '@/constants/finance'
 import { httpClient } from '@/shared/api/httpClient'
@@ -26,7 +27,6 @@ export const useFinanceStore = defineStore('finance', () => {
   // ── State ──
 
   const wallets = ref<Wallet[]>([])
-  const transactions = ref<Transaction[]>([])
   const loading = ref(false)
   const filter = ref<TransactionFilter>({ type: 'all' })
   const selectedMonth = ref(
@@ -36,6 +36,17 @@ export const useFinanceStore = defineStore('finance', () => {
     })()
   )
 
+  const stats = ref<FinanceStats>({
+    monthIncome: 0,
+    monthExpense: 0,
+    monthNet: 0,
+    weeklyStats: [],
+    expenseByCategory: [],
+    expenseByWallet: [],
+    incomeByWallet: [],
+    recentTransactions: []
+  })
+
   // ── Sync state (module-level, not reactive) ──
   let _lastFetchTime = 0
   const VISIBILITY_STALE_MS = 5_000 // 5 seconds — refresh when user returns to tab
@@ -44,110 +55,35 @@ export const useFinanceStore = defineStore('finance', () => {
 
   const totalBalance = computed(() => wallets.value.reduce((sum, w) => sum + w.balance, 0))
 
-  const monthTransactions = computed(() => {
-    return transactions.value.filter((t) => t.date.startsWith(selectedMonth.value))
-  })
-
-  const monthIncome = computed(() =>
-    monthTransactions.value.filter((t) => t.type === 'income').reduce((sum, t) => sum + t.amount, 0)
-  )
-
-  const monthExpense = computed(() =>
-    monthTransactions.value
-      .filter((t) => t.type === 'expense')
-      .reduce((sum, t) => sum + t.amount, 0)
-  )
-
-  const monthNet = computed(() => monthIncome.value - monthExpense.value)
-
-  // ── Computed: Filtered Transactions ──
-
-  const filteredTransactions = computed(() => {
-    let result = [...transactions.value]
-
-    if (filter.value.type && filter.value.type !== 'all') {
-      result = result.filter((t) => t.type === filter.value.type)
-    }
-    if (filter.value.walletId) {
-      result = result.filter((t) => t.walletId === filter.value.walletId)
-    }
-    if (filter.value.category) {
-      result = result.filter((t) => t.category === filter.value.category)
-    }
-    if (filter.value.dateFrom) {
-      result = result.filter((t) => t.date >= filter.value.dateFrom!)
-    }
-    if (filter.value.dateTo) {
-      result = result.filter((t) => t.date <= filter.value.dateTo!)
-    }
-
-    // Sort by date desc, then createdAt desc
-    result.sort((a, b) => {
-      const dateDiff = b.date.localeCompare(a.date)
-      if (dateDiff !== 0) return dateDiff
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    })
-
-    return result
-  })
+  const monthIncome = computed(() => stats.value.monthIncome)
+  const monthExpense = computed(() => stats.value.monthExpense)
+  const monthNet = computed(() => stats.value.monthNet)
 
   // ── Computed: Category Stats ──
 
   const expenseByCategoryThisMonth = computed<CategoryStat[]>(() => {
-    const map: Record<string, number> = {}
-    let total = 0
-
-    monthTransactions.value
-      .filter((t) => t.type === 'expense')
-      .forEach((t) => {
-        map[t.category] = (map[t.category] || 0) + t.amount
-        total += t.amount
-      })
-
-    return Object.entries(map)
-      .map(([key, amount]) => {
-        const cfg = getCategoryConfig(key)
-        return {
-          category: key,
-          total: amount,
-          count: monthTransactions.value.filter((t) => t.type === 'expense' && t.category === key)
-            .length,
-          percentage: total > 0 ? (amount / total) * 100 : 0,
-          icon: cfg.icon,
-          color: cfg.color
-        }
-      })
-      .sort((a, b) => b.total - a.total)
+    return stats.value.expenseByCategory.map(s => {
+      const cfg = getCategoryConfig(s.category)
+      return {
+        ...s,
+        icon: cfg.icon,
+        color: cfg.color
+      }
+    })
   })
 
   // ── Computed: Daily Stats (last 7 days) ──
 
-  const weeklyStats = computed<DailyStat[]>(() => {
-    const stats: DailyStat[] = []
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date()
-      d.setDate(d.getDate() - i)
-      const dateStr = d.toISOString().substring(0, 10)
-      const dayTx = transactions.value.filter((t) => t.date === dateStr)
-      const income = dayTx.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0)
-      const expense = dayTx.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
-      stats.push({
-        date: dateStr,
-        income,
-        expense,
-        net: income - expense
-      })
-    }
-    return stats
-  })
+  const weeklyStats = computed<DailyStat[]>(() => stats.value.weeklyStats)
 
   // ── Computed: Recent Transactions ──
 
-  const recentTransactions = computed(() =>
-    [...transactions.value]
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 10)
-  )
+  const recentTransactions = computed(() => stats.value.recentTransactions)
+
+  // ── Pagination State ──
+  const paginatedTransactions = ref<Transaction[]>([])
+  const totalTransactions = ref(0)
+  const pagination = ref({ page: 1, limit: 15 })
 
   // ── Actions: Fetch from API ──
 
@@ -165,20 +101,65 @@ export const useFinanceStore = defineStore('finance', () => {
     }
   }
 
-  async function fetchTransactions() {
+  async function fetchStats() {
     if (!isLoggedIn()) return
     try {
-      const data = await httpClient.get<Transaction[]>('/api/transactions')
-      transactions.value = data || []
+      const data = await httpClient.get<FinanceStats>(`/api/finance/stats?month=${selectedMonth.value}`)
+      if (data) {
+        stats.value = data
+      }
     } catch (err) {
-      if (!isAbortError(err)) console.error('Failed to fetch transactions:', err)
+      if (!isAbortError(err)) console.error('Failed to fetch stats:', err)
+    }
+  }
+
+  async function fetchPaginatedTransactions() {
+    if (!isLoggedIn()) return
+    loading.value = true
+    try {
+      const qs = new URLSearchParams()
+      qs.set('page', String(pagination.value.page))
+      qs.set('limit', String(pagination.value.limit))
+      if (filter.value.type && filter.value.type !== 'all') qs.set('type', filter.value.type)
+      if (filter.value.walletId) qs.set('walletId', filter.value.walletId)
+      // Note: category filtering was done locally, now we can pass it if supported
+      if (filter.value.category) qs.set('category', filter.value.category)
+
+      const res = await httpClient.get<any>(`/api/transactions?${qs.toString()}`)
+      if (res && res.data) {
+        paginatedTransactions.value = res.data
+        totalTransactions.value = res.total
+      } else {
+        paginatedTransactions.value = []
+        totalTransactions.value = 0
+      }
+    } catch (err) {
+      if (!isAbortError(err)) console.error('Failed to fetch paginated transactions:', err)
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function getExportTransactions(): Promise<Transaction[]> {
+    try {
+      const qs = new URLSearchParams()
+      if (filter.value.type && filter.value.type !== 'all') qs.set('type', filter.value.type)
+      if (filter.value.walletId) qs.set('walletId', filter.value.walletId)
+      
+      const res = await httpClient.get<any>(`/api/transactions?${qs.toString()}`)
+      // if it returns an array directly (fallback backward compatibility) or {data: []}
+      if (Array.isArray(res)) return res
+      return res?.data || []
+    } catch (err) {
+      console.error('Failed to fetch export transactions:', err)
+      return []
     }
   }
 
   async function fetchAll() {
     loading.value = true
     try {
-      await Promise.all([fetchWallets(), fetchTransactions()])
+      await Promise.all([fetchWallets(), fetchStats()])
       _lastFetchTime = Date.now()
     } finally {
       loading.value = false
@@ -192,7 +173,7 @@ export const useFinanceStore = defineStore('finance', () => {
   async function silentRefresh() {
     if (!isLoggedIn()) return
     try {
-      await Promise.all([fetchWallets(), fetchTransactions()])
+      await Promise.all([fetchWallets(), fetchStats()])
       _lastFetchTime = Date.now()
     } catch (err) {
       if (!isAbortError(err)) console.error('silentRefresh error:', err)
@@ -220,7 +201,7 @@ export const useFinanceStore = defineStore('finance', () => {
    */
   function reset() {
     wallets.value = []
-    transactions.value = []
+    stats.value = { monthIncome: 0, monthExpense: 0, monthNet: 0, weeklyStats: [], expenseByCategory: [], expenseByWallet: [], incomeByWallet: [], recentTransactions: [] }
     filter.value = { type: 'all' }
     selectedMonth.value = new Date().toISOString().substring(0, 7)
     _lastFetchTime = 0
@@ -274,18 +255,17 @@ export const useFinanceStore = defineStore('finance', () => {
     try {
       const tx = await httpClient.post<Transaction>('/api/transactions', data)
       if (tx) {
-        transactions.value.push(tx)
-        
         // Eagerly update local wallet balance to bypass KV eventual consistency delay
         const wIdx = wallets.value.findIndex(w => w.id === tx.walletId)
         if (wIdx !== -1) {
           wallets.value[wIdx].balance += tx.type === 'income' ? tx.amount : -tx.amount
         }
         
-        // Refresh wallets from server in background
+        // Refresh wallets and stats from server in background
         fetchWallets().then(() => {
           _lastFetchTime = Date.now()
         })
+        fetchStats()
         return tx
       }
     } catch (err) {
@@ -296,7 +276,8 @@ export const useFinanceStore = defineStore('finance', () => {
 
   async function deleteTransaction(id: string) {
     try {
-      const txToDelete = transactions.value.find(t => t.id === id)
+      // Find in recentTransactions to revert balance locally before fetch
+      const txToDelete = stats.value.recentTransactions.find(t => t.id === id)
       if (txToDelete) {
         const wIdx = wallets.value.findIndex(w => w.id === txToDelete.walletId)
         if (wIdx !== -1) {
@@ -305,12 +286,12 @@ export const useFinanceStore = defineStore('finance', () => {
       }
       
       await httpClient.del(`/api/transactions/${id}`)
-      transactions.value = transactions.value.filter((t) => t.id !== id)
       
-      // Refresh wallets from server in background
+      // Refresh wallets and stats from server in background
       fetchWallets().then(() => {
         _lastFetchTime = Date.now()
       })
+      fetchStats()
     } catch (err) {
       console.error('Failed to delete transaction:', err)
     }
@@ -318,16 +299,17 @@ export const useFinanceStore = defineStore('finance', () => {
 
   return {
     wallets,
-    transactions,
+    stats,
     loading,
     filter,
     selectedMonth,
+    paginatedTransactions,
+    totalTransactions,
+    pagination,
     totalBalance,
-    monthTransactions,
     monthIncome,
     monthExpense,
     monthNet,
-    filteredTransactions,
     expenseByCategoryThisMonth,
     weeklyStats,
     recentTransactions,
@@ -339,7 +321,9 @@ export const useFinanceStore = defineStore('finance', () => {
     addTransaction,
     deleteTransaction,
     fetchWallets,
-    fetchTransactions,
+    fetchStats,
+    fetchPaginatedTransactions,
+    getExportTransactions,
     fetchAll,
     silentRefresh,
     refreshOnVisible,

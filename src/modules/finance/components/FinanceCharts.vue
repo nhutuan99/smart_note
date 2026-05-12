@@ -183,59 +183,31 @@ interface WalletStat {
 }
 
 const expenseByWallet = computed<WalletStat[]>(() => {
-  const map: Record<string, number> = {}
-  let total = 0
-
-  finance.monthTransactions
-    .filter((t: any) => t.type === 'expense')
-    .forEach((t: any) => {
-      map[t.walletId] = (map[t.walletId] || 0) + t.amount
-      total += t.amount
-    })
-
-  return Object.entries(map)
-    .map(([walletId, amount]) => {
-      const walletName = finance.getWalletName(walletId)
-      const brand = getWalletBrand(walletName)
-      const wallet = finance.wallets.find((w: any) => w.id === walletId)
-      return {
-        walletId,
-        name: walletName,
-        total: amount,
-        percentage: total > 0 ? (amount / total) * 100 : 0,
-        color: brand?.bgColor && brand.bgColor !== '#ffffff' ? brand.bgColor : (wallet?.color || '#6366f1'),
-        logoUrl: wallet?.customLogoUrl || brand?.logoUrl || ''
-      }
-    })
-    .sort((a, b) => b.total - a.total)
+  return finance.stats.expenseByWallet.map(stat => {
+    const walletName = finance.getWalletName(stat.walletId)
+    const brand = getWalletBrand(walletName)
+    const wallet = finance.wallets.find((w: any) => w.id === stat.walletId)
+    return {
+      ...stat,
+      name: walletName,
+      color: brand?.bgColor && brand.bgColor !== '#ffffff' ? brand.bgColor : (wallet?.color || '#6366f1'),
+      logoUrl: wallet?.customLogoUrl || brand?.logoUrl || ''
+    }
+  })
 })
 
 const incomeByWallet = computed<WalletStat[]>(() => {
-  const map: Record<string, number> = {}
-  let total = 0
-
-  finance.monthTransactions
-    .filter((t: any) => t.type === 'income')
-    .forEach((t: any) => {
-      map[t.walletId] = (map[t.walletId] || 0) + t.amount
-      total += t.amount
-    })
-
-  return Object.entries(map)
-    .map(([walletId, amount]) => {
-      const walletName = finance.getWalletName(walletId)
-      const brand = getWalletBrand(walletName)
-      const wallet = finance.wallets.find((w: any) => w.id === walletId)
-      return {
-        walletId,
-        name: walletName,
-        total: amount,
-        percentage: total > 0 ? (amount / total) * 100 : 0,
-        color: brand?.bgColor && brand.bgColor !== '#ffffff' ? brand.bgColor : (wallet?.color || '#10b981'),
-        logoUrl: wallet?.customLogoUrl || brand?.logoUrl || ''
-      }
-    })
-    .sort((a, b) => b.total - a.total)
+  return finance.stats.incomeByWallet.map(stat => {
+    const walletName = finance.getWalletName(stat.walletId)
+    const brand = getWalletBrand(walletName)
+    const wallet = finance.wallets.find((w: any) => w.id === stat.walletId)
+    return {
+      ...stat,
+      name: walletName,
+      color: brand?.bgColor && brand.bgColor !== '#ffffff' ? brand.bgColor : (wallet?.color || '#10b981'),
+      logoUrl: wallet?.customLogoUrl || brand?.logoUrl || ''
+    }
+  })
 })
 
 const walletBreakdownTab = ref<'expense' | 'income'>('income')

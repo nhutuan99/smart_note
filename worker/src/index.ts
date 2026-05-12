@@ -47,6 +47,7 @@ import {
   handleListTransactions,
   handleCreateTransaction,
   handleDeleteTransaction,
+  handleGetFinanceStats,
   handleGetBudget,
   handleUpdateBudget,
   handleGetTradingConfig,
@@ -395,7 +396,10 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
 
       // Finance: Transactions
       if (path === '/api/transactions' && request.method === 'GET') {
-        return handleListTransactions(userId, env)
+        return handleListTransactions(userId, request, env)
+      }
+      if (path === '/api/finance/stats' && request.method === 'GET') {
+        return handleGetFinanceStats(userId, request, env)
       }
       if (path === '/api/transactions' && request.method === 'POST') {
         return handleCreateTransaction(userId, request, env)

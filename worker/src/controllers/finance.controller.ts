@@ -73,13 +73,149 @@ export async function handleDeleteWallet(
   return jsonResponse({ success: true })
 }
 
-export async function handleListTransactions(userId: string, env: Env): Promise<Response> {
+export async function handleListTransactions(userId: string, request: Request, env: Env): Promise<Response> {
   const txs =
     (await getJSON<TransactionData[]>(
       env.SMART_NOTE_KV,
       `users/${userId}/finance/transactions`
     )) || []
-  return jsonResponse({ success: true, data: txs })
+
+  const url = new URL(request.url)
+  const pageStr = url.searchParams.get('page')
+  const limitStr = url.searchParams.get('limit')
+  const typeFilter = url.searchParams.get('type')
+  const walletIdFilter = url.searchParams.get('walletId')
+
+  // Filter
+  let filtered = txs
+  if (typeFilter && typeFilter !== 'all') {
+    filtered = filtered.filter(t => t.type === typeFilter)
+  }
+  if (walletIdFilter) {
+    filtered = filtered.filter(t => t.walletId === walletIdFilter)
+  }
+
+  // Sort by date desc, then createdAt desc
+  filtered.sort((a, b) => {
+    const dateDiff = b.date.localeCompare(a.date)
+    if (dateDiff !== 0) return dateDiff
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  })
+
+  // Pagination
+  if (pageStr && limitStr) {
+    const page = parseInt(pageStr, 10) || 1
+    const limit = parseInt(limitStr, 10) || 15
+    const total = filtered.length
+    const start = (page - 1) * limit
+    const paginated = filtered.slice(start, start + limit)
+    
+    return jsonResponse({
+      success: true,
+      data: paginated,
+      total,
+      page,
+      limit
+    })
+  }
+
+  // Fallback if no pagination requested (backward compatibility)
+  return jsonResponse({ success: true, data: filtered })
+}
+
+export async function handleGetFinanceStats(userId: string, request: Request, env: Env): Promise<Response> {
+  const txs = (await getJSON<TransactionData[]>(env.SMART_NOTE_KV, `users/${userId}/finance/transactions`)) || []
+  const wallets = (await getJSON<WalletData[]>(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`)) || []
+
+  const url = new URL(request.url)
+  let month = url.searchParams.get('month')
+  if (!month) {
+    const d = new Date()
+    month = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+  }
+
+  const monthTransactions = txs.filter(t => t.date.startsWith(month!))
+
+  const monthIncome = monthTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0)
+  const monthExpense = monthTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0)
+
+  // Weekly stats (last 7 days)
+  const weeklyStats = []
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date()
+    d.setDate(d.getDate() - i)
+    const dateStr = d.toISOString().substring(0, 10)
+    const dayTx = txs.filter((t) => t.date === dateStr)
+    const income = dayTx.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0)
+    const expense = dayTx.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
+    weeklyStats.push({
+      date: dateStr,
+      income,
+      expense,
+      net: income - expense
+    })
+  }
+
+  // Expense by category
+  const expenseMap: Record<string, number> = {}
+  let totalExpense = 0
+  monthTransactions.filter(t => t.type === 'expense').forEach(t => {
+    expenseMap[t.category] = (expenseMap[t.category] || 0) + t.amount
+    totalExpense += t.amount
+  })
+  
+  const expenseByCategory = Object.entries(expenseMap).map(([category, amount]) => {
+    return {
+      category,
+      total: amount,
+      count: monthTransactions.filter(t => t.type === 'expense' && t.category === category).length,
+      percentage: totalExpense > 0 ? (amount / totalExpense) * 100 : 0
+    }
+  }).sort((a, b) => b.total - a.total)
+
+  // Wallet Breakdown
+  const expenseWalletMap: Record<string, number> = {}
+  let totalWalletExpense = 0
+  monthTransactions.filter(t => t.type === 'expense').forEach(t => {
+    expenseWalletMap[t.walletId] = (expenseWalletMap[t.walletId] || 0) + t.amount
+    totalWalletExpense += t.amount
+  })
+  const expenseByWallet = Object.entries(expenseWalletMap).map(([walletId, amount]) => ({
+    walletId,
+    total: amount,
+    percentage: totalWalletExpense > 0 ? (amount / totalWalletExpense) * 100 : 0
+  })).sort((a, b) => b.total - a.total)
+
+  const incomeWalletMap: Record<string, number> = {}
+  let totalWalletIncome = 0
+  monthTransactions.filter(t => t.type === 'income').forEach(t => {
+    incomeWalletMap[t.walletId] = (incomeWalletMap[t.walletId] || 0) + t.amount
+    totalWalletIncome += t.amount
+  })
+  const incomeByWallet = Object.entries(incomeWalletMap).map(([walletId, amount]) => ({
+    walletId,
+    total: amount,
+    percentage: totalWalletIncome > 0 ? (amount / totalWalletIncome) * 100 : 0
+  })).sort((a, b) => b.total - a.total)
+
+  // Recent transactions (last 10)
+  const recentTransactions = [...txs]
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 10)
+
+  return jsonResponse({
+    success: true,
+    data: {
+      monthIncome,
+      monthExpense,
+      monthNet: monthIncome - monthExpense,
+      weeklyStats,
+      expenseByCategory,
+      expenseByWallet,
+      incomeByWallet,
+      recentTransactions
+    }
+  })
 }
 
 export async function handleCreateTransaction(

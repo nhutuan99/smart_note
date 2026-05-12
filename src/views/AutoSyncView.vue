@@ -43,7 +43,7 @@ async function copyWebhookUrl() {
 }
 
 onMounted(() => {
-  financeStore.fetchTransactions()
+  financeStore.fetchAll()
 })
 </script>
 

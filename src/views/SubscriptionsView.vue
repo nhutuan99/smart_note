@@ -1,18 +1,27 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useFinanceStore } from '@/stores/finance'
 import { useFinancePolling } from '@/composables/useFinancePolling'
 import { formatVND, getCategoryConfig } from '@/constants/finance'
 import { useI18n } from 'vue-i18n'
-import { CreditCard, AlertTriangle, Calendar, DollarSign } from 'lucide-vue-next'
+import type { Transaction } from '@/types'
+import { CreditCard, AlertTriangle, Calendar, DollarSign, Loader2 } from 'lucide-vue-next'
 
 const { t } = useI18n()
 const finance = useFinancePolling()
 
+const transactions = ref<Transaction[]>([])
+const loading = ref(true)
+
+onMounted(async () => {
+  transactions.value = await finance.getExportTransactions()
+  loading.value = false
+})
+
 // Auto-detect subscriptions from transaction history
 // Look for recurring expenses with same amount + same category in different months
 const subscriptions = computed(() => {
-  const txs = finance.transactions.filter(tx => tx.type === 'expense')
+  const txs = transactions.value.filter(tx => tx.type === 'expense')
   const grouped: Record<string, { amount: number; category: string; note: string; walletId: string; dates: string[]; count: number }> = {}
 
   for (const tx of txs) {
@@ -53,7 +62,12 @@ function fmtDate(d: string) { const [y, m, dd] = d.split('-'); return `${dd}/${m
       <p class="text-text-tertiary mt-1 text-sm">{{ t('subs.desc') }}</p>
     </div>
 
-    <!-- Summary -->
+    <div v-if="loading" class="flex justify-center py-12">
+      <Loader2 class="h-8 w-8 animate-spin text-text-tertiary" />
+    </div>
+    
+    <template v-else>
+      <!-- Summary -->
     <div v-if="subscriptions.length" class="card-premium mb-6 flex items-center justify-between p-4">
       <div class="flex items-center gap-3">
         <div class="bg-error/10 flex h-9 w-9 items-center justify-center rounded-lg"><CreditCard :size="18" class="text-error" /></div>
@@ -91,5 +105,6 @@ function fmtDate(d: string) { const [y, m, dd] = d.split('-'); return `${dd}/${m
         <div class="text-sm font-bold text-error whitespace-nowrap">-{{ formatVND(sub.amount) }}</div>
       </div>
     </div>
+    </template>
   </div>
 </template>
