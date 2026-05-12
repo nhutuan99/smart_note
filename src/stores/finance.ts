@@ -122,19 +122,16 @@ export const useFinanceStore = defineStore('finance', () => {
       qs.set('limit', String(pagination.value.limit))
       if (filter.value.type && filter.value.type !== 'all') qs.set('type', filter.value.type)
       if (filter.value.walletId) qs.set('walletId', filter.value.walletId)
-      // Note: category filtering was done locally, now we can pass it if supported
       if (filter.value.category) qs.set('category', filter.value.category)
 
-      const res = await httpClient.get<any>(`/api/transactions?${qs.toString()}`)
-      if (res && res.data) {
-        paginatedTransactions.value = res.data
-        totalTransactions.value = res.total
-      } else {
-        paginatedTransactions.value = []
-        totalTransactions.value = 0
-      }
+      // getPaginated preserves total/page/limit alongside data[]
+      const res = await httpClient.getPaginated<Transaction>(`/api/transactions?${qs.toString()}`)
+      paginatedTransactions.value = res.data
+      totalTransactions.value = res.total
     } catch (err) {
       if (!isAbortError(err)) console.error('Failed to fetch paginated transactions:', err)
+      paginatedTransactions.value = []
+      totalTransactions.value = 0
     } finally {
       loading.value = false
     }
@@ -145,11 +142,9 @@ export const useFinanceStore = defineStore('finance', () => {
       const qs = new URLSearchParams()
       if (filter.value.type && filter.value.type !== 'all') qs.set('type', filter.value.type)
       if (filter.value.walletId) qs.set('walletId', filter.value.walletId)
-      
-      const res = await httpClient.get<any>(`/api/transactions?${qs.toString()}`)
-      // if it returns an array directly (fallback backward compatibility) or {data: []}
-      if (Array.isArray(res)) return res
-      return res?.data || []
+      // No page/limit → backend returns all matching transactions
+      const res = await httpClient.getPaginated<Transaction>(`/api/transactions?${qs.toString()}`)
+      return res.data
     } catch (err) {
       console.error('Failed to fetch export transactions:', err)
       return []

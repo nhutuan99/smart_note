@@ -11,7 +11,7 @@
  * @see vue-expert.md §5 Repository Pattern
  */
 
-import type { ApiResponse } from '@/types'
+import type { ApiResponse, PaginatedApiResponse } from '@/types'
 import type { Router } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { AUTH_TOKEN_KEY, AUTH_USER_KEY, AUTH_REFRESH_TOKEN_KEY } from '@/constants/auth'
@@ -216,9 +216,10 @@ async function get<T>(url: string, options?: { silent?: boolean }): Promise<T> {
   return handleResponse<T>(response, doRequest, silent)
 }
 
-async function post<T>(url: string, body?: unknown): Promise<T> {
+async function post<T>(url: string, body?: unknown, options?: { silent?: boolean }): Promise<T> {
   const isExternal = url.startsWith('http')
   const fullUrl = isExternal ? url : `${API_BASE}${url}`
+  const silent = options?.silent
 
   const doRequest = async (): Promise<T> => {
     const response = await fetch(fullUrl, {
@@ -226,7 +227,7 @@ async function post<T>(url: string, body?: unknown): Promise<T> {
       headers: buildHeaders(true, isExternal),
       body: body ? JSON.stringify(body) : undefined
     })
-    return handleResponse<T>(response)
+    return handleResponse<T>(response, undefined, silent)
   }
 
   const response = await fetch(fullUrl, {
@@ -234,7 +235,7 @@ async function post<T>(url: string, body?: unknown): Promise<T> {
     headers: buildHeaders(true, isExternal),
     body: body ? JSON.stringify(body) : undefined
   })
-  return handleResponse<T>(response, doRequest)
+  return handleResponse<T>(response, doRequest, silent)
 }
 
 async function put<T>(url: string, body?: unknown): Promise<T> {
@@ -277,4 +278,73 @@ async function del(url: string): Promise<void> {
   await handleResponse<void>(response, doRequest)
 }
 
-export const httpClient = { get, post, put, del }
+/**
+ * GET that returns the full paginated wrapper { data, total, page, limit }.
+ * Use for endpoints that support pagination (e.g. /api/transactions?page=1&limit=15).
+ */
+async function getPaginated<T>(url: string, options?: { silent?: boolean }): Promise<PaginatedApiResponse<T>> {
+  const fullUrl = `${API_BASE}${url}`
+  const silent = options?.silent
+
+  const doRequest = async (): Promise<PaginatedApiResponse<T>> => {
+    const response = await fetch(fullUrl, {
+      method: 'GET',
+      headers: buildHeaders(false, false),
+      cache: 'no-store'
+    })
+    return handlePaginatedResponse<T>(response, undefined, silent)
+  }
+
+  const response = await fetch(fullUrl, {
+    method: 'GET',
+    headers: buildHeaders(false, false),
+    cache: 'no-store'
+  })
+  return handlePaginatedResponse<T>(response, doRequest, silent)
+}
+
+async function handlePaginatedResponse<T>(
+  response: Response,
+  retryFn?: () => Promise<PaginatedApiResponse<T>>,
+  silent?: boolean
+): Promise<PaginatedApiResponse<T>> {
+  if (response.status === 401 && retryFn) {
+    const refreshed = await tryRefreshToken()
+    if (refreshed) return retryFn()
+    handle401()
+    throw new Error('Session expired')
+  }
+  if (response.status === 401) {
+    handle401()
+    throw new Error('Session expired')
+  }
+
+  const contentType = response.headers.get('content-type') || ''
+  if (!contentType.includes('application/json')) {
+    const errorMsg = `Request failed (${response.status})`
+    if (!silent) {
+      try {
+        const { useUiStore } = await import('@/stores/ui')
+        useUiStore().showToast('error', errorMsg)
+      } catch (e) {}
+    }
+    throw new Error(errorMsg)
+  }
+
+  const json = await response.json() as PaginatedApiResponse<T>
+
+  if (!json.success) {
+    const errorMsg = json.error || `Request failed (${response.status})`
+    if (!silent) {
+      try {
+        const { useUiStore } = await import('@/stores/ui')
+        useUiStore().showToast('error', errorMsg)
+      } catch (e) {}
+    }
+    throw new Error(errorMsg)
+  }
+
+  return json
+}
+
+export const httpClient = { get, getPaginated, post, put, del }

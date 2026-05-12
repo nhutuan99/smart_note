@@ -79,7 +79,7 @@ export const useTradingStore = defineStore('trading', () => {
     if (!isLoggedIn()) return
     configLoading.value = true
     try {
-      const data = await httpClient.get<TradingConfig>('/api/trading/config')
+      const data = await httpClient.get<TradingConfig>('/api/trading/config', { silent: true })
       if (data) config.value = data
     } catch (err) {
       console.error('[Trading] fetchConfig failed:', err)
@@ -119,7 +119,7 @@ export const useTradingStore = defineStore('trading', () => {
     if (!isLoggedIn()) return
     loading.value = true
     try {
-      const data = await httpClient.get<TradingCheckin[]>('/api/trading/checkins')
+      const data = await httpClient.get<TradingCheckin[]>('/api/trading/checkins', { silent: true })
       checkins.value = data ?? []
     } catch (err) {
       console.error('[Trading] fetchCheckins failed:', err)
@@ -141,7 +141,14 @@ export const useTradingStore = defineStore('trading', () => {
         return true
       }
       return false
-    } catch (err) {
+    } catch (err: any) {
+      // 409 = check-in for today already exists (race condition or stale state).
+      // Silently retry as an UPDATE using today's date.
+      if (err?.message?.includes('already exists')) {
+        const today = todayStr()
+        console.warn('[Trading] submitCheckin got 409, retrying as updateCheckin for', today)
+        return updateCheckin(today, entries, note)
+      }
       console.error('[Trading] submitCheckin failed:', err)
       return false
     }

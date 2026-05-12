@@ -125,6 +125,15 @@ export interface ApiResponse<T> {
   error?: string
 }
 
+export interface PaginatedApiResponse<T> {
+  success: boolean
+  data: T[]
+  total: number
+  page: number
+  limit: number
+  error?: string
+}
+
 // ── Blog ──
 
 export interface Blog {
