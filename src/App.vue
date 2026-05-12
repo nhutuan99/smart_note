@@ -125,13 +125,16 @@ onMounted(async () => {
       <!-- Public Header for Unauthenticated Users to discover the app -->
       <header v-if="!auth.isAuthenticated" class="public-header">
         <div class="public-header__container">
+          <div class="public-header__left"></div>
           <router-link to="/" class="public-header__logo">
             <img src="/images/logo-512.png" alt="FinNote" class="w-8 h-8 object-contain" />
             <span class="font-bold text-[1.125rem] text-text-primary tracking-tight">FinNote</span>
           </router-link>
-          <router-link to="/login" class="public-header__btn">
-            {{ t('common.login') }}
-          </router-link>
+          <div class="public-header__right">
+            <router-link to="/login" class="public-header__btn">
+              {{ t('common.login') }}
+            </router-link>
+          </div>
         </div>
       </header>
       <!-- In-App Floating Back Button for Authenticated Users -->
@@ -192,19 +195,24 @@ onMounted(async () => {
   max-width: 52rem;
   margin: 0 auto;
   padding: 1rem 1.5rem;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
 }
 .public-header__logo {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.75rem;
   text-decoration: none;
   transition: opacity 0.2s;
 }
 .public-header__logo:hover {
   opacity: 0.8;
+}
+.public-header__right {
+  display: flex;
+  justify-content: flex-end;
 }
 .public-header__btn {
   background: var(--color-accent);

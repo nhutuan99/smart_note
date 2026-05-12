@@ -4,7 +4,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
 import { httpClient } from '@/shared/api/httpClient'
 import { useRouter, useRoute } from 'vue-router'
-import { Mail, Lock, User, Eye, EyeOff, ArrowRight, KeyRound, RotateCcw, CheckCircle2, ChevronLeft, ShieldCheck } from 'lucide-vue-next'
+import { Mail, Lock, User, Eye, EyeOff, ArrowRight, KeyRound, RotateCcw, CheckCircle2, ChevronLeft, ShieldCheck, Loader2 } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
 import { setLocale, currentLocale } from '@/i18n'
 import { useEventListener } from '@/composables/useEventListener'
@@ -441,7 +441,7 @@ watch(
             :disabled="!isValid || loading"
             class="btn-primary w-full justify-center py-3 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <LogoLoader v-if="loading" :size="18" />
+            <Loader2 v-if="loading" :size="18" class="animate-spin" />
             <template v-else>
               <span>{{ isLogin ? t('login.signIn') : t('login.signUp') }}</span>
               <ArrowRight :size="16" />
@@ -466,7 +466,7 @@ watch(
           class="border-border-default bg-bg-elevated hover:bg-bg-hover text-text-primary flex w-full items-center justify-center gap-2.5 rounded-lg border py-2.5 text-sm font-medium transition-all duration-150 disabled:opacity-50"
           @click="startGoogleSignIn"
         >
-          <LogoLoader v-if="googleLoading" :size="16" />
+          <Loader2 v-if="googleLoading" :size="16" class="animate-spin" />
           <template v-else>
             <svg viewBox="0 0 24 24" class="h-[1.125rem] w-[1.125rem]">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
@@ -539,7 +539,7 @@ watch(
             :disabled="fpLoading || !fpEmail"
             class="btn-primary w-full justify-center py-3 disabled:opacity-50"
           >
-            <LogoLoader v-if="fpLoading" :size="16" />
+            <Loader2 v-if="fpLoading" :size="16" class="animate-spin" />
             <template v-else>
               <!-- Google icon -->
               <svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor">
@@ -644,7 +644,7 @@ watch(
             :disabled="fpLoading || !fpNewPass || !fpConfirmPass"
             class="btn-primary w-full justify-center py-3 disabled:opacity-50"
           >
-            <LogoLoader v-if="fpLoading" :size="16" />
+            <Loader2 v-if="fpLoading" :size="16" class="animate-spin" />
             <template v-else>
               <span>{{ t('forgot.resetPassword') }}</span>
               <ArrowRight :size="16" />
