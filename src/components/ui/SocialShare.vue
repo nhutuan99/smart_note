@@ -37,21 +37,21 @@ function shareLinkedin() {
     <span class="text-sm font-medium text-text-secondary mr-2">Chia sẻ:</span>
     <button 
       @click="shareFacebook" 
-      class="social-btn hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/30"
+      class="flex h-8 w-8 items-center justify-center rounded-full text-text-tertiary transition-colors hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/30"
       title="Chia sẻ lên Facebook"
     >
       <Facebook :size="16" />
     </button>
     <button 
       @click="shareTwitter" 
-      class="social-btn hover:bg-sky-50 hover:text-sky-500 dark:hover:bg-sky-900/30"
+      class="flex h-8 w-8 items-center justify-center rounded-full text-text-tertiary transition-colors hover:bg-sky-50 hover:text-sky-500 dark:hover:bg-sky-900/30"
       title="Chia sẻ lên Twitter"
     >
       <Twitter :size="16" />
     </button>
     <button 
       @click="shareLinkedin" 
-      class="social-btn hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-900/30"
+      class="flex h-8 w-8 items-center justify-center rounded-full text-text-tertiary transition-colors hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-900/30"
       title="Chia sẻ lên LinkedIn"
     >
       <Linkedin :size="16" />
@@ -61,7 +61,7 @@ function shareLinkedin() {
     
     <button 
       @click="copyLink" 
-      class="social-btn"
+      class="flex h-8 w-8 items-center justify-center rounded-full text-text-tertiary transition-colors"
       :class="copied ? 'text-green-500 bg-green-50 dark:bg-green-900/20' : 'hover:bg-bg-hover'"
       :title="copied ? 'Đã sao chép!' : 'Sao chép liên kết'"
     >
@@ -70,9 +70,3 @@ function shareLinkedin() {
     </button>
   </div>
 </template>
-
-<style scoped>
-.social-btn {
-  @apply flex h-8 w-8 items-center justify-center rounded-full text-text-tertiary transition-colors;
-}
-</style>
