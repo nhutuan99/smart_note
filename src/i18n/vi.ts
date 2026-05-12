@@ -206,7 +206,20 @@ export default {
     successCheckin: 'Check-in thành công! 🎯',
     successUpdate: 'Cập nhật thành công! ✅',
     errorCheckin: 'Không thể lưu check-in. Vui lòng thử lại.',
-    errorUpdate: 'Không thể cập nhật check-in. Vui lòng thử lại.'
+    errorUpdate: 'Không thể cập nhật check-in. Vui lòng thử lại.',
+
+    // Daily reminder
+    reminderTitle: 'Nhắc nhở hàng ngày',
+    reminderDesc: 'Nhận thông báo nhắc bạn check-in lãi/lỗ mỗi ngày đúng giờ',
+    reminderSetBtn: 'Đặt giờ nhắc',
+    reminderActive: 'Đang nhắc lúc {time} ⏰',
+    reminderOff: 'Chưa đặt giờ nhắc',
+    reminderPresets: 'Chọn nhanh',
+    reminderCustom: 'Tuỳ chỉnh',
+    reminderSaved: 'Đã đặt giờ nhắc lúc {time} 🔔',
+    reminderDisabled: 'Đã tắt nhắc nhở',
+    reminderSaveError: 'Không thể lưu, thử lại nhé.',
+    reminderTurnOff: 'Tắt nhắc nhở'
   },
 
   // ── Planning Hub ──

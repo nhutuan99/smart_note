@@ -196,7 +196,20 @@ export default {
     successCheckin: 'Check-in saved! 🎯',
     successUpdate: 'Check-in updated! ✅',
     errorCheckin: 'Failed to save check-in. Please try again.',
-    errorUpdate: 'Failed to update check-in. Please try again.'
+    errorUpdate: 'Failed to update check-in. Please try again.',
+
+    // Daily reminder
+    reminderTitle: 'Daily Reminder',
+    reminderDesc: 'Get a push notification to remind you to check in your P&L every day',
+    reminderSetBtn: 'Set Reminder',
+    reminderActive: 'Reminding at {time} ⏰',
+    reminderOff: 'No reminder set',
+    reminderPresets: 'Quick select',
+    reminderCustom: 'Custom',
+    reminderSaved: 'Reminder set for {time} 🔔',
+    reminderDisabled: 'Reminder disabled',
+    reminderSaveError: 'Failed to save. Please try again.',
+    reminderTurnOff: 'Turn off reminder'
   },
 
   // ── Planning Hub ──

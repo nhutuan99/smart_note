@@ -139,6 +139,7 @@ import {
 import { runAutoBlog } from './services/auto-blog.service'
 import { checkAllStockAlerts } from './services/stock-alert.service'
 import { checkAllReminders } from './services/reminder.service'
+import { checkTradingReminders } from './services/trading-reminder.service'
 
 
 async function handleRequest(request: Request, env: Env): Promise<Response> {
@@ -650,6 +651,13 @@ export default {
       checkAllReminders(env)
         .then(result => console.log(`[Cron] Reminders: ${result}`))
         .catch(err => console.error('[Cron] Reminders failed:', err))
+    )
+
+    // Trading daily check-in reminders
+    ctx.waitUntil(
+      checkTradingReminders(env)
+        .then(result => console.log(result))
+        .catch(err => console.error('[Cron] TradingReminder failed:', err))
     )
   }
 }

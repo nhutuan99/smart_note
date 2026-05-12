@@ -3,6 +3,7 @@
 import { ref, onMounted } from 'vue'
 // 2. Vue ecosystem
 import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
 // 3. Composables / Stores
 import { useTradingCheckin } from '@/composables/useTradingCheckin'
 // 4. Components & icons
@@ -11,13 +12,23 @@ import TradingHistoryView from '@/modules/finance/components/TradingHistoryView.
 import { BookOpen, Plus, Edit2 } from 'lucide-vue-next'
 
 const { t } = useI18n()
+const route = useRoute()
+const router = useRouter()
 const { trading } = useTradingCheckin()
 const showCheckinModal = ref(false)
 
-onMounted(() => {
-  trading.fetchAll()
+onMounted(async () => {
+  await trading.fetchAll()
+
+  // Deep-link from push notification: /trading?checkin=1
+  if (route.query.checkin === '1') {
+    showCheckinModal.value = true
+    // Clean up the URL without re-triggering navigation
+    router.replace({ query: { ...route.query, checkin: undefined } })
+  }
 })
 </script>
+
 
 <template>
   <div class="w-full max-w-[90rem] mx-auto">

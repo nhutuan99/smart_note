@@ -26,10 +26,12 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   BookOpen,
-  AlertCircle
+  AlertCircle,
+  Bell
 } from 'lucide-vue-next'
 import WeatherWidget from '@/components/WeatherWidget.vue'
 import TradingCheckinModal from './TradingCheckinModal.vue'
+import TradingReminderModal from './TradingReminderModal.vue'
 
 const { t, tm } = useI18n()
 const router = useRouter()
@@ -40,6 +42,8 @@ const trading = useTradingStore()
 
 // Trading check-in modal (manual trigger from widget)
 const showCheckinModal = ref(false)
+// Trading reminder time modal
+const showReminderModal = ref(false)
 
 
 // ── Month navigation ──
@@ -275,6 +279,29 @@ const primaryBalance = computed(() =>
           <BookOpen :size="16" class="text-accent" />
         </div>
         <span class="text-text-tertiary text-xs font-medium flex-1">{{ t('trading.widgetTitle') }}</span>
+
+        <!-- Reminder time badge (when active) -->
+        <button
+          v-if="trading.reminderTime"
+          @click="showReminderModal = true"
+          class="flex items-center gap-1 text-[10px] font-semibold text-accent bg-accent/10 px-2 py-1 rounded-full hover:bg-accent/20 transition-colors"
+          title="Giờ nhắc nhở"
+        >
+          <Bell :size="10" />
+          {{ trading.reminderTime }}
+        </button>
+
+        <!-- Set reminder button (when not active) -->
+        <button
+          v-else
+          @click="showReminderModal = true"
+          class="flex items-center gap-1 text-[10px] font-medium text-text-disabled hover:text-accent transition-colors px-1.5 py-1 rounded-lg hover:bg-accent/5"
+          title="Đặt giờ nhắc hàng ngày"
+        >
+          <Bell :size="11" />
+          {{ t('trading.reminderSetBtn') }}
+        </button>
+
         <button
           @click="showCheckinModal = true"
           class="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
@@ -343,4 +370,6 @@ const primaryBalance = computed(() =>
 
   <!-- Trading Check-in Modal (manual trigger) -->
   <TradingCheckinModal v-model="showCheckinModal" />
+  <!-- Trading Reminder Modal -->
+  <TradingReminderModal v-model="showReminderModal" />
 </template>

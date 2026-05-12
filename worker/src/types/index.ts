@@ -202,6 +202,17 @@ export interface TodoData {
 export interface TradingConfigData {
   /** Wallet IDs selected by the user for trading journal tracking */
   selectedWalletIds: string[]
+  /**
+   * Daily reminder time in "HH:MM" format (Vietnam timezone UTC+7).
+   * When set, the cron job will push a reminder at this time if no check-in exists.
+   * Absent or null means reminders are disabled.
+   */
+  reminderTime?: string | null
+  /**
+   * The last date (YYYY-MM-DD VN) a reminder was pushed for this user.
+   * Guards against sending multiple push notifications in the same day.
+   */
+  reminderNotifiedDate?: string | null
   createdAt: string
   updatedAt: string
 }

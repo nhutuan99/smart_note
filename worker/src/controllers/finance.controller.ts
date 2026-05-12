@@ -185,6 +185,25 @@ export async function handleUpdateBudget(userId: string, request: Request, env: 
 
 const TRADING_CONFIG_KEY = (userId: string) => `users/${userId}/trading/config`
 const TRADING_CHECKINS_KEY = (userId: string) => `users/${userId}/trading/checkins`
+const TRADING_REMINDER_USERS_KEY = 'public/trading-reminder-users'
+
+/** Register a user into the trading-reminder cron registry */
+async function registerTradingReminderUser(userId: string, env: Env): Promise<void> {
+  const users = (await getJSON<string[]>(env.SMART_NOTE_KV, TRADING_REMINDER_USERS_KEY)) || []
+  if (!users.includes(userId)) {
+    users.push(userId)
+    await putJSON(env.SMART_NOTE_KV, TRADING_REMINDER_USERS_KEY, users)
+  }
+}
+
+/** Remove a user from the trading-reminder cron registry */
+async function unregisterTradingReminderUser(userId: string, env: Env): Promise<void> {
+  const users = (await getJSON<string[]>(env.SMART_NOTE_KV, TRADING_REMINDER_USERS_KEY)) || []
+  const filtered = users.filter((u) => u !== userId)
+  if (filtered.length !== users.length) {
+    await putJSON(env.SMART_NOTE_KV, TRADING_REMINDER_USERS_KEY, filtered)
+  }
+}
 
 export async function handleGetTradingConfig(userId: string, env: Env): Promise<Response> {
   const config = await getJSON<TradingConfigData>(env.SMART_NOTE_KV, TRADING_CONFIG_KEY(userId))
@@ -200,16 +219,41 @@ export async function handleUpdateTradingConfig(userId: string, request: Request
 
   const ids = (body.selectedWalletIds as unknown[]).filter((id): id is string => typeof id === 'string')
 
+  // Validate optional reminderTime field (must be "HH:MM" format or null/undefined)
+  let reminderTime: string | null | undefined = undefined
+  if ('reminderTime' in body) {
+    if (body.reminderTime === null || body.reminderTime === '') {
+      reminderTime = null
+    } else if (typeof body.reminderTime === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(body.reminderTime)) {
+      reminderTime = body.reminderTime
+    } else {
+      return errorResponse('reminderTime must be in HH:MM format or null')
+    }
+  }
+
   const now = new Date().toISOString()
   const existing = await getJSON<TradingConfigData>(env.SMART_NOTE_KV, TRADING_CONFIG_KEY(userId))
 
   const config: TradingConfigData = {
     selectedWalletIds: ids,
+    reminderTime: reminderTime !== undefined ? reminderTime : existing?.reminderTime,
+    // Reset notified date when reminder time changes, preserve otherwise
+    reminderNotifiedDate: reminderTime !== undefined && reminderTime !== existing?.reminderTime
+      ? null
+      : existing?.reminderNotifiedDate,
     createdAt: existing?.createdAt || now,
     updatedAt: now
   }
 
   await putJSON(env.SMART_NOTE_KV, TRADING_CONFIG_KEY(userId), config)
+
+  // Manage registry: add when reminderTime set, remove when cleared
+  if (config.reminderTime) {
+    await registerTradingReminderUser(userId, env)
+  } else if (reminderTime === null) {
+    await unregisterTradingReminderUser(userId, env)
+  }
+
   return jsonResponse({ success: true, data: config })
 }
 

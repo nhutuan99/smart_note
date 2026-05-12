@@ -48,6 +48,9 @@ export const useTradingStore = defineStore('trading', () => {
 
   const hasWalletsConfigured = computed(() => config.value.selectedWalletIds.length > 0)
 
+  /** Current reminder time ("HH:MM") or null if disabled */
+  const reminderTime = computed(() => config.value.reminderTime ?? null)
+
   /** Checkins sorted newest-first for history display */
   const sortedCheckins = computed(() =>
     [...checkins.value].sort((a, b) => b.date.localeCompare(a.date))
@@ -91,6 +94,24 @@ export const useTradingStore = defineStore('trading', () => {
       if (data) config.value = data
     } catch (err) {
       console.error('[Trading] saveConfig failed:', err)
+    }
+  }
+
+  /** Set or clear the daily push reminder time ("HH:MM" or null to disable) */
+  async function saveReminderTime(time: string | null): Promise<boolean> {
+    try {
+      const data = await httpClient.put<TradingConfig>('/api/trading/config', {
+        selectedWalletIds: config.value.selectedWalletIds,
+        reminderTime: time
+      })
+      if (data) {
+        config.value = data
+        return true
+      }
+      return false
+    } catch (err) {
+      console.error('[Trading] saveReminderTime failed:', err)
+      return false
     }
   }
 
@@ -164,6 +185,7 @@ export const useTradingStore = defineStore('trading', () => {
     todayCheckin,
     hasDoneCheckinToday,
     hasWalletsConfigured,
+    reminderTime,
     sortedCheckins,
     totalPnlAllTime,
     totalDepositAllTime,
@@ -171,6 +193,7 @@ export const useTradingStore = defineStore('trading', () => {
     // Actions
     fetchConfig,
     saveConfig,
+    saveReminderTime,
     fetchCheckins,
     fetchAll,
     submitCheckin,

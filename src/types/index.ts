@@ -216,6 +216,8 @@ export interface TodoSuggestion {
 /** User config: which wallets to include in the daily trading check-in */
 export interface TradingConfig {
   selectedWalletIds: string[]
+  /** Daily reminder time "HH:MM" in VN timezone (UTC+7). Null/absent = disabled. */
+  reminderTime?: string | null
   createdAt: string
   updatedAt: string
 }
