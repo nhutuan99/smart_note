@@ -1,0 +1,77 @@
+<script setup lang="ts">
+import { NodeViewWrapper, nodeViewProps } from '@tiptap/vue-3'
+import { X } from 'lucide-vue-next'
+
+const props = defineProps(nodeViewProps)
+</script>
+
+<template>
+  <node-view-wrapper as="span" class="custom-image-wrapper" :class="{ 'is-selected': selected }">
+    <img :src="node.attrs.src" :alt="node.attrs.alt" :title="node.attrs.title" />
+    
+    <!-- Remove button -->
+    <button 
+      v-if="editor.isEditable"
+      class="image-remove-btn" 
+      @click.stop="deleteNode"
+      title="Remove Image"
+    >
+      <X :size="14" />
+    </button>
+  </node-view-wrapper>
+</template>
+
+<style scoped>
+.custom-image-wrapper {
+  position: relative;
+  display: inline-block;
+  line-height: 0;
+  margin: 0.5rem 0;
+}
+.custom-image-wrapper img {
+  max-width: 100%;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: opacity 0.2s, outline 0.2s;
+}
+.custom-image-wrapper.is-selected img {
+  outline: 2px solid var(--accent);
+}
+
+.image-remove-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.65);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s, background 0.2s, transform 0.1s;
+  backdrop-filter: blur(4px);
+  z-index: 10;
+}
+.custom-image-wrapper:hover .image-remove-btn {
+  opacity: 1;
+}
+.image-remove-btn:hover {
+  background: var(--error);
+  transform: scale(1.1);
+}
+.image-remove-btn:active {
+  transform: scale(0.95);
+}
+
+/* Ensure mobile users can always see the remove button or tap to see it */
+@media (hover: none) {
+  .image-remove-btn {
+    opacity: 0.8;
+  }
+}
+</style>

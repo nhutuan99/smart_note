@@ -3,6 +3,8 @@ import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import Image from '@tiptap/extension-image'
+import { VueNodeViewRenderer } from '@tiptap/vue-3'
+import CustomImageNode from './CustomImageNode.vue'
 import Placeholder from '@tiptap/extension-placeholder'
 import CharacterCount from '@tiptap/extension-character-count'
 import TaskList from '@tiptap/extension-task-list'
@@ -15,7 +17,7 @@ import { watch, onBeforeUnmount, ref } from 'vue'
 import {
   Bold, Italic, Strikethrough, Code, Link2, Image as ImageIcon,
   List, ListOrdered, ListChecks, Quote, Minus, Undo, Redo,
-  Heading1, Heading2, Heading3, Highlighter, Code2, ImagePlus
+  Heading1, Heading2, Heading3, Highlighter, Code2, ImagePlus, X
 } from 'lucide-vue-next'
 
 const props = defineProps<{
@@ -39,6 +41,12 @@ const showImageDialog = ref(false)
 const imageUrl = ref('')
 const imageInput = ref<HTMLInputElement | null>(null)
 
+const CustomImage = Image.extend({
+  addNodeView() {
+    return VueNodeViewRenderer(CustomImageNode)
+  }
+})
+
 const editor = useEditor({
   content: props.modelValue,
   editable: !props.readonly,
@@ -51,7 +59,7 @@ const editor = useEditor({
       openOnClick: false,
       HTMLAttributes: { rel: 'noopener noreferrer', target: '_blank' }
     }),
-    Image.configure({ allowBase64: true }),
+    CustomImage.configure({ allowBase64: true }),
     Placeholder.configure({ placeholder: 'Start writing... (supports rich text, links, images)' }),
     CharacterCount,
     TaskList,
@@ -67,22 +75,30 @@ const editor = useEditor({
       const items = event.clipboardData?.items
       if (!items) return false
       
-      let hasImage = false
+      const imageFiles: File[] = []
       for (const item of Array.from(items)) {
         if (item.type.startsWith('image/')) {
           const file = item.getAsFile()
-          if (file) {
-            hasImage = true
-            const reader = new FileReader()
-            reader.onload = (e) => {
-              const src = e.target?.result as string
-              editor.value?.chain().focus().setImage({ src }).run()
-            }
-            reader.readAsDataURL(file)
-          }
+          if (file) imageFiles.push(file)
         }
       }
-      return hasImage
+
+      if (imageFiles.length > 0) {
+        Promise.all(imageFiles.map(file => {
+          return new Promise<string>((resolve) => {
+            const reader = new FileReader()
+            reader.onload = (e) => resolve(e.target?.result as string)
+            reader.readAsDataURL(file)
+          })
+        })).then(sources => {
+          if (editor.value) {
+            const htmlString = sources.map(src => `<img src="${src}" />`).join('')
+            editor.value.commands.insertContent(htmlString)
+          }
+        })
+        return true
+      }
+      return false
     }
   }
 })
@@ -139,24 +155,38 @@ function triggerImageUpload() {
   fileInputRef.value?.click()
 }
 
-function handleFileUpload(event: Event) {
+async function handleFileUpload(event: Event) {
   const target = event.target as HTMLInputElement
   const files = target.files
   if (!files || files.length === 0) return
 
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i]
-    if (file.type.startsWith('image/')) {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        const src = e.target?.result as string
-        editor.value?.chain().focus().setImage({ src }).run()
-      }
-      reader.readAsDataURL(file)
+  const imageFiles = Array.from(files).filter(f => f.type.startsWith('image/'))
+  if (imageFiles.length > 0) {
+    const sources = await Promise.all(imageFiles.map(file => {
+      return new Promise<string>((resolve) => {
+        const reader = new FileReader()
+        reader.onload = (e) => resolve(e.target?.result as string)
+        reader.readAsDataURL(file)
+      })
+    }))
+    
+    if (editor.value) {
+      const htmlString = sources.map(src => `<img src="${src}" />`).join('')
+      editor.value.commands.insertContent(htmlString)
     }
   }
+
   // Reset input so the same file can be selected again
   if (fileInputRef.value) fileInputRef.value.value = ''
+}
+
+// Image Zoom
+const zoomedImage = ref<string | null>(null)
+function handleEditorClick(event: MouseEvent) {
+  const target = event.target as HTMLElement
+  if (target.tagName === 'IMG') {
+    zoomedImage.value = (target as HTMLImageElement).src
+  }
 }
 </script>
 
@@ -295,7 +325,9 @@ function handleFileUpload(event: Event) {
     </div>
 
     <!-- Editor Area -->
-    <EditorContent :editor="editor" class="editor-content" :class="{ 'is-readonly': readonly }" />
+    <div class="editor-content" @click="handleEditorClick">
+      <EditorContent :editor="editor" :class="{ 'is-readonly': readonly }" />
+    </div>
 
     <!-- Link Dialog -->
     <Teleport to="body">
@@ -355,6 +387,18 @@ function handleFileUpload(event: Event) {
       @change="handleFileUpload"
       multiple
     />
+
+    <!-- Zoom Overlay -->
+    <Teleport to="body">
+      <Transition name="fade-zoom">
+        <div v-if="zoomedImage" class="image-zoom-overlay" @click="zoomedImage = null">
+          <img :src="zoomedImage" class="zoomed-img" @click.stop />
+          <button class="zoom-close-btn" @click="zoomedImage = null">
+            <X :size="24" />
+          </button>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -364,6 +408,56 @@ function handleFileUpload(event: Event) {
   display: flex;
   flex-direction: column;
   flex: 1;
+}
+
+/* ── Image Zoom ── */
+.image-zoom-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  cursor: zoom-out;
+}
+.zoomed-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  cursor: default;
+}
+.zoom-close-btn {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.zoom-close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+.fade-zoom-enter-active,
+.fade-zoom-leave-active {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.fade-zoom-enter-from,
+.fade-zoom-leave-to {
+  opacity: 0;
+  transform: scale(0.98);
 }
 
 /* ── Toolbar ── */
