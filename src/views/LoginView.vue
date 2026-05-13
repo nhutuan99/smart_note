@@ -685,40 +685,52 @@ watch(
         class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
         @click.self="closeGuestWelcome"
       >
-        <div 
-          class="bg-bg-elevated border-border-default relative w-full max-w-md animate-in zoom-in-95 rounded-[1.25rem] border p-6 shadow-2xl duration-200 md:p-8"
+        <div
+          class="bg-bg-elevated border-border-default relative w-full max-w-sm animate-in zoom-in-95 rounded-2xl border shadow-2xl duration-200"
+          style="padding: 2rem 1.75rem 1.75rem;"
         >
+          <!-- Close -->
           <button
             @click="closeGuestWelcome"
-            class="text-text-tertiary hover:text-text-primary absolute right-4 top-4 transition-colors"
+            class="text-text-tertiary hover:text-text-primary absolute right-4 top-4 rounded-lg p-1 transition-colors"
+            aria-label="Close"
           >
-            <X :size="20" />
+            <X :size="18" />
           </button>
 
-          <div class="mb-6 flex flex-col items-center text-center">
-            <div class="bg-accent/10 text-accent mb-5 flex h-16 w-16 items-center justify-center rounded-full">
-              <Sparkles :size="32" />
+          <!-- Logo centered -->
+          <div class="flex flex-col items-center text-center mb-6">
+            <div class="mb-4 flex items-center justify-center">
+              <img
+                src="/images/logo-512.png"
+                alt="FinNote"
+                class="h-16 w-16 rounded-2xl object-cover"
+                style="box-shadow: 0 0 28px rgba(124, 111, 247, 0.45);"
+              />
             </div>
-            <h2 class="mb-2 text-2xl font-bold tracking-tight">{{ t('login.welcomeTitle') }}</h2>
-            <p class="text-text-secondary text-sm leading-relaxed">
+            <h2 class="text-xl font-bold tracking-tight text-text-primary mb-1">
+              {{ t('login.welcomeTitle') }}
+            </h2>
+            <p class="text-text-secondary text-sm leading-relaxed max-w-[22rem]">
               {{ t('login.welcomeDesc') }}
             </p>
           </div>
 
+          <!-- Actions -->
           <div class="flex flex-col gap-3">
             <button
               @click="auth.startGuestMode(router)"
-              class="btn-primary w-full justify-center py-3.5"
+              class="btn-primary w-full justify-center py-3"
             >
-              <User :size="18" />
-              <span class="font-semibold">{{ t('login.guestMode') }}</span>
+              <User :size="16" />
+              <span class="font-semibold text-sm">{{ t('login.guestMode') }}</span>
             </button>
             <button
               @click="closeGuestWelcome"
-              class="border-border-default bg-bg-surface hover:bg-bg-hover text-text-primary flex w-full items-center justify-center gap-2 rounded-xl border py-3.5 transition-all duration-150"
+              class="border-border-default bg-bg-surface hover:bg-bg-hover text-text-primary flex w-full items-center justify-center gap-2 rounded-xl border py-3 text-sm font-medium transition-all duration-150"
             >
-              <LogIn :size="18" />
-              <span class="font-medium">{{ t('login.actionLogin') }}</span>
+              <LogIn :size="16" />
+              <span>{{ t('login.actionLogin') }}</span>
             </button>
           </div>
         </div>

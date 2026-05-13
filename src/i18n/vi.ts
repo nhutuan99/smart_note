@@ -657,7 +657,10 @@
     orContinueWith: 'hoáº·c tiáº¿p tá»¥c vá»›i',
     continueWithGoogle: 'Tiáº¿p tá»¥c vá»›i Google',
     guestMode: 'DÃ¹ng thá»­ miá»…n phÃ­ (LÆ°u táº¡i mÃ¡y - 7 ngÃ y)',
-    guestExpired: 'Thá»i gian dÃ¹ng thá»­ 7 ngÃ y Ä‘Ã£ háº¿t. Vui lÃ²ng Ä‘Äƒng nháº­p Ä‘á»ƒ Ä‘á»“ng bá»™ vÃ  tiáº¿p tá»¥c.'
+    guestExpired: 'Thá»i gian dÃ¹ng thá»­ 7 ngÃ y Ä‘Ã£ háº¿t. Vui lÃ²ng Ä‘Äƒng nháº­p Ä‘á»ƒ Ä‘á»“ng bá»™ vÃ  tiáº¿p tá»¥c.',
+    welcomeTitle: 'Chào mừng đến FinNote! 👋',
+    welcomeDesc: 'Quản lý tài chính thông minh, ghi chú cá nhân và theo dõi đầu tư — tất cả trong một ứng dụng.',
+    actionLogin: 'Đăng nhập / Đăng ký'
   },
 
   // â”€â”€ Forgot Password / PIN â”€â”€
