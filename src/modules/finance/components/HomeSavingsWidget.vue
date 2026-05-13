@@ -28,10 +28,10 @@ const suggestedGoal = computed(() => {
 async function quickSave() {
   if (!suggestedGoal.value) return
   const g = suggestedGoal.value
-  const amount = g.autoSaveAmount || 50000
+  const amount = g.autoSaveAmount || 0
   const walletId = g.autoSaveWalletId || financeStore.wallets[0]?.id
   
-  if (!walletId) return // Need a wallet
+  if (!walletId || amount <= 0) return // Need a wallet and positive amount
 
   loading.value = true
   try {
@@ -74,13 +74,13 @@ async function quickSave() {
 
       <div class="flex items-center gap-2 sm:gap-3">
         <button 
-          v-if="suggestedGoal.autoSaveEnabled"
-          @click="quickSave" 
+          v-if="suggestedGoal.autoSaveEnabled && suggestedGoal.autoSaveAmount"
+          @click="quickSave"
           :disabled="loading"
           class="btn-primary py-2 px-4 whitespace-nowrap shadow-md shadow-accent/20 flex items-center gap-2"
         >
           <Zap :size="16" />
-          {{ t('savings.autoSaveExtractBtn', { amount: formatVND(suggestedGoal.autoSaveAmount || 50000) }) }}
+          {{ t('savings.autoSaveExtractBtn', { amount: formatVND(suggestedGoal.autoSaveAmount) }) }}
         </button>
         <button 
           v-else

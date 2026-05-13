@@ -72,7 +72,7 @@ async function deleteGoal(id: string) {
 function openAutoSave(id: string) {
   const g = goals.value.find(x => x.id === id)
   if (g) {
-    autoSaveAmount.value = g.autoSaveAmount || dailySaveNeeded(g) || 0
+    autoSaveAmount.value = g.autoSaveAmount || 0
     autoSaveWalletId.value = g.autoSaveWalletId || (financeStore.wallets[0]?.id) || ''
     showAutoSave.value = id
   }

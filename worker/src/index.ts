@@ -609,7 +609,8 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
         return handleAiImage(request, env)
       }
 
-      return errorResponse('Not found', 404)
+      // 404 Fallback
+      return errorResponse(`Not found: ${request.method} ${path}`, 404)
     } catch (err: any) {
     console.error('[Worker Error]', err)
     return errorResponse(err.message || 'Internal server error', 500)
