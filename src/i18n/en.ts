@@ -1,5 +1,5 @@
-export default {
-  // ── Common ──
+﻿export default {
+  // â”€â”€ Common â”€â”€
   common: {
     cancel: 'Cancel',
     confirm: 'Confirm',
@@ -42,7 +42,7 @@ export default {
     fillRequiredFields: 'Please fill in all required fields'
   },
 
-  // ── Stock Alerts ──
+  // â”€â”€ Stock Alerts â”€â”€
   stockAlert: {
     addAlert: 'Set Price Alert',
     direction: 'Alert Type',
@@ -63,7 +63,7 @@ export default {
     takeProfit: 'Take Profit Target'
   },
 
-  // ── Time ──
+  // â”€â”€ Time â”€â”€
   time: {
     justNow: 'Just now',
     minutesAgo: '{n} minutes ago',
@@ -74,19 +74,19 @@ export default {
     dAgo: '{n}d ago'
   },
 
-  // ── Days ──
+  // â”€â”€ Days â”€â”€
   days: {
     short: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
     long: ['Sun', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
   },
 
-  // ── Months ──
+  // â”€â”€ Months â”€â”€
   months: [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
   ],
 
-  // ── Navigation ──
+  // â”€â”€ Navigation â”€â”€
   nav: {
     dashboard: 'Dashboard',
     transactions: 'Transactions',
@@ -113,11 +113,11 @@ export default {
     trading: 'Trading Journal'
   },
 
-  // ── Trading Journal ──
+  // â”€â”€ Trading Journal â”€â”€
   trading: {
     // Page
     title: 'Trading Journal',
-    subtitle: 'Track daily P&L · Performance analytics',
+    subtitle: 'Track daily P&L Â· Performance analytics',
     checkinToday: 'Check-in today',
     editCheckinToday: 'Edit today\'s check-in',
 
@@ -155,18 +155,18 @@ export default {
     viewEdit: 'View / Edit',
     checkinCta: '+ Check-in',
 
-    // Modal — general
+    // Modal â€” general
     modalTitle: 'Trading Check-in',
     stepSetup: 'Select wallets',
     stepInput: 'Enter today\'s result',
     stepSummary: 'Confirm check-in',
 
-    // Modal — step 1 setup
+    // Modal â€” step 1 setup
     setupDesc: 'Choose wallets to track P&L daily. You can change this later.',
     noWallets: 'No wallets found. Please create a wallet first.',
     walletRequired: 'Select at least 1 wallet to track.',
 
-    // Modal — step 2 input
+    // Modal â€” step 2 input
     noWalletsSelected: 'No wallets selected.',
     balanceBefore: 'Balance: {amount}',
     pnlLabel: 'Profit / Loss',
@@ -178,25 +178,25 @@ export default {
     notePlaceholder: 'Brief notes about today\'s trading session...',
     inputRequired: 'Enter P&L or deposit for at least 1 wallet.',
 
-    // Modal — step 3 summary
+    // Modal â€” step 3 summary
     summaryTotal: 'Total P&L today',
     summaryDeposit: '+ {amount} deposited',
     summaryNote: 'Note',
-    balanceChange: '{before} → {after}',
+    balanceChange: '{before} â†’ {after}',
 
-    // Modal — footer buttons
+    // Modal â€” footer buttons
     cancel: 'Cancel',
     next: 'Next',
-    backToWallets: '← Wallets',
+    backToWallets: 'â† Wallets',
     viewSummary: 'View Summary',
-    backToEdit: '← Edit',
+    backToEdit: 'â† Edit',
     confirm: 'Confirm check-in',
     update: 'Update check-in',
     saving: 'Saving...',
 
     // Toast
-    successCheckin: 'Check-in saved! 🎯',
-    successUpdate: 'Check-in updated! ✅',
+    successCheckin: 'Check-in saved! ðŸŽ¯',
+    successUpdate: 'Check-in updated! âœ…',
     errorCheckin: 'Failed to save check-in. Please try again.',
     errorUpdate: 'Failed to update check-in. Please try again.',
 
@@ -204,22 +204,22 @@ export default {
     reminderTitle: 'Daily Reminder',
     reminderDesc: 'Get a push notification to remind you to check in your P&L every day',
     reminderSetBtn: 'Set Reminder',
-    reminderActive: 'Reminding at {time} ⏰',
+    reminderActive: 'Reminding at {time} â°',
     reminderOff: 'No reminder set',
     reminderPresets: 'Quick select',
     reminderCustom: 'Custom',
-    reminderSaved: 'Reminder set for {time} 🔔',
+    reminderSaved: 'Reminder set for {time} ðŸ””',
     reminderDisabled: 'Reminder disabled',
     reminderSaveError: 'Failed to save. Please try again.',
     reminderTurnOff: 'Turn off reminder'
   },
 
-  // ── Planning Hub ──
+  // â”€â”€ Planning Hub â”€â”€
   planning: {
     description: 'Advanced financial control center. Plan, track goals, and master your cash flow.'
   },
 
-  // ── Debt/Loan ──
+  // â”€â”€ Debt/Loan â”€â”€
   debt: {
     title: 'Debt / Loan Manager',
     description: 'Track debts, loans, and payment schedules',
@@ -249,7 +249,7 @@ export default {
     count: '{n} items'
   },
 
-  // ── Onboarding ──
+  // â”€â”€ Onboarding â”€â”€
   onboarding: {
     welcome: 'Welcome to FinNote!',
     welcomeDesc: 'Smart personal finance management',
@@ -269,7 +269,7 @@ export default {
     monthlyBudget: 'Monthly spending target'
   },
 
-  // ── Notifications ──
+  // â”€â”€ Notifications â”€â”€
   notifications: {
     title: 'Notifications',
     new: '{n} new',
@@ -284,7 +284,7 @@ export default {
     smsIn: '[SMS] Money transferred in'
   },
 
-  // ── Dashboard ──
+  // â”€â”€ Dashboard â”€â”€
   dashboard: {
     totalBalance: 'Total Balance',
     monthIncome: 'Monthly Income',
@@ -323,16 +323,16 @@ export default {
     budgetDismissed: 'Budget setup was skipped',
     reEnableBudget: 'Set up now',
     setBudgetTitle: 'Set a spending goal',
-    setBudgetHint: 'Enter your monthly spending target → AI will plan automatically',
+    setBudgetHint: 'Enter your monthly spending target â†’ AI will plan automatically',
     setBudgetLabel: 'Monthly spending goal (VND)',
-    setBudgetSubhint: '⚡ After saving, AI will automatically analyze and suggest a plan',
+    setBudgetSubhint: 'âš¡ After saving, AI will automatically analyze and suggest a plan',
     analyzeAndSave: 'Save & Analyze',
     analyzeWithAi: 'Analyze & create spending plan',
     refresh: 'Refresh',
     greetingMorning: 'Good morning',
     greetingAfternoon: 'Good afternoon',
     greetingEvening: 'Good evening',
-    welcomeBack: 'Welcome back, {name}! 👋',
+    welcomeBack: 'Welcome back, {name}! ðŸ‘‹',
     welcomeDesc: 'Have a great day managing your finances and saving money.',
     toggleBalance: 'Show/hide balance',
     aiAdvisorTitle: 'AI Finance Advisor',
@@ -345,13 +345,13 @@ export default {
     saveToNotes: 'Save to Notes',
     savedToNotes: 'Saved to Notes',
     askMore: 'Ask more',
-    aiEmptyHint: 'Enter your spending plan → AI will advise based on actual balance',
-    aiPlanTitle: '📊 Financial Plan - {date}',
+    aiEmptyHint: 'Enter your spending plan â†’ AI will advise based on actual balance',
+    aiPlanTitle: 'ðŸ“Š Financial Plan - {date}',
     aiPlanFooter: '*Auto-generated by AI Finance Advisor*',
     aiPlanDate: '*Date: {date}*',
-    aiTooltip: 'Meow! Can {name} help you? 👋',
+    aiTooltip: 'Meow! Can {name} help you? ðŸ‘‹',
     aiReadyToHelp: 'Ready to assist',
-    aiGreeting: 'Hi there! 👋 I am {name}. I can help you analyze expenses, give advice, or answer questions about your finances this month. What would you like to ask?',
+    aiGreeting: 'Hi there! ðŸ‘‹ I am {name}. I can help you analyze expenses, give advice, or answer questions about your finances this month. What would you like to ask?',
     totalAssets: 'Total Assets',
     walletBalance: 'Wallet Balance',
     stocksLabel: 'Stocks',
@@ -360,7 +360,7 @@ export default {
     incomePercent: '% of income'
   },
 
-  // ── Transactions ──
+  // â”€â”€ Transactions â”€â”€
   transactions: {
     title: 'Transactions',
     count: '{n} transactions',
@@ -394,7 +394,7 @@ export default {
     source: 'Source'
   },
 
-  // ── Add Transaction ──
+  // â”€â”€ Add Transaction â”€â”€
   addTx: {
     title: 'Add Transaction',
     expense: 'Expense',
@@ -410,7 +410,7 @@ export default {
     submitIncome: 'Record Income'
   },
 
-  // ── Wallets ──
+  // â”€â”€ Wallets â”€â”€
   wallets: {
     title: 'My Wallets',
     addWallet: 'Add Wallet',
@@ -429,7 +429,7 @@ export default {
     pinDeleteMessage: 'Enter your PIN to delete this wallet'
   },
 
-  // ── Notes ──
+  // â”€â”€ Notes â”€â”€
   notes: {
     title: 'Notes',
     count: '{n} notes',
@@ -490,7 +490,7 @@ export default {
     }
   },
 
-  // ── Shared Note ──
+  // â”€â”€ Shared Note â”€â”€
   sharedNote: {
     notFound: 'Note not found or you do not have access.',
     loginRequired: 'You need to log in to view this note.',
@@ -502,7 +502,7 @@ export default {
     shareLabel: 'Share'
   },
 
-  // ── Settings ──
+  // â”€â”€ Settings â”€â”€
   settings: {
     title: 'Settings',
     tabs: {
@@ -515,11 +515,11 @@ export default {
     appDownload: 'App Installation',
     pwaInstallTitle: 'Install FinNote (PWA)',
     pwaInstallDesc: 'Experience a full-screen, smoother app without downloading from App Store/Google Play.',
-    pwaIosTarget: '📱 On iOS (Safari):',
+    pwaIosTarget: 'ðŸ“± On iOS (Safari):',
     pwaIosStep: 'Tap the <strong>Share</strong> button at the bottom > Select <strong>Add to Home Screen</strong>.',
-    pwaAndroidTarget: '🤖 On Android (Chrome):',
+    pwaAndroidTarget: 'ðŸ¤– On Android (Chrome):',
     pwaAndroidStep: 'Tap the <strong>Menu (3 dots)</strong> button at the top right > Select <strong>Add to Home Screen</strong>.',
-    pwaDesktopTarget: '💻 On Desktop (Chrome/Edge):',
+    pwaDesktopTarget: 'ðŸ’» On Desktop (Chrome/Edge):',
     pwaDesktopStep: 'Click the <strong>Install</strong> icon on the right side of the address bar.',
     // Language
     language: 'Language',
@@ -595,13 +595,13 @@ export default {
     pushDesc: 'Receive bank transaction alerts on your lock screen',
     pushEnable: 'Enable Push',
     pushDisable: 'Disable Push',
-    pushEnabled: 'Active — You will receive transaction alerts on this device',
+    pushEnabled: 'Active â€” You will receive transaction alerts on this device',
     pushDisabled: 'Receive transaction notifications like a native app',
     pushNotSupported: 'Browser does not support push notifications',
     pushDenied: 'Notification permission denied. Please enable in device settings.',
-    pushInstallHint: '📱 To receive notifications on iOS, please install FinNote to Home Screen first',
+    pushInstallHint: 'ðŸ“± To receive notifications on iOS, please install FinNote to Home Screen first',
     pushPermissionDenied: 'Notification permission denied',
-    pushSubscribeSuccess: '🔔 Push notifications enabled!',
+    pushSubscribeSuccess: 'ðŸ”” Push notifications enabled!',
     pushSubscribeFailed: 'Failed to enable notifications',
     pushUnsubscribeSuccess: 'Push notifications disabled',
     pushUnsubscribeFailed: 'Failed to disable notifications',
@@ -615,7 +615,7 @@ export default {
     disconnectVault: 'Disconnect',
   },
 
-  // ── Login ──
+  // â”€â”€ Login â”€â”€
   login: {
     tagline: 'Your personal knowledge hub',
     welcomeBack: 'Welcome back',
@@ -636,10 +636,13 @@ export default {
     orContinueWith: 'or continue with',
     continueWithGoogle: 'Continue with Google',
     guestMode: 'Try it for free (Local Storage - 7 days)',
-    guestExpired: 'Your 7-day trial has expired. Please log in to sync and continue.'
+    guestExpired: 'Your 7-day trial has expired. Please log in to sync and continue.',
+    welcomeTitle: 'Welcome to FinNote',
+    welcomeDesc: 'Choose how you want to get started with the app',
+    actionLogin: 'Log In / Register'
   },
 
-  // ── Forgot Password / PIN ──
+  // â”€â”€ Forgot Password / PIN â”€â”€
   forgot: {
     // Forgot Password
     title: 'Forgot Password',
@@ -675,41 +678,41 @@ export default {
     pinResetSuccess: 'PIN reset successfully!'
   },
 
-  // ── AutoSync ──
+  // â”€â”€ AutoSync â”€â”€
   autoSync: {
     title: 'Auto Sync (iOS)',
-    desc: 'Automatically record bank transactions from SMS into FinNote via iOS Shortcuts — secure, free, no bank login needed.',
+    desc: 'Automatically record bank transactions from SMS into FinNote via iOS Shortcuts â€” secure, free, no bank login needed.',
     whyTitle: 'Why use SMS Shortcuts?',
     security: '<strong>100% Secure:</strong> No bank login credentials required.',
     native: '<strong>Apple Native:</strong> Uses the built-in Shortcuts app on iPhone.',
     free: '<strong>Free:</strong> No third-party intermediaries needed.',
-    instant: '<strong>Instant:</strong> SMS balance notifications → auto-recorded in FinNote (~30 seconds).',
+    instant: '<strong>Instant:</strong> SMS balance notifications â†’ auto-recorded in FinNote (~30 seconds).',
     step1Title: '1. Your Webhook URL',
     step1Desc: 'This URL contains your unique identifier. Do not share it with anyone.',
     step2Title: '2. Setup Guide for iPhone',
     s1Title: 'Create a New Automation',
-    s1Desc: 'Open the <strong>Shortcuts</strong> app on your iPhone → <strong>Automation</strong> tab at the bottom → tap <strong>+</strong> in the top right corner.',
+    s1Desc: 'Open the <strong>Shortcuts</strong> app on your iPhone â†’ <strong>Automation</strong> tab at the bottom â†’ tap <strong>+</strong> in the top right corner.',
     s2Title: 'Set the Trigger',
     s2Desc: 'Scroll down and select <strong>Message</strong>. Configure as follows:',
     s2Li1: '<strong>Sender:</strong> Leave as default <em>Any Sender</em>.',
     s2Li2: '<strong>Message Contains:</strong> Enter your bank name, e.g. <code>(TPBank)</code>, <code>Techcombank</code>, <code>BIDV</code>. Create <strong>1 separate automation</strong> per bank.',
-    s2Next: 'Select <strong>Run Immediately</strong> → tap <strong>Next</strong> → select <strong>New Blank Automation</strong>.',
+    s2Next: 'Select <strong>Run Immediately</strong> â†’ tap <strong>Next</strong> â†’ select <strong>New Blank Automation</strong>.',
     s3Title: 'Add the Webhook URL',
-    s3Desc: 'Tap <strong>Add Action</strong> → search for <strong>"URL"</strong> → select <strong>Get Contents of URL</strong>. Paste the Webhook URL from Step 1 into the URL field.',
+    s3Desc: 'Tap <strong>Add Action</strong> â†’ search for <strong>"URL"</strong> â†’ select <strong>Get Contents of URL</strong>. Paste the Webhook URL from Step 1 into the URL field.',
     s4Title: 'Configure the Request',
-    s4Desc: 'Tap the small arrow <strong>⌄</strong> (Show More) on the action you just added:',
+    s4Desc: 'Tap the small arrow <strong>âŒ„</strong> (Show More) on the action you just added:',
     s4Li1: 'Change Method to <strong>POST</strong>.',
-    s4Li2: 'Scroll down to <strong>Request Body</strong> → add new field as <strong>Text</strong>.',
+    s4Li2: 'Scroll down to <strong>Request Body</strong> â†’ add new field as <strong>Text</strong>.',
     s4Li3: 'Enter Key: <kbd>text</kbd>',
     s4Li4: 'For Value: select <strong>Shortcut Input</strong>.',
     s4Done: 'Tap <strong>Done</strong> to save. From now on, every bank SMS will be automatically recorded as a transaction!',
     copySuccess: 'URL copied to clipboard!',
     copyFailed: 'Failed to copy. Please try again.',
     revealUrl: 'Reveal URL',
-    hiddenUrl: '••••••••••••••••••••••••••••••••••••••••••••••••••••••••'
+    hiddenUrl: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢'
   },
 
-  // ── PinDialog ──
+  // â”€â”€ PinDialog â”€â”€
   pin: {
     title: 'Confirm with PIN',
     message: 'Enter your PIN to continue',
@@ -721,7 +724,7 @@ export default {
     setupNow: 'Setup PIN Now'
   },
 
-  // ── Weather ──
+  // â”€â”€ Weather â”€â”€
   weather: {
     feelsLike: 'Feels like',
     humidity: 'Humidity',
@@ -735,13 +738,13 @@ export default {
     cities: {
       'Ho Chi Minh City': 'Ho Chi Minh City',
       'Hanoi': 'Hanoi',
-      'Hà Nội': 'Hanoi',
+      'HÃ  Ná»™i': 'Hanoi',
       'Danang': 'Da Nang',
-      'Đà Nẵng': 'Da Nang'
+      'ÄÃ  Náºµng': 'Da Nang'
     }
   },
 
-  // ── Bug Report ──
+  // â”€â”€ Bug Report â”€â”€
   bugReport: {
     sectionTitle: 'Bug Report & Feedback',
     sendReport: 'Submit a bug report',
@@ -765,8 +768,8 @@ export default {
     modalTitle: 'Bug Report / Feedback',
     modalDesc: 'Thanks for reporting! The details will be sent directly to the Admin for review.',
     typeLabel: 'Report Type',
-    typeBug: '🐛 Bug Report',
-    typeFeature: '✨ Feature Request',
+    typeBug: 'ðŸ› Bug Report',
+    typeFeature: 'âœ¨ Feature Request',
     titleLabel: 'Title',
     titlePlaceholder: 'e.g. Cannot save new transaction',
     descLabel: 'Detailed Description',
@@ -775,7 +778,7 @@ export default {
     imageRemove: 'Remove image',
     imageDrop: 'Drag and drop an image here or',
     imageSelect: 'choose file',
-    imageHint: 'PNG, JPG, GIF — max 2 MB',
+    imageHint: 'PNG, JPG, GIF â€” max 2 MB',
     imageTooLarge: 'Image too large. Max 2 MB.',
     autoInfo: 'Auto-detected info',
     submitBtn: 'Submit Report',
@@ -784,7 +787,7 @@ export default {
     error: 'Failed to submit report'
   },
 
-  // ── Contact / Feedback ──
+  // â”€â”€ Contact / Feedback â”€â”€
   contact: {
     sectionTitle: 'Contact & Feedback',
     sendFeedback: 'Send feedback to Admin',
@@ -803,7 +806,7 @@ export default {
     error: 'Failed to send feedback'
   },
 
-  // ── Categories ──
+  // â”€â”€ Categories â”€â”€
   categories: {
     food: 'Food & Drinks',
     transport: 'Transport',
@@ -827,25 +830,25 @@ export default {
     other_income: 'Other Income'
   },
 
-  // ── Guide ──
+  // â”€â”€ Guide â”€â”€
   guide: {
     syncTitle: 'Did you know?',
     syncMessage: 'FinNote supports automatic bank transaction sync via iOS Shortcuts without requiring bank credentials.',
     syncAction: 'Learn More'
   },
 
-  // ── PWA Install Guide ──
+  // â”€â”€ PWA Install Guide â”€â”€
   pwa: {
     installTitle: 'Install FinNote on iPhone',
-    installDesc: 'Run as a native app — full screen, no App Store required',
-    step1: 'Tap <strong>Share</strong> (🔲↑) at the bottom of Safari',
+    installDesc: 'Run as a native app â€” full screen, no App Store required',
+    step1: 'Tap <strong>Share</strong> (ðŸ”²â†‘) at the bottom of Safari',
     step2: 'Select <strong>"Add to Home Screen"</strong>',
     iosNativeOption: 'Or install Native App:',
     downloadIpa: 'Download .IPA',
     ipaInstruction: '*Requires a computer with <strong>AltStore</strong>, <strong>Sideloadly</strong>, or a <strong>TrollStore</strong> enabled device.'
   },
 
-  // ── Blog ──
+  // â”€â”€ Blog â”€â”€
   blog: {
     // Admin page
     manageTitle: 'Blog Management',
@@ -863,8 +866,8 @@ export default {
     modalTitle: 'Create New Post',
     tabAiGenerate: 'AI Generate',
     tabPasteMarkdown: 'Paste Markdown',
-    aiHint: 'Type an idea or paste an image (Ctrl+V) — AI will write the entire blog post.',
-    pasteHint: 'Paste existing Markdown content — AI will extract title, description, and tags.',
+    aiHint: 'Type an idea or paste an image (Ctrl+V) â€” AI will write the entire blog post.',
+    pasteHint: 'Paste existing Markdown content â€” AI will extract title, description, and tags.',
     aiTopicPlaceholder: 'E.g. Smart saving tips for Gen Z?',
     pasteMarkdownPlaceholder: '# Post Title\n\nPaste your markdown content here...',
     generateBtn: 'Analyze & Create',
@@ -895,16 +898,16 @@ export default {
     editor: 'FinNote Editor',
     minRead: 'min read',
     // App Intro CTA
-    appIntroTitle: 'FinNote — Smart Personal Finance',
-    appIntroDesc: 'Track expenses, auto-sync bank transactions, AI-powered financial insights — all in one free app.',
+    appIntroTitle: 'FinNote â€” Smart Personal Finance',
+    appIntroDesc: 'Track expenses, auto-sync bank transactions, AI-powered financial insights â€” all in one free app.',
     appIntroFeature1: 'Auto-record transactions via SMS',
     appIntroFeature2: 'AI analysis & spending advice',
     appIntroFeature3: 'Intuitive dashboard, easy to use',
     appIntroCta: 'Try for free',
-    appIntroNote: 'No download needed — runs directly in your browser'
+    appIntroNote: 'No download needed â€” runs directly in your browser'
   },
 
-  // ── Recurring ──
+  // â”€â”€ Recurring â”€â”€
   recurring: {
     title: 'Recurring Transactions',
     count: '{n} items',
@@ -925,11 +928,11 @@ export default {
     deleteMessage: 'This recurring transaction will be removed.'
   },
 
-  // ── Budget ──
+  // â”€â”€ Budget â”€â”€
   budget: {
     title: 'Monthly Budget',
     setupTitle: 'Set a spending goal',
-    setupHint: 'Enter amount → AI auto-allocates by category',
+    setupHint: 'Enter amount â†’ AI auto-allocates by category',
     inputPlaceholder: '0',
     saveAndAnalyze: 'Save & AI Analyze',
     monthlyBudget: 'Monthly Budget',
@@ -941,7 +944,7 @@ export default {
     reset: 'Reset'
   },
 
-  // ── Savings ──
+  // â”€â”€ Savings â”€â”€
   savings: {
     title: 'Savings Goals',
     count: '{n} goals',
@@ -978,7 +981,7 @@ export default {
     processing: 'Processing...'
   },
 
-  // ── Subscriptions ──
+  // â”€â”€ Subscriptions â”€â”€
   subs: {
     title: 'Subscriptions',
     desc: 'Auto-detect recurring expenses from your transaction history',
@@ -991,7 +994,7 @@ export default {
     emptyHint: 'Add transactions so the system can auto-detect recurring charges (Netflix, Spotify, gym...)'
   },
 
-  // ── Weekly Event ──
+  // â”€â”€ Weekly Event â”€â”€
   weeklyEvent: {
     title: 'Weekly AI Event',
     skip: 'Skip for now',
@@ -1008,7 +1011,7 @@ export default {
     }
   },
 
-  // ── Reminders ──
+  // â”€â”€ Reminders â”€â”€
   reminders: {
     title: 'Reminders',
     subtitle: 'AI auto-detects events from notes. Get reminders before deadlines so you never miss a thing.',
@@ -1045,7 +1048,7 @@ export default {
     markAcknowledged: 'Mark as remembered',
     iRemember: 'I remember',
     remembered: 'Confirmed',
-    acknowledged: 'Confirmed — no last-chance notification',
+    acknowledged: 'Confirmed â€” no last-chance notification',
     fromNote: 'From Note',
     created: 'Reminder created',
     updated: 'Reminder updated',
@@ -1063,15 +1066,15 @@ export default {
     widgetTitle: 'Upcoming Reminders'
   },
 
-  // ── Coffee ──
+  // â”€â”€ Coffee â”€â”€
   coffee: {
-    title: 'Buy me a coffee ☕',
+    title: 'Buy me a coffee â˜•',
     desc: 'Thank you for using FinNote! If you find it helpful, consider buying me a coffee.',
     bankName: 'TP Bank',
     accountName: 'TRUONG NHU TUAN'
   },
 
-  // ── AI To-Do ──
+  // â”€â”€ AI To-Do â”€â”€
   aiTodo: {
     title: 'AI To-Do',
     subtitle: 'Chat with AI to plan your day effectively',

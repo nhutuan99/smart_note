@@ -4,14 +4,14 @@ import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
 import { httpClient } from '@/shared/api/httpClient'
 import { useRouter, useRoute } from 'vue-router'
-import { Mail, Lock, User, Eye, EyeOff, ArrowRight, KeyRound, RotateCcw, CheckCircle2, ChevronLeft, ShieldCheck } from 'lucide-vue-next'
+import { Mail, Lock, User, Eye, EyeOff, ArrowRight, KeyRound, RotateCcw, CheckCircle2, ChevronLeft, ShieldCheck, Sparkles, LogIn, X } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
 import { setLocale, currentLocale } from '@/i18n'
 import { useEventListener } from '@/composables/useEventListener'
 import LogoLoader from '@/components/ui/LogoLoader.vue'
 import { GOOGLE_OAUTH_AUTH_URL } from '@/constants/api'
 
-// ── Interactive Mouse Glow ────────────────────────────────────────────────────
+// â”€â”€ Interactive Mouse Glow â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const mouseX = ref(0)
 const mouseY = ref(0)
 const isMouseActive = ref(false)
@@ -31,7 +31,7 @@ const router = useRouter()
 const route = useRoute()
 const { t, locale } = useI18n()
 
-// ── Login / Register ──────────────────────────────────────────────────────────
+// â”€â”€ Login / Register â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const isLogin = ref(true)
 const loading = ref(false)
 const showPassword = ref(false)
@@ -65,7 +65,7 @@ async function handleSubmit() {
   }
 }
 
-// ── Google Sign-In ────────────────────────────────────────────────────────────
+// â”€â”€ Google Sign-In â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const googleLoading = ref(false)
 const googleError = ref('')
 
@@ -97,7 +97,7 @@ async function startGoogleSignInViaBackend() {
   googleLoading.value = true
   googleError.value = ''
   try {
-    // Use a dummy email just to get the OAuth URL — backend will be updated to handle this
+    // Use a dummy email just to get the OAuth URL â€” backend will be updated to handle this
     const redirectUri = `${window.location.origin}/login`
     sessionStorage.setItem('google_signin_flow', 'true')
     const params = new URLSearchParams({
@@ -144,7 +144,7 @@ async function handleGoogleSignInCallback(code: string) {
   }
 }
 
-// ── Forgot Password Flow (Google OAuth Verification) ──────────────────────────
+// â”€â”€ Forgot Password Flow (Google OAuth Verification) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // step: 'login' | 'email' | 'google-pending' | 'newpass' | 'done'
 const fpStep = ref<'login' | 'email' | 'google-pending' | 'newpass' | 'done'>('login')
 const fpEmail = ref('')
@@ -155,6 +155,13 @@ const fpShowNew = ref(false)
 const fpShowConfirm = ref(false)
 const fpLoading = ref(false)
 const fpError = ref('')
+
+const showGuestWelcome = ref(!route.query.expired && !localStorage.getItem('guest_popup_closed'))
+
+function closeGuestWelcome() {
+  showGuestWelcome.value = false
+  localStorage.setItem('guest_popup_closed', 'true')
+}
 
 function goForgot() {
   fpStep.value = 'email'
@@ -201,7 +208,7 @@ async function requestGoogleOAuth() {
   }
 }
 
-/** Step 2: Handle Google OAuth callback — exchange code for resetToken */
+/** Step 2: Handle Google OAuth callback â€” exchange code for resetToken */
 async function handleOAuthCallback(code: string, state: string) {
   fpStep.value = 'google-pending'
   fpLoading.value = true
@@ -262,7 +269,7 @@ function backToLoginFromDone() {
   isLogin.value = true
 }
 
-// ── Handle OAuth callback on page load ──
+// â”€â”€ Handle OAuth callback on page load â”€â”€
 watch(
   () => route.query,
   (query) => {
@@ -353,7 +360,7 @@ watch(
         <h1 class="text-3xl font-bold tracking-tight text-text-primary drop-shadow-sm">FinNote</h1>
       </div>
 
-      <!-- ══ STEP: LOGIN / REGISTER ══ -->
+      <!-- â•â• STEP: LOGIN / REGISTER â•â• -->
       <div v-if="fpStep === 'login'" class="bg-bg-surface border-border-default rounded-2xl border p-6 shadow-lg md:p-8 relative z-10 backdrop-blur-xl bg-opacity-95 dark:bg-opacity-80">
         <div class="mb-6">
           <h2 class="mb-1 text-xl font-semibold">
@@ -421,7 +428,7 @@ watch(
                 id="password-input"
                 v-model="form.password"
                 :type="showPassword ? 'text' : 'password'"
-                placeholder="••••••••"
+                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                 autocomplete="current-password"
                 required
                 @focus="error = ''"
@@ -479,15 +486,6 @@ watch(
 
         </button>
 
-        <!-- Guest Mode Button -->
-        <button
-          type="button"
-          class="border-border-default bg-bg-elevated hover:bg-bg-hover text-text-primary mt-3 flex w-full items-center justify-center gap-2.5 rounded-lg border py-2.5 text-sm font-medium transition-all duration-150"
-          @click="auth.startGuestMode(router)"
-        >
-          <User :size="16" class="text-text-tertiary" />
-          <span>{{ t('login.guestMode') }}</span>
-        </button>
 
         <div class="border-border-default text-text-tertiary mt-5 border-t pt-4 text-center text-sm">
           <span>{{ isLogin ? t('login.noAccount') : t('login.hasAccount') }}</span>
@@ -497,7 +495,7 @@ watch(
         </div>
       </div>
 
-      <!-- ══ STEP 1: Enter Email ══ -->
+      <!-- â•â• STEP 1: Enter Email â•â• -->
       <div v-else-if="fpStep === 'email'" class="bg-bg-surface border-border-default rounded-2xl border p-6 shadow-lg md:p-8 relative z-10 backdrop-blur-xl bg-opacity-95 dark:bg-opacity-80">
         <button @click="goBack" class="text-text-tertiary hover:text-text-primary mb-4 flex items-center gap-1.5 text-sm transition-colors">
           <ChevronLeft :size="16" />
@@ -565,7 +563,7 @@ watch(
         </form>
       </div>
 
-      <!-- ══ STEP: Google Pending (loading while exchanging code) ══ -->
+      <!-- â•â• STEP: Google Pending (loading while exchanging code) â•â• -->
       <div v-else-if="fpStep === 'google-pending'" class="bg-bg-surface border-border-default rounded-2xl border p-8 shadow-lg text-center">
         <div class="mb-4 flex justify-center">
           <div class="bg-accent/10 flex h-16 w-16 items-center justify-center rounded-full">
@@ -591,7 +589,7 @@ watch(
         </template>
       </div>
 
-      <!-- ══ STEP 3: New Password ══ -->
+      <!-- â•â• STEP 3: New Password â•â• -->
       <div v-else-if="fpStep === 'newpass'" class="bg-bg-surface border-border-default rounded-2xl border p-6 shadow-lg md:p-8 relative z-10 backdrop-blur-xl bg-opacity-95 dark:bg-opacity-80">
         <div class="mb-6 flex items-start gap-3">
           <div class="bg-success/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
@@ -662,7 +660,7 @@ watch(
         </form>
       </div>
 
-      <!-- ══ DONE ══ -->
+      <!-- â•â• DONE â•â• -->
       <div v-else-if="fpStep === 'done'" class="bg-bg-surface border-border-default rounded-2xl border p-8 shadow-lg text-center">
         <div class="bg-success/10 mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
           <CheckCircle2 :size="36" class="text-success" />
@@ -679,6 +677,53 @@ watch(
         {{ t('common.version') }}
       </p>
     </div>
+
+    <!-- Welcome / Guest Mode Popup -->
+    <transition name="fade">
+      <div
+        v-if="showGuestWelcome"
+        class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+        @click.self="closeGuestWelcome"
+      >
+        <div 
+          class="bg-bg-elevated border-border-default relative w-full max-w-md animate-in zoom-in-95 rounded-[1.25rem] border p-6 shadow-2xl duration-200 md:p-8"
+        >
+          <button
+            @click="closeGuestWelcome"
+            class="text-text-tertiary hover:text-text-primary absolute right-4 top-4 transition-colors"
+          >
+            <X :size="20" />
+          </button>
+
+          <div class="mb-6 flex flex-col items-center text-center">
+            <div class="bg-accent/10 text-accent mb-5 flex h-16 w-16 items-center justify-center rounded-full">
+              <Sparkles :size="32" />
+            </div>
+            <h2 class="mb-2 text-2xl font-bold tracking-tight">{{ t('login.welcomeTitle') }}</h2>
+            <p class="text-text-secondary text-sm leading-relaxed">
+              {{ t('login.welcomeDesc') }}
+            </p>
+          </div>
+
+          <div class="flex flex-col gap-3">
+            <button
+              @click="auth.startGuestMode(router)"
+              class="btn-primary w-full justify-center py-3.5"
+            >
+              <User :size="18" />
+              <span class="font-semibold">{{ t('login.guestMode') }}</span>
+            </button>
+            <button
+              @click="closeGuestWelcome"
+              class="border-border-default bg-bg-surface hover:bg-bg-hover text-text-primary flex w-full items-center justify-center gap-2 rounded-xl border py-3.5 transition-all duration-150"
+            >
+              <LogIn :size="18" />
+              <span class="font-medium">{{ t('login.actionLogin') }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -698,7 +743,7 @@ watch(
   transform: translateY(-0.75rem);
 }
 
-/* ── Ambient orbs ── */
+/* â”€â”€ Ambient orbs â”€â”€ */
 .login-orb {
   position: absolute;
   border-radius: 50%;
