@@ -1,4 +1,4 @@
-﻿export default {
+export default {
   // â”€â”€ Common â”€â”€
   common: {
     cancel: 'Cancel',
@@ -612,7 +612,7 @@
     notConnected: 'Not connected. Works on Chrome/Edge (Desktop) only.',
     connected: 'Connected to local vault',
     connectVault: 'Connect Vault',
-    disconnectVault: 'Disconnect',
+    disconnectVault: 'Disconnect'
   },
 
   // â”€â”€ Login â”€â”€
