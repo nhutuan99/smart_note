@@ -155,18 +155,18 @@ export default {
     viewEdit: 'View / Edit',
     checkinCta: '+ Check-in',
 
-    // Modal â€” general
+    // Modal — general
     modalTitle: 'Trading Check-in',
     stepSetup: 'Select wallets',
     stepInput: 'Enter today\'s result',
     stepSummary: 'Confirm check-in',
 
-    // Modal â€” step 1 setup
+    // Modal — step 1 setup
     setupDesc: 'Choose wallets to track P&L daily. You can change this later.',
     noWallets: 'No wallets found. Please create a wallet first.',
     walletRequired: 'Select at least 1 wallet to track.',
 
-    // Modal â€” step 2 input
+    // Modal — step 2 input
     noWalletsSelected: 'No wallets selected.',
     balanceBefore: 'Balance: {amount}',
     pnlLabel: 'Profit / Loss',
@@ -178,13 +178,13 @@ export default {
     notePlaceholder: 'Brief notes about today\'s trading session...',
     inputRequired: 'Enter P&L or deposit for at least 1 wallet.',
 
-    // Modal â€” step 3 summary
+    // Modal — step 3 summary
     summaryTotal: 'Total P&L today',
     summaryDeposit: '+ {amount} deposited',
     summaryNote: 'Note',
     balanceChange: '{before} â†’ {after}',
 
-    // Modal â€” footer buttons
+    // Modal — footer buttons
     cancel: 'Cancel',
     next: 'Next',
     backToWallets: 'â† Wallets',
@@ -595,7 +595,7 @@ export default {
     pushDesc: 'Receive bank transaction alerts on your lock screen',
     pushEnable: 'Enable Push',
     pushDisable: 'Disable Push',
-    pushEnabled: 'Active â€” You will receive transaction alerts on this device',
+    pushEnabled: 'Active — You will receive transaction alerts on this device',
     pushDisabled: 'Receive transaction notifications like a native app',
     pushNotSupported: 'Browser does not support push notifications',
     pushDenied: 'Notification permission denied. Please enable in device settings.',
@@ -681,7 +681,7 @@ export default {
   // â”€â”€ AutoSync â”€â”€
   autoSync: {
     title: 'Auto Sync (iOS)',
-    desc: 'Automatically record bank transactions from SMS into FinNote via iOS Shortcuts â€” secure, free, no bank login needed.',
+    desc: 'Automatically record bank transactions from SMS into FinNote via iOS Shortcuts — secure, free, no bank login needed.',
     whyTitle: 'Why use SMS Shortcuts?',
     security: '<strong>100% Secure:</strong> No bank login credentials required.',
     native: '<strong>Apple Native:</strong> Uses the built-in Shortcuts app on iPhone.',
@@ -709,7 +709,7 @@ export default {
     copySuccess: 'URL copied to clipboard!',
     copyFailed: 'Failed to copy. Please try again.',
     revealUrl: 'Reveal URL',
-    hiddenUrl: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢'
+    hiddenUrl: '••••••••••••••••••••••••••••••••••••••••••••••••••••••••'
   },
 
   // â”€â”€ PinDialog â”€â”€
@@ -778,7 +778,7 @@ export default {
     imageRemove: 'Remove image',
     imageDrop: 'Drag and drop an image here or',
     imageSelect: 'choose file',
-    imageHint: 'PNG, JPG, GIF â€” max 2 MB',
+    imageHint: 'PNG, JPG, GIF — max 2 MB',
     imageTooLarge: 'Image too large. Max 2 MB.',
     autoInfo: 'Auto-detected info',
     submitBtn: 'Submit Report',
@@ -840,7 +840,7 @@ export default {
   // â”€â”€ PWA Install Guide â”€â”€
   pwa: {
     installTitle: 'Install FinNote on iPhone',
-    installDesc: 'Run as a native app â€” full screen, no App Store required',
+    installDesc: 'Run as a native app — full screen, no App Store required',
     step1: 'Tap <strong>Share</strong> (ðŸ”²â†‘) at the bottom of Safari',
     step2: 'Select <strong>"Add to Home Screen"</strong>',
     iosNativeOption: 'Or install Native App:',
@@ -866,8 +866,8 @@ export default {
     modalTitle: 'Create New Post',
     tabAiGenerate: 'AI Generate',
     tabPasteMarkdown: 'Paste Markdown',
-    aiHint: 'Type an idea or paste an image (Ctrl+V) â€” AI will write the entire blog post.',
-    pasteHint: 'Paste existing Markdown content â€” AI will extract title, description, and tags.',
+    aiHint: 'Type an idea or paste an image (Ctrl+V) — AI will write the entire blog post.',
+    pasteHint: 'Paste existing Markdown content — AI will extract title, description, and tags.',
     aiTopicPlaceholder: 'E.g. Smart saving tips for Gen Z?',
     pasteMarkdownPlaceholder: '# Post Title\n\nPaste your markdown content here...',
     generateBtn: 'Analyze & Create',
@@ -898,13 +898,13 @@ export default {
     editor: 'FinNote Editor',
     minRead: 'min read',
     // App Intro CTA
-    appIntroTitle: 'FinNote â€” Smart Personal Finance',
-    appIntroDesc: 'Track expenses, auto-sync bank transactions, AI-powered financial insights â€” all in one free app.',
+    appIntroTitle: 'FinNote — Smart Personal Finance',
+    appIntroDesc: 'Track expenses, auto-sync bank transactions, AI-powered financial insights — all in one free app.',
     appIntroFeature1: 'Auto-record transactions via SMS',
     appIntroFeature2: 'AI analysis & spending advice',
     appIntroFeature3: 'Intuitive dashboard, easy to use',
     appIntroCta: 'Try for free',
-    appIntroNote: 'No download needed â€” runs directly in your browser'
+    appIntroNote: 'No download needed — runs directly in your browser'
   },
 
   // â”€â”€ Recurring â”€â”€
@@ -1048,7 +1048,7 @@ export default {
     markAcknowledged: 'Mark as remembered',
     iRemember: 'I remember',
     remembered: 'Confirmed',
-    acknowledged: 'Confirmed â€” no last-chance notification',
+    acknowledged: 'Confirmed — no last-chance notification',
     fromNote: 'From Note',
     created: 'Reminder created',
     updated: 'Reminder updated',

@@ -97,7 +97,7 @@ async function startGoogleSignInViaBackend() {
   googleLoading.value = true
   googleError.value = ''
   try {
-    // Use a dummy email just to get the OAuth URL â€” backend will be updated to handle this
+    // Use a dummy email just to get the OAuth URL — backend will be updated to handle this
     const redirectUri = `${window.location.origin}/login`
     sessionStorage.setItem('google_signin_flow', 'true')
     const params = new URLSearchParams({
@@ -208,7 +208,7 @@ async function requestGoogleOAuth() {
   }
 }
 
-/** Step 2: Handle Google OAuth callback â€” exchange code for resetToken */
+/** Step 2: Handle Google OAuth callback — exchange code for resetToken */
 async function handleOAuthCallback(code: string, state: string) {
   fpStep.value = 'google-pending'
   fpLoading.value = true
@@ -428,7 +428,7 @@ watch(
                 id="password-input"
                 v-model="form.password"
                 :type="showPassword ? 'text' : 'password'"
-                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                placeholder="••••••••"
                 autocomplete="current-password"
                 required
                 @focus="error = ''"

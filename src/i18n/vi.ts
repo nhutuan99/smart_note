@@ -165,18 +165,18 @@
     viewEdit: 'Xem / Sửa',
     checkinCta: '+ Check-in',
 
-    // Modal â€” general
+    // Modal — general
     modalTitle: 'Trading Check-in',
     stepSetup: 'Chọn ví theo dõi',
     stepInput: 'Nhập kết quả hôm nay',
     stepSummary: 'Xác nhận check-in',
 
-    // Modal â€” step 1 setup
+    // Modal — step 1 setup
     setupDesc: 'Chọn các ví bạn muốn theo dõi lãi/lỗ mỗi ngày. Bạn có thể thay đổi sau.',
     noWallets: 'Chưa có ví nào. Hãy tạo ví trước.',
     walletRequired: 'Chọn ít nhất 1 ví để theo dõi.',
 
-    // Modal â€” step 2 input
+    // Modal — step 2 input
     noWalletsSelected: 'Chưa có ví nào được chọn.',
     balanceBefore: 'Số dư: {amount}',
     pnlLabel: 'Lãi / Lỗ',
@@ -188,13 +188,13 @@
     notePlaceholder: 'Nhận xét ngắn về phiên giao dịch hôm nay...',
     inputRequired: 'Nhập lãi/lỗ hoặc nạp tiền cho ít nhất 1 ví.',
 
-    // Modal â€” step 3 summary
+    // Modal — step 3 summary
     summaryTotal: 'Tổng lãi / lỗ hôm nay',
     summaryDeposit: '+ {amount} nạp thêm',
     summaryNote: 'Ghi chú',
     balanceChange: '{before} → {after}',
 
-    // Modal â€” footer buttons
+    // Modal — footer buttons
     cancel: 'Huỷ',
     next: 'Tiếp theo',
     backToWallets: '← Ví',
