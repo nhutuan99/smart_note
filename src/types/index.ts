@@ -252,9 +252,9 @@ export interface TradingConfig {
 export interface TradingCheckinEntry {
   walletId: string
   walletName: string
-  /** 'percent' = user typed %, 'amount' = user typed VND */
-  inputMode: 'percent' | 'amount'
-  /** Raw value: % (e.g. 2.5) or VND absolute (e.g. 250000) */
+  /** 'percent' = user typed %, 'amount' = user typed VND, 'usd' = user typed USD (converted to VND) */
+  inputMode: 'percent' | 'amount' | 'usd'
+  /** Raw value: % (e.g. 2.5), VND absolute (e.g. 250000), or USD (e.g. 10) */
   inputValue: number
   /** Calculated VND P&L (positive = profit, negative = loss) */
   pnlAmount: number

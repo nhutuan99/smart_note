@@ -16,6 +16,25 @@ import { getWalletBrand } from '@/constants/walletBrands'
 import CurrencyInput from '@/components/ui/CurrencyInput.vue'
 import { X, TrendingUp, TrendingDown, DollarSign, Percent, Check, ChevronRight, BookOpen } from 'lucide-vue-next'
 
+// ── USD/VND exchange rate ──
+const usdRate = ref<number | null>(null)
+const usdRateLoading = ref(false)
+
+async function fetchUsdRate() {
+  if (usdRate.value !== null || usdRateLoading.value) return
+  usdRateLoading.value = true
+  try {
+    // fawazahmed0 currency API – free, no key needed
+    const res = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json')
+    const data = await res.json()
+    usdRate.value = data?.usd?.vnd ?? null
+  } catch {
+    usdRate.value = null
+  } finally {
+    usdRateLoading.value = false
+  }
+}
+
 const { t } = useI18n()
 
 const props = defineProps<{ modelValue: boolean }>()
@@ -65,19 +84,23 @@ interface EntryDraft {
   walletId: string
   walletName: string
   customLogoUrl: string
-  inputMode: 'percent' | 'amount'
+  inputMode: 'percent' | 'amount' | 'usd'
   inputValue: number
   depositAmount: number
   balanceBefore: number
 }
 
 const drafts = ref<EntryDraft[]>([])
+const showDeposit = ref<boolean[]>([])
+const walletStep = ref(0)
 const sessionNote = ref('')
 
 watch(
   [() => step.value, () => trading.config.selectedWalletIds, () => finance.wallets],
   ([s]) => {
     if (s !== 'input') return
+    // Prefetch exchange rate when entering input step
+    fetchUsdRate()
     const wallets = getSelectedWallets()
     const existing = trading.todayCheckin
 
@@ -96,6 +119,10 @@ watch(
       }
     })
 
+    // Reset deposit visibility and wallet step
+    showDeposit.value = wallets.map(() => false)
+    walletStep.value = 0
+
     // Pre-fill note
     sessionNote.value = existing?.note ?? ''
   },
@@ -104,6 +131,7 @@ watch(
 
 function calcPnl(d: EntryDraft): number {
   if (d.inputMode === 'percent') return Math.round(d.balanceBefore * (d.inputValue / 100))
+  if (d.inputMode === 'usd') return Math.round(d.inputValue * (usdRate.value ?? 0))
   return d.inputValue
 }
 
@@ -111,13 +139,28 @@ function calcBalanceAfter(d: EntryDraft): number {
   return d.balanceBefore + calcPnl(d) + d.depositAmount
 }
 
-function goToSummary() {
-  const hasInput = drafts.value.some((d) => d.inputValue !== 0 || d.depositAmount !== 0)
-  if (!hasInput) {
-    ui.showToast('warning', t('trading.inputRequired'))
-    return
+const isLastWallet = computed(() => walletStep.value === drafts.value.length - 1)
+
+function walletNext() {
+  if (!isLastWallet.value) {
+    walletStep.value++
+    showDeposit.value[walletStep.value] = showDeposit.value[walletStep.value] ?? false
+  } else {
+    const hasInput = drafts.value.some((d) => d.inputValue !== 0 || d.depositAmount !== 0)
+    if (!hasInput) {
+      ui.showToast('warning', t('trading.inputRequired'))
+      return
+    }
+    step.value = 'summary'
   }
-  step.value = 'summary'
+}
+
+function walletPrev() {
+  if (walletStep.value > 0) {
+    walletStep.value--
+  } else {
+    step.value = 'setup'
+  }
 }
 
 // ── Step 3: Summary ──
@@ -265,7 +308,7 @@ function close() { emit('update:modelValue', false) }
               </div>
             </div>
 
-            <!-- STEP 2: P&L Input -->
+            <!-- STEP 2: P&L Input (one wallet at a time) -->
             <div v-else-if="step === 'input'" class="p-5 space-y-4">
               <div v-if="trading.configLoading" class="space-y-3">
                 <div v-for="i in 2" :key="i" class="skeleton h-28 rounded-xl" />
@@ -274,108 +317,156 @@ function close() { emit('update:modelValue', false) }
                 {{ t('trading.noWalletsSelected') }}
               </div>
 
-              <div
-                v-for="(draft, idx) in drafts"
-                :key="draft.walletId"
-                class="rounded-xl border border-border-default bg-bg-elevated p-4 space-y-3"
-              >
-                <!-- Wallet header -->
-                <div class="flex items-center gap-2.5">
-                  <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg overflow-hidden bg-white border border-border-default/30">
-                    <img v-if="getWalletLogo(draft.walletName, draft.customLogoUrl)" :src="getWalletLogo(draft.walletName, draft.customLogoUrl)" :alt="draft.walletName" class="h-5 w-5 object-contain" loading="lazy" />
-                    <span v-else class="text-xs font-bold text-text-secondary">{{ draft.walletName.substring(0,2) }}</span>
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <div class="text-sm font-bold text-text-primary">{{ draft.walletName }}</div>
-                    <div class="text-[11px] text-text-disabled">{{ t('trading.balanceBefore', { amount: formatVND(draft.balanceBefore) }) }}</div>
-                  </div>
-                  <!-- Live P&L preview -->
-                  <div class="text-sm font-bold tabular-nums" :class="calcPnl(draft) >= 0 ? 'text-success' : 'text-error'">
-                    {{ calcPnl(draft) >= 0 ? '+' : '' }}{{ formatVND(calcPnl(draft)) }}
-                  </div>
+              <template v-else>
+                <!-- Wallet progress dots -->
+                <div v-if="drafts.length > 1" class="flex items-center justify-center gap-1.5">
+                  <button
+                    v-for="(d, i) in drafts" :key="d.walletId"
+                    @click="walletStep = i; showDeposit[i] = showDeposit[i] ?? false"
+                    class="h-1.5 rounded-full transition-all duration-300"
+                    :class="i === walletStep ? 'w-6 bg-accent' : i < walletStep ? 'w-2 bg-accent/40' : 'w-2 bg-border-strong'"
+                  />
                 </div>
 
-                <!-- Input mode toggle -->
-                <div class="flex items-center gap-1 p-0.5 bg-bg-surface rounded-lg border border-border-default">
-                  <button
-                    @click="drafts[idx].inputMode = 'percent'; drafts[idx].inputValue = 0"
-                    class="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs font-medium transition-all"
-                    :class="draft.inputMode === 'percent' ? 'bg-accent text-white shadow-sm' : 'text-text-tertiary hover:text-text-primary'"
-                  >
-                    <Percent :size="11" /> %
-                  </button>
-                  <button
-                    @click="drafts[idx].inputMode = 'amount'; drafts[idx].inputValue = 0"
-                    class="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs font-medium transition-all"
-                    :class="draft.inputMode === 'amount' ? 'bg-accent text-white shadow-sm' : 'text-text-tertiary hover:text-text-primary'"
-                  >
-                    <DollarSign :size="11" /> VND
-                  </button>
-                </div>
+                <!-- Single wallet card -->
+                <div class="rounded-xl border border-border-default bg-bg-elevated p-4 space-y-3">
+                  <!-- Wallet header -->
+                  <div class="flex items-center gap-2.5">
+                    <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg overflow-hidden bg-white border border-border-default/30">
+                      <img v-if="getWalletLogo(drafts[walletStep].walletName, drafts[walletStep].customLogoUrl)" :src="getWalletLogo(drafts[walletStep].walletName, drafts[walletStep].customLogoUrl)" :alt="drafts[walletStep].walletName" class="h-5 w-5 object-contain" loading="lazy" />
+                      <span v-else class="text-xs font-bold text-text-secondary">{{ drafts[walletStep].walletName.substring(0,2) }}</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="text-sm font-bold text-text-primary">{{ drafts[walletStep].walletName }}</div>
+                      <div class="text-[11px] text-text-disabled">{{ t('trading.balanceBefore', { amount: formatVND(drafts[walletStep].balanceBefore) }) }}</div>
+                    </div>
+                    <!-- Live P&L preview -->
+                    <div class="text-sm font-bold tabular-nums" :class="calcPnl(drafts[walletStep]) >= 0 ? 'text-success' : 'text-error'">
+                      {{ calcPnl(drafts[walletStep]) >= 0 ? '+' : '' }}{{ formatVND(calcPnl(drafts[walletStep])) }}
+                    </div>
+                  </div>
 
-                <!-- P&L input -->
-                <div class="space-y-1">
-                  <label class="text-[11px] text-text-tertiary font-medium">
-                    {{ t('trading.pnlLabel') }} <span class="text-text-disabled">{{ t('trading.pnlHint') }}</span>
-                  </label>
-                  <div class="relative">
-                    <input
-                      v-if="draft.inputMode === 'percent'"
-                      v-model.number="drafts[idx].inputValue"
-                      type="number" step="0.01" placeholder="0.00"
-                      class="w-full rounded-lg border border-border-default bg-bg-surface px-3 py-2 pr-8 text-sm text-right focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent transition-colors"
-                    />
-                    <CurrencyInput
-                      v-else
-                      :modelValue="draft.inputValue"
-                      @update:modelValue="drafts[idx].inputValue = $event"
-                      :allowNegative="true"
-                      :placeholder="'0'"
-                      :className="'w-full rounded-lg border border-border-default bg-bg-surface px-3 py-2 pr-8 text-sm text-right focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent transition-colors'"
-                    />
-                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-text-disabled pointer-events-none">
-                      {{ draft.inputMode === 'percent' ? '%' : '₫' }}
+                  <!-- Input mode toggle -->
+                  <div class="flex items-center gap-1 p-0.5 bg-bg-surface rounded-lg border border-border-default">
+                    <button
+                      @click="drafts[walletStep].inputMode = 'percent'; drafts[walletStep].inputValue = 0"
+                      class="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs font-medium transition-all"
+                      :class="drafts[walletStep].inputMode === 'percent' ? 'bg-accent text-white shadow-sm' : 'text-text-tertiary hover:text-text-primary'"
+                    >
+                      <Percent :size="11" /> %
+                    </button>
+                    <button
+                      @click="drafts[walletStep].inputMode = 'amount'; drafts[walletStep].inputValue = 0"
+                      class="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs font-medium transition-all"
+                      :class="drafts[walletStep].inputMode === 'amount' ? 'bg-accent text-white shadow-sm' : 'text-text-tertiary hover:text-text-primary'"
+                    >
+                      <span class="text-[10px] font-bold">₫</span> VND
+                    </button>
+                    <button
+                      @click="drafts[walletStep].inputMode = 'usd'; drafts[walletStep].inputValue = 0; fetchUsdRate()"
+                      class="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs font-medium transition-all"
+                      :class="drafts[walletStep].inputMode === 'usd' ? 'bg-emerald-500 text-white shadow-sm' : 'text-text-tertiary hover:text-text-primary'"
+                    >
+                      <DollarSign :size="11" /> USD
+                    </button>
+                  </div>
+
+                  <!-- P&L input -->
+                  <div class="space-y-1">
+                    <label class="text-[11px] text-text-tertiary font-medium">
+                      {{ t('trading.pnlLabel') }} <span class="text-text-disabled">{{ t('trading.pnlHint') }}</span>
+                    </label>
+                    <div class="relative">
+                      <input
+                        v-if="drafts[walletStep].inputMode === 'percent'"
+                        v-model.number="drafts[walletStep].inputValue"
+                        type="number" step="0.01" placeholder="0.00"
+                        class="w-full rounded-lg border border-border-default bg-bg-surface px-3 py-2 pr-8 text-sm text-right focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent transition-colors"
+                      />
+                      <input
+                        v-else-if="drafts[walletStep].inputMode === 'usd'"
+                        v-model.number="drafts[walletStep].inputValue"
+                        type="number" step="0.01" placeholder="0.00"
+                        class="w-full rounded-lg border border-border-default bg-bg-surface px-3 py-2 pr-8 text-sm text-right focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors"
+                      />
+                      <CurrencyInput
+                        v-else
+                        :modelValue="drafts[walletStep].inputValue"
+                        @update:modelValue="drafts[walletStep].inputValue = $event"
+                        :allowNegative="true"
+                        :placeholder="'0'"
+                        :className="'w-full rounded-lg border border-border-default bg-bg-surface px-3 py-2 pr-8 text-sm text-right focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent transition-colors'"
+                      />
+                      <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs pointer-events-none"
+                        :class="drafts[walletStep].inputMode === 'usd' ? 'text-emerald-400 font-medium' : 'text-text-disabled'"
+                      >
+                        {{ drafts[walletStep].inputMode === 'percent' ? '%' : drafts[walletStep].inputMode === 'usd' ? '$' : '₫' }}
+                      </span>
+                    </div>
+                    <!-- USD live conversion hint -->
+                    <div v-if="drafts[walletStep].inputMode === 'usd'" class="flex items-center text-[11px] px-1">
+                      <span v-if="usdRateLoading" class="text-text-disabled italic">Đang tải tỷ giá...</span>
+                      <span v-else-if="usdRate" class="text-emerald-400 font-medium">
+                        ≈ {{ formatVND(calcPnl(drafts[walletStep])) }} (1$ = {{ new Intl.NumberFormat('vi-VN').format(Math.round(usdRate)) }}₫)
+                      </span>
+                      <span v-else class="text-error text-[10px]">Không lấy được tỷ giá</span>
+                    </div>
+                  </div>
+
+                  <!-- Deposit input: collapsed by default -->
+                  <div>
+                    <button
+                      type="button"
+                      @click="showDeposit[walletStep] = !showDeposit[walletStep]"
+                      class="flex items-center gap-1.5 text-[11px] text-text-tertiary hover:text-text-primary transition-colors py-0.5"
+                    >
+                      <span class="inline-block transition-transform duration-200" :class="showDeposit[walletStep] ? 'rotate-90' : ''">&#9656;</span>
+                      {{ t('trading.depositLabel') }}
+                      <span class="text-text-disabled">{{ t('trading.depositHint') }}</span>
+                      <span v-if="drafts[walletStep].depositAmount !== 0" class="ml-1 text-accent font-semibold">{{ formatVND(drafts[walletStep].depositAmount) }}</span>
+                    </button>
+                    <Transition
+                      enter-active-class="transition-all duration-200 ease-out"
+                      leave-active-class="transition-all duration-150 ease-in"
+                      enter-from-class="opacity-0 -translate-y-1"
+                      leave-to-class="opacity-0 -translate-y-1"
+                    >
+                      <div v-if="showDeposit[walletStep]" class="mt-1.5 relative">
+                        <CurrencyInput
+                          :modelValue="drafts[walletStep].depositAmount"
+                          @update:modelValue="drafts[walletStep].depositAmount = $event"
+                          placeholder="0"
+                          :className="'w-full rounded-lg border border-border-default bg-bg-surface px-3 py-2 pr-6 text-sm text-right focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent transition-colors'"
+                        />
+                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-text-disabled pointer-events-none">₫</span>
+                      </div>
+                    </Transition>
+                  </div>
+
+                  <!-- Balance after preview -->
+                  <div class="flex items-center justify-between text-[11px] rounded-lg bg-bg-surface px-3 py-2 border border-border-subtle">
+                    <span class="text-text-tertiary">{{ t('trading.balanceAfter') }}</span>
+                    <span class="font-bold tabular-nums" :class="calcBalanceAfter(drafts[walletStep]) >= 0 ? 'text-text-primary' : 'text-error'">
+                      {{ formatVND(calcBalanceAfter(drafts[walletStep])) }}
                     </span>
                   </div>
                 </div>
 
-                <!-- Deposit input -->
-                <div class="space-y-1">
-                  <label class="text-[11px] text-text-tertiary font-medium">
-                    {{ t('trading.depositLabel') }} <span class="text-text-disabled">{{ t('trading.depositHint') }}</span>
-                  </label>
-                  <div class="relative">
-                    <CurrencyInput
-                      :modelValue="draft.depositAmount"
-                      @update:modelValue="drafts[idx].depositAmount = $event"
-                      placeholder="0"
-                      :className="'w-full rounded-lg border border-border-default bg-bg-surface px-3 py-2 pr-6 text-sm text-right focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent transition-colors'"
-                    />
-                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-text-disabled pointer-events-none">₫</span>
-                  </div>
+                <!-- Session note: only on last wallet -->
+                <div v-if="isLastWallet" class="space-y-1">
+                  <label class="text-[11px] text-text-tertiary font-medium">{{ t('trading.noteLabel') }}</label>
+                  <textarea
+                    v-model="sessionNote"
+                    rows="2"
+                    :placeholder="t('trading.notePlaceholder')"
+                    maxlength="500"
+                    class="w-full rounded-lg border border-border-default bg-bg-elevated px-3 py-2 text-sm text-text-primary placeholder:text-text-disabled resize-none focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent transition-colors"
+                  />
                 </div>
-
-                <!-- Balance after preview -->
-                <div class="flex items-center justify-between text-[11px] rounded-lg bg-bg-surface px-3 py-2 border border-border-subtle">
-                  <span class="text-text-tertiary">{{ t('trading.balanceAfter') }}</span>
-                  <span class="font-bold tabular-nums" :class="calcBalanceAfter(draft) >= 0 ? 'text-text-primary' : 'text-error'">
-                    {{ formatVND(calcBalanceAfter(draft)) }}
-                  </span>
-                </div>
-              </div>
-
-              <!-- Session note -->
-              <div class="space-y-1">
-                <label class="text-[11px] text-text-tertiary font-medium">{{ t('trading.noteLabel') }}</label>
-                <textarea
-                  v-model="sessionNote"
-                  rows="2"
-                  :placeholder="t('trading.notePlaceholder')"
-                  maxlength="500"
-                  class="w-full rounded-lg border border-border-default bg-bg-elevated px-3 py-2 text-sm text-text-primary placeholder:text-text-disabled resize-none focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent transition-colors"
-                />
-              </div>
+              </template>
             </div>
+
+
 
             <!-- STEP 3: Summary -->
             <div v-else-if="step === 'summary'" class="p-5 space-y-4">
@@ -461,14 +552,20 @@ function close() { emit('update:modelValue', false) }
               </button>
             </div>
 
-            <!-- Step 2 -->
+            <!-- Step 2 footer: per-wallet navigation -->
             <div v-else-if="step === 'input'" class="flex gap-2">
-              <button @click="step = 'setup'" class="rounded-xl border border-border-default px-4 py-2.5 text-sm text-text-secondary hover:bg-bg-hover transition-colors">
-                {{ t('trading.backToWallets') }}
+              <button @click="walletPrev" class="rounded-xl border border-border-default px-4 py-2.5 text-sm text-text-secondary hover:bg-bg-hover transition-colors">
+                {{ walletStep === 0 ? t('trading.backToWallets') : '← ' + (walletStep) + '/' + drafts.length }}
               </button>
-              <button @click="goToSummary" class="flex-1 btn-primary justify-center py-2.5">
-                {{ t('trading.viewSummary') }}
-                <ChevronRight :size="14" />
+              <button @click="walletNext" class="flex-1 btn-primary justify-center py-2.5">
+                <template v-if="isLastWallet">
+                  {{ t('trading.viewSummary') }}
+                  <ChevronRight :size="14" />
+                </template>
+                <template v-else>
+                  <span>{{ drafts[walletStep + 1]?.walletName ?? t('trading.next') }}</span>
+                  <ChevronRight :size="14" />
+                </template>
               </button>
             </div>
 
