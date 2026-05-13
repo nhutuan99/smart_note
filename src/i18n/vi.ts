@@ -655,7 +655,9 @@ export default {
     backToLogin: 'Quay lại đăng nhập',
     goBack: 'Quay lại',
     orContinueWith: 'hoặc tiếp tục với',
-    continueWithGoogle: 'Tiếp tục với Google'
+    continueWithGoogle: 'Tiếp tục với Google',
+    guestMode: 'Dùng thử miễn phí (Lưu tại máy - 7 ngày)',
+    guestExpired: 'Thời gian dùng thử 7 ngày đã hết. Vui lòng đăng nhập để đồng bộ và tiếp tục.'
   },
 
   // ── Forgot Password / PIN ──

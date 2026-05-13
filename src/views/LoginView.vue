@@ -266,6 +266,10 @@ function backToLoginFromDone() {
 watch(
   () => route.query,
   (query) => {
+    if (query.expired === '1') {
+      ui.showToast('warning', t('login.guestExpired'))
+      router.replace({ path: '/login' })
+    }
     const code = query.code as string
     const state = query.state as string
     if (code && state && fpStep.value === 'login') {
@@ -473,6 +477,16 @@ watch(
             </svg>
             <span>{{ t('login.continueWithGoogle') }}</span>
 
+        </button>
+
+        <!-- Guest Mode Button -->
+        <button
+          type="button"
+          class="border-border-default bg-bg-elevated hover:bg-bg-hover text-text-primary mt-3 flex w-full items-center justify-center gap-2.5 rounded-lg border py-2.5 text-sm font-medium transition-all duration-150"
+          @click="auth.startGuestMode(router)"
+        >
+          <User :size="16" class="text-text-tertiary" />
+          <span>{{ t('login.guestMode') }}</span>
         </button>
 
         <div class="border-border-default text-text-tertiary mt-5 border-t pt-4 text-center text-sm">

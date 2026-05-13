@@ -20,6 +20,16 @@ import { AUTH_TOKEN_KEY, AUTH_USER_KEY, AUTH_REFRESH_TOKEN_KEY } from '@/constan
 // In production, use the full worker URL
 const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
 
+import { localDbMock } from '@/shared/localDb'
+
+async function tryLocalMock(method: string, url: string, body?: any): Promise<any> {
+  const auth = useAuthStore()
+  if (auth.isGuest && url.startsWith('/api/') && !url.startsWith('/api/proxy/')) {
+    return await localDbMock(method, url, body)
+  }
+  return null
+}
+
 // ── 401 handling state ────────────────────────────────────────────────────────
 
 let _router: Router | null = null
@@ -195,6 +205,9 @@ async function handleResponse<T>(response: Response, retryFn?: () => Promise<T>,
 }
 
 async function get<T>(url: string, options?: { silent?: boolean }): Promise<T> {
+  const mock = await tryLocalMock('GET', url)
+  if (mock) return mock.data as T
+
   const isExternal = url.startsWith('http')
   const fullUrl = isExternal ? url : `${API_BASE}${url}`
   const silent = options?.silent
@@ -217,6 +230,9 @@ async function get<T>(url: string, options?: { silent?: boolean }): Promise<T> {
 }
 
 async function post<T>(url: string, body?: unknown, options?: { silent?: boolean }): Promise<T> {
+  const mock = await tryLocalMock('POST', url, body)
+  if (mock) return mock.data as T
+
   const isExternal = url.startsWith('http')
   const fullUrl = isExternal ? url : `${API_BASE}${url}`
   const silent = options?.silent
@@ -239,6 +255,9 @@ async function post<T>(url: string, body?: unknown, options?: { silent?: boolean
 }
 
 async function put<T>(url: string, body?: unknown): Promise<T> {
+  const mock = await tryLocalMock('PUT', url, body)
+  if (mock) return mock.data as T
+
   const isExternal = url.startsWith('http')
   const fullUrl = isExternal ? url : `${API_BASE}${url}`
 
@@ -260,6 +279,9 @@ async function put<T>(url: string, body?: unknown): Promise<T> {
 }
 
 async function del(url: string): Promise<void> {
+  const mock = await tryLocalMock('DELETE', url)
+  if (mock) return mock.data as void
+
   const isExternal = url.startsWith('http')
   const fullUrl = isExternal ? url : `${API_BASE}${url}`
 
@@ -283,6 +305,9 @@ async function del(url: string): Promise<void> {
  * Use for endpoints that support pagination (e.g. /api/transactions?page=1&limit=15).
  */
 async function getPaginated<T>(url: string, options?: { silent?: boolean }): Promise<PaginatedApiResponse<T>> {
+  const mock = await tryLocalMock('GET', url)
+  if (mock) return mock as PaginatedApiResponse<T>
+
   const fullUrl = `${API_BASE}${url}`
   const silent = options?.silent
 

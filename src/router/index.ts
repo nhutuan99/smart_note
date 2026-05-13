@@ -159,8 +159,14 @@ router.beforeEach((to) => {
   }
 
   // Protected pages: redirect unauthenticated users to login
-  if (!to.meta.requiresGuest && !to.meta.isPublic && to.path !== '/login' && !auth.isAuthenticated) {
-    return { path: '/login', replace: true }
+  if (!to.meta.requiresGuest && !to.meta.isPublic && to.path !== '/login') {
+    if (!auth.isAuthenticated) {
+      return { path: '/login', replace: true }
+    }
+    // Check if the guest session has expired (7 days)
+    if (auth.isGuest && auth.checkGuestExpiry()) {
+      return { path: '/login', query: { expired: '1' }, replace: true }
+    }
   }
 
   // Onboarding: redirect first-time authenticated users

@@ -634,7 +634,9 @@ export default {
     backToLogin: 'Back to login',
     goBack: 'Go back',
     orContinueWith: 'or continue with',
-    continueWithGoogle: 'Continue with Google'
+    continueWithGoogle: 'Continue with Google',
+    guestMode: 'Try it for free (Local Storage - 7 days)',
+    guestExpired: 'Your 7-day trial has expired. Please log in to sync and continue.'
   },
 
   // ── Forgot Password / PIN ──

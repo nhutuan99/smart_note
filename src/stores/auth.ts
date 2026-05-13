@@ -25,7 +25,8 @@ export const useAuthStore = defineStore('auth', () => {
     })()
   )
 
-  const isAuthenticated = computed(() => !!token.value && !!user.value)
+  const isGuest = ref(localStorage.getItem('guest_mode') === 'true')
+  const isAuthenticated = computed(() => (!!token.value && !!user.value) || isGuest.value)
 
   /**
    * True once the auth state has been read from storage.
@@ -60,9 +61,25 @@ export const useAuthStore = defineStore('auth', () => {
     keysToRemove.forEach(k => localStorage.removeItem(k))
   })()
 
+  /** Wipes all local data except preferences. Use before login or on logout. */
+  function wipeLocalData() {
+    const keysToRemove: string[] = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key && !PRESERVE_ON_LOGOUT.includes(key)) {
+        keysToRemove.push(key)
+      }
+    }
+    keysToRemove.forEach(k => localStorage.removeItem(k))
+  }
+
   function setAuth(newToken: string, newUser: User, newRefreshToken?: string) {
+    // When logging in, wipe ALL previous guest/local data to start fresh.
+    wipeLocalData()
+
     token.value = newToken
     user.value = newUser
+    isGuest.value = false
     localStorage.setItem(AUTH_TOKEN_KEY, newToken)
     localStorage.setItem(AUTH_USER_KEY, JSON.stringify(newUser))
     if (newRefreshToken) {
@@ -79,6 +96,33 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.setItem(AUTH_REFRESH_TOKEN_KEY, newRefreshToken)
   }
 
+  function startGuestMode(router: Router) {
+    wipeLocalData()
+    isGuest.value = true
+    // Simulate a basic user profile for the UI
+    user.value = {
+      id: 'guest',
+      email: 'guest@local.app',
+      name: 'Khách',
+      createdAt: new Date().toISOString(),
+      hasCompletedOnboarding: true
+    }
+    localStorage.setItem('guest_mode', 'true')
+    localStorage.setItem('guest_start_time', Date.now().toString())
+    router.push('/')
+  }
+
+  function checkGuestExpiry(): boolean {
+    if (!isGuest.value) return false
+    const start = parseInt(localStorage.getItem('guest_start_time') || '0', 10)
+    const sevenDays = 7 * 24 * 60 * 60 * 1000
+    if (Date.now() - start > sevenDays) {
+      logout()
+      return true // Expired
+    }
+    return false // Valid
+  }
+
   /**
    * Logout: clear ALL user-specific data from localStorage.
    * Only device-level preferences (theme, locale) are preserved.
@@ -87,16 +131,9 @@ export const useAuthStore = defineStore('auth', () => {
     token.value = null
     refreshToken.value = null
     user.value = null
+    isGuest.value = false
 
-    // Collect all keys, then remove everything except device preferences
-    const keysToRemove: string[] = []
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i)
-      if (key && !PRESERVE_ON_LOGOUT.includes(key)) {
-        keysToRemove.push(key)
-      }
-    }
-    keysToRemove.forEach(k => localStorage.removeItem(k))
+    wipeLocalData()
   }
 
   function getToken(): string | null {
@@ -109,7 +146,9 @@ export const useAuthStore = defineStore('auth', () => {
 
   function updateUser(updatedUser: User) {
     user.value = { ...user.value, ...updatedUser }
-    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user.value))
+    if (!isGuest.value) {
+      localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user.value))
+    }
   }
 
   /**
@@ -118,13 +157,24 @@ export const useAuthStore = defineStore('auth', () => {
    * Returns true if authenticated, false if redirecting.
    */
   function guardAuth(router: Router): boolean {
-    if (isAuthenticated.value) return true
+    if (isAuthenticated.value) {
+      if (checkGuestExpiry()) {
+        router.push('/login?expired=1')
+        return false
+      }
+      return true
+    }
     router.push('/login')
     return false
   }
 
   async function completeOnboarding() {
     if (!user.value) return
+    if (isGuest.value) {
+      updateUser({ ...user.value, hasCompletedOnboarding: true })
+      return
+    }
+
     try {
       const { httpClient } = await import('@/shared/api/httpClient')
       
@@ -149,9 +199,12 @@ export const useAuthStore = defineStore('auth', () => {
     refreshToken,
     user,
     isAuthenticated,
+    isGuest,
     authReady,
     setAuth,
     setTokens,
+    startGuestMode,
+    checkGuestExpiry,
     logout,
     getToken,
     getRefreshToken,
@@ -160,3 +213,4 @@ export const useAuthStore = defineStore('auth', () => {
     completeOnboarding
   }
 })
+
