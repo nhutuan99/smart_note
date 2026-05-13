@@ -15,25 +15,11 @@ import { getWalletBrand } from '@/constants/walletBrands'
 // 6. Components & icons
 import CurrencyInput from '@/components/ui/CurrencyInput.vue'
 import { X, TrendingUp, TrendingDown, DollarSign, Percent, Check, ChevronRight, BookOpen } from 'lucide-vue-next'
+import { useCurrency } from '@/composables/useCurrency'
 
-// ── USD/VND exchange rate ──
-const usdRate = ref<number | null>(null)
-const usdRateLoading = ref(false)
-
-async function fetchUsdRate() {
-  if (usdRate.value !== null || usdRateLoading.value) return
-  usdRateLoading.value = true
-  try {
-    // fawazahmed0 currency API – free, no key needed
-    const res = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json')
-    const data = await res.json()
-    usdRate.value = data?.usd?.vnd ?? null
-  } catch {
-    usdRate.value = null
-  } finally {
-    usdRateLoading.value = false
-  }
-}
+const { exchangeRate, rateLoading: usdRateLoading, rateError: usdRateError, fetchExchangeRate } = useCurrency()
+// exchangeRate = 1 VND in USD → 1 USD in VND = 1/exchangeRate
+const usdToVnd = computed(() => exchangeRate.value > 0 ? Math.round(1 / exchangeRate.value) : 0)
 
 const { t } = useI18n()
 
@@ -99,8 +85,8 @@ watch(
   [() => step.value, () => trading.config.selectedWalletIds, () => finance.wallets],
   ([s]) => {
     if (s !== 'input') return
-    // Prefetch exchange rate when entering input step
-    fetchUsdRate()
+    // Ensure exchange rate is available for USD mode
+    fetchExchangeRate()
     const wallets = getSelectedWallets()
     const existing = trading.todayCheckin
 
@@ -131,7 +117,7 @@ watch(
 
 function calcPnl(d: EntryDraft): number {
   if (d.inputMode === 'percent') return Math.round(d.balanceBefore * (d.inputValue / 100))
-  if (d.inputMode === 'usd') return Math.round(d.inputValue * (usdRate.value ?? 0))
+  if (d.inputMode === 'usd') return Math.round(d.inputValue * usdToVnd.value)
   return d.inputValue
 }
 
@@ -363,7 +349,7 @@ function close() { emit('update:modelValue', false) }
                       <span class="text-[10px] font-bold">₫</span> VND
                     </button>
                     <button
-                      @click="drafts[walletStep].inputMode = 'usd'; drafts[walletStep].inputValue = 0; fetchUsdRate()"
+                      @click="drafts[walletStep].inputMode = 'usd'; drafts[walletStep].inputValue = 0; fetchExchangeRate()"
                       class="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs font-medium transition-all"
                       :class="drafts[walletStep].inputMode === 'usd' ? 'bg-emerald-500 text-white shadow-sm' : 'text-text-tertiary hover:text-text-primary'"
                     >
@@ -406,10 +392,11 @@ function close() { emit('update:modelValue', false) }
                     <!-- USD live conversion hint -->
                     <div v-if="drafts[walletStep].inputMode === 'usd'" class="flex items-center text-[11px] px-1">
                       <span v-if="usdRateLoading" class="text-text-disabled italic">Đang tải tỷ giá...</span>
-                      <span v-else-if="usdRate" class="text-emerald-400 font-medium">
-                        ≈ {{ formatVND(calcPnl(drafts[walletStep])) }} (1$ = {{ new Intl.NumberFormat('vi-VN').format(Math.round(usdRate)) }}₫)
+                      <span v-else-if="usdToVnd > 0" class="text-emerald-400 font-medium">
+                        ≈ {{ formatVND(calcPnl(drafts[walletStep])) }} (1$ = {{ new Intl.NumberFormat('vi-VN').format(usdToVnd) }}₫)
                       </span>
-                      <span v-else class="text-error text-[10px]">Không lấy được tỷ giá</span>
+                      <span v-else-if="usdRateError" class="text-error text-[10px]">{{ usdRateError }}</span>
+                      <span v-else class="text-text-disabled text-[10px]">Chưa có tỷ giá</span>
                     </div>
                   </div>
 
