@@ -1068,7 +1068,7 @@ function getChartData(symbol: string) {
 .stock-modal-panel {
   position: relative;
   width: 100%;
-  max-width: 24rem; /* max-w-sm */
+  max-width: 28rem; /* max-w-md */
   max-height: 90vh;
   max-height: 90dvh;
   overflow-y: auto;

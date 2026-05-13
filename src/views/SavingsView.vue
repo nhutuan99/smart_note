@@ -223,7 +223,7 @@ const totalTarget = computed(() => savingsStore.totalTarget)
 
     <!-- Smart Auto-Save Modal -->
     <div v-if="showAutoSave" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div class="bg-bg-surface border-border-default w-full max-w-sm rounded-2xl border p-5 shadow-2xl">
+      <div class="bg-bg-surface border-border-default w-full max-w-md rounded-2xl border p-5 shadow-2xl">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-lg font-bold flex items-center gap-2"><Zap class="text-accent" :size="20" /> {{ t('savings.autoSaveTitle') }}</h3>
           <button @click="showAutoSave = null" class="text-text-tertiary hover:text-text-primary"><X :size="20" /></button>
