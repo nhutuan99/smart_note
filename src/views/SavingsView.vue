@@ -1,65 +1,104 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
+import { useSavingsStore } from '@/stores/savings'
+import { useFinanceStore } from '@/stores/finance'
 import { formatVND } from '@/constants/finance'
-import type { SavingsGoal } from '@/types'
-import { Plus, Trash2, Target, ArrowUpRight, ArrowDownRight, PartyPopper, X } from 'lucide-vue-next'
+import { Plus, Trash2, Target, ArrowUpRight, ArrowDownRight, PartyPopper, X, Zap, Settings } from 'lucide-vue-next'
 import CurrencyInput from '@/components/ui/CurrencyInput.vue'
 import CustomDatePicker from '@/components/ui/CustomDatePicker.vue'
 
 const { t } = useI18n()
 const ui = useUiStore()
+const savingsStore = useSavingsStore()
+const financeStore = useFinanceStore()
 
-const STORAGE_KEY = 'finnote_savings'
-function load(): SavingsGoal[] { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]') } catch { return [] } }
-function persist(g: SavingsGoal[]) { localStorage.setItem(STORAGE_KEY, JSON.stringify(g)) }
+onMounted(async () => {
+  await financeStore.fetchWallets()
+  await savingsStore.migrateFromLocal()
+})
 
-const goals = ref<SavingsGoal[]>(load())
+const goals = computed(() => savingsStore.goals)
 const showAdd = ref(false)
 const showDeposit = ref<string | null>(null)
 const depositAmount = ref<number>(0)
+const depositWalletId = ref<string>('')
+
+// Auto Save Modal
+const showAutoSave = ref<string | null>(null)
+const autoSaveAmount = ref<number>(0)
+const autoSaveWalletId = ref<string>('')
 
 const ICONS = ['🏖️','💻','🏠','🚗','🎓','💍','🏥','🎮','📱','✈️','🎯','💰']
 const COLORS = ['#10b981','#3b82f6','#f59e0b','#8b5cf6','#ec4899','#ef4444','#14b8a6','#6366f1']
 
 const form = ref({ name: '', icon: '🎯', color: '#10b981', targetAmount: 0, deadline: '' })
 
-function addGoal() {
+async function addGoal() {
   const amt = form.value.targetAmount
   if (!form.value.name.trim() || amt <= 0) return
-  goals.value.push({ id: crypto.randomUUID(), name: form.value.name.trim(), icon: form.value.icon, color: form.value.color, targetAmount: amt, currentAmount: 0, deadline: form.value.deadline || undefined, createdAt: new Date().toISOString() })
-  persist(goals.value); showAdd.value = false
+  await savingsStore.create({
+    name: form.value.name.trim(),
+    icon: form.value.icon,
+    color: form.value.color,
+    targetAmount: amt,
+    deadline: form.value.deadline || undefined
+  })
+  showAdd.value = false
   form.value = { name: '', icon: '🎯', color: '#10b981', targetAmount: 0, deadline: '' }
 }
 
-function deposit(id: string) {
+async function deposit(id: string) {
   const amt = depositAmount.value
   if (amt <= 0) return
-  const g = goals.value.find(x => x.id === id)
-  if (g) { g.currentAmount = Math.min(g.currentAmount + amt, g.targetAmount) }
-  persist(goals.value); showDeposit.value = null; depositAmount.value = 0
+  await savingsStore.deposit(id, amt, depositWalletId.value || undefined)
+  showDeposit.value = null; depositAmount.value = 0
 }
 
-function withdraw(id: string) {
+async function withdraw(id: string) {
   const amt = depositAmount.value
   if (amt <= 0) return
-  const g = goals.value.find(x => x.id === id)
-  if (g) { g.currentAmount = Math.max(g.currentAmount - amt, 0) }
-  persist(goals.value); showDeposit.value = null; depositAmount.value = 0
+  await savingsStore.withdraw(id, amt, depositWalletId.value || undefined)
+  showDeposit.value = null; depositAmount.value = 0
 }
 
 async function deleteGoal(id: string) {
   const ok = await ui.requestConfirm({ title: t('savings.deleteTitle'), message: t('savings.deleteMessage'), danger: true, confirmText: t('common.delete') })
-  if (!ok) return; goals.value = goals.value.filter(g => g.id !== id); persist(goals.value)
+  if (!ok) return;
+  await savingsStore.remove(id)
 }
 
-function pct(g: SavingsGoal) { return g.targetAmount > 0 ? Math.min((g.currentAmount / g.targetAmount) * 100, 100) : 0 }
-function daysLeft(deadline?: string) { if (!deadline) return null; return Math.max(0, Math.ceil((new Date(deadline).getTime() - Date.now()) / 86400000)) }
-function dailySaveNeeded(g: SavingsGoal) { const d = daysLeft(g.deadline); if (!d || d === 0) return 0; return Math.ceil((g.targetAmount - g.currentAmount) / d) }
+function openAutoSave(id: string) {
+  const g = goals.value.find(x => x.id === id)
+  if (g) {
+    autoSaveAmount.value = g.autoSaveAmount || dailySaveNeeded(g) || 0
+    autoSaveWalletId.value = g.autoSaveWalletId || (financeStore.wallets[0]?.id) || ''
+    showAutoSave.value = id
+  }
+}
 
-const totalSaved = computed(() => goals.value.reduce((s, g) => s + g.currentAmount, 0))
-const totalTarget = computed(() => goals.value.reduce((s, g) => s + g.targetAmount, 0))
+async function enableAutoSave() {
+  if (!showAutoSave.value) return
+  await savingsStore.update(showAutoSave.value, {
+    autoSaveEnabled: true,
+    autoSaveAmount: autoSaveAmount.value,
+    autoSaveWalletId: autoSaveWalletId.value || undefined
+  })
+  showAutoSave.value = null
+}
+
+async function disableAutoSave(id: string) {
+  await savingsStore.update(id, { autoSaveEnabled: false })
+  showAutoSave.value = null
+}
+
+function pct(g: any) { return g.targetAmount > 0 ? Math.min((g.currentAmount / g.targetAmount) * 100, 100) : 0 }
+function daysLeft(deadline?: string) { if (!deadline) return null; return Math.max(0, Math.ceil((new Date(deadline).getTime() - Date.now()) / 86400000)) }
+function dailySaveNeeded(g: any) { const d = daysLeft(g.deadline); if (!d || d === 0) return 0; return Math.ceil((g.targetAmount - g.currentAmount) / d) }
+
+const totalSaved = computed(() => savingsStore.totalSaved)
+const totalTarget = computed(() => savingsStore.totalTarget)
 </script>
 
 <template>
@@ -141,8 +180,12 @@ const totalTarget = computed(() => goals.value.reduce((s, g) => s + g.targetAmou
           <div class="flex h-11 w-11 items-center justify-center rounded-xl text-xl" :style="{ backgroundColor: g.color + '20' }">{{ g.icon }}</div>
           <div class="flex-1 min-w-0">
             <div class="text-sm font-semibold truncate">{{ g.name }}</div>
-            <div class="text-text-disabled text-[0.6875rem]" v-if="daysLeft(g.deadline) !== null">{{ t('savings.daysLeft', { n: daysLeft(g.deadline) }) }}</div>
+            <div class="text-text-disabled text-[0.6875rem] flex items-center gap-1">
+              <span v-if="daysLeft(g.deadline) !== null">{{ t('savings.daysLeft', { n: daysLeft(g.deadline) }) }}</span>
+              <span v-if="g.autoSaveEnabled" class="text-accent flex items-center gap-0.5 ml-1"><Zap :size="10" /> Auto</span>
+            </div>
           </div>
+          <button @click="openAutoSave(g.id)" class="text-text-tertiary hover:text-accent p-1 rounded hover:bg-bg-hover transition-all"><Settings :size="14" /></button>
           <button @click="deleteGoal(g.id)" class="text-text-tertiary hover:text-error p-1 rounded hover:bg-bg-hover transition-all"><Trash2 :size="14" /></button>
         </div>
 
@@ -162,13 +205,48 @@ const totalTarget = computed(() => goals.value.reduce((s, g) => s + g.targetAmou
         </div>
 
         <!-- Deposit/Withdraw -->
-        <div v-if="showDeposit === g.id" class="flex gap-2 mt-3">
-          <CurrencyInput v-model="depositAmount" placeholder="0" className="border-border-default bg-bg-elevated text-text-primary focus:border-accent w-full rounded-lg border px-3 py-1.5 text-sm focus:ring-1 focus:ring-accent-subtle focus:outline-none flex-1" />
-          <button @click="deposit(g.id)" class="bg-success/15 text-success hover:bg-success/25 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all"><ArrowUpRight :size="14" /></button>
-          <button @click="withdraw(g.id)" class="bg-error/15 text-error hover:bg-error/25 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all"><ArrowDownRight :size="14" /></button>
-          <button @click="showDeposit = null; depositAmount = 0" class="text-text-tertiary hover:text-text-primary p-1"><X :size="14" /></button>
+        <div v-if="showDeposit === g.id" class="flex flex-col gap-2 mt-3 bg-bg-hover p-2 rounded-lg">
+          <select v-model="depositWalletId" class="border-border-default bg-bg-elevated text-text-primary focus:border-accent w-full rounded-lg border px-3 py-1.5 text-xs focus:ring-1 focus:outline-none">
+             <option value="">{{ t('savings.autoSaveSourceExt') }}</option>
+             <option v-for="w in financeStore.wallets" :key="w.id" :value="w.id">{{ w.name }} ({{ formatVND(w.balance) }})</option>
+          </select>
+          <div class="flex gap-2">
+            <CurrencyInput v-model="depositAmount" placeholder="0" className="border-border-default bg-bg-elevated text-text-primary focus:border-accent w-full rounded-lg border px-3 py-1.5 text-sm focus:ring-1 focus:ring-accent-subtle focus:outline-none flex-1" />
+            <button @click="deposit(g.id)" class="bg-success/15 text-success hover:bg-success/25 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all"><ArrowUpRight :size="14" /></button>
+            <button @click="withdraw(g.id)" class="bg-error/15 text-error hover:bg-error/25 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all"><ArrowDownRight :size="14" /></button>
+            <button @click="showDeposit = null; depositAmount = 0" class="text-text-tertiary hover:text-text-primary p-1"><X :size="14" /></button>
+          </div>
         </div>
         <button v-else @click="showDeposit = g.id" class="mt-3 w-full border-border-default text-text-secondary hover:bg-bg-hover hover:text-text-primary rounded-lg border py-2 text-xs font-medium transition-all">{{ t('savings.addMoney') }}</button>
+      </div>
+    </div>
+
+    <!-- Smart Auto-Save Modal -->
+    <div v-if="showAutoSave" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div class="bg-bg-surface border-border-default w-full max-w-sm rounded-2xl border p-5 shadow-2xl">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-bold flex items-center gap-2"><Zap class="text-accent" :size="20" /> {{ t('savings.autoSaveTitle') }}</h3>
+          <button @click="showAutoSave = null" class="text-text-tertiary hover:text-text-primary"><X :size="20" /></button>
+        </div>
+        <p class="text-sm text-text-secondary mb-4">{{ t('savings.autoSaveDesc') }}</p>
+        
+        <div class="space-y-4 mb-6">
+          <div>
+            <label class="text-xs text-text-tertiary mb-1 block">{{ t('savings.autoSaveSource') }}</label>
+            <select v-model="autoSaveWalletId" class="border-border-default bg-bg-elevated text-text-primary focus:border-accent w-full rounded-lg border px-3 py-2 text-sm focus:ring-1 focus:outline-none">
+              <option v-for="w in financeStore.wallets" :key="w.id" :value="w.id">{{ w.name }} ({{ formatVND(w.balance) }})</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs text-text-tertiary mb-1 block">{{ t('savings.autoSaveAmount') }}</label>
+            <CurrencyInput v-model="autoSaveAmount" className="border-border-default bg-bg-elevated text-text-primary focus:border-accent w-full rounded-lg border px-3 py-2 text-sm focus:ring-1 focus:outline-none" />
+          </div>
+        </div>
+
+        <div class="flex gap-3">
+          <button v-if="goals.find(g => g.id === showAutoSave)?.autoSaveEnabled" @click="disableAutoSave(showAutoSave)" class="flex-1 py-2 rounded-lg border border-border-default text-error hover:bg-error/10 font-semibold transition-all">{{ t('savings.autoSaveDisable') }}</button>
+          <button @click="enableAutoSave" class="btn-primary flex-1 justify-center py-2 shadow-lg shadow-accent/20">{{ t('savings.autoSaveEnable') }}</button>
+        </div>
       </div>
     </div>
   </div>

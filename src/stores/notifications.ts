@@ -16,6 +16,7 @@ export interface AppNotification {
     txType?: 'income' | 'expense'
     walletName?: string
     bankName?: string
+    savingId?: string
   }
 }
 

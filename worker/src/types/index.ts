@@ -1,5 +1,5 @@
 export interface Env {
-  SMART_NOTE_KV: KVNamespace
+  SMART_NOTE_KV: any // KVNamespace
   JWT_SECRET: string
   TELEGRAM_WEBHOOK_SECRET: string
   GOOGLE_CLIENT_ID: string
@@ -80,6 +80,7 @@ export interface NotificationData {
     txType?: 'income' | 'expense'
     walletName?: string
     bankName?: string
+    savingId?: string
   }
 }
 
@@ -95,6 +96,21 @@ export interface PushSubscriptionRecord {
 export interface BudgetData {
   amount: number
   dismissed: boolean
+  updatedAt: string
+}
+
+export interface SavingsGoalData {
+  id: string
+  name: string
+  icon: string
+  color: string
+  targetAmount: number
+  currentAmount: number
+  deadline?: string
+  autoSaveEnabled?: boolean
+  autoSaveAmount?: number
+  autoSaveWalletId?: string
+  createdAt: string
   updatedAt: string
 }
 

@@ -958,7 +958,22 @@ export default {
     empty: 'No savings goals',
     emptyHint: 'Create money pots for your goals',
     deleteTitle: 'Delete Goal',
-    deleteMessage: 'This savings goal will be removed.'
+    deleteMessage: 'This savings goal will be removed.',
+    autoSaveTitle: 'Smart Auto-Save',
+    autoSaveDesc: 'The system will automatically send you reminders and help you quickly deposit money into this fund.',
+    autoSaveSource: 'Auto-save funding source',
+    autoSaveSourceExt: 'External funding (Do not deduct from wallet)',
+    autoSaveAmount: 'Amount to save per prompt',
+    autoSaveDisable: 'Disable Auto-Save',
+    autoSaveEnable: 'Enable Auto-Save',
+    autoSaveExtractBtn: 'Save {amount}',
+    depositSuccess: 'Deposit successful!',
+    depositNoWallet: 'No suitable wallet found for deduction',
+    depositError: 'Error processing deposit',
+    notificationTitle: 'Smart Savings: {name}',
+    notificationBody: 'You have enabled auto-save. Would you like to deposit {amount} into this goal right now?',
+    approveExtract: 'Approve saving {amount}',
+    processing: 'Processing...'
   },
 
   // ── Subscriptions ──

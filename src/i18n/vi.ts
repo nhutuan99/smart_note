@@ -991,7 +991,22 @@ export default {
     empty: 'Chưa có mục tiêu',
     emptyHint: 'Tạo hũ tiết kiệm cho các mục tiêu của bạn',
     deleteTitle: 'Xóa mục tiêu',
-    deleteMessage: 'Mục tiêu tiết kiệm này sẽ bị xóa.'
+    deleteMessage: 'Mục tiêu tiết kiệm này sẽ bị xóa.',
+    autoSaveTitle: 'Smart Auto-Save',
+    autoSaveDesc: 'Hệ thống sẽ tự động gửi thông báo nhắc nhở và giúp bạn trích tiền vào quỹ này một cách nhanh chóng.',
+    autoSaveSource: 'Nguồn tiền trích tự động',
+    autoSaveSourceExt: 'Trích tiền ngoài (Không trừ ví)',
+    autoSaveAmount: 'Số tiền trích mỗi lần gợi ý',
+    autoSaveDisable: 'Tắt Auto-Save',
+    autoSaveEnable: 'Bật Auto-Save',
+    autoSaveExtractBtn: 'Trích {amount}',
+    depositSuccess: 'Trích tiền thành công!',
+    depositNoWallet: 'Không tìm thấy ví phù hợp để trích',
+    depositError: 'Lỗi khi trích tiền',
+    notificationTitle: 'Tiết kiệm thông minh: {name}',
+    notificationBody: 'Bạn đã bật trích tiền tự động. Bạn có muốn chuyển {amount} vào mục tiêu này ngay bây giờ không?',
+    approveExtract: 'Đồng ý trích {amount}',
+    processing: 'Đang xử lý...'
   },
 
   // ── Subscriptions ──

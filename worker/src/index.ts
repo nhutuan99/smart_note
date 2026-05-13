@@ -58,6 +58,15 @@ import {
 } from './controllers/finance.controller'
 
 import {
+  handleListSavings,
+  handleCreateSaving,
+  handleUpdateSaving,
+  handleDeleteSaving,
+  handleDepositSaving,
+  handleWithdrawSaving
+} from './controllers/savings.controller'
+
+import {
   handleCheckPin,
   handleSetPin,
   handleVerifyPin,
@@ -396,6 +405,35 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
       }
       if (path === '/api/finance/budget' && request.method === 'PUT') {
         return handleUpdateBudget(userId, request, env)
+      }
+
+      // Finance: Savings
+      if (path === '/api/savings' && request.method === 'GET') {
+        return handleListSavings(userId, env)
+      }
+      if (path === '/api/savings' && request.method === 'POST') {
+        return handleCreateSaving(userId, request, env)
+      }
+      const savingMatch = path.match(/^\/api\/savings\/(.+)$/)
+      if (savingMatch) {
+        const savingId = savingMatch[1]
+        // Note: Check for sub-paths before the base ID match if needed, but since we matched strict id, deposit and withdraw must be checked first
+      }
+
+      const savingDepositMatch = path.match(/^\/api\/savings\/(.+)\/deposit$/)
+      if (savingDepositMatch && request.method === 'POST') {
+        return handleDepositSaving(userId, savingDepositMatch[1], request, env)
+      }
+
+      const savingWithdrawMatch = path.match(/^\/api\/savings\/(.+)\/withdraw$/)
+      if (savingWithdrawMatch && request.method === 'POST') {
+        return handleWithdrawSaving(userId, savingWithdrawMatch[1], request, env)
+      }
+
+      const savingIdMatch = path.match(/^\/api\/savings\/([^\/]+)$/)
+      if (savingIdMatch) {
+        if (request.method === 'PUT') return handleUpdateSaving(userId, savingIdMatch[1], request, env)
+        if (request.method === 'DELETE') return handleDeleteSaving(userId, savingIdMatch[1], env)
       }
 
       // Trading Journal

@@ -10,6 +10,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { formatMoney } from '@/composables/useCurrency'
 import { getWalletBrand } from '@/constants/walletBrands'
+import { useSavingsStore } from '@/stores/savings'
 import { Menu, ChevronLeft, Bell, Settings, LogOut, ArrowUpRight, ArrowDownRight, CheckCheck, Trash2, BellOff, Zap, Sun, Moon } from 'lucide-vue-next'
 
 const { t } = useI18n()
@@ -18,6 +19,7 @@ const ui = useUiStore()
 const notiStore = useNotificationStore()
 const finance = useFinanceStore()
 const trading = useTradingStore()
+const savings = useSavingsStore()
 const router = useRouter()
 const route = useRoute()
 
@@ -69,6 +71,34 @@ function handleLogout() {
   trading.reset()   // clear trading journal data — prevent leakage between users
   auth.logout()
   router.push('/login')
+}
+
+// ─── Auto-Save Action ────────────────────────────────────────────────────────
+const actionLoading = ref<string | null>(null)
+async function handleAutoSaveApprove(n: any) {
+  if (!n.meta?.savingId || !n.meta?.amount) return
+  actionLoading.value = n.id
+  try {
+    // If savings store is empty (e.g. user refreshed and hasn't visited Savings), fetch it first
+    if (savings.goals.length === 0) await savings.fetch()
+    const target = savings.goals.find(g => g.id === n.meta.savingId)
+    const walletId = target?.autoSaveWalletId || finance.wallets[0]?.id
+    
+    if (walletId) {
+      await savings.deposit(n.meta.savingId, n.meta.amount, walletId)
+      ui.showToast('success', t('savings.depositSuccess'))
+      await notiStore.markRead(n.id)
+      
+      // Also refresh wallet balance
+      await finance.fetchWallets()
+    } else {
+      ui.showToast('error', t('savings.depositNoWallet'))
+    }
+  } catch (error: any) {
+    ui.showToast('error', error.message || t('savings.depositError'))
+  } finally {
+    actionLoading.value = null
+  }
 }
 </script>
 
@@ -275,6 +305,19 @@ function handleLogout() {
                       <span class="text-text-disabled text-[0.6875rem]">
                         {{ notiStore.timeSince(n.createdAt) }}
                       </span>
+                    </div>
+
+                    <!-- Auto-Save Action Button -->
+                    <div v-if="n.meta?.savingId && !n.read" class="mt-3">
+                      <button 
+                        @click.stop="handleAutoSaveApprove(n)" 
+                        class="bg-accent hover:bg-accent-hover text-white text-xs font-semibold py-1.5 px-3 rounded-lg shadow-md transition-colors flex items-center gap-1.5"
+                        :disabled="actionLoading === n.id"
+                      >
+                        <Zap :size="12" />
+                        <span v-if="actionLoading === n.id">{{ t('savings.processing') }}</span>
+                        <span v-else>{{ t('savings.approveExtract', { amount: formatMoney(n.meta.amount || 0) }) }}</span>
+                      </button>
                     </div>
                   </div>
 

@@ -13,6 +13,7 @@ import FinanceWallets from '@/modules/finance/components/FinanceWallets.vue'
 import FinanceCharts from '@/modules/finance/components/FinanceCharts.vue'
 import HomeRemindersWidget from '@/modules/finance/components/HomeRemindersWidget.vue'
 import HomeNotesWidget from '@/modules/finance/components/HomeNotesWidget.vue'
+import HomeSavingsWidget from '@/modules/finance/components/HomeSavingsWidget.vue'
 
 const auth = useAuthStore()
 const ui = useUiStore()
@@ -37,6 +38,9 @@ onMounted(() => {
 
     <!-- Wallet scrollable row -->
     <FinanceWallets />
+
+    <!-- Smart Auto-Save Widget -->
+    <HomeSavingsWidget />
 
     <!-- 7-day chart + Spending by wallet -->
     <FinanceCharts />
