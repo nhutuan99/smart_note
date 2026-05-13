@@ -25,8 +25,8 @@ onMounted(() => {
   if (auth.isAuthenticated && ui.enableStocks) {
     // If user has stock module enabled, fetch positions directly on home page
     // so total balance dynamically includes investments.
-    stockStore.fetchPositions()
-    fundStore.fetchPositions()
+    stockStore.fetchPositions(true)
+    fundStore.fetchPositions(true)
   }
 })
 </script>

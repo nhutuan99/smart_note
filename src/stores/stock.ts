@@ -11,7 +11,7 @@ export const useStockStore = defineStore('stock', () => {
 
   let pollTimer: ReturnType<typeof setInterval> | null = null
 
-  async function fetchPositions() {
+  async function fetchPositions(force = false) {
     loading.value = true
     try {
       const data = await stockApi.getPositions()
@@ -19,8 +19,8 @@ export const useStockStore = defineStore('stock', () => {
       
       // Fetch current prices in background
       data?.forEach(p => {
-        fetchPrice(p.symbol)
-        fetchHistory(p.symbol)
+        fetchPrice(p.symbol, force)
+        fetchHistory(p.symbol, force)
       })
     } catch (error) {
       console.error('Failed to fetch stocks:', error)
@@ -29,25 +29,25 @@ export const useStockStore = defineStore('stock', () => {
     }
   }
 
-  async function fetchPrice(symbol: string) {
+  async function fetchPrice(symbol: string, force = false) {
     try {
-      const data = await stockApi.getCurrentPrice(symbol)
+      const data = await stockApi.getCurrentPrice(symbol, force)
       if (data?.currentPrice) {
         prices.value[symbol] = data.currentPrice
       }
-    } catch (e) {
-      // Ignore
+    } catch (error) {
+      // Background fetch error ignored
     }
   }
 
-  async function fetchAllPrices() {
+  async function fetchAllPrices(force = false) {
     const symbols = [...new Set(positions.value.map(p => p.symbol))]
-    await Promise.allSettled(symbols.map(s => fetchPrice(s)))
+    await Promise.allSettled(symbols.map(s => fetchPrice(s, force)))
   }
 
-  async function fetchHistory(symbol: string) {
+  async function fetchHistory(symbol: string, force = false) {
     try {
-      const data = await stockApi.getStockHistory(symbol, 7)
+      const data = await stockApi.getStockHistory(symbol, 7, force)
       if (data?.history) {
         histories.value[symbol] = data.history
       }

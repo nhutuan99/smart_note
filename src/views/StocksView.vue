@@ -107,9 +107,9 @@ const searchResults = computed(() => {
 
 
 onMounted(() => {
-  stockStore.fetchPositions()
+  stockStore.fetchPositions(true)
   stockStore.startPolling()
-  fundStore.fetchPositions()
+  fundStore.fetchPositions(true)
 })
 
 onUnmounted(() => {

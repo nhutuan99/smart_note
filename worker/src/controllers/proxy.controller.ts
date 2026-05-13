@@ -168,6 +168,7 @@ export async function handleProxyExchangeRate(request: Request): Promise<Respons
 export async function handleProxyStockPrice(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url)
   const symbol = url.searchParams.get('symbol')?.toUpperCase()
+  const force = url.searchParams.get('force') === 'true' || url.searchParams.get('force') === '1'
 
   if (!symbol) {
     return errorResponse('Missing symbol query parameter', 400)
@@ -178,11 +179,13 @@ export async function handleProxyStockPrice(request: Request, env: Env): Promise
 
   try {
     // Try cache first (valid for 5 minutes)
-    const cachedStr = await env.SMART_NOTE_KV.get(cacheKey)
-    if (cachedStr) {
-      const cached = JSON.parse(cachedStr)
-      if (now - cached.timestamp < 5 * 60 * 1000) {
-        return jsonResponse({ success: true, data: { currentPrice: cached.price, symbol } })
+    if (!force) {
+      const cachedStr = await env.SMART_NOTE_KV.get(cacheKey)
+      if (cachedStr) {
+        const cached = JSON.parse(cachedStr)
+        if (now - cached.timestamp < 5 * 60 * 1000) {
+          return jsonResponse({ success: true, data: { currentPrice: cached.price, symbol } })
+        }
       }
     }
 
@@ -222,6 +225,7 @@ export async function handleProxyStockHistory(request: Request, env: Env): Promi
   const url = new URL(request.url)
   const symbol = url.searchParams.get('symbol')?.toUpperCase()
   const days = parseInt(url.searchParams.get('days') || '7', 10)
+  const force = url.searchParams.get('force') === 'true' || url.searchParams.get('force') === '1'
 
   if (!symbol) {
     return errorResponse('Missing symbol query parameter', 400)
@@ -231,11 +235,14 @@ export async function handleProxyStockHistory(request: Request, env: Env): Promi
   const now = Date.now()
 
   try {
-    const cachedStr = await env.SMART_NOTE_KV.get(cacheKey)
-    if (cachedStr) {
-      const cached = JSON.parse(cachedStr)
-      if (now - cached.timestamp < 30 * 60 * 1000) { // 30 mins cache
-        return jsonResponse({ success: true, data: { history: cached.history, symbol } })
+    // Try cache first (valid for 15 minutes)
+    if (!force) {
+      const cachedStr = await env.SMART_NOTE_KV.get(cacheKey)
+      if (cachedStr) {
+        const cached = JSON.parse(cachedStr)
+        if (now - cached.timestamp < 15 * 60 * 1000) {
+          return jsonResponse({ success: true, data: { history: cached.history, symbol } })
+        }
       }
     }
 
@@ -342,6 +349,7 @@ const FMARKET_HEADERS = {
 export async function handleProxyFundNav(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url)
   const symbol = url.searchParams.get('symbol')?.toUpperCase()
+  const force = url.searchParams.get('force') === 'true' || url.searchParams.get('force') === '1'
 
   if (!symbol) return errorResponse('Missing symbol', 400)
 
@@ -350,11 +358,13 @@ export async function handleProxyFundNav(request: Request, env: Env): Promise<Re
 
   try {
     // Cache for 4 hours — NAV updates once a day
-    const cached = await env.SMART_NOTE_KV.get(cacheKey)
-    if (cached) {
-      const parsed = JSON.parse(cached)
-      if (now - parsed.timestamp < 4 * 60 * 60 * 1000) {
-        return jsonResponse({ success: true, data: { nav: parsed.nav, symbol } })
+    if (!force) {
+      const cached = await env.SMART_NOTE_KV.get(cacheKey)
+      if (cached) {
+        const parsed = JSON.parse(cached)
+        if (now - parsed.timestamp < 4 * 60 * 60 * 1000) {
+          return jsonResponse({ success: true, data: { nav: parsed.nav, symbol } })
+        }
       }
     }
 
@@ -405,6 +415,7 @@ export async function handleProxyFundHistory(request: Request, env: Env): Promis
   const url = new URL(request.url)
   const symbol = url.searchParams.get('symbol')?.toUpperCase()
   const days = parseInt(url.searchParams.get('days') || '7', 10)
+  const force = url.searchParams.get('force') === 'true' || url.searchParams.get('force') === '1'
   const productIdParam = url.searchParams.get('productId')
 
   if (!symbol) return errorResponse('Missing symbol', 400)
@@ -413,11 +424,13 @@ export async function handleProxyFundHistory(request: Request, env: Env): Promis
   const now = Date.now()
 
   try {
-    const cached = await env.SMART_NOTE_KV.get(cacheKey)
-    if (cached) {
-      const parsed = JSON.parse(cached)
-      if (now - parsed.timestamp < 6 * 60 * 60 * 1000) {
-        return jsonResponse({ success: true, data: { history: parsed.history, symbol } })
+    if (!force) {
+      const cached = await env.SMART_NOTE_KV.get(cacheKey)
+      if (cached) {
+        const parsed = JSON.parse(cached)
+        if (now - parsed.timestamp < 6 * 60 * 60 * 1000) {
+          return jsonResponse({ success: true, data: { history: parsed.history, symbol } })
+        }
       }
     }
 

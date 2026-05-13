@@ -16,15 +16,15 @@ export const fundApi = {
     httpClient.del(`/api/funds/${id}`),
 
   // ── Fund Market Data (via Worker proxy → Fmarket) ──
-  getCurrentNav: (symbol: string) =>
+  getCurrentNav: (symbol: string, force = false) =>
     httpClient.get<{ nav: number; symbol: string }>(
-      `/api/proxy/fund-nav?symbol=${encodeURIComponent(symbol)}`,
+      `/api/proxy/fund-nav?symbol=${encodeURIComponent(symbol)}${force ? '&force=true' : ''}`,
       { silent: true }
     ),
 
-  getNavHistory: (symbol: string, days = 7) =>
+  getNavHistory: (symbol: string, days = 7, force = false) =>
     httpClient.get<{ history: { nav: number; time: number }[]; symbol: string }>(
-      `/api/proxy/fund-history?symbol=${encodeURIComponent(symbol)}&days=${days}`,
+      `/api/proxy/fund-history?symbol=${encodeURIComponent(symbol)}&days=${days}${force ? '&force=true' : ''}`,
       { silent: true }
     ),
 

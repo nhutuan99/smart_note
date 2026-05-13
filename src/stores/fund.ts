@@ -9,15 +9,15 @@ export const useFundStore = defineStore('fund', () => {
   const navs = ref<Record<string, number>>({})                 // symbol → current NAV
   const histories = ref<Record<string, { nav: number; time: number }[]>>({}) // symbol → history
 
-  async function fetchPositions() {
+  async function fetchPositions(force = false) {
     loading.value = true
     try {
       const data = await fundApi.getPositions()
       positions.value = data || []
       // Fetch market data in background
       data?.forEach(p => {
-        fetchNav(p.symbol)
-        fetchHistory(p.symbol)
+        fetchNav(p.symbol, force)
+        fetchHistory(p.symbol, force)
       })
     } catch (e) {
       console.error('Failed to fetch fund positions:', e)
@@ -26,23 +26,25 @@ export const useFundStore = defineStore('fund', () => {
     }
   }
 
-  async function fetchNav(symbol: string) {
+  async function fetchNav(symbol: string, force = false) {
     try {
-      const data = await fundApi.getCurrentNav(symbol)
+      const data = await fundApi.getCurrentNav(symbol, force)
       if (data?.nav) {
         navs.value[symbol] = data.nav
       }
-    } catch (e) { /* silent */ }
+    } catch (e) {
+      // ignore background error
+    }
   }
 
-  async function fetchAllNavs() {
+  async function fetchAllNavs(force = false) {
     const symbols = [...new Set(positions.value.map(p => p.symbol))]
-    await Promise.allSettled(symbols.map(s => fetchNav(s)))
+    await Promise.allSettled(symbols.map(s => fetchNav(s, force)))
   }
 
-  async function fetchHistory(symbol: string) {
+  async function fetchHistory(symbol: string, force = false) {
     try {
-      const data = await fundApi.getNavHistory(symbol, 7)
+      const data = await fundApi.getNavHistory(symbol, 7, force)
       if (data?.history) {
         histories.value[symbol] = data.history
       }
