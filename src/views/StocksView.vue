@@ -575,15 +575,15 @@ function getChartData(symbol: string) {
         </div>
 
         <!-- Header -->
-        <div class="flex items-center justify-between mb-4 pr-16">
-          <div class="flex items-center gap-3 relative">
+        <div class="flex items-center justify-between mb-4 pr-12 gap-2">
+          <div class="flex items-center gap-3 relative min-w-0 flex-1">
             <div class="h-10 w-14 rounded-xl bg-accent/10 flex items-center justify-center text-accent font-bold text-xs relative overflow-hidden border border-accent/20 p-1.5 bg-white dark:bg-bg-elevated flex-shrink-0">
               <span class="absolute z-0 text-accent opacity-50">{{ pos.symbol }}</span>
               <img :src="getLogoUrls(pos.symbol)[0]" :alt="pos.symbol" referrerpolicy="no-referrer" :data-fallback-index="0" class="w-full h-full object-contain relative z-10" @error="(e) => handleImageError(e, pos.symbol)" />
             </div>
-            <div>
-              <p class="font-semibold text-lg cursor-help inline-block" @mouseenter="fetchCompanyInfo(pos.symbol)" @mouseleave="clearTooltip">{{ pos.symbol }}</p>
-              <p class="text-xs text-text-tertiary truncate max-w-[140px]" :title="getCompanyName(pos.symbol)">{{ getCompanyName(pos.symbol) }}</p>
+            <div class="min-w-0 flex-1">
+              <p class="font-semibold text-lg cursor-help inline-block leading-tight" @mouseenter="fetchCompanyInfo(pos.symbol)" @mouseleave="clearTooltip">{{ pos.symbol }}</p>
+              <p class="text-xs text-text-tertiary line-clamp-2 leading-tight mt-0.5" :title="getCompanyName(pos.symbol)">{{ getCompanyName(pos.symbol) }}</p>
               <p class="text-[10px] text-text-disabled mt-0.5">{{ pos.quantity }} {{ t('common.shares') }}</p>
             </div>
             
@@ -599,7 +599,7 @@ function getChartData(symbol: string) {
                   <div class="flex justify-between"><span class="text-text-tertiary">Mã niêm yết:</span> <span class="font-medium">{{ tooltipInfo.code }}</span></div>
                   <div class="flex justify-between"><span class="text-text-tertiary">Sàn GDKC:</span> <span class="font-medium">{{ tooltipInfo.floor }}</span></div>
                   <div class="flex justify-between"><span class="text-text-tertiary">Ngày niêm yết:</span> <span class="font-medium">{{ tooltipInfo.listedDate }}</span></div>
-                  <div class="flex justify-between"><span class="text-text-tertiary">Tên QT:</span> <span class="font-medium truncate max-w-[120px]" :title="tooltipInfo.companyNameEng">{{ tooltipInfo.companyNameEng || '---' }}</span></div>
+                  <div class="flex justify-between gap-2"><span class="text-text-tertiary shrink-0">Tên QT:</span> <span class="font-medium truncate text-right min-w-0" :title="tooltipInfo.companyNameEng">{{ tooltipInfo.companyNameEng || '---' }}</span></div>
                 </div>
               </div>
             </transition>
@@ -928,13 +928,13 @@ function getChartData(symbol: string) {
           </div>
 
           <!-- Header -->
-          <div class="flex items-center justify-between mb-4 pr-10">
-            <div>
-              <p class="font-bold text-lg text-accent">{{ pos.symbol }}</p>
-              <p class="text-xs text-text-tertiary truncate max-w-[180px]" :title="pos.fundName">{{ pos.fundName || '—' }}</p>
+          <div class="flex items-center justify-between mb-4 pr-10 gap-2">
+            <div class="min-w-0 flex-1">
+              <p class="font-bold text-lg text-accent leading-tight">{{ pos.symbol }}</p>
+              <p class="text-xs text-text-tertiary line-clamp-2 leading-tight mt-0.5" :title="pos.fundName">{{ pos.fundName || '—' }}</p>
               <p class="text-[10px] text-text-disabled mt-0.5">{{ pos.quantity.toLocaleString() }} CCQ</p>
             </div>
-            <div class="text-right">
+            <div class="text-right flex-shrink-0">
               <p class="text-xs text-text-tertiary">NAV hiện tại</p>
               <p class="font-semibold text-lg">
                 {{ fundStore.navs[pos.symbol] ? fundStore.navs[pos.symbol].toLocaleString('vi-VN') : '---' }}
