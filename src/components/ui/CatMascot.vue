@@ -21,13 +21,14 @@ const sizeClass = computed(() => {
   }
 })
 
-// Since we only generated orange cat images, we fallback to orange if grey is requested.
-// The different animation states load different realistic images.
+// Load images based on type and animation
 const imageSrc = computed(() => {
-  // We can use the specific image generated for the animation
-  if (props.animation === 'think') return '/images/cat_think_nobg.png'
-  if (props.animation === 'wave') return '/images/cat_wave_nobg.png'
-  return '/images/cat_idle_nobg.png'
+  const color = props.type === 'grey' ? 'grey' : ''
+  const prefix = color ? `_${color}` : ''
+  
+  if (props.animation === 'think') return `/images/cat${prefix}_think_nobg.png`
+  if (props.animation === 'wave') return `/images/cat${prefix}_wave_nobg.png`
+  return `/images/cat${prefix}_idle_nobg.png`
 })
 
 const isHide = computed(() => props.animation === 'hide')
