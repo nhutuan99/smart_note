@@ -8,6 +8,7 @@ import { formatVND } from '@/constants/finance'
 import { Plus, Trash2, Target, ArrowUpRight, ArrowDownRight, PartyPopper, X, Zap, Settings } from 'lucide-vue-next'
 import CurrencyInput from '@/components/ui/CurrencyInput.vue'
 import CustomDatePicker from '@/components/ui/CustomDatePicker.vue'
+import CustomSelect from '@/components/ui/CustomSelect.vue'
 
 const { t } = useI18n()
 const ui = useUiStore()
@@ -99,6 +100,16 @@ function dailySaveNeeded(g: any) { const d = daysLeft(g.deadline); if (!d || d =
 
 const totalSaved = computed(() => savingsStore.totalSaved)
 const totalTarget = computed(() => savingsStore.totalTarget)
+
+const walletOptions = computed(() => financeStore.wallets.map(w => ({
+  value: w.id,
+  label: `${w.name} (${formatVND(w.balance)})`
+})))
+
+const depositWalletOptions = computed(() => [
+  { value: '', label: t('savings.autoSaveSourceExt') },
+  ...walletOptions.value
+])
 </script>
 
 <template>
@@ -206,10 +217,11 @@ const totalTarget = computed(() => savingsStore.totalTarget)
 
         <!-- Deposit/Withdraw -->
         <div v-if="showDeposit === g.id" class="flex flex-col gap-2 mt-3 bg-bg-hover p-2 rounded-lg">
-          <select v-model="depositWalletId" class="border-border-default bg-bg-elevated text-text-primary focus:border-accent w-full rounded-lg border px-3 py-1.5 text-xs focus:ring-1 focus:outline-none">
-             <option value="">{{ t('savings.autoSaveSourceExt') }}</option>
-             <option v-for="w in financeStore.wallets" :key="w.id" :value="w.id">{{ w.name }} ({{ formatVND(w.balance) }})</option>
-          </select>
+          <CustomSelect 
+            v-model="depositWalletId" 
+            :options="depositWalletOptions" 
+            :placeholder="t('savings.autoSaveSourceExt')"
+          />
           <div class="flex gap-2">
             <CurrencyInput v-model="depositAmount" placeholder="0" className="border-border-default bg-bg-elevated text-text-primary focus:border-accent w-full rounded-lg border px-3 py-1.5 text-sm focus:ring-1 focus:ring-accent-subtle focus:outline-none flex-1" />
             <button @click="deposit(g.id)" class="bg-success/15 text-success hover:bg-success/25 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all"><ArrowUpRight :size="14" /></button>
@@ -233,9 +245,11 @@ const totalTarget = computed(() => savingsStore.totalTarget)
         <div class="space-y-4 mb-6">
           <div>
             <label class="text-xs text-text-tertiary mb-1 block">{{ t('savings.autoSaveSource') }}</label>
-            <select v-model="autoSaveWalletId" class="border-border-default bg-bg-elevated text-text-primary focus:border-accent w-full rounded-lg border px-3 py-2 text-sm focus:ring-1 focus:outline-none">
-              <option v-for="w in financeStore.wallets" :key="w.id" :value="w.id">{{ w.name }} ({{ formatVND(w.balance) }})</option>
-            </select>
+            <CustomSelect 
+              v-model="autoSaveWalletId" 
+              :options="walletOptions" 
+              :placeholder="t('savings.autoSaveSource')"
+            />
           </div>
           <div>
             <label class="text-xs text-text-tertiary mb-1 block">{{ t('savings.autoSaveAmount') }}</label>
