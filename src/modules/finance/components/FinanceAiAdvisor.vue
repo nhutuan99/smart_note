@@ -31,37 +31,58 @@ function buildFinanceContext() {
   const totalDays = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
   const dayOfMonth = now.getDate()
   const daysLeft = daysLeftInMonth.value
-  const daysElapsed = dayOfMonth - 1
-  const avgDailyExpense = daysElapsed > 0 ? Math.round(finance.monthExpense / daysElapsed) : 0
+  const daysElapsed = dayOfMonth - 1 || 1 // Avoid division by zero
+  
+  const avgDailyExpense = Math.round(finance.monthExpense / daysElapsed)
   const projectedMonthExpense = avgDailyExpense * totalDays
+  
+  const netFlow = finance.monthIncome - finance.monthExpense
+  const savingsRate = finance.monthIncome > 0 
+    ? ((netFlow / finance.monthIncome) * 100).toFixed(1) 
+    : '0.0'
 
   const walletLines = finance.wallets
-    .map(w => `  • ${w.name}: ${formatMoney(w.balance)}`)
+    .map(w => `  - [${w.name}]: ${formatMoney(w.balance)}`)
     .join('\n')
 
   const categoryLines = finance.expenseByCategoryThisMonth
-    .map(c => `  • ${t(`categories.${c.category}`)}: ${formatMoney(c.total)} (${c.percentage.toFixed(0)}%)`)
+    .map(c => `  - [${t(`categories.${c.category}`)}]: ${formatMoney(c.total)} (${c.percentage.toFixed(1)}%)`)
     .join('\n')
 
-  const netFlow = finance.monthIncome - finance.monthExpense
+  return `
+SYSTEM INSTRUCTIONS FOR AI ADVISOR:
+You are "${catName.value}", a smart, friendly, and slightly cheeky personal finance assistant taking the form of a cat.
+Your goal is to provide concise, actionable, and data-driven financial advice based on the user's current context.
+Use markdown for formatting (bolding key numbers, using bullet points).
+Use relevant emojis, but don't overdo it.
+Keep responses brief and easy to read on a mobile screen.
+Always respond in ${locale.value === 'en' ? 'English' : 'Tiếng Việt'}.
 
-  return `Bạn là ${catName.value}, trợ lý tài chính cá nhân thông minh hình chú mèo, đang tư vấn cho người dùng với dữ liệu sau:
+CURRENT CONTEXT:
+- Date: ${now.toLocaleDateString(locale.value)} (Day ${dayOfMonth} of ${totalDays})
+- Days remaining in month: ${daysLeft}
 
-📊 TÀI CHÍNH THÁNG ${now.getMonth()+1}/${now.getFullYear()}
-Hôm nay ngày ${dayOfMonth}/${totalDays} | Còn ${daysLeft} ngày trong tháng
+FINANCIAL SNAPSHOT (Current Month):
+- Total Income: ${formatMoney(finance.monthIncome)}
+- Total Expense: ${formatMoney(finance.monthExpense)}
+- Net Cash Flow: ${netFlow >= 0 ? '+' : ''}${formatMoney(netFlow)}
+- Savings Rate: ${savingsRate}%
+- Current Daily Burn Rate: ${formatMoney(avgDailyExpense)}/day
+- Projected End-of-Month Expense: ${formatMoney(projectedMonthExpense)}
 
-🏦 SỐ DƯ CÁC TÀI KHOẢN (số dư hiện tại):
-${walletLines || '  Chưa có tài khoản'}
-→ Tổng: ${formatMoney(finance.totalBalance)}
+ASSETS / WALLETS:
+- Total Balance Available: ${formatMoney(finance.totalBalance)}
+${walletLines || '  (No wallet data available)'}
 
-📅 THU CHI THÁNG ${now.getMonth()+1}:
-  ↑ Thu vào: ${formatMoney(finance.monthIncome)}
-  ↓ Chi ra: ${formatMoney(finance.monthExpense)}
-  = Dòng tiền ròng: ${netFlow >= 0 ? '+' : ''}${formatMoney(netFlow)}
-  Ø Chi bình quân/ngày: ${formatMoney(avgDailyExpense)}/ngày (dự kiến cả tháng: ${formatMoney(projectedMonthExpense)})
+EXPENSES BY CATEGORY THIS MONTH:
+${categoryLines || '  (No transaction data available)'}
 
-🏷️ DANH MỤC ĐÃ CHI THÁNG NÀY:
-${categoryLines || '  Chưa có giao dịch'}`
+BEHAVIORAL GUIDELINES:
+- If spending is high compared to income, warn them gently but clearly.
+- If they are saving well, praise them.
+- If they ask for budget advice, use the daily burn rate and projected expenses to guide them.
+- Do not invent data. If a category isn't listed, you don't know about it.
+`
 }
 
 const { streamText: aiInsightText, loading: isAiLoading, askFinance } = useAi()
@@ -96,13 +117,7 @@ async function askAiAdvisor() {
 
   const context = buildFinanceContext()
 
-  const fullPrompt = `${context}
-
----
-CÂU HỎI CỦA NGƯỜI DÙNG: ${q}
-
-Hãy trả lời dựa trên dữ liệu tài chính ở trên. Ngắn gọn, thực tế, dùng emoji và Markdown.
-BẠN PHẢI TRẢ LỜI HOÀN TOÀN BẰNG NGÔN NGỮ NÀY: ${locale.value === 'en' ? 'English' : 'Tiếng Việt'}`
+  const fullPrompt = `${context}\n\nUSER QUESTION: ${q}`
 
   await askFinance(fullPrompt)
   
@@ -118,13 +133,13 @@ function renderAiMarkdown(text: string): string {
   let html = text
   html = html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
   html = html.replace(/\u2705\s*(.+)/g, '<span class="ai-badge ai-badge-ok">✅ $1</span>')
-  html = html.replace(/\u26a0\ufe0f\s*(.+)/g, '<span class="ai-badge ai-badge-warn">⚠️ $1</span>')
+  html = html.replace(/\u26a0\ufe0f?\s*(.+)/g, '<span class="ai-badge ai-badge-warn">⚠️ $1</span>')
   html = html.replace(/\u274c\s*(.+)/g, '<span class="ai-badge ai-badge-err">❌ $1</span>')
   html = html.replace(/^\*\*(.+?)\*\*\s*$/gm, '<div class="ai-section-title">$1</div>')
   html = html.replace(/\*\*(.+?)\*\*/g, '<strong class="ai-bold">$1</strong>')
-  html = html.replace(/(\d+[,.]?\d*\s*(?:tr|triệu|k|đồng|d|đ)\b)/gi, '<span class="ai-amount">$1</span>')
+  html = html.replace(/(\d+[,.]?\d*\s*(?:tr|triệu|k|đồng|d|đ|VND)\b)/gi, '<span class="ai-amount">$1</span>')
   html = html.replace(/^[\-\*•]\s+(.+)/gm, '<div class="ai-bullet"><span class="ai-bullet-dot">‣</span><span>$1</span></div>')
-  html = html.replace(/^(\d+)\.\ (.+)/gm, '<div class="ai-numbered"><span class="ai-num">$1</span><span>$2</span></div>')
+  html = html.replace(/^(\d+)\.\s+(.+)/gm, '<div class="ai-numbered"><span class="ai-num">$1</span><span>$2</span></div>')
   html = html.replace(/^([\u{1F300}-\u{1FFFF}\u2600-\u27FF]\ufe0f?\s+.+)/gmu, '<div class="ai-info-line">$1</div>')
   html = html.replace(/\n\n+/g, '<div class="ai-spacer"></div>')
   html = html.replace(/\n/g, '<br>')
@@ -246,7 +261,7 @@ function renderAiMarkdown(text: string): string {
   </div>
 </template>
 
-<style>
+<style scoped>
 .popover-enter-active,
 .popover-leave-active {
   transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -257,10 +272,10 @@ function renderAiMarkdown(text: string): string {
   transform: scale(0.85) translateY(30px);
 }
 
-.ai-rich-response {
+:deep(.ai-rich-response) {
   line-height: 1.7;
 }
-.ai-rich-response strong {
+:deep(.ai-rich-response strong) {
   color: var(--color-text-primary);
   font-weight: 600;
 }
