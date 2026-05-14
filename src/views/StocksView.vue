@@ -623,7 +623,7 @@ function getChartData(symbol: string) {
                 <TrendingUp v-if="(stockStore.prices[pos.symbol] - pos.buyPrice) > 0" :size="14" />
                 <TrendingDown v-else-if="(stockStore.prices[pos.symbol] - pos.buyPrice) < 0" :size="14" />
                 <span v-else class="w-[14px] inline-block"></span>
-                {{ (((stockStore.prices[pos.symbol] - pos.buyPrice) / pos.buyPrice) * 100).toFixed(2) }}%
+                {{ (stockStore.prices[pos.symbol] - pos.buyPrice) > 0 ? '+' : '' }}{{ formatVNDShort((stockStore.prices[pos.symbol] - pos.buyPrice) * pos.quantity * 1000) }}
               </p>
             </template>
             <p v-else class="font-medium text-sm mt-0.5">---</p>
