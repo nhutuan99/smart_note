@@ -149,6 +149,7 @@ import {
 import { checkAllStockAlerts } from './services/stock-alert.service'
 import { checkAllReminders } from './services/reminder.service'
 import { checkTradingReminders } from './services/trading-reminder.service'
+import { checkSavingsReminders } from './services/savings-reminder.service'
 
 
 async function handleRequest(request: Request, env: Env): Promise<Response> {
@@ -673,6 +674,13 @@ export default {
       checkTradingReminders(env)
         .then(result => console.log(result))
         .catch(err => console.error('[Cron] TradingReminder failed:', err))
+    )
+
+    // Savings reminders
+    ctx.waitUntil(
+      checkSavingsReminders(env)
+        .then(result => console.log(result))
+        .catch(err => console.error('[Cron] SavingsReminder failed:', err))
     )
   }
 }

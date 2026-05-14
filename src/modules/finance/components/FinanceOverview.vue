@@ -9,6 +9,7 @@ import { useFinancePolling } from '@/composables/useFinancePolling'
 import { usePortfolioSummary } from '@/composables/usePortfolioSummary'
 import { useUiStore } from '@/stores/ui'
 import { useTradingStore } from '@/stores/trading'
+import { useSavingsStore } from '@/stores/savings'
 // 4. Utils
 import { formatVNDShort } from '@/constants/finance'
 // 5. Components & icons
@@ -27,7 +28,8 @@ import {
   ArrowDownRight,
   BookOpen,
   AlertCircle,
-  Bell
+  Bell,
+  Target
 } from 'lucide-vue-next'
 import WeatherWidget from '@/components/WeatherWidget.vue'
 import TradingCheckinModal from './TradingCheckinModal.vue'
@@ -39,6 +41,7 @@ const finance = useFinancePolling()
 const ui = useUiStore()
 const portfolio = usePortfolioSummary()
 const trading = useTradingStore()
+const savings = useSavingsStore()
 
 // Trading check-in modal (manual trigger from widget)
 const showCheckinModal = ref(false)
@@ -157,10 +160,20 @@ const primaryBalance = computed(() =>
       </div>
 
       <!-- Breakdown rows (only when investments exist) -->
-      <template v-if="portfolio.hasInvestments.value && !finance.loading">
+      <template v-if="(!finance.loading)">
         <div class="relative z-10 mt-3 space-y-1.5 border-t pt-3" style="border-color: color-mix(in srgb, var(--border-subtle) 80%, transparent);">
 
-          <!-- Wallet row -->
+          <!-- Total Savings row -->
+          <div v-if="savings.totalSaved > 0" class="flex items-center gap-2">
+            <Target :size="12" class="text-accent shrink-0" />
+            <span class="flex-1 text-xs text-text-disabled">{{ t('savings.totalSaved') }}</span>
+            <span class="text-xs tabular-nums text-text-secondary font-medium">
+              {{ ui.hideBalances ? '•••' : formatVNDShort(savings.totalSaved) }}
+            </span>
+          </div>
+
+          <template v-if="portfolio.hasInvestments.value">
+            <!-- Wallet row -->
           <div class="flex items-center gap-2">
             <Wallet :size="12" class="text-text-disabled shrink-0" />
             <span class="flex-1 text-xs text-text-disabled">{{ t('dashboard.walletBalance') }}</span>
@@ -208,6 +221,7 @@ const primaryBalance = computed(() =>
               {{ ui.hideBalances ? '•••' : formatVNDShort(Math.abs(portfolio.fundProfit.value)) }}
             </span>
           </div>
+          </template>
         </div>
       </template>
     </div>

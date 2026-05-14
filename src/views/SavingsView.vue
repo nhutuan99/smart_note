@@ -34,7 +34,33 @@ const autoSaveWalletId = ref<string>('')
 const ICONS = ['🏖️','💻','🏠','🚗','🎓','💍','🏥','🎮','📱','✈️','🎯','💰']
 const COLORS = ['#10b981','#3b82f6','#f59e0b','#8b5cf6','#ec4899','#ef4444','#14b8a6','#6366f1']
 
-const form = ref({ name: '', icon: '🎯', color: '#10b981', targetAmount: 0, deadline: '' })
+const form = ref({ name: '', icon: '🎯', color: '#10b981', targetAmount: 0, deadline: '', autoSaveEnabled: false, autoSaveAmount: 0, autoSaveWalletId: '' })
+
+// AI Planner State
+const planDurationMonths = ref<number | null>(null)
+const aiDailyAmount = computed(() => {
+  if (form.value.targetAmount <= 0 || !planDurationMonths.value) return 0;
+  const days = planDurationMonths.value * 30;
+  return Math.ceil(form.value.targetAmount / days);
+})
+const aiWeeklyAmount = computed(() => {
+  if (form.value.targetAmount <= 0 || !planDurationMonths.value) return 0;
+  const weeks = planDurationMonths.value * 4;
+  return Math.ceil(form.value.targetAmount / weeks);
+})
+
+function applyAiPlan() {
+  if (!planDurationMonths.value) return;
+  const targetDate = new Date();
+  targetDate.setMonth(targetDate.getMonth() + planDurationMonths.value);
+  form.value.deadline = targetDate.toISOString().substring(0, 10);
+  form.value.autoSaveEnabled = true;
+  form.value.autoSaveAmount = aiDailyAmount.value;
+  if (!form.value.autoSaveWalletId && financeStore.wallets.length > 0) {
+    form.value.autoSaveWalletId = financeStore.wallets[0].id;
+  }
+}
+
 
 async function addGoal() {
   const amt = form.value.targetAmount
@@ -44,10 +70,14 @@ async function addGoal() {
     icon: form.value.icon,
     color: form.value.color,
     targetAmount: amt,
-    deadline: form.value.deadline || undefined
+    deadline: form.value.deadline || undefined,
+    autoSaveEnabled: form.value.autoSaveEnabled,
+    autoSaveAmount: form.value.autoSaveAmount || undefined,
+    autoSaveWalletId: form.value.autoSaveWalletId || undefined
   })
   showAdd.value = false
-  form.value = { name: '', icon: '🎯', color: '#10b981', targetAmount: 0, deadline: '' }
+  planDurationMonths.value = null
+  form.value = { name: '', icon: '🎯', color: '#10b981', targetAmount: 0, deadline: '', autoSaveEnabled: false, autoSaveAmount: 0, autoSaveWalletId: '' }
 }
 
 async function deposit(id: string) {
@@ -161,13 +191,56 @@ const depositWalletOptions = computed(() => [
             </div>
           </div>
           <CurrencyInput v-model="form.targetAmount" :placeholder="t('savings.targetPlaceholder')" className="border-border-default bg-bg-elevated text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-lg border px-4 py-2.5 text-sm transition-all focus:ring-2 focus:outline-none" />
-          <CustomDatePicker
-            v-model="form.deadline"
-            :label="t('savings.deadline')"
-            :placeholder="t('savings.deadline')"
-          />
+          
+          <!-- AI Planner Widget -->
+          <div v-if="form.targetAmount > 0" class="bg-accent/5 border border-accent/20 rounded-xl p-4 flex flex-col gap-3 relative overflow-hidden mt-1">
+            <div class="flex gap-3">
+              <img src="/images/cat_think_nobg.png" class="w-12 h-12 object-contain drop-shadow-md" alt="AI Mít" />
+              <div class="flex-1">
+                <div class="bg-white dark:bg-bg-elevated rounded-2xl rounded-tl-none p-3 text-sm text-text-primary shadow-sm border border-border-default relative">
+                  Mít tính toán giúp bạn nhé! Bạn muốn đạt mục tiêu này trong bao lâu?
+                </div>
+              </div>
+            </div>
+            
+            <div class="flex flex-wrap gap-2 ml-14">
+              <button @click="planDurationMonths = 1" :class="planDurationMonths === 1 ? 'bg-accent text-white border-accent' : 'bg-bg-elevated text-text-secondary border-border-default hover:border-accent'" class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all">1 Tháng</button>
+              <button @click="planDurationMonths = 3" :class="planDurationMonths === 3 ? 'bg-accent text-white border-accent' : 'bg-bg-elevated text-text-secondary border-border-default hover:border-accent'" class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all">3 Tháng</button>
+              <button @click="planDurationMonths = 6" :class="planDurationMonths === 6 ? 'bg-accent text-white border-accent' : 'bg-bg-elevated text-text-secondary border-border-default hover:border-accent'" class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all">6 Tháng</button>
+              <button @click="planDurationMonths = 12" :class="planDurationMonths === 12 ? 'bg-accent text-white border-accent' : 'bg-bg-elevated text-text-secondary border-border-default hover:border-accent'" class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all">1 Năm</button>
+            </div>
+
+            <div v-if="planDurationMonths" class="ml-14 bg-white dark:bg-bg-elevated rounded-xl p-3 border border-border-default shadow-sm">
+              <p class="text-xs text-text-secondary mb-2">Gợi ý tiết kiệm:</p>
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-sm font-semibold text-text-primary">{{ formatVND(aiDailyAmount) }} <span class="text-[0.625rem] text-text-tertiary font-normal">/ngày</span></span>
+                <span class="text-text-disabled text-xs">hoặc</span>
+                <span class="text-sm font-semibold text-text-primary">{{ formatVND(aiWeeklyAmount) }} <span class="text-[0.625rem] text-text-tertiary font-normal">/tuần</span></span>
+              </div>
+              <button @click="applyAiPlan" class="w-full mt-2 bg-accent/10 text-accent hover:bg-accent/20 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 transition-all">
+                <Zap :size="12" /> Áp dụng ngày hạn & Auto-save ({{ formatVND(aiDailyAmount) }}/ngày)
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <CustomDatePicker
+              v-model="form.deadline"
+              :label="t('savings.deadline')"
+              :placeholder="t('savings.deadline')"
+            />
+            <div v-if="form.autoSaveEnabled">
+              <span class="text-text-tertiary mb-1 block text-[0.6875rem]">Nguồn Auto-Save</span>
+              <CustomSelect 
+                v-model="form.autoSaveWalletId" 
+                :options="walletOptions" 
+                placeholder="Chọn ví"
+              />
+            </div>
+          </div>
+
           <div class="flex gap-2">
-            <button @click="showAdd = false" class="border-border-default text-text-secondary hover:bg-bg-hover flex-1 rounded-lg border py-2 text-sm transition-all">{{ t('common.cancel') }}</button>
+            <button @click="showAdd = false; planDurationMonths = null" class="border-border-default text-text-secondary hover:bg-bg-hover flex-1 rounded-lg border py-2 text-sm transition-all">{{ t('common.cancel') }}</button>
             <button @click="addGoal" :disabled="!form.name.trim() || form.targetAmount <= 0" class="btn-primary flex-1 justify-center py-2 disabled:opacity-40">{{ t('common.add') }}</button>
           </div>
         </div>
@@ -196,7 +269,8 @@ const depositWalletOptions = computed(() => [
               <span v-if="g.autoSaveEnabled" class="text-accent flex items-center gap-0.5 ml-1"><Zap :size="10" /> Auto</span>
             </div>
           </div>
-          <button @click="openAutoSave(g.id)" class="text-text-tertiary hover:text-accent p-1 rounded hover:bg-bg-hover transition-all"><Settings :size="14" /></button>
+          <button v-if="g.autoSaveEnabled" @click="openAutoSave(g.id)" class="text-text-tertiary hover:text-accent p-1 rounded hover:bg-bg-hover transition-all"><Settings :size="14" /></button>
+          <button v-else @click="openAutoSave(g.id)" class="bg-bg-elevated border border-border-default hover:border-accent text-text-primary px-2 py-1 rounded text-[0.6875rem] font-semibold transition-all">Bật Auto-Save</button>
           <button @click="deleteGoal(g.id)" class="text-text-tertiary hover:text-error p-1 rounded hover:bg-bg-hover transition-all"><Trash2 :size="14" /></button>
         </div>
 
