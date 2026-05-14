@@ -831,7 +831,8 @@ export default {
     bonus: 'Bonus',
     refund: 'Refund',
     bank_receive: 'Bank Received',
-    other_income: 'Other Income'
+    other_income: 'Other Income',
+    saving: 'Savings'
   },
 
   // ── Guide ──

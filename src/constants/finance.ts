@@ -70,7 +70,8 @@ export const EXPENSE_CATEGORIES: CategoryConfig[] = [
   { key: 'bank_transfer', label: 'Chuyển khoản', icon: '🏦', color: '#0ea5e9', type: 'expense' },
   { key: 'bank_fee', label: 'Phí ngân hàng', icon: '💳', color: '#64748b', type: 'expense' },
   { key: 'subscription', label: 'Đăng ký dịch vụ', icon: '📋', color: '#a855f7', type: 'expense' },
-  { key: 'other_expense', label: 'Khác', icon: '📌', color: '#737373', type: 'expense' }
+  { key: 'other_expense', label: 'Khác', icon: '📌', color: '#737373', type: 'expense' },
+  { key: 'saving', label: 'Tiết kiệm', icon: '🐷', color: '#10b981', type: 'expense' }
 ]
 
 export const INCOME_CATEGORIES: CategoryConfig[] = [

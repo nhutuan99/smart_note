@@ -861,7 +861,8 @@ export default {
     bonus: 'Thưởng',
     refund: 'Hoàn tiền',
     bank_receive: 'Nhận CK',
-    other_income: 'Thu khác'
+    other_income: 'Thu khác',
+    saving: 'Tiết kiệm'
   },
 
   // ── Guide ──
