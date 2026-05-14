@@ -117,7 +117,7 @@ export default {
   trading: {
     // Page
     title: 'Trading Journal',
-    subtitle: 'Track daily P&L Â· Performance analytics',
+    subtitle: 'Track daily P&L · Performance analytics',
     checkinToday: 'Check-in today',
     editCheckinToday: 'Edit today\'s check-in',
 
@@ -187,9 +187,9 @@ export default {
     // Modal — footer buttons
     cancel: 'Cancel',
     next: 'Next',
-    backToWallets: 'â† Wallets',
+    backToWallets: '← Wallets',
     viewSummary: 'View Summary',
-    backToEdit: 'â† Edit',
+    backToEdit: '← Edit',
     confirm: 'Confirm check-in',
     update: 'Update check-in',
     saving: 'Saving...',
@@ -204,7 +204,7 @@ export default {
     reminderTitle: 'Daily Reminder',
     reminderDesc: 'Get a push notification to remind you to check in your P&L every day',
     reminderSetBtn: 'Set Reminder',
-    reminderActive: 'Reminding at {time} â°',
+    reminderActive: 'Reminding at {time} ⏰',
     reminderOff: 'No reminder set',
     reminderPresets: 'Quick select',
     reminderCustom: 'Custom',
@@ -325,7 +325,7 @@ export default {
     setBudgetTitle: 'Set a spending goal',
     setBudgetHint: 'Enter your monthly spending target → AI will plan automatically',
     setBudgetLabel: 'Monthly spending goal (VND)',
-    setBudgetSubhint: 'âš¡ After saving, AI will automatically analyze and suggest a plan',
+    setBudgetSubhint: '⚡ After saving, AI will automatically analyze and suggest a plan',
     analyzeAndSave: 'Save & Analyze',
     analyzeWithAi: 'Analyze & create spending plan',
     refresh: 'Refresh',
@@ -700,7 +700,7 @@ export default {
     s3Title: 'Add the Webhook URL',
     s3Desc: 'Tap <strong>Add Action</strong> → search for <strong>"URL"</strong> → select <strong>Get Contents of URL</strong>. Paste the Webhook URL from Step 1 into the URL field.',
     s4Title: 'Configure the Request',
-    s4Desc: 'Tap the small arrow <strong>âŒ„</strong> (Show More) on the action you just added:',
+    s4Desc: 'Tap the small arrow <strong>⌄</strong> (Show More) on the action you just added:',
     s4Li1: 'Change Method to <strong>POST</strong>.',
     s4Li2: 'Scroll down to <strong>Request Body</strong> → add new field as <strong>Text</strong>.',
     s4Li3: 'Enter Key: <kbd>text</kbd>',
@@ -738,9 +738,9 @@ export default {
     cities: {
       'Ho Chi Minh City': 'Ho Chi Minh City',
       'Hanoi': 'Hanoi',
-      'HÃ  Ná»™i': 'Hanoi',
+      'Hà Nội': 'Hanoi',
       'Danang': 'Da Nang',
-      'ÄÃ  Náºµng': 'Da Nang'
+      'Đà Nẵng': 'Da Nang'
     }
   },
 
@@ -768,8 +768,8 @@ export default {
     modalTitle: 'Bug Report / Feedback',
     modalDesc: 'Thanks for reporting! The details will be sent directly to the Admin for review.',
     typeLabel: 'Report Type',
-    typeBug: 'ðŸ› Bug Report',
-    typeFeature: 'âœ¨ Feature Request',
+    typeBug: '🐛 Bug Report',
+    typeFeature: '✨ Feature Request',
     titleLabel: 'Title',
     titlePlaceholder: 'e.g. Cannot save new transaction',
     descLabel: 'Detailed Description',
@@ -841,7 +841,7 @@ export default {
   pwa: {
     installTitle: 'Install FinNote on iPhone',
     installDesc: 'Run as a native app — full screen, no App Store required',
-    step1: 'Tap <strong>Share</strong> (🔳â†‘) at the bottom of Safari',
+    step1: 'Tap <strong>Share</strong> (📤) at the bottom of Safari',
     step2: 'Select <strong>"Add to Home Screen"</strong>',
     iosNativeOption: 'Or install Native App:',
     downloadIpa: 'Download .IPA',
@@ -1068,7 +1068,7 @@ export default {
 
   // ── Coffee ──
   coffee: {
-    title: 'Buy me a coffee â˜•',
+    title: 'Buy me a coffee ☕',
     desc: 'Thank you for using FinNote! If you find it helpful, consider buying me a coffee.',
     bankName: 'TP Bank',
     accountName: 'TRUONG NHU TUAN'
