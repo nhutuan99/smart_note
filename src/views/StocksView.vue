@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, computed, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Plus, Trash2, LineChart, TrendingUp, TrendingDown, Bell, BellRing, RotateCcw, X, Landmark } from 'lucide-vue-next'
+import { Plus, Trash2, LineChart, TrendingUp, TrendingDown, Bell, BellRing, RotateCcw, X, Landmark, Pencil } from 'lucide-vue-next'
 import { useStockStore } from '@/stores/stock'
 import { useFundStore } from '@/stores/fund'
 import { useUiStore } from '@/stores/ui'
@@ -53,6 +53,9 @@ function handleImageError(e: Event, symbol: string) {
 }
 
 const showAddModal = ref(false)
+const isEditingStock = ref(false)
+const editingStockId = ref<string | null>(null)
+
 const newPosition = ref({ symbol: '', buyPrice: '', quantity: '', targetProfit: '', stopLoss: '' })
 const addModalRef = ref<HTMLElement | null>(null)
 const alertModalRef = ref<HTMLElement | null>(null)
@@ -147,6 +150,9 @@ const fundTotalProfit = computed(() => {
 
 // ── Fund Add Modal ──
 const showFundAddModal = ref(false)
+const isEditingFund = ref(false)
+const editingFundId = ref<string | null>(null)
+
 const newFund = ref({ symbol: '', buyPrice: '', quantity: '', fundName: '', productId: 0 })
 const isFundSymbolFocused = ref(false)
 const fundAddModalRef = ref<HTMLElement | null>(null)
@@ -184,15 +190,40 @@ async function handleFundAdd() {
     ui.showToast('error', t('common.fillRequiredFields'))
     return
   }
-  await fundStore.addPosition({
+  
+  const data = {
     symbol: newFund.value.symbol.toUpperCase(),
     buyPrice: Number(newFund.value.buyPrice),
     quantity: Number(newFund.value.quantity),
     fundName: newFund.value.fundName || undefined,
     productId: newFund.value.productId || undefined,
-  })
+  }
+
+  if (isEditingFund.value && editingFundId.value) {
+    await fundStore.updatePosition(editingFundId.value, data)
+    ui.showToast('success', `Đã cập nhật ${data.symbol}`)
+  } else {
+    await fundStore.addPosition(data)
+    ui.showToast('success', `Đã thêm ${data.symbol}`)
+  }
+  
   showFundAddModal.value = false
+  isEditingFund.value = false
+  editingFundId.value = null
   newFund.value = { symbol: '', buyPrice: '', quantity: '', fundName: '', productId: 0 }
+}
+
+function editFundPos(pos: FundPosition) {
+  isEditingFund.value = true
+  editingFundId.value = pos.id
+  newFund.value = {
+    symbol: pos.symbol,
+    buyPrice: pos.buyPrice.toString(),
+    quantity: pos.quantity.toString(),
+    fundName: pos.fundName || '',
+    productId: pos.productId || 0
+  }
+  showFundAddModal.value = true
 }
 
 async function removeFund(id: string, symbol: string) {
@@ -241,15 +272,40 @@ async function handleAdd() {
     ui.showToast('error', t('common.fillRequiredFields'))
     return
   }
-  await stockStore.addPosition({
+  
+  const data = {
     symbol: newPosition.value.symbol.toUpperCase(),
     buyPrice: Number(newPosition.value.buyPrice),
     quantity: Number(newPosition.value.quantity),
     targetProfit: newPosition.value.targetProfit ? Number(newPosition.value.targetProfit) : undefined,
     stopLoss: newPosition.value.stopLoss ? Number(newPosition.value.stopLoss) : undefined
-  })
+  }
+
+  if (isEditingStock.value && editingStockId.value) {
+    await stockStore.updatePosition(editingStockId.value, data)
+    ui.showToast('success', `Đã cập nhật mã ${data.symbol}`)
+  } else {
+    await stockStore.addPosition(data)
+    ui.showToast('success', `Đã thêm mã ${data.symbol}`)
+  }
+  
   showAddModal.value = false
+  isEditingStock.value = false
+  editingStockId.value = null
   newPosition.value = { symbol: '', buyPrice: '', quantity: '', targetProfit: '', stopLoss: '' }
+}
+
+function editStockPos(pos: StockPosition) {
+  isEditingStock.value = true
+  editingStockId.value = pos.id
+  newPosition.value = {
+    symbol: pos.symbol,
+    buyPrice: pos.buyPrice.toString(),
+    quantity: pos.quantity.toString(),
+    targetProfit: pos.targetProfit?.toString() || '',
+    stopLoss: pos.stopLoss?.toString() || ''
+  }
+  showAddModal.value = true
 }
 
 async function removePos(id: string, symbol: string) {
@@ -568,8 +624,11 @@ function getChartData(symbol: string) {
     <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div v-for="pos in stockStore.positions" :key="pos.id" class="card-premium p-5 flex flex-col relative group">
         <!-- Action buttons -->
-        <div class="absolute top-4 right-4 flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-          <button @click="removePos(pos.id, pos.symbol)" class="p-1.5 text-text-disabled hover:text-error active:text-error hover:bg-error/10 active:bg-error/10 rounded-lg transition-colors">
+        <div class="absolute top-4 right-4 flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10">
+          <button @click="editStockPos(pos)" class="p-1.5 text-text-disabled hover:text-accent active:text-accent hover:bg-accent/10 active:bg-accent/10 rounded-lg transition-colors" :title="t('common.edit')">
+            <Pencil :size="16" />
+          </button>
+          <button @click="removePos(pos.id, pos.symbol)" class="p-1.5 text-text-disabled hover:text-error active:text-error hover:bg-error/10 active:bg-error/10 rounded-lg transition-colors" :title="t('common.delete')">
             <Trash2 :size="16" />
           </button>
         </div>
@@ -727,7 +786,7 @@ function getChartData(symbol: string) {
       <div v-if="showAddModal" class="stock-modal-overlay" @click.self="showAddModal = false">
         <div ref="addModalRef" class="stock-modal-panel card-premium" @click.stop>
           <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-accent to-accent-hover rounded-t-2xl"></div>
-          <h3 class="mb-5 text-lg font-bold">{{ t('common.add') }} {{ t('settings.stocks') }}</h3>
+          <h3 class="mb-5 text-lg font-bold">{{ isEditingStock ? 'Cập nhật' : t('common.add') }} {{ t('settings.stocks') }}</h3>
           
           <div class="space-y-4">
             <div class="relative">
@@ -737,11 +796,12 @@ function getChartData(symbol: string) {
                 type="text" 
                 class="uppercase border-border-default bg-bg-surface text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-2.5 text-sm transition-all duration-150 focus:ring-2 focus:outline-none" 
                 placeholder="FPT" 
-                @focus="isSymbolFocused = true"
+                :disabled="isEditingStock"
+                @focus="!isEditingStock && (isSymbolFocused = true)"
                 @blur="handleSymbolBlur"
               />
               <!-- Autocomplete dropdown -->
-              <div v-if="isSymbolFocused && searchResults.length > 0" class="absolute z-10 mt-1 w-full max-h-[240px] overflow-y-auto custom-scrollbar bg-bg-elevated border border-border-default rounded-xl shadow-lg">
+              <div v-if="isSymbolFocused && !isEditingStock && searchResults.length > 0" class="absolute z-10 mt-1 w-full max-h-[240px] overflow-y-auto custom-scrollbar bg-bg-elevated border border-border-default rounded-xl shadow-lg">
                 <div 
                   v-for="stock in searchResults" 
                   :key="stock.symbol"
@@ -783,7 +843,7 @@ function getChartData(symbol: string) {
           </div>
 
           <div class="mt-8 flex justify-end gap-3">
-            <button @click="showAddModal = false" class="btn-secondary w-full">{{ t('common.cancel') }}</button>
+            <button @click="showAddModal = false; isEditingStock = false; newPosition = { symbol: '', buyPrice: '', quantity: '', targetProfit: '', stopLoss: '' }" class="btn-secondary w-full">{{ t('common.cancel') }}</button>
             <button @click="handleAdd" class="btn-primary w-full">{{ t('common.save') }}</button>
           </div>
         </div>
@@ -898,7 +958,7 @@ function getChartData(symbol: string) {
             </span>
           </p>
         </div>
-        <button @click="showFundAddModal = true" class="btn-primary">
+        <button @click="showFundAddModal = true; isEditingFund = false; newFund = { symbol: '', buyPrice: '', quantity: '', fundName: '', productId: 0 }" class="btn-primary">
           <Plus :size="18" /> Thêm quỹ
         </button>
       </div>
@@ -921,8 +981,11 @@ function getChartData(symbol: string) {
       <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div v-for="pos in fundStore.positions" :key="pos.id" class="card-premium p-5 flex flex-col relative group">
           <!-- Delete button -->
-          <div class="absolute top-4 right-4 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-            <button @click="removeFund(pos.id, pos.symbol)" class="p-1.5 text-text-disabled hover:text-error hover:bg-error/10 rounded-lg transition-colors">
+          <div class="absolute top-4 right-4 flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10">
+            <button @click="editFundPos(pos)" class="p-1.5 text-text-disabled hover:text-accent hover:bg-accent/10 rounded-lg transition-colors" title="Chỉnh sửa">
+              <Pencil :size="16" />
+            </button>
+            <button @click="removeFund(pos.id, pos.symbol)" class="p-1.5 text-text-disabled hover:text-error hover:bg-error/10 rounded-lg transition-colors" title="Xóa">
               <Trash2 :size="16" />
             </button>
           </div>
@@ -982,7 +1045,7 @@ function getChartData(symbol: string) {
         <div v-if="showFundAddModal" class="stock-modal-overlay" @click.self="showFundAddModal = false">
           <div ref="fundAddModalRef" class="stock-modal-panel card-premium" @click.stop>
             <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-accent to-accent-hover rounded-t-2xl"></div>
-            <h3 class="mb-5 text-lg font-bold flex items-center gap-2"><Landmark :size="18" class="text-accent" /> Thêm chứng chỉ quỹ</h3>
+            <h3 class="mb-5 text-lg font-bold flex items-center gap-2"><Landmark :size="18" class="text-accent" /> {{ isEditingFund ? 'Cập nhật' : 'Thêm' }} chứng chỉ quỹ</h3>
 
             <div class="space-y-4">
               <!-- Symbol search -->
@@ -993,11 +1056,12 @@ function getChartData(symbol: string) {
                   type="text"
                   class="uppercase border-border-default bg-bg-surface text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-2.5 text-sm transition-all focus:ring-2 focus:outline-none"
                   placeholder="SSISCA"
-                  @focus="isFundSymbolFocused = true"
+                  :disabled="isEditingFund"
+                  @focus="!isEditingFund && (isFundSymbolFocused = true)"
                   @blur="handleFundSymbolBlur"
                 />
                 <!-- Autocomplete -->
-                <div v-if="isFundSymbolFocused && fundSearchResults.length > 0" class="absolute z-10 mt-1 w-full max-h-[260px] overflow-y-auto custom-scrollbar bg-bg-elevated border border-border-default rounded-xl shadow-lg">
+                <div v-if="isFundSymbolFocused && !isEditingFund && fundSearchResults.length > 0" class="absolute z-10 mt-1 w-full max-h-[260px] overflow-y-auto custom-scrollbar bg-bg-elevated border border-border-default rounded-xl shadow-lg">
                   <div
                     v-for="fund in fundSearchResults"
                     :key="fund.symbol"
@@ -1034,9 +1098,9 @@ function getChartData(symbol: string) {
               </div>
             </div>
 
-            <div class="mt-8 flex gap-3">
-              <button @click="showFundAddModal = false" class="btn-secondary flex-1">{{ t('common.cancel') }}</button>
-              <button @click="handleFundAdd" class="btn-primary flex-1">{{ t('common.save') }}</button>
+            <div class="mt-8 flex justify-end gap-3">
+              <button @click="showFundAddModal = false; isEditingFund = false; newFund = { symbol: '', buyPrice: '', quantity: '', fundName: '', productId: 0 }" class="btn-secondary w-full">{{ t('common.cancel') }}</button>
+              <button @click="handleFundAdd" class="btn-primary w-full">{{ t('common.save') }}</button>
             </div>
           </div>
         </div>
