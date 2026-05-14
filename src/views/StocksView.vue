@@ -634,7 +634,7 @@ function getChartData(symbol: string) {
         </div>
 
         <!-- Header -->
-        <div class="flex items-center justify-between mb-4 pr-12 gap-2">
+        <div class="flex items-center justify-between mb-4 pr-20 gap-2">
           <div class="flex items-center gap-3 relative min-w-0 flex-1">
             <div class="h-10 w-14 rounded-xl bg-accent/10 flex items-center justify-center text-accent font-bold text-xs relative overflow-hidden border border-accent/20 p-1.5 bg-white dark:bg-bg-elevated flex-shrink-0">
               <span class="absolute z-0 text-accent opacity-50">{{ pos.symbol }}</span>
@@ -991,7 +991,7 @@ function getChartData(symbol: string) {
           </div>
 
           <!-- Header -->
-          <div class="flex items-center justify-between mb-4 pr-10 gap-2">
+          <div class="flex items-center justify-between mb-4 pr-20 gap-2">
             <div class="min-w-0 flex-1">
               <p class="font-bold text-lg text-accent leading-tight">{{ pos.symbol }}</p>
               <p class="text-xs text-text-tertiary line-clamp-2 leading-tight mt-0.5" :title="pos.fundName">{{ pos.fundName || '—' }}</p>
