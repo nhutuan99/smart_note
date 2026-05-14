@@ -982,7 +982,20 @@ export default {
     notificationTitle: 'Smart Savings: {name}',
     notificationBody: 'You have enabled auto-save. Would you like to deposit {amount} into this goal right now?',
     approveExtract: 'Approve saving {amount}',
-    processing: 'Processing...'
+    processing: 'Processing...',
+    // AI Planner
+    aiPlannerText: 'Let me calculate for you! How long do you want to take to reach this goal?',
+    oneMonth: '1 Month',
+    threeMonths: '3 Months',
+    sixMonths: '6 Months',
+    oneYear: '1 Year',
+    savingsSuggestion: 'Savings Suggestion:',
+    or: 'or',
+    perWeek: '/week',
+    perDayText: '/day',
+    applyAiPlan: 'Apply Deadline & Auto-save ({amount}/day)',
+    autoSaveSourceLabel: 'Auto-Save Source',
+    chooseWallet: 'Choose wallet'
   },
 
   // ── Subscriptions ──

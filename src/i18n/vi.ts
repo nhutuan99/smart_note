@@ -1015,7 +1015,20 @@ export default {
     notificationTitle: 'Tiết kiệm thông minh: {name}',
     notificationBody: 'Bạn đã bật trích tiền tự động. Bạn có muốn chuyển {amount} vào mục tiêu này ngay bây giờ không?',
     approveExtract: 'Đồng ý trích {amount}',
-    processing: 'Đang xử lý...'
+    processing: 'Đang xử lý...',
+    // AI Planner
+    aiPlannerText: 'Mít tính toán giúp bạn nhé! Bạn muốn đạt mục tiêu này trong bao lâu?',
+    oneMonth: '1 Tháng',
+    threeMonths: '3 Tháng',
+    sixMonths: '6 Tháng',
+    oneYear: '1 Năm',
+    savingsSuggestion: 'Gợi ý tiết kiệm:',
+    or: 'hoặc',
+    perWeek: '/tuần',
+    perDayText: '/ngày',
+    applyAiPlan: 'Áp dụng ngày hạn & Auto-save ({amount}/ngày)',
+    autoSaveSourceLabel: 'Nguồn Auto-Save',
+    chooseWallet: 'Chọn ví'
   },
 
   // ── Subscriptions ──

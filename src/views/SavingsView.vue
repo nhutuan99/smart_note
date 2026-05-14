@@ -198,27 +198,27 @@ const depositWalletOptions = computed(() => [
               <img src="/images/cat_think_nobg.png" class="w-12 h-12 object-contain drop-shadow-md" alt="AI Mít" />
               <div class="flex-1">
                 <div class="bg-white dark:bg-bg-elevated rounded-2xl rounded-tl-none p-3 text-sm text-text-primary shadow-sm border border-border-default relative">
-                  Mít tính toán giúp bạn nhé! Bạn muốn đạt mục tiêu này trong bao lâu?
+                  {{ t('savings.aiPlannerText') }}
                 </div>
               </div>
             </div>
             
             <div class="flex flex-wrap gap-2 ml-14">
-              <button @click="planDurationMonths = 1" :class="planDurationMonths === 1 ? 'bg-accent text-white border-accent' : 'bg-bg-elevated text-text-secondary border-border-default hover:border-accent'" class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all">1 Tháng</button>
-              <button @click="planDurationMonths = 3" :class="planDurationMonths === 3 ? 'bg-accent text-white border-accent' : 'bg-bg-elevated text-text-secondary border-border-default hover:border-accent'" class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all">3 Tháng</button>
-              <button @click="planDurationMonths = 6" :class="planDurationMonths === 6 ? 'bg-accent text-white border-accent' : 'bg-bg-elevated text-text-secondary border-border-default hover:border-accent'" class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all">6 Tháng</button>
-              <button @click="planDurationMonths = 12" :class="planDurationMonths === 12 ? 'bg-accent text-white border-accent' : 'bg-bg-elevated text-text-secondary border-border-default hover:border-accent'" class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all">1 Năm</button>
+              <button @click="planDurationMonths = 1" :class="planDurationMonths === 1 ? 'bg-accent text-white border-accent' : 'bg-bg-elevated text-text-secondary border-border-default hover:border-accent'" class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all">{{ t('savings.oneMonth') }}</button>
+              <button @click="planDurationMonths = 3" :class="planDurationMonths === 3 ? 'bg-accent text-white border-accent' : 'bg-bg-elevated text-text-secondary border-border-default hover:border-accent'" class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all">{{ t('savings.threeMonths') }}</button>
+              <button @click="planDurationMonths = 6" :class="planDurationMonths === 6 ? 'bg-accent text-white border-accent' : 'bg-bg-elevated text-text-secondary border-border-default hover:border-accent'" class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all">{{ t('savings.sixMonths') }}</button>
+              <button @click="planDurationMonths = 12" :class="planDurationMonths === 12 ? 'bg-accent text-white border-accent' : 'bg-bg-elevated text-text-secondary border-border-default hover:border-accent'" class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all">{{ t('savings.oneYear') }}</button>
             </div>
 
             <div v-if="planDurationMonths" class="ml-14 bg-white dark:bg-bg-elevated rounded-xl p-3 border border-border-default shadow-sm">
-              <p class="text-xs text-text-secondary mb-2">Gợi ý tiết kiệm:</p>
+              <p class="text-xs text-text-secondary mb-2">{{ t('savings.savingsSuggestion') }}</p>
               <div class="flex items-center justify-between mb-1">
-                <span class="text-sm font-semibold text-text-primary">{{ formatVND(aiDailyAmount) }} <span class="text-[0.625rem] text-text-tertiary font-normal">/ngày</span></span>
-                <span class="text-text-disabled text-xs">hoặc</span>
-                <span class="text-sm font-semibold text-text-primary">{{ formatVND(aiWeeklyAmount) }} <span class="text-[0.625rem] text-text-tertiary font-normal">/tuần</span></span>
+                <span class="text-sm font-semibold text-text-primary">{{ formatVND(aiDailyAmount) }} <span class="text-[0.625rem] text-text-tertiary font-normal">{{ t('savings.perDayText') }}</span></span>
+                <span class="text-text-disabled text-xs">{{ t('savings.or') }}</span>
+                <span class="text-sm font-semibold text-text-primary">{{ formatVND(aiWeeklyAmount) }} <span class="text-[0.625rem] text-text-tertiary font-normal">{{ t('savings.perWeek') }}</span></span>
               </div>
               <button @click="applyAiPlan" class="w-full mt-2 bg-accent/10 text-accent hover:bg-accent/20 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 transition-all">
-                <Zap :size="12" /> Áp dụng ngày hạn & Auto-save ({{ formatVND(aiDailyAmount) }}/ngày)
+                <Zap :size="12" /> {{ t('savings.applyAiPlan', { amount: formatVND(aiDailyAmount) }) }}
               </button>
             </div>
           </div>
@@ -230,11 +230,11 @@ const depositWalletOptions = computed(() => [
               :placeholder="t('savings.deadline')"
             />
             <div v-if="form.autoSaveEnabled">
-              <span class="text-text-tertiary mb-1 block text-[0.6875rem]">Nguồn Auto-Save</span>
+              <span class="text-text-tertiary mb-1 block text-[0.6875rem]">{{ t('savings.autoSaveSourceLabel') }}</span>
               <CustomSelect 
                 v-model="form.autoSaveWalletId" 
                 :options="walletOptions" 
-                placeholder="Chọn ví"
+                :placeholder="t('savings.chooseWallet')"
               />
             </div>
           </div>
@@ -270,7 +270,7 @@ const depositWalletOptions = computed(() => [
             </div>
           </div>
           <button v-if="g.autoSaveEnabled" @click="openAutoSave(g.id)" class="text-text-tertiary hover:text-accent p-1 rounded hover:bg-bg-hover transition-all"><Settings :size="14" /></button>
-          <button v-else @click="openAutoSave(g.id)" class="bg-bg-elevated border border-border-default hover:border-accent text-text-primary px-2 py-1 rounded text-[0.6875rem] font-semibold transition-all">Bật Auto-Save</button>
+          <button v-else @click="openAutoSave(g.id)" class="bg-bg-elevated border border-border-default hover:border-accent text-text-primary px-2 py-1 rounded text-[0.6875rem] font-semibold transition-all">{{ t('savings.autoSaveEnable') }}</button>
           <button @click="deleteGoal(g.id)" class="text-text-tertiary hover:text-error p-1 rounded hover:bg-bg-hover transition-all"><Trash2 :size="14" /></button>
         </div>
 
