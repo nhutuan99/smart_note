@@ -130,7 +130,7 @@ function renderAiMarkdown(text: string): string {
         <div class="bg-gradient-to-r from-accent/20 to-pink-500/10 px-5 py-4 flex items-center justify-between border-b border-border-subtle relative overflow-hidden">
           <div class="absolute -right-4 -top-4 w-24 h-24 bg-accent/20 rounded-full blur-xl pointer-events-none"></div>
           <div class="flex items-center gap-3 relative z-10">
-            <div class="w-12 h-12 rounded-full bg-bg-surface border-2 border-accent/30 flex items-center justify-center overflow-hidden shrink-0 shadow-inner">
+            <div class="w-12 h-12 rounded-full bg-transparent flex items-center justify-center shrink-0">
                <CatMascot :type="catType" size="sm" :animation="isAiLoading ? 'think' : 'idle'" />
             </div>
             <div>
