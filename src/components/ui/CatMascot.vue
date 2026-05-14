@@ -3,7 +3,7 @@ import { computed } from 'vue'
 
 const props = withDefaults(defineProps<{
   type?: 'grey' | 'orange'
-  animation?: 'idle' | 'hide' | 'peek' | 'float' | 'wave' | 'jump' | 'think'
+  animation?: 'idle' | 'hide' | 'peek' | 'float' | 'wave' | 'jump' | 'think' | 'happy' | 'sad' | 'shock'
   size?: 'sm' | 'md' | 'lg' | 'xl'
 }>(), {
   type: 'orange',
@@ -21,13 +21,16 @@ const sizeClass = computed(() => {
   }
 })
 
-// Load images based on type and animation
+// Load images based on type and animation/emotion
 const imageSrc = computed(() => {
   const color = props.type === 'grey' ? 'grey' : ''
   const prefix = color ? `_${color}` : ''
   
   if (props.animation === 'think') return `/images/cat${prefix}_think_nobg.png`
   if (props.animation === 'wave') return `/images/cat${prefix}_wave_nobg.png`
+  if (props.animation === 'happy') return `/images/cat${prefix}_happy_nobg.png`
+  if (props.animation === 'sad') return `/images/cat${prefix}_sad_nobg.png`
+  if (props.animation === 'shock') return `/images/cat${prefix}_shock_nobg.png`
   return `/images/cat${prefix}_idle_nobg.png`
 })
 
@@ -42,6 +45,9 @@ const containerClass = computed(() => {
     case 'peek': return 'translate-y-2 scale-105'
     case 'wave': return 'animate-mascot-wave'
     case 'think': return 'animate-mascot-think'
+    case 'happy': return 'animate-mascot-bounce'
+    case 'sad': return 'animate-mascot-droop'
+    case 'shock': return 'animate-mascot-shake'
     default: return 'animate-mascot-idle'
   }
 })
@@ -86,10 +92,31 @@ const containerClass = computed(() => {
   50% { transform: rotate(3deg) translateY(-3px); }
 }
 
+@keyframes mascot-bounce {
+  0%, 100% { transform: translateY(0); }
+  25% { transform: translateY(-12px) scale(1.05); }
+  50% { transform: translateY(0) scale(0.95); }
+  75% { transform: translateY(-6px) scale(1.02); }
+}
+
+@keyframes mascot-droop {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(5px) rotate(-3deg) scale(0.98); }
+}
+
+@keyframes mascot-shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px) translateY(-2px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px) translateY(2px); }
+}
+
 /* Classes */
 .animate-mascot-idle { animation: mascot-idle 4s ease-in-out infinite; }
 .animate-mascot-float { animation: mascot-float 3s ease-in-out infinite; }
 .animate-mascot-jump { animation: mascot-jump 0.8s ease-in-out infinite; }
 .animate-mascot-wave { animation: mascot-wave 2s ease-in-out infinite; }
 .animate-mascot-think { animation: mascot-think 3s ease-in-out infinite; }
+.animate-mascot-bounce { animation: mascot-bounce 1.5s ease-in-out infinite; }
+.animate-mascot-droop { animation: mascot-droop 4s ease-in-out infinite; }
+.animate-mascot-shake { animation: mascot-shake 1s ease-in-out infinite; }
 </style>
