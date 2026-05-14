@@ -4,6 +4,7 @@ export default {
     cancel: 'Cancel',
     confirm: 'Confirm',
     save: 'Save',
+    update: 'Update',
     delete: 'Delete',
     add: 'Add',
     edit: 'Edit',
@@ -36,7 +37,10 @@ export default {
     buyPrice: 'Buy Price',
     profit: 'Profit/Loss',
     symbol: 'Symbol',
+    fundSymbol: 'Fund Symbol',
     quantity: 'Quantity',
+    target: 'Target',
+    stopLoss: 'Stop Loss',
     confirmDelete: 'Are you sure you want to delete this?',
     noData: 'No Data Available',
     fillRequiredFields: 'Please fill in all required fields'

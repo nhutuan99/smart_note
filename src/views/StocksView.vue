@@ -786,7 +786,7 @@ function getChartData(symbol: string) {
       <div v-if="showAddModal" class="stock-modal-overlay" @click.self="showAddModal = false">
         <div ref="addModalRef" class="stock-modal-panel card-premium" @click.stop>
           <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-accent to-accent-hover rounded-t-2xl"></div>
-          <h3 class="mb-5 text-lg font-bold">{{ isEditingStock ? 'Cập nhật' : t('common.add') }} {{ t('settings.stocks') }}</h3>
+          <h3 class="mb-5 text-lg font-bold">{{ isEditingStock ? t('common.update') : t('common.add') }} {{ t('settings.stocks') }}</h3>
           
           <div class="space-y-4">
             <div class="relative">
@@ -832,11 +832,11 @@ function getChartData(symbol: string) {
             </div>
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="mb-1.5 block text-sm font-medium text-text-secondary">Target (%)</label>
+                <label class="mb-1.5 block text-sm font-medium text-text-secondary">{{ t('common.target') }} (%)</label>
                 <input v-model="newPosition.targetProfit" type="number" class="border-border-default bg-bg-surface text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-2.5 text-sm transition-all duration-150 focus:ring-2 focus:outline-none" />
               </div>
               <div>
-                <label class="mb-1.5 block text-sm font-medium text-text-secondary">Stop Loss (%)</label>
+                <label class="mb-1.5 block text-sm font-medium text-text-secondary">{{ t('common.stopLoss') }} (%)</label>
                 <input v-model="newPosition.stopLoss" type="number" class="border-border-default bg-bg-surface text-text-primary placeholder:text-text-disabled focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-2.5 text-sm transition-all duration-150 focus:ring-2 focus:outline-none" />
               </div>
             </div>
@@ -1045,12 +1045,12 @@ function getChartData(symbol: string) {
         <div v-if="showFundAddModal" class="stock-modal-overlay" @click.self="showFundAddModal = false">
           <div ref="fundAddModalRef" class="stock-modal-panel card-premium" @click.stop>
             <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-accent to-accent-hover rounded-t-2xl"></div>
-            <h3 class="mb-5 text-lg font-bold flex items-center gap-2"><Landmark :size="18" class="text-accent" /> {{ isEditingFund ? 'Cập nhật' : 'Thêm' }} chứng chỉ quỹ</h3>
+            <h3 class="mb-5 text-lg font-bold flex items-center gap-2"><Landmark :size="18" class="text-accent" /> {{ isEditingFund ? t('common.update') : t('common.add') }} {{ t('finance.fundsLabel') }}</h3>
 
             <div class="space-y-4">
               <!-- Symbol search -->
               <div class="relative">
-                <label class="mb-1.5 block text-sm font-medium text-text-secondary">Mã quỹ</label>
+                <label class="mb-1.5 block text-sm font-medium text-text-secondary">{{ t('common.fundSymbol') }}</label>
                 <input
                   v-model="newFund.symbol"
                   type="text"
@@ -1086,12 +1086,12 @@ function getChartData(symbol: string) {
               <!-- Buy price + Quantity -->
               <div class="grid grid-cols-2 gap-4">
                 <div>
-                  <label class="mb-1.5 block text-sm font-medium text-text-secondary">Số lượng CCQ</label>
+                  <label class="mb-1.5 block text-sm font-medium text-text-secondary">{{ t('common.quantity') }} CCQ</label>
                   <input v-model="newFund.quantity" type="number" min="0" step="1"
                     class="border-border-default bg-bg-surface text-text-primary focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-2.5 text-sm transition-all focus:ring-2 focus:outline-none" />
                 </div>
                 <div>
-                  <label class="mb-1.5 block text-sm font-medium text-text-secondary">Giá mua / CCQ (VND)</label>
+                  <label class="mb-1.5 block text-sm font-medium text-text-secondary">{{ t('common.buyPrice') }} / CCQ (VND)</label>
                   <input v-model="newFund.buyPrice" type="number" min="0" step="100"
                     class="border-border-default bg-bg-surface text-text-primary focus:border-accent focus:ring-accent-subtle w-full rounded-xl border px-4 py-2.5 text-sm transition-all focus:ring-2 focus:outline-none" />
                 </div>

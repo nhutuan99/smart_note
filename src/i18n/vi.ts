@@ -1,9 +1,10 @@
-﻿export default {
+export default {
   // ── Common ──
   common: {
     cancel: 'Hủy',
     confirm: 'Xác nhận',
     save: 'Lưu',
+    update: 'Cập nhật',
     delete: 'Xóa',
     add: 'Thêm',
     edit: 'Sửa',
@@ -36,7 +37,10 @@
     buyPrice: 'Giá mua',
     profit: 'Lãi/Lỗ',
     symbol: 'Mã CK',
+    fundSymbol: 'Mã quỹ',
     quantity: 'Số lượng',
+    target: 'Mục tiêu',
+    stopLoss: 'Cắt lỗ',
     confirmDelete: 'Bạn có chắc chắn muốn xóa không?',
     noData: 'Chưa có dữ liệu',
     fillRequiredFields: 'Vui lòng điền đầy đủ thông tin bắt buộc'
