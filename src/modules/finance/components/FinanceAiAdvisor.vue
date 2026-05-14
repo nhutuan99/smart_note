@@ -131,7 +131,7 @@ function renderAiMarkdown(text: string): string {
           <div class="absolute -right-4 -top-4 w-24 h-24 bg-accent/20 rounded-full blur-xl pointer-events-none"></div>
           <div class="flex items-center gap-3 relative z-10">
             <div class="w-12 h-12 rounded-full bg-bg-surface border-2 border-accent/30 flex items-center justify-center overflow-hidden shrink-0 shadow-inner">
-               <CatMascot :type="catType" size="sm" animation="idle" />
+               <CatMascot :type="catType" size="sm" :animation="isAiLoading ? 'think' : 'idle'" />
             </div>
             <div>
               <h3 class="text-[0.9375rem] font-bold text-text-primary flex items-center gap-1.5">{{ t('dashboard.aiAdvisorTitle') }} <div class="w-2 h-2 bg-success rounded-full animate-pulse shadow-[0_0_8px_var(--success)]"></div></h3>
@@ -208,7 +208,7 @@ function renderAiMarkdown(text: string): string {
         class="relative flex items-center justify-center filter outline-none z-50 will-change-transform hover:scale-110 drop-shadow-[0_10px_20px_rgba(0,0,0,0.3)] hover:drop-shadow-[0_15px_30px_rgba(142,125,250,0.4)] transition-all duration-300"
         style="transform: translateZ(0);"
       >
-        <CatMascot :type="catType" size="md" animation="wave" />
+        <CatMascot :type="catType" size="md" :animation="isOpen ? (isAiLoading ? 'think' : 'idle') : 'wave'" />
         
         <!-- Chat Bubble Tooltip -->
         <transition name="fade">

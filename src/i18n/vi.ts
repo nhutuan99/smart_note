@@ -1,5 +1,5 @@
 ﻿export default {
-  // â”€â”€ Common â”€â”€
+  // ── Common ──
   common: {
     cancel: 'Hủy',
     confirm: 'Xác nhận',
@@ -42,7 +42,7 @@
     fillRequiredFields: 'Vui lòng điền đầy đủ thông tin bắt buộc'
   },
 
-  // â”€â”€ Stock Alerts â”€â”€
+  // ── Stock Alerts ──
   stockAlert: {
     addAlert: 'Đặt mốc giá',
     direction: 'Loại cảnh báo',
@@ -63,7 +63,7 @@
     takeProfit: 'Mục tiêu chốt lời'
   },
 
-  // â”€â”€ Time â”€â”€
+  // ── Time ──
   time: {
     justNow: 'Vừa xong',
     minutesAgo: '{n} phút trước',
@@ -74,13 +74,13 @@
     dAgo: '{n}d trước'
   },
 
-  // â”€â”€ Days â”€â”€
+  // ── Days ──
   days: {
     short: ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'],
     long: ['CN', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7']
   },
 
-  // â”€â”€ Months â”€â”€
+  // ── Months ──
   months: [
     'Tháng 1',
     'Tháng 2',
@@ -96,7 +96,7 @@
     'Tháng 12'
   ],
 
-  // â”€â”€ Navigation â”€â”€
+  // ── Navigation ──
   nav: {
     dashboard: 'Dashboard',
     transactions: 'Giao dịch',
@@ -123,7 +123,7 @@
     trading: 'Trading Journal'
   },
 
-  // â”€â”€ Trading Journal â”€â”€
+  // ── Trading Journal ──
   trading: {
     // Page
     title: 'Trading Journal',
@@ -224,13 +224,13 @@
     reminderTurnOff: 'Tắt nhắc nhở'
   },
 
-  // â”€â”€ Planning Hub â”€â”€
+  // ── Planning Hub ──
   planning: {
     description:
       'Trung tâm kiểm soát tài chính nâng cao. Lên kế hoạch, theo dõi mục tiêu và làm chủ dòng tiền của bạn.'
   },
 
-  // â”€â”€ Debt/Loan â”€â”€
+  // ── Debt/Loan ──
   debt: {
     title: 'Quản lý nợ/vay',
     description: 'Theo dõi các khoản nợ, khoản vay và lịch thanh toán',
@@ -260,7 +260,7 @@
     count: '{n} khoản'
   },
 
-  // â”€â”€ Onboarding â”€â”€
+  // ── Onboarding ──
   onboarding: {
     welcome: 'Chào mừng đến với FinNote!',
     welcomeDesc: 'Ứng dụng quản lý tài chính cá nhân thông minh',
@@ -281,7 +281,7 @@
     monthlyBudget: 'Mục tiêu chi tiêu tháng'
   },
 
-  // â”€â”€ Notifications â”€â”€
+  // ── Notifications ──
   notifications: {
     title: 'Thông báo',
     new: '{n} mới',
@@ -297,7 +297,7 @@
     smsIn: '[SMS] Tiền vào tài khoản'
   },
 
-  // â”€â”€ Dashboard â”€â”€
+  // ── Dashboard ──
   dashboard: {
     totalBalance: 'Tổng số dư',
     monthIncome: 'Thu nhập tháng',
@@ -374,7 +374,7 @@
     incomePercent: '% thu nhập'
   },
 
-  // â”€â”€ Transactions â”€â”€
+  // ── Transactions ──
   transactions: {
     title: 'Giao dịch',
     count: '{n} giao dịch',
@@ -408,7 +408,7 @@
     source: 'Nguồn'
   },
 
-  // â”€â”€ Add Transaction â”€â”€
+  // ── Add Transaction ──
   addTx: {
     title: 'Thêm giao dịch',
     expense: 'Chi tiêu',
@@ -424,7 +424,7 @@
     submitIncome: 'Ghi thu nhập'
   },
 
-  // â”€â”€ Wallets â”€â”€
+  // ── Wallets ──
   wallets: {
     title: 'Ví của tôi',
     addWallet: 'Thêm ví',
@@ -443,7 +443,7 @@
     pinDeleteMessage: 'Nhập mã PIN để xóa ví này'
   },
 
-  // â”€â”€ Notes â”€â”€
+  // ── Notes ──
   notes: {
     title: 'Notes',
     count: '{n} notes',
@@ -504,7 +504,7 @@
     }
   },
 
-  // â”€â”€ Shared Note â”€â”€
+  // ── Shared Note ──
   sharedNote: {
     notFound: 'Không tìm thấy ghi chú hoặc bạn không có quyền truy cập.',
     loginRequired: 'Bạn cần đăng nhập để xem ghi chú này.',
@@ -516,7 +516,7 @@
     shareLabel: 'Chia sẻ'
   },
 
-  // â”€â”€ Settings â”€â”€
+  // ── Settings ──
   settings: {
     title: 'Cài đặt',
     tabs: {
@@ -636,7 +636,7 @@
     disconnectVault: 'Ngắt kết nối'
   },
 
-  // â”€â”€ Login â”€â”€
+  // ── Login ──
   login: {
     tagline: 'Trung tâm kiến thức cá nhân',
     welcomeBack: 'Chào mừng trở lại',
@@ -663,7 +663,7 @@
     actionLogin: 'Đăng nhập / Đăng ký'
   },
 
-  // â”€â”€ Forgot Password / PIN â”€â”€
+  // ── Forgot Password / PIN ──
   forgot: {
     // Forgot Password
     title: 'Quên mật khẩu',
@@ -700,7 +700,7 @@
     pinResetSuccess: 'Đặt lại PIN thành công!'
   },
 
-  // â”€â”€ AutoSync â”€â”€
+  // ── AutoSync ──
   autoSync: {
     title: 'Đồng bộ tự động (iOS)',
     desc: 'Tự động ghi nhận giao dịch ngân hàng từ SMS vào FinNote thông qua iOS Shortcuts — an toàn, miễn phí, không cần đăng nhập ngân hàng.',
@@ -741,7 +741,7 @@
     hiddenUrl: '••••••••••••••••••••••••••••••••••••••••••••••••••••••••'
   },
 
-  // â”€â”€ PinDialog â”€â”€
+  // ── PinDialog ──
   pin: {
     title: 'Xác nhận bằng PIN',
     message: 'Nhập mã PIN để tiếp tục',
@@ -754,7 +754,7 @@
     setupNow: 'Thiết lập PIN ngay'
   },
 
-  // â”€â”€ Weather â”€â”€
+  // ── Weather ──
   weather: {
     feelsLike: 'Cảm giác như',
     humidity: 'Độ ẩm',
@@ -774,7 +774,7 @@
     }
   },
 
-  // â”€â”€ Bug Report â”€â”€
+  // ── Bug Report ──
   bugReport: {
     sectionTitle: 'Báo lỗi & Góp ý',
     sendReport: 'Gửi phản hồi',
@@ -817,7 +817,7 @@
     error: 'Lỗi khi gửi báo cáo'
   },
 
-  // â”€â”€ Contact / Feedback â”€â”€
+  // ── Contact / Feedback ──
   contact: {
     sectionTitle: 'Liên hệ & Góp ý',
     sendFeedback: 'Gửi ý kiến cho Admin',
@@ -836,7 +836,7 @@
     error: 'Lỗi khi gửi ý kiến'
   },
 
-  // â”€â”€ Categories â”€â”€
+  // ── Categories ──
   categories: {
     food: 'Ăn uống',
     transport: 'Di chuyển',
@@ -860,7 +860,7 @@
     other_income: 'Thu khác'
   },
 
-  // â”€â”€ Guide â”€â”€
+  // ── Guide ──
   guide: {
     syncTitle: 'Bạn có biết?',
     syncMessage:
@@ -868,7 +868,7 @@
     syncAction: 'Tìm hiểu ngay'
   },
 
-  // â”€â”€ PWA Install Guide â”€â”€
+  // ── PWA Install Guide ──
   pwa: {
     installTitle: 'Cài FinNote lên iPhone',
     installDesc: 'Chạy như app native — toàn màn hình, không cần App Store',
@@ -880,7 +880,7 @@
       '*Yêu cầu sử dụng máy tính cài qua <strong>AltStore</strong>, <strong>Sideloadly</strong>, hoặc dùng thiết bị đã có <strong>TrollStore</strong>.'
   },
 
-  // â”€â”€ Blog â”€â”€
+  // ── Blog ──
   blog: {
     // Admin page
     manageTitle: 'Quản Lý Blog',
@@ -940,7 +940,7 @@
     appIntroNote: 'Không cần tải app — chạy trực tiếp trên trình duyệt'
   },
 
-  // â”€â”€ Recurring â”€â”€
+  // ── Recurring ──
   recurring: {
     title: 'Giao dịch định kỳ',
     count: '{n} mục',
@@ -961,7 +961,7 @@
     deleteMessage: 'Giao dịch định kỳ này sẽ bị xóa.'
   },
 
-  // â”€â”€ Budget â”€â”€
+  // ── Budget ──
   budget: {
     title: 'Ngân sách tháng',
     setupTitle: 'Đặt mục tiêu chi tiêu',
@@ -977,7 +977,7 @@
     reset: 'Đặt lại'
   },
 
-  // â”€â”€ Savings â”€â”€
+  // ── Savings ──
   savings: {
     title: 'Mục tiêu tiết kiệm',
     count: '{n} mục tiêu',
@@ -1014,7 +1014,7 @@
     processing: 'Đang xử lý...'
   },
 
-  // â”€â”€ Subscriptions â”€â”€
+  // ── Subscriptions ──
   subs: {
     title: 'Đăng ký dịch vụ',
     desc: 'Tự động phát hiện các khoản chi định kỳ từ lịch sử giao dịch',
@@ -1028,7 +1028,7 @@
       'Thêm giao dịch để hệ thống tự động phát hiện các khoản chi định kỳ (Netflix, Spotify, gym...)'
   },
 
-  // â”€â”€ Weekly Event â”€â”€
+  // ── Weekly Event ──
   weeklyEvent: {
     title: 'Sự Kiện Hàng Tuần (AI)',
     skip: 'Bỏ qua tuần này',
@@ -1048,7 +1048,7 @@
     }
   },
 
-  // â”€â”€ Reminders â”€â”€
+  // ── Reminders ──
   reminders: {
     title: 'Lời nhắc',
     subtitle:
@@ -1105,7 +1105,7 @@
     widgetTitle: 'Nhắc nhở sắp tới'
   },
 
-  // â”€â”€ Coffee â”€â”€
+  // ── Coffee ──
   coffee: {
     title: 'Buy me a coffee ☕',
     desc: 'Cảm ơn bạn đã sử dụng FinNote! Nếu thấy ứng dụng hữu ích, bạn có thể mời mình một ly cà phê nhé.',
@@ -1113,7 +1113,7 @@
     accountName: 'TRUONG NHU TUAN'
   },
 
-  // â”€â”€ AI To-Do â”€â”€
+  // ── AI To-Do ──
   aiTodo: {
     title: 'AI To-Do',
     subtitle: 'Chat với AI để lên kế hoạch ngày hiệu quả',
