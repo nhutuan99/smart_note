@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed, ref, nextTick, onMounted } from 'vue'
 import { useFinancePolling } from '@/composables/useFinancePolling'
-import { formatMoneyShort } from '@/composables/useCurrency'
+import { formatMoney, formatMoneyShort } from '@/composables/useCurrency'
 import { useI18n } from 'vue-i18n'
 import { Bot, X, Zap } from 'lucide-vue-next'
 import { useAi } from '@/composables/useGemini'
 import CatMascot from '@/components/ui/CatMascot.vue'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const finance = useFinancePolling()
 
 const isOpen = ref(false)
@@ -36,11 +36,11 @@ function buildFinanceContext() {
   const projectedMonthExpense = avgDailyExpense * totalDays
 
   const walletLines = finance.wallets
-    .map(w => `  • ${w.name}: ${formatMoneyShort(w.balance)}`)
+    .map(w => `  • ${w.name}: ${formatMoney(w.balance)}`)
     .join('\n')
 
   const categoryLines = finance.expenseByCategoryThisMonth
-    .map(c => `  • ${t(`categories.${c.category}`)}: ${formatMoneyShort(c.total)} (${c.percentage.toFixed(0)}%)`)
+    .map(c => `  • ${t(`categories.${c.category}`)}: ${formatMoney(c.total)} (${c.percentage.toFixed(0)}%)`)
     .join('\n')
 
   const netFlow = finance.monthIncome - finance.monthExpense
@@ -52,13 +52,13 @@ Hôm nay ngày ${dayOfMonth}/${totalDays} | Còn ${daysLeft} ngày trong tháng
 
 🏦 SỐ DƯ CÁC TÀI KHOẢN (số dư hiện tại):
 ${walletLines || '  Chưa có tài khoản'}
-→ Tổng: ${formatMoneyShort(finance.totalBalance)}
+→ Tổng: ${formatMoney(finance.totalBalance)}
 
 📅 THU CHI THÁNG ${now.getMonth()+1}:
-  ↑ Thu vào: ${formatMoneyShort(finance.monthIncome)}
-  ↓ Chi ra: ${formatMoneyShort(finance.monthExpense)}
-  = Dòng tiền ròng: ${netFlow >= 0 ? '+' : ''}${formatMoneyShort(netFlow)}
-  Ø Chi bình quân/ngày: ${formatMoneyShort(avgDailyExpense)}/ngày (dự kiến cả tháng: ${formatMoneyShort(projectedMonthExpense)})
+  ↑ Thu vào: ${formatMoney(finance.monthIncome)}
+  ↓ Chi ra: ${formatMoney(finance.monthExpense)}
+  = Dòng tiền ròng: ${netFlow >= 0 ? '+' : ''}${formatMoney(netFlow)}
+  Ø Chi bình quân/ngày: ${formatMoney(avgDailyExpense)}/ngày (dự kiến cả tháng: ${formatMoney(projectedMonthExpense)})
 
 🏷️ DANH MỤC ĐÃ CHI THÁNG NÀY:
 ${categoryLines || '  Chưa có giao dịch'}`
@@ -101,7 +101,8 @@ async function askAiAdvisor() {
 ---
 CÂU HỎI CỦA NGƯỜI DÙNG: ${q}
 
-Hãy trả lời dựa trên dữ liệu tài chính ở trên. Ngắn gọn, thực tế, dùng emoji và Markdown.`
+Hãy trả lời dựa trên dữ liệu tài chính ở trên. Ngắn gọn, thực tế, dùng emoji và Markdown.
+BẠN PHẢI TRẢ LỜI HOÀN TOÀN BẰNG NGÔN NGỮ NÀY: ${locale.value === 'en' ? 'English' : 'Tiếng Việt'}`
 
   await askFinance(fullPrompt)
   
