@@ -3,7 +3,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
 import { setLocale } from '@/i18n'
-import { ArrowRight, Bot, ShieldCheck, Sparkles, Smartphone, PenTool, LayoutDashboard, Target, Zap, TrendingUp, CheckCircle2, Moon, Sun } from 'lucide-vue-next'
+import { ArrowRight, Bot, ShieldCheck, Sparkles, Smartphone, PenTool, LayoutDashboard, Target, Zap, TrendingUp, CheckCircle2, Moon, Sun, Volume2, VolumeX } from 'lucide-vue-next'
 import { onMounted, ref } from 'vue'
 
 const { t, locale } = useI18n()
@@ -11,6 +11,15 @@ const router = useRouter()
 const auth = useAuthStore()
 
 const isStarting = ref(false)
+const isMuted = ref(true)
+const demoVideoRef = ref<HTMLVideoElement | null>(null)
+
+function toggleMute() {
+  if (demoVideoRef.value) {
+    isMuted.value = !isMuted.value
+    demoVideoRef.value.muted = isMuted.value
+  }
+}
 
 async function startGuest() {
   if (isStarting.value) return
@@ -175,15 +184,30 @@ onUnmounted(() => {
           </div>
           
           <div class="relative w-full aspect-video bg-[#0b0c10] mt-12 overflow-hidden">
-            <!-- Video Player (using WEBP for auto-play without restrictions) -->
-            <img 
-              src="/images/demo_video.webp" 
-              alt="FinNote App Demo"
+            <!-- Veo 3 Video Player -->
+            <video 
+              ref="demoVideoRef"
+              src="/images/demo-veo3.mp4" 
+              autoplay 
+              loop 
+              muted 
+              playsinline
+              preload="auto"
               class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-1000 ease-out"
-            />
+            ></video>
             
-            <!-- Play Overlay (Subtle Gradient) -->
-            <div class="absolute inset-0 bg-gradient-to-t from-[#04060d]/80 via-transparent to-transparent pointer-events-none"></div>
+            <!-- Bottom gradient overlay -->
+            <div class="absolute inset-0 bg-gradient-to-t from-[#04060d]/60 via-transparent to-transparent pointer-events-none"></div>
+            
+            <!-- Custom Volume Toggle Button -->
+            <button 
+              @click="toggleMute" 
+              class="absolute bottom-4 right-4 z-20 w-10 h-10 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/80 hover:text-white hover:bg-black/70 transition-all duration-200 hover:scale-110 shadow-lg"
+              :title="isMuted ? 'Bật âm thanh' : 'Tắt âm thanh'"
+            >
+              <VolumeX v-if="isMuted" :size="18" />
+              <Volume2 v-else :size="18" />
+            </button>
           </div>
         </div>
       </div>
