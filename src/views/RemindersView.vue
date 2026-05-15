@@ -6,6 +6,7 @@ import { useUiStore } from '@/stores/ui'
 import type { Reminder, ReminderSuggestion } from '@/types'
 import CreateReminderModal from '@/components/ui/CreateReminderModal.vue'
 import ReminderSuggestionModal from '@/components/ui/ReminderSuggestionModal.vue'
+import CleanupExpiredModal from '@/components/ui/CleanupExpiredModal.vue'
 import {
   Bell, Plus, Check, Clock, CalendarDays, Trash2,
   CheckCircle2, AlertCircle, Timer, BellRing, Repeat, Eye,
@@ -19,6 +20,7 @@ const ui = useUiStore()
 const isAiFocused = ref(false)
 
 const showCreateModal = ref(false)
+const showCleanupModal = ref(false)
 const editingReminder = ref<Reminder | null>(null)
 
 const tabs: { key: ReminderFilter; label: string }[] = [
@@ -28,6 +30,10 @@ const tabs: { key: ReminderFilter; label: string }[] = [
 ]
 
 const aiSuggestions = ref<any[]>([])
+
+const expiredReminders = computed(() => {
+  return store.reminders.filter(r => r.status === 'expired')
+})
 
 onMounted(() => {
   store.fetch()
@@ -250,15 +256,27 @@ const groupedReminders = computed<DateGroup[]>(() => {
         </button>
       </div>
 
-      <button 
-        v-if="store.filtered.length > 0"
-        @click="handleClearReminders"
-        class="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-error bg-error/10 hover:bg-error/20 transition-colors"
-        title="Xóa tất cả"
-      >
-        <Trash2 :size="14" />
-        <span class="hidden sm:inline">Xóa tất cả</span>
-      </button>
+      <div class="flex items-center gap-2">
+        <button 
+          v-if="expiredReminders.length > 0"
+          @click="showCleanupModal = true"
+          class="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-warning bg-warning/10 hover:bg-warning/20 transition-colors"
+          title="Dọn dẹp quá hạn"
+        >
+          <Sparkles :size="14" />
+          <span class="hidden sm:inline">Dọn dẹp ({{ expiredReminders.length }})</span>
+        </button>
+
+        <button 
+          v-if="store.filtered.length > 0"
+          @click="handleClearReminders"
+          class="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-error bg-error/10 hover:bg-error/20 transition-colors"
+          title="Xóa tất cả"
+        >
+          <Trash2 :size="14" />
+          <span class="hidden sm:inline">Xóa tất cả</span>
+        </button>
+      </div>
     </div>
 
     <!-- Loading State -->
@@ -437,6 +455,14 @@ const groupedReminders = computed<DateGroup[]>(() => {
       :suggestions="aiSuggestions"
       @close="aiSuggestions = []"
       @created="() => { aiSuggestions = []; store.fetch(); }"
+    />
+    
+    <!-- Cleanup Expired Modal -->
+    <CleanupExpiredModal
+      v-if="showCleanupModal"
+      :reminders="expiredReminders"
+      @close="showCleanupModal = false"
+      @cleaned="showCleanupModal = false; store.fetch()"
     />
   </div>
 </template>

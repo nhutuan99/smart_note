@@ -190,6 +190,8 @@ export async function handleClearReminders(userId: string, request: Request, env
     reminders = reminders.filter(r => r.status !== 'completed' && r.status !== 'expired')
   } else if (statusFilter === 'active') {
     reminders = reminders.filter(r => r.status !== 'active')
+  } else if (statusFilter === 'expired') {
+    reminders = reminders.filter(r => r.status !== 'expired')
   }
 
   await putJSON(env.SMART_NOTE_KV, `users/${userId}/reminders`, reminders)
