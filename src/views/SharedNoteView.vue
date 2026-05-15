@@ -20,10 +20,16 @@ const note = ref<Note | null>(null)
 const loading = ref(true)
 const error = ref('')
 
+import { autoFormatJsonContent } from '@/shared/utils/jsonFormatter'
+
 onMounted(async () => {
   try {
     const data = await httpClient.get<Note>(`/api/notes/shared/${noteId}`)
     if (data) {
+      const formatted = autoFormatJsonContent(data.content)
+      if (formatted) {
+        data.content = formatted
+      }
       note.value = data
       
       useAppSeo({

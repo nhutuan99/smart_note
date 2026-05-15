@@ -14,6 +14,7 @@ import { ArrowLeft, Save, Pin, Trash2, Tag, X, Plus, Check, Sparkles, Bell, Load
 import { useI18n } from 'vue-i18n'
 import { useAi } from '@/composables/useGemini'
 import { useBlogStore } from '@/stores/blog'
+import { autoFormatJsonContent } from '@/shared/utils/jsonFormatter'
 
 const route = useRoute()
 const router = useRouter()
@@ -85,28 +86,16 @@ watch(
   { deep: true }
 )
 
+
+
 async function saveNote() {
   if (!noteId.value || saving.value) return
   saving.value = true
   try {
     // Auto-format JSON data
-    const tempDiv = document.createElement('div')
-    tempDiv.innerHTML = content.value
-    const textContext = tempDiv.textContent || ''
-    const trimmed = textContext.trim()
-    
-    if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
-      try {
-        const parsed = JSON.parse(trimmed)
-        const formatted = JSON.stringify(parsed, null, 2)
-        const escaped = formatted.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-        const codeBlock = `<pre><code class="language-json">${escaped}</code></pre>`
-        if (content.value !== codeBlock) {
-          content.value = codeBlock
-        }
-      } catch {
-        // Ignore if not valid JSON
-      }
+    const formattedJson = autoFormatJsonContent(content.value)
+    if (formattedJson && content.value !== formattedJson) {
+      content.value = formattedJson
     }
 
     await notesStore.updateNote(noteId.value, {
