@@ -52,7 +52,7 @@ function maybeTriggerCheckin() {
  * True when the current route should be rendered standalone (no AppLayout).
  * Used for login and onboarding screens.
  */
-const isStandalonePage = computed(() => ['login', 'onboarding'].includes(route.name as string))
+const isStandalonePage = computed(() => ['login', 'onboarding', 'landing'].includes(route.name as string))
 
 /**
  * Public pages (blog) — rendered without sidebar, accessible without login.

@@ -46,7 +46,7 @@ onMounted(() => {
   animate()
 
   // Typewriter logic
-  const fullText = t('landing.hero.titlePart1') + '\\n' + t('landing.hero.titlePart2')
+  const fullText = t('landing.hero.titlePart1') + '\n' + t('landing.hero.titlePart2')
   let i = 0
   const typeWriter = () => {
     if (i < fullText.length) {
@@ -123,7 +123,7 @@ onUnmounted(() => {
         </p>
         
         <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-          <button @click="startGuest" class="w-full sm:w-auto bg-text-primary text-bg-base hover:opacity-90 text-base font-bold px-8 py-3.5 rounded-2xl transition-all shadow-[0_0_40px_rgba(255,255,255,0.1)] hover:scale-105 flex items-center justify-center gap-2" style="color: var(--bg-base);">
+          <button @click="startGuest" class="w-full sm:w-auto bg-accent hover:bg-accent-hover text-white text-base font-bold px-8 py-3.5 rounded-2xl transition-all shadow-[0_0_40px_rgba(124,111,247,0.3)] hover:scale-105 flex items-center justify-center gap-2">
             {{ t('landing.hero.ctaPrimary') }}
             <ArrowRight :size="18" />
           </button>
@@ -289,7 +289,7 @@ onUnmounted(() => {
         <p class="text-xl text-text-secondary mb-10 max-w-2xl mx-auto">
           {{ t('landing.cta.desc') }}
         </p>
-        <button @click="startGuest" class="w-full sm:w-auto bg-text-primary text-bg-base hover:opacity-90 text-lg font-bold px-10 py-4 rounded-2xl transition-all shadow-xl hover:scale-105 flex items-center justify-center gap-3 mx-auto" style="color: var(--bg-base);">
+        <button @click="startGuest" class="w-full sm:w-auto bg-accent hover:bg-accent-hover text-white text-lg font-bold px-10 py-4 rounded-2xl transition-all shadow-[0_0_40px_rgba(124,111,247,0.3)] hover:scale-105 flex items-center justify-center gap-3 mx-auto">
           <span v-if="!isStarting">{{ t('landing.cta.button') }}</span>
           <span v-else>{{ t('landing.cta.starting') }}</span>
           <ArrowRight :size="20" v-if="!isStarting" />
