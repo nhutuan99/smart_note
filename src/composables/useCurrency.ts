@@ -8,6 +8,7 @@
  */
 import { ref, computed, watch } from 'vue'
 import { httpClient } from '@/shared/api/httpClient'
+import { useUiStore } from '@/stores/ui'
 
 // ── State (singleton — shared across all imports) ──
 const CACHE_KEY = 'sn_currency'
@@ -93,8 +94,14 @@ function convertToUSD(vndAmount: number): number {
  * @param amount - Amount in VND
  * @param hideBalances - Whether to mask the amount (from UI store)
  */
-export function formatMoney(amount: number, hideBalances = false): string {
-  if (hideBalances) return '******'
+export function formatMoney(amount: number, hideBalances?: boolean): string {
+  let isHidden = hideBalances
+  if (!isHidden) {
+    try {
+      isHidden = useUiStore().hideBalances
+    } catch (e) {}
+  }
+  if (isHidden) return '******'
 
   if (currency.value === 'USD') {
     const usd = convertToUSD(amount)
@@ -113,8 +120,14 @@ export function formatMoney(amount: number, hideBalances = false): string {
 /**
  * Format money in short form (e.g., 1.5tr, 300k, $12.50).
  */
-export function formatMoneyShort(amount: number, hideBalances = false): string {
-  if (hideBalances) return '******'
+export function formatMoneyShort(amount: number, hideBalances?: boolean): string {
+  let isHidden = hideBalances
+  if (!isHidden) {
+    try {
+      isHidden = useUiStore().hideBalances
+    } catch (e) {}
+  }
+  if (isHidden) return '******'
 
   if (currency.value === 'USD') {
     const usd = convertToUSD(amount)

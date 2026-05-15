@@ -11,7 +11,7 @@ import { useI18n } from 'vue-i18n'
 import { formatMoney } from '@/composables/useCurrency'
 import { getWalletBrand } from '@/constants/walletBrands'
 import { useSavingsStore } from '@/stores/savings'
-import { Menu, ChevronLeft, Bell, Settings, LogOut, ArrowUpRight, ArrowDownRight, CheckCheck, Trash2, BellOff, Zap, Sun, Moon } from 'lucide-vue-next'
+import { Menu, ChevronLeft, Bell, Settings, LogOut, ArrowUpRight, ArrowDownRight, CheckCheck, Trash2, BellOff, Zap, Sun, Moon, Eye, EyeOff } from 'lucide-vue-next'
 
 const { t } = useI18n()
 const auth = useAuthStore()
@@ -136,6 +136,16 @@ async function handleAutoSaveApprove(n: any) {
 
     <!-- Right -->
     <div class="flex items-center gap-1">
+      <!-- Toggle Balance -->
+      <button
+        class="text-text-secondary hover:bg-bg-hover active:bg-bg-hover hover:text-accent active:text-accent relative flex h-[2.125rem] w-[2.125rem] items-center justify-center rounded-lg transition-all duration-150"
+        :title="ui.hideBalances ? t('dashboard.toggleBalance') : t('dashboard.toggleBalance')"
+        @click="ui.toggleHideBalances()"
+      >
+        <EyeOff v-if="ui.hideBalances" :size="18" />
+        <Eye v-else :size="18" />
+      </button>
+
       <!-- Theme Toggle -->
       <button
         class="text-text-secondary hover:bg-bg-hover active:bg-bg-hover hover:text-accent active:text-accent relative flex h-[2.125rem] w-[2.125rem] items-center justify-center rounded-lg transition-all duration-150"

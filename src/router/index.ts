@@ -14,6 +14,12 @@ const router = createRouter({
       meta: { requiresGuest: true }
     },
     {
+      path: '/landing',
+      name: 'landing',
+      component: () => import('@/views/LandingView.vue'),
+      meta: { isPublic: true, requiresGuest: true }
+    },
+    {
       path: '/onboarding',
       name: 'onboarding',
       component: () => import('@/views/OnboardingView.vue')
@@ -161,7 +167,7 @@ router.beforeEach((to) => {
   // Protected pages: redirect unauthenticated users to login
   if (!to.meta.requiresGuest && !to.meta.isPublic && to.path !== '/login') {
     if (!auth.isAuthenticated) {
-      return { path: '/login', replace: true }
+      return { path: '/landing', replace: true }
     }
     // Check if the guest session has expired (7 days)
     if (auth.isGuest && auth.checkGuestExpiry()) {

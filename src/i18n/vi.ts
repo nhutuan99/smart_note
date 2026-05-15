@@ -1179,5 +1179,63 @@ export default {
     timelineDaysAgo: '{n} ngày trước',
     timelineDaysLeft: '{n} ngày nữa',
     timelineOverdue: 'Quá hạn'
+  },
+
+  // ── Landing Page ──
+  landing: {
+    nav: {
+      login: 'Đăng nhập',
+      tryNow: 'Dùng thử ngay',
+      starting: 'Đang vào...'
+    },
+    hero: {
+      badge: 'Quản lý tiền bạc hệ "không nhức đầu"',
+      titlePart1: 'Chữa bệnh',
+      titlePart2: '"đầu tháng tỷ phú, cuối tháng ăn mì"',
+      description: 'FinNote tự động hoá mớ bòng bong tài chính của bạn bằng AI. Quét SMS tự động, quản lý đầu tư, và tư vấn chi tiêu chân thật như một người bạn thân.',
+      ctaPrimary: 'Trải nghiệm miễn phí 7 ngày',
+      ctaSecondary: 'Tìm hiểu thêm',
+      privacyNote: '100% dữ liệu nằm trên máy bạn. Không lưu pass ngân hàng.'
+    },
+    demo: {
+      dashboard: 'Dashboard',
+      planning: 'Kế hoạch',
+      stocks: 'Chứng khoán',
+      totalAssets: 'Tổng tài sản',
+      thisMonth: '+12% tháng này',
+      aiAdvisor: 'AI Advisor Meow',
+      aiMessage: '"Hôm nay bạn chi 500k tiền cafe rồi đấy. Nếu bớt uống Starbucks lại thì tháng này để dành được dư sức mua PS5 nha!"',
+      syncSms: 'Vừa đồng bộ SMS',
+      coffee: 'Highland Coffee',
+      salary: 'Lương tháng 5'
+    },
+    features: {
+      title: 'Có gì hay ho trong FinNote?',
+      sms: {
+        title: 'Tự động đọc SMS Ngân hàng',
+        desc: 'Không cần cặm cụi nhập từng đồng như thời tiền sử nữa. FinNote sử dụng Apple Shortcuts bắt thẳng thông báo biến động số dư và ghi nhận ngay lập tức.'
+      },
+      privacy: {
+        title: 'Bảo mật là chân ái',
+        desc: 'Không lưu mật khẩu. Không kết nối API lằng nhằng. Dữ liệu của bạn nằm gọn trong máy (Local-first). Chúng mình không thèm ngó đâu.'
+      },
+      allInOne: {
+        title: 'All-in-One Finance',
+        desc: 'Ví tiền mặt, cổ phiếu, nợ nần, tiết kiệm mua xe... tất cả nằm trên một giao diện mượt như bơ.'
+      },
+      knowledge: {
+        title: 'Không chỉ là tiền, còn là Kiến thức',
+        desc: 'Tích hợp sẵn Markdown Note xịn xò. Note lại bài học đầu tư, lập kế hoạch trả nợ, đồng bộ thẳng với Obsidian, hay thậm chí biến nó thành trang Blog công khai 1-click.'
+      }
+    },
+    cta: {
+      title: 'Sẵn sàng để làm chủ ví tiền?',
+      desc: 'Mở app lên, nhấn nút Dùng thử là xong. Thề không rườm rà.',
+      button: 'Dùng thử 7 ngày không cần thẻ',
+      starting: 'Đang thiết lập...'
+    },
+    footer: {
+      copyright: '© 2026 FinNote. Made with 🤍 for better financial freedom.'
+    }
   }
 }

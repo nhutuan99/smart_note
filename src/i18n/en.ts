@@ -1142,5 +1142,63 @@ export default {
     timelineHoursLeft: '{n} hours left',
     timelineMinsLeft: '{n} mins left',
     timelineOverdue: 'Overdue'
+  },
+
+  // ── Landing Page ──
+  landing: {
+    nav: {
+      login: 'Login',
+      tryNow: 'Try Now',
+      starting: 'Starting...'
+    },
+    hero: {
+      badge: 'Manage money with zero headache',
+      titlePart1: 'Curing the',
+      titlePart2: '"Rich at the start, broke at the end" disease',
+      description: 'FinNote automates your financial mess with AI. Scan SMS automatically, manage investments, and get spending advice from a true companion.',
+      ctaPrimary: 'Start 7-Day Free Trial',
+      ctaSecondary: 'Learn More',
+      privacyNote: '100% data on your device. No bank passwords saved.'
+    },
+    demo: {
+      dashboard: 'Dashboard',
+      planning: 'Planning',
+      stocks: 'Stocks',
+      totalAssets: 'Total Assets',
+      thisMonth: '+12% this month',
+      aiAdvisor: 'AI Advisor Meow',
+      aiMessage: '"You spent $20 on coffee today. If you cut back on Starbucks, you can easily save enough for a PS5 this month!"',
+      syncSms: 'SMS Synced',
+      coffee: 'Highland Coffee',
+      salary: 'May Salary'
+    },
+    features: {
+      title: 'What\'s cool in FinNote?',
+      sms: {
+        title: 'Auto-read Bank SMS',
+        desc: 'No more manual entry like the stone age. FinNote uses Apple Shortcuts to capture balance changes and log them instantly.'
+      },
+      privacy: {
+        title: 'Privacy is Priority',
+        desc: 'No passwords saved. No complicated APIs. Your data lives locally on your device (Local-first). We don\'t even peek.'
+      },
+      allInOne: {
+        title: 'All-in-One Finance',
+        desc: 'Cash wallets, stocks, debts, car savings... everything on one buttery-smooth interface.'
+      },
+      knowledge: {
+        title: 'Not just Money, but Knowledge',
+        desc: 'Built-in premium Markdown Note. Jot down investment lessons, plan debt repayments, sync directly with Obsidian, or turn it into a public blog in 1 click.'
+      }
+    },
+    cta: {
+      title: 'Ready to master your wallet?',
+      desc: 'Open the app, hit Try Now and you\'re set. Zero hassle, we promise.',
+      button: 'Try 7 days without card',
+      starting: 'Setting up...'
+    },
+    footer: {
+      copyright: '© 2026 FinNote. Made with 🤍 for better financial freedom.'
+    }
   }
 }
