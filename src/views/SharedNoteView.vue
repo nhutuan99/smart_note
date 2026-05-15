@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { httpClient } from '@/shared/api/httpClient'
 import type { Note } from '@/types'
 import RichEditor from '@/components/editor/RichEditor.vue'
+import JsonViewer from '@/components/ui/JsonViewer.vue'
 import LogoLoader from '@/components/ui/LogoLoader.vue'
 import AppIntroCta from '@/components/ui/AppIntroCta.vue'
 import SocialShare from '@/components/ui/SocialShare.vue'
@@ -19,16 +20,62 @@ const noteId = route.params.id as string
 const note = ref<Note | null>(null)
 const loading = ref(true)
 const error = ref('')
+const parsedJsonBlocks = ref<{ prefix: string; data: any }[]>([])
 
-import { autoFormatJsonContent } from '@/shared/utils/jsonFormatter'
+/** Attempt to extract JSON blocks from note content */
+function extractJsonBlocks(html: string): { prefix: string; data: any }[] | null {
+  const tempDiv = document.createElement('div')
+  tempDiv.innerHTML = html.replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n</p>')
+  const text = tempDiv.textContent || ''
+  const trimmed = text.trim()
+  if (!trimmed) return null
+
+  // Case 1: Entire content is one JSON object/array
+  try {
+    const parsed = JSON.parse(trimmed)
+    if (typeof parsed === 'object' && parsed !== null) {
+      return [{ prefix: '', data: parsed }]
+    }
+  } catch { /* continue */ }
+
+  // Case 2: Line-by-line JSON (SSE / NDJSON)
+  const lines = trimmed.split('\n').filter(l => l.trim())
+  const blocks: { prefix: string; data: any }[] = []
+  let jsonCount = 0
+
+  for (const line of lines) {
+    let cleanLine = line.trim()
+    let prefix = ''
+    if (cleanLine.startsWith('data: ')) {
+      prefix = 'data: '
+      cleanLine = cleanLine.substring(6).trim()
+    }
+    if (
+      (cleanLine.startsWith('{') && cleanLine.endsWith('}')) ||
+      (cleanLine.startsWith('[') && cleanLine.endsWith(']'))
+    ) {
+      try {
+        const parsed = JSON.parse(cleanLine)
+        blocks.push({ prefix, data: parsed })
+        jsonCount++
+        continue
+      } catch { /* not valid JSON */ }
+    }
+    // Non-JSON line → skip for block extraction
+  }
+
+  if (jsonCount > 0 && jsonCount >= lines.length * 0.3) return blocks
+  return null
+}
 
 onMounted(async () => {
   try {
     const data = await httpClient.get<Note>(`/api/notes/shared/${noteId}`)
     if (data) {
-      const formatted = autoFormatJsonContent(data.content)
-      if (formatted) {
-        data.content = formatted
+      // Try to detect JSON blocks for the interactive viewer
+      const blocks = extractJsonBlocks(data.content)
+      if (blocks) {
+        parsedJsonBlocks.value = blocks
       }
       note.value = data
       
@@ -65,6 +112,7 @@ function goToDashboard() {
 }
 
 const shareUrl = computed(() => `${typeof window !== 'undefined' ? window.location.origin : ''}/notes/shared/${noteId}`)
+const hasJsonBlocks = computed(() => parsedJsonBlocks.value.length > 0)
 </script>
 
 <template>
@@ -119,7 +167,16 @@ const shareUrl = computed(() => `${typeof window !== 'undefined' ? window.locati
 
       <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
         <div class="mx-auto w-full">
-          <RichEditor v-model="note.content" :readonly="true" />
+          <!-- JSON Interactive Viewer -->
+          <template v-if="hasJsonBlocks">
+            <div v-for="(block, idx) in parsedJsonBlocks" :key="idx" class="mb-4">
+              <div v-if="block.prefix" class="text-text-tertiary text-xs font-mono mb-1 px-1">{{ block.prefix }}</div>
+              <JsonViewer :data="block.data" />
+            </div>
+          </template>
+
+          <!-- Fallback: Rich Editor for non-JSON notes -->
+          <RichEditor v-else v-model="note.content" :readonly="true" />
         </div>
       </div>
     </div>
@@ -135,3 +192,4 @@ const shareUrl = computed(() => `${typeof window !== 'undefined' ? window.locati
   min-height: auto;
 }
 </style>
+
