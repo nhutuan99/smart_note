@@ -175,16 +175,12 @@ onUnmounted(() => {
           </div>
           
           <div class="relative w-full aspect-video bg-[#0b0c10] mt-12 overflow-hidden">
-            <!-- Video Player (Veo 3 Demo) -->
-            <video 
-              src="/images/demo-veo3.mp4" 
-              poster="/images/demo_video.webp"
-              autoplay 
-              loop 
-              muted 
-              playsinline 
+            <!-- Video Player (using WEBP for auto-play without restrictions) -->
+            <img 
+              src="/images/demo_video.webp" 
+              alt="FinNote App Demo"
               class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-1000 ease-out"
-            ></video>
+            />
             
             <!-- Play Overlay (Subtle Gradient) -->
             <div class="absolute inset-0 bg-gradient-to-t from-[#04060d]/80 via-transparent to-transparent pointer-events-none"></div>
