@@ -74,6 +74,24 @@ const editor = useEditor({
   },
   editorProps: {
     handlePaste(view, event) {
+      const text = event.clipboardData?.getData('text/plain')
+      if (text) {
+        const trimmed = text.trim()
+        if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+          try {
+            const parsed = JSON.parse(trimmed)
+            const formatted = JSON.stringify(parsed, null, 2)
+            const escaped = formatted.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            if (editor.value) {
+              editor.value.commands.insertContent(`<pre><code class="language-json">${escaped}</code></pre>`)
+            }
+            return true
+          } catch {
+            // Ignore, proceed to normal paste or image handling
+          }
+        }
+      }
+
       const items = event.clipboardData?.items
       if (!items) return false
       

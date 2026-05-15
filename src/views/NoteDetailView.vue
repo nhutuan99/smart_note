@@ -89,6 +89,26 @@ async function saveNote() {
   if (!noteId.value || saving.value) return
   saving.value = true
   try {
+    // Auto-format JSON data
+    const tempDiv = document.createElement('div')
+    tempDiv.innerHTML = content.value
+    const textContext = tempDiv.textContent || ''
+    const trimmed = textContext.trim()
+    
+    if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+      try {
+        const parsed = JSON.parse(trimmed)
+        const formatted = JSON.stringify(parsed, null, 2)
+        const escaped = formatted.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        const codeBlock = `<pre><code class="language-json">${escaped}</code></pre>`
+        if (content.value !== codeBlock) {
+          content.value = codeBlock
+        }
+      } catch {
+        // Ignore if not valid JSON
+      }
+    }
+
     await notesStore.updateNote(noteId.value, {
       title: title.value,
       content: content.value,
