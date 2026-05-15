@@ -155,15 +155,40 @@ onUnmounted(() => {
       </div>
 
       <!-- App Demo Video (Main Demo) -->
-      <div class="max-w-5xl mx-auto mt-20 relative perspective-1000 reveal-on-scroll" :style="`transform: translateY(${floatOffset}px)`">
-        <div class="rounded-3xl border border-border-strong bg-bg-surface overflow-hidden shadow-2xl ring-1 ring-border-default mx-auto relative group">
+      <div class="max-w-5xl mx-auto mt-24 relative perspective-1000 reveal-on-scroll">
+        <!-- Glow effect behind the video -->
+        <div class="absolute -inset-4 bg-gradient-to-r from-accent/40 via-purple-500/30 to-accent/40 blur-3xl opacity-50 rounded-[3rem] -z-10 animate-pulse" style="animation-duration: 4s;"></div>
+        
+        <div class="rounded-3xl border border-white/10 bg-bg-surface/80 backdrop-blur-xl overflow-hidden shadow-[0_0_80px_rgba(124,111,247,0.2)] ring-1 ring-border-default mx-auto relative group">
           <!-- Window Controls -->
-          <div class="h-10 border-b border-border-default flex items-center px-4 gap-2 bg-bg-elevated/50 absolute top-0 w-full z-10">
-            <div class="w-3 h-3 rounded-full bg-error/80"></div>
-            <div class="w-3 h-3 rounded-full bg-warning/80"></div>
-            <div class="w-3 h-3 rounded-full bg-success/80"></div>
+          <div class="h-12 border-b border-white/5 flex items-center px-5 gap-2 bg-gradient-to-r from-bg-elevated/80 to-bg-surface/80 absolute top-0 w-full z-10 backdrop-blur-md">
+            <div class="flex gap-2">
+              <div class="w-3.5 h-3.5 rounded-full bg-error/90 shadow-[0_0_10px_rgba(255,82,82,0.5)]"></div>
+              <div class="w-3.5 h-3.5 rounded-full bg-warning/90 shadow-[0_0_10px_rgba(251,140,0,0.5)]"></div>
+              <div class="w-3.5 h-3.5 rounded-full bg-success/90 shadow-[0_0_10px_rgba(67,160,71,0.5)]"></div>
+            </div>
+            <div class="mx-auto flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/20 border border-white/5 text-xs text-text-tertiary font-medium">
+              <ShieldCheck :size="12" class="text-accent/80" />
+              app.finnote.vn
+            </div>
+            <div class="w-[54px]"></div> <!-- Spacer for centering -->
           </div>
-          <img src="/images/demo_video.webp" alt="App Demo Video" class="w-full h-auto object-cover mt-10 group-hover:scale-[1.01] transition-transform duration-700" />
+          
+          <div class="relative w-full aspect-video bg-[#0b0c10] mt-12 overflow-hidden">
+            <!-- Video Player (Veo 3 Demo) -->
+            <video 
+              src="/images/demo-veo3.mp4" 
+              poster="/images/demo_video.webp"
+              autoplay 
+              loop 
+              muted 
+              playsinline 
+              class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-1000 ease-out"
+            ></video>
+            
+            <!-- Play Overlay (Subtle Gradient) -->
+            <div class="absolute inset-0 bg-gradient-to-t from-[#04060d]/80 via-transparent to-transparent pointer-events-none"></div>
+          </div>
         </div>
       </div>
     </main>

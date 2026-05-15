@@ -25,10 +25,6 @@ import { localDbMock } from '@/shared/localDb'
 async function tryLocalMock(method: string, url: string, body?: any): Promise<any> {
   const auth = useAuthStore()
   if (auth.isGuest && url.startsWith('/api/') && !url.startsWith('/api/proxy/')) {
-    // Exclude public routes that should always fetch from the real server
-    if (url.startsWith('/api/blogs') || url.startsWith('/api/images')) {
-      return null
-    }
     return await localDbMock(method, url, body)
   }
   return null
@@ -68,7 +64,7 @@ async function tryRefreshToken(): Promise<boolean> {
 
       if (!response.ok) return false
 
-      const json = await response.json() as ApiResponse<{
+      const json = (await response.json()) as ApiResponse<{
         token: string
         refreshToken: string
         user: any
@@ -137,7 +133,7 @@ function getToken(): string | null {
 
 function buildHeaders(hasBody: boolean, isExternal: boolean = false): HeadersInit {
   const headers: Record<string, string> = {}
-  
+
   if (!isExternal) {
     const token = getToken()
     if (token) {
@@ -154,7 +150,11 @@ function buildHeaders(hasBody: boolean, isExternal: boolean = false): HeadersIni
   return headers
 }
 
-async function handleResponse<T>(response: Response, retryFn?: () => Promise<T>, silent?: boolean): Promise<T> {
+async function handleResponse<T>(
+  response: Response,
+  retryFn?: () => Promise<T>,
+  silent?: boolean
+): Promise<T> {
   if (response.status === 401 && retryFn) {
     // Attempt silent refresh before giving up
     const refreshed = await tryRefreshToken()
@@ -176,7 +176,9 @@ async function handleResponse<T>(response: Response, retryFn?: () => Promise<T>,
   const contentType = response.headers.get('content-type') || ''
   if (!contentType.includes('application/json')) {
     const isSpaFallback = response.status === 200
-    const errorMsg = isSpaFallback ? 'API not found (SPA fallback)' : `Request failed (${response.status})`
+    const errorMsg = isSpaFallback
+      ? 'API not found (SPA fallback)'
+      : `Request failed (${response.status})`
     if (!silent) {
       try {
         const { useUiStore } = await import('@/stores/ui')
@@ -308,7 +310,10 @@ async function del(url: string): Promise<void> {
  * GET that returns the full paginated wrapper { data, total, page, limit }.
  * Use for endpoints that support pagination (e.g. /api/transactions?page=1&limit=15).
  */
-async function getPaginated<T>(url: string, options?: { silent?: boolean }): Promise<PaginatedApiResponse<T>> {
+async function getPaginated<T>(
+  url: string,
+  options?: { silent?: boolean }
+): Promise<PaginatedApiResponse<T>> {
   const mock = await tryLocalMock('GET', url)
   if (mock) return mock as PaginatedApiResponse<T>
 
@@ -360,7 +365,7 @@ async function handlePaginatedResponse<T>(
     throw new Error(errorMsg)
   }
 
-  const json = await response.json() as PaginatedApiResponse<T>
+  const json = (await response.json()) as PaginatedApiResponse<T>
 
   if (!json.success) {
     const errorMsg = json.error || `Request failed (${response.status})`
