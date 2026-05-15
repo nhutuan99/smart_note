@@ -1197,6 +1197,7 @@ export default {
       ctaSecondary: 'Tìm hiểu thêm',
       privacyNote: '100% dữ liệu nằm trên máy bạn. Không lưu pass ngân hàng.'
     },
+    demoVideo: 'Trải nghiệm thực tế',
     demo: {
       dashboard: 'Dashboard',
       planning: 'Kế hoạch',

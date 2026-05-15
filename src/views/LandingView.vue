@@ -27,14 +27,57 @@ function goToLogin() {
 
 // Simple floating animation
 const floatOffset = ref(0)
+let animationFrameId: number
+
+// Scroll reveal
+const observer = ref<IntersectionObserver | null>(null)
+
+// Typewriter effect
+const typeWriterText = ref('')
+const isTyping = ref(true)
+
 onMounted(() => {
   let start = Date.now()
   const animate = () => {
     const elapsed = Date.now() - start
     floatOffset.value = Math.sin(elapsed / 1000) * 10
-    requestAnimationFrame(animate)
+    animationFrameId = requestAnimationFrame(animate)
   }
   animate()
+
+  // Typewriter logic
+  const fullText = t('landing.hero.titlePart1') + '\\n' + t('landing.hero.titlePart2')
+  let i = 0
+  const typeWriter = () => {
+    if (i < fullText.length) {
+      typeWriterText.value += fullText.charAt(i)
+      i++
+      setTimeout(typeWriter, 50)
+    } else {
+      isTyping.value = false
+    }
+  }
+  setTimeout(typeWriter, 300)
+
+  // Intersection Observer for scroll animations
+  observer.value = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('reveal-visible')
+        observer.value?.unobserve(entry.target)
+      }
+    })
+  }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' })
+
+  document.querySelectorAll('.reveal-on-scroll').forEach(el => {
+    observer.value?.observe(el)
+  })
+})
+
+import { onUnmounted } from 'vue'
+onUnmounted(() => {
+  if (animationFrameId) cancelAnimationFrame(animationFrameId)
+  if (observer.value) observer.value.disconnect()
 })
 </script>
 
@@ -71,8 +114,8 @@ onMounted(() => {
           <span>{{ t('landing.hero.badge') }}</span>
         </div>
         
-        <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-text-primary via-text-primary to-text-disabled leading-[1.1]">
-          {{ t('landing.hero.titlePart1') }} <br class="hidden md:block"/> {{ t('landing.hero.titlePart2') }}
+        <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-text-primary via-text-primary to-text-disabled leading-[1.1] min-h-[120px] md:min-h-[160px] whitespace-pre-line">
+          {{ typeWriterText }}<span v-if="isTyping" class="animate-pulse text-text-primary">|</span>
         </h1>
         
         <p class="text-lg md:text-xl text-text-secondary max-w-2xl mx-auto leading-relaxed">
@@ -80,7 +123,7 @@ onMounted(() => {
         </p>
         
         <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-          <button @click="startGuest" class="w-full sm:w-auto bg-text-primary text-bg-base hover:opacity-90 text-base font-bold px-8 py-3.5 rounded-2xl transition-all shadow-[0_0_40px_rgba(255,255,255,0.1)] hover:scale-105 flex items-center justify-center gap-2">
+          <button @click="startGuest" class="w-full sm:w-auto bg-text-primary text-bg-base hover:opacity-90 text-base font-bold px-8 py-3.5 rounded-2xl transition-all shadow-[0_0_40px_rgba(255,255,255,0.1)] hover:scale-105 flex items-center justify-center gap-2" style="color: var(--bg-base);">
             {{ t('landing.hero.ctaPrimary') }}
             <ArrowRight :size="18" />
           </button>
@@ -96,7 +139,7 @@ onMounted(() => {
       </div>
 
       <!-- Cool UI Demo Mockup -->
-      <div class="max-w-5xl mx-auto mt-20 relative perspective-1000" :style="`transform: translateY(${floatOffset}px)`">
+      <div class="max-w-5xl mx-auto mt-20 relative perspective-1000 reveal-on-scroll" :style="`transform: translateY(${floatOffset}px)`">
         <!-- Mockup Container -->
         <div class="rounded-3xl border border-border-strong bg-bg-surface/80 backdrop-blur-xl shadow-2xl overflow-hidden ring-1 ring-border-default">
           <!-- Window Controls -->
@@ -175,6 +218,16 @@ onMounted(() => {
       </div>
     </main>
 
+    <!-- App Demo Video Section -->
+    <section class="py-12 px-6 relative reveal-on-scroll">
+      <div class="max-w-5xl mx-auto text-center">
+        <h2 class="text-3xl font-bold mb-8 text-text-primary">{{ t('landing.demoVideo') }}</h2>
+        <div class="rounded-3xl border border-border-strong bg-bg-surface overflow-hidden shadow-2xl ring-1 ring-border-default mx-auto relative group">
+          <img src="/images/demo_video.webp" alt="App Demo Video" class="w-full h-auto object-cover group-hover:scale-[1.01] transition-transform duration-500" />
+        </div>
+      </div>
+    </section>
+
     <!-- Bento Grid Features -->
     <section id="features" class="py-24 px-6 relative">
       <div class="max-w-5xl mx-auto">
@@ -183,7 +236,7 @@ onMounted(() => {
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[300px]">
           
           <!-- Card 1 -->
-          <div class="md:col-span-2 bg-bg-surface border border-border-default rounded-3xl p-8 hover:bg-bg-elevated transition-colors relative overflow-hidden group shadow-sm">
+          <div class="md:col-span-2 bg-bg-surface border border-border-default rounded-3xl p-8 hover:bg-bg-elevated transition-colors relative overflow-hidden group shadow-sm reveal-on-scroll" style="transition-delay: 0.1s">
             <div class="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
             <Smartphone class="text-accent mb-6" :size="40" stroke-width="1.5" />
             <h3 class="text-2xl font-bold mb-3">{{ t('landing.features.sms.title') }}</h3>
@@ -196,7 +249,7 @@ onMounted(() => {
           </div>
           
           <!-- Card 2 -->
-          <div class="bg-bg-surface border border-border-default rounded-3xl p-8 hover:bg-bg-elevated transition-colors relative overflow-hidden group shadow-sm">
+          <div class="bg-bg-surface border border-border-default rounded-3xl p-8 hover:bg-bg-elevated transition-colors relative overflow-hidden group shadow-sm reveal-on-scroll" style="transition-delay: 0.2s">
             <ShieldCheck class="text-success mb-6" :size="40" stroke-width="1.5" />
             <h3 class="text-xl font-bold mb-3">{{ t('landing.features.privacy.title') }}</h3>
             <p class="text-text-secondary">
@@ -205,7 +258,7 @@ onMounted(() => {
           </div>
           
           <!-- Card 3 -->
-          <div class="bg-bg-surface border border-border-default rounded-3xl p-8 hover:bg-bg-elevated transition-colors relative overflow-hidden group shadow-sm">
+          <div class="bg-bg-surface border border-border-default rounded-3xl p-8 hover:bg-bg-elevated transition-colors relative overflow-hidden group shadow-sm reveal-on-scroll" style="transition-delay: 0.3s">
             <LayoutDashboard class="text-warning mb-6" :size="40" stroke-width="1.5" />
             <h3 class="text-xl font-bold mb-3">{{ t('landing.features.allInOne.title') }}</h3>
             <p class="text-text-secondary">
@@ -214,7 +267,7 @@ onMounted(() => {
           </div>
           
           <!-- Card 4 -->
-          <div class="md:col-span-2 bg-bg-surface border border-border-default rounded-3xl p-8 hover:bg-bg-elevated transition-colors relative overflow-hidden group shadow-sm">
+          <div class="md:col-span-2 bg-bg-surface border border-border-default rounded-3xl p-8 hover:bg-bg-elevated transition-colors relative overflow-hidden group shadow-sm reveal-on-scroll" style="transition-delay: 0.4s">
             <PenTool class="text-info mb-6" :size="40" stroke-width="1.5" />
             <h3 class="text-2xl font-bold mb-3">{{ t('landing.features.knowledge.title') }}</h3>
             <p class="text-text-secondary text-lg leading-relaxed max-w-md relative z-10">
@@ -230,13 +283,13 @@ onMounted(() => {
     </section>
 
     <!-- Bottom CTA -->
-    <section class="py-24 px-6">
+    <section class="py-24 px-6 reveal-on-scroll">
       <div class="max-w-4xl mx-auto bg-gradient-to-br from-accent/15 to-transparent border border-accent/20 rounded-[40px] p-12 md:p-20 text-center relative overflow-hidden shadow-lg shadow-accent/5">
         <h2 class="text-4xl md:text-5xl font-bold mb-6 text-text-primary">{{ t('landing.cta.title') }}</h2>
         <p class="text-xl text-text-secondary mb-10 max-w-2xl mx-auto">
           {{ t('landing.cta.desc') }}
         </p>
-        <button @click="startGuest" class="bg-text-primary text-bg-base hover:opacity-90 text-lg font-bold px-10 py-4 rounded-2xl transition-all shadow-xl hover:scale-105 flex items-center justify-center gap-3 mx-auto">
+        <button @click="startGuest" class="w-full sm:w-auto bg-text-primary text-bg-base hover:opacity-90 text-lg font-bold px-10 py-4 rounded-2xl transition-all shadow-xl hover:scale-105 flex items-center justify-center gap-3 mx-auto" style="color: var(--bg-base);">
           <span v-if="!isStarting">{{ t('landing.cta.button') }}</span>
           <span v-else>{{ t('landing.cta.starting') }}</span>
           <ArrowRight :size="20" v-if="!isStarting" />
@@ -260,5 +313,16 @@ onMounted(() => {
 
 .perspective-1000 {
   perspective: 1000px;
+}
+
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 </style>

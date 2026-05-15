@@ -1160,6 +1160,7 @@ export default {
       ctaSecondary: 'Learn More',
       privacyNote: '100% data on your device. No bank passwords saved.'
     },
+    demoVideo: 'Live Demo',
     demo: {
       dashboard: 'Dashboard',
       planning: 'Planning',
