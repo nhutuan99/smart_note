@@ -2,10 +2,11 @@
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
+import { setLocale } from '@/i18n'
 import { ArrowRight, Bot, ShieldCheck, Sparkles, Smartphone, PenTool, LayoutDashboard, Target, Zap, TrendingUp, CheckCircle2, Moon, Sun } from 'lucide-vue-next'
 import { onMounted, ref } from 'vue'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const router = useRouter()
 const auth = useAuthStore()
 
@@ -91,6 +92,21 @@ onUnmounted(() => {
           <span class="font-bold text-lg tracking-tight">FinNote</span>
         </div>
         <div class="flex items-center gap-4">
+          <div class="flex items-center gap-1 mr-2">
+            <button 
+              @click="setLocale('vi')"
+              :class="['text-[0.8125rem] font-semibold transition-colors rounded-lg px-2 py-1.5', locale === 'vi' ? 'text-accent bg-accent/10' : 'text-text-tertiary hover:text-text-primary hover:bg-bg-hover']"
+            >
+              VI
+            </button>
+            <span class="text-border-strong text-xs select-none">|</span>
+            <button 
+              @click="setLocale('en')"
+              :class="['text-[0.8125rem] font-semibold transition-colors rounded-lg px-2 py-1.5', locale === 'en' ? 'text-accent bg-accent/10' : 'text-text-tertiary hover:text-text-primary hover:bg-bg-hover']"
+            >
+              EN
+            </button>
+          </div>
           <button @click="goToLogin" class="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors">
             {{ t('landing.nav.login') }}
           </button>
@@ -138,95 +154,21 @@ onUnmounted(() => {
         </p>
       </div>
 
-      <!-- Cool UI Demo Mockup -->
+      <!-- App Demo Video (Main Demo) -->
       <div class="max-w-5xl mx-auto mt-20 relative perspective-1000 reveal-on-scroll" :style="`transform: translateY(${floatOffset}px)`">
-        <!-- Mockup Container -->
-        <div class="rounded-3xl border border-border-strong bg-bg-surface/80 backdrop-blur-xl shadow-2xl overflow-hidden ring-1 ring-border-default">
+        <div class="rounded-3xl border border-border-strong bg-bg-surface overflow-hidden shadow-2xl ring-1 ring-border-default mx-auto relative group">
           <!-- Window Controls -->
-          <div class="h-12 border-b border-border-default flex items-center px-4 gap-2 bg-bg-elevated/50">
+          <div class="h-10 border-b border-border-default flex items-center px-4 gap-2 bg-bg-elevated/50 absolute top-0 w-full z-10">
             <div class="w-3 h-3 rounded-full bg-error/80"></div>
             <div class="w-3 h-3 rounded-full bg-warning/80"></div>
             <div class="w-3 h-3 rounded-full bg-success/80"></div>
           </div>
-          
-          <!-- Mockup Content -->
-          <div class="p-6 md:p-8 flex flex-col md:flex-row gap-6">
-            <!-- Left Sidebar Simulation -->
-            <div class="w-64 hidden md:flex flex-col gap-2">
-              <div class="h-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center px-4 gap-3 text-accent font-medium">
-                <LayoutDashboard :size="18" /> {{ t('landing.demo.dashboard') }}
-              </div>
-              <div class="h-10 rounded-xl hover:bg-bg-hover flex items-center px-4 gap-3 text-text-secondary cursor-pointer">
-                <Target :size="18" /> {{ t('landing.demo.planning') }}
-              </div>
-              <div class="h-10 rounded-xl hover:bg-bg-hover flex items-center px-4 gap-3 text-text-secondary cursor-pointer">
-                <TrendingUp :size="18" /> {{ t('landing.demo.stocks') }}
-              </div>
-            </div>
-
-            <!-- Main Dashboard Area -->
-            <div class="flex-1 space-y-6">
-              <div class="flex justify-between items-end">
-                <div>
-                  <p class="text-sm text-text-tertiary">{{ t('landing.demo.totalAssets') }}</p>
-                  <h2 class="text-4xl font-bold tracking-tight text-text-primary mt-1">294.900.000đ</h2>
-                </div>
-                <div class="flex items-center gap-2 text-success bg-success/10 px-3 py-1.5 rounded-lg text-sm font-semibold border border-success/20">
-                  <TrendingUp :size="16" /> {{ t('landing.demo.thisMonth') }}
-                </div>
-              </div>
-
-              <!-- Widgets -->
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <!-- AI Widget -->
-                <div class="p-5 rounded-2xl bg-gradient-to-br from-accent/10 to-transparent border border-accent/20 relative overflow-hidden group">
-                  <div class="absolute -right-6 -top-6 w-24 h-24 bg-accent/20 blur-2xl rounded-full"></div>
-                  <div class="flex items-center gap-3 mb-3">
-                    <div class="p-2 bg-accent/20 rounded-lg text-accent">
-                      <Bot :size="20" />
-                    </div>
-                    <span class="font-bold text-accent">{{ t('landing.demo.aiAdvisor') }}</span>
-                  </div>
-                  <p class="text-sm text-text-secondary leading-relaxed">
-                    {{ t('landing.demo.aiMessage') }}
-                  </p>
-                </div>
-                
-                <!-- Notification / SMS Widget -->
-                <div class="p-5 rounded-2xl bg-bg-elevated border border-border-default shadow-sm">
-                  <div class="flex items-center gap-3 mb-3">
-                    <div class="p-2 bg-info/20 rounded-lg text-info">
-                      <Zap :size="20" />
-                    </div>
-                    <span class="font-bold text-text-primary">{{ t('landing.demo.syncSms') }}</span>
-                  </div>
-                  <div class="space-y-3">
-                    <div class="flex items-center justify-between text-sm">
-                      <span class="text-text-secondary flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-error"></div> {{ t('landing.demo.coffee') }}</span>
-                      <span class="font-mono text-error font-semibold">-55.000đ</span>
-                    </div>
-                    <div class="flex items-center justify-between text-sm">
-                      <span class="text-text-secondary flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-success"></div> {{ t('landing.demo.salary') }}</span>
-                      <span class="font-mono text-success font-semibold">+25.000.000đ</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <img src="/images/demo_video.webp" alt="App Demo Video" class="w-full h-auto object-cover mt-10 group-hover:scale-[1.01] transition-transform duration-700" />
         </div>
       </div>
     </main>
 
-    <!-- App Demo Video Section -->
-    <section class="py-12 px-6 relative reveal-on-scroll">
-      <div class="max-w-5xl mx-auto text-center">
-        <h2 class="text-3xl font-bold mb-8 text-text-primary">{{ t('landing.demoVideo') }}</h2>
-        <div class="rounded-3xl border border-border-strong bg-bg-surface overflow-hidden shadow-2xl ring-1 ring-border-default mx-auto relative group">
-          <img src="/images/demo_video.webp" alt="App Demo Video" class="w-full h-auto object-cover group-hover:scale-[1.01] transition-transform duration-500" />
-        </div>
-      </div>
-    </section>
+
 
     <!-- Bento Grid Features -->
     <section id="features" class="py-24 px-6 relative">
