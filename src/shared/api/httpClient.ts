@@ -25,6 +25,10 @@ import { localDbMock } from '@/shared/localDb'
 async function tryLocalMock(method: string, url: string, body?: any): Promise<any> {
   const auth = useAuthStore()
   if (auth.isGuest && url.startsWith('/api/') && !url.startsWith('/api/proxy/')) {
+    // Exclude public routes that should always fetch from the real server
+    if (url.startsWith('/api/blogs') || url.startsWith('/api/images')) {
+      return null
+    }
     return await localDbMock(method, url, body)
   }
   return null
