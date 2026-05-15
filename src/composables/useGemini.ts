@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { httpClient } from '@/shared/api/httpClient'
 
-type AiAction = 'summarize' | 'continue' | 'improve' | 'tags' | 'ask' | 'finance' | 'rewrite_note' | 'create_blog'
+type AiAction = 'summarize' | 'continue' | 'improve' | 'tags' | 'ask' | 'finance' | 'rewrite_note' | 'create_blog' | 'format_json'
 
 interface AiPayload {
   action: AiAction
@@ -113,6 +113,7 @@ export function useAi() {
   const askAbout        = (content: string, question: string, imagesBase64?: string[]) => runStream({ action: 'ask', content, question, imagesBase64 })
 
   const rewriteNote     = (content: string, imagesBase64?: string[]) => runStream({ action: 'rewrite_note', content, imagesBase64 })
+  const formatJson      = (content: string, imagesBase64?: string[]) => runStream({ action: 'format_json', content, imagesBase64 })
   const createBlog      = async (content: string, imagesBase64?: string[]) => run(() => callAi({ action: 'create_blog', content, imagesBase64 }))
 
   /**
@@ -132,6 +133,7 @@ export function useAi() {
     askAbout,
     askFinance,
     rewriteNote,
+    formatJson,
     createBlog
   }
 }

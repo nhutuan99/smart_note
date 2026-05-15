@@ -6,6 +6,7 @@ import App from './App.vue'
 import { createHead } from '@unhead/vue/client'
 import { setHttpClientRouter } from './shared/api/httpClient'
 import './assets/styles/base.css'
+import 'highlight.js/styles/atom-one-dark.css'
 
 import AppSpinner from '@/components/ui/AppSpinner.vue'
 

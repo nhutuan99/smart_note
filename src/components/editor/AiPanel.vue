@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { useAi } from '@/composables/useGemini'
 import {
   Sparkles, X, Copy, Check, ChevronDown,
-  AlignLeft, PenLine, Wand2, Tag, MessageSquare, ListChecks
+  AlignLeft, PenLine, Wand2, Tag, MessageSquare, ListChecks, Braces
 } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
 import LogoLoader from '@/components/ui/LogoLoader.vue'
@@ -24,7 +24,7 @@ const emit = defineEmits<{
 }>()
 
 const ai = useAi()
-const activeMode = ref<'summarize' | 'continue' | 'improve' | 'tags' | 'ask' | 'rewrite' | null>(null)
+const activeMode = ref<'summarize' | 'continue' | 'improve' | 'tags' | 'ask' | 'rewrite' | 'format_json' | null>(null)
 const question = ref('')
 const copied = ref(false)
 const suggestedTags = ref<string[]>([])
@@ -98,6 +98,13 @@ async function runRewrite() {
   resetState()
   const ctx = prepareContextForAi('rewrite')
   await ai.rewriteNote(ctx.text, ctx.imagesBase64)
+}
+
+async function runFormatJson() {
+  activeMode.value = 'format_json'
+  resetState()
+  const ctx = prepareContextForAi('format_json')
+  await ai.formatJson(ctx.text, ctx.imagesBase64)
 }
 
 async function runSuggestTags() {
@@ -180,6 +187,10 @@ const hasResult = computed(() => ai.streamText.value.length > 0 || suggestedTags
         <button class="ai-action-btn" :class="{ active: activeMode === 'rewrite' }" @click="runRewrite" :disabled="ai.loading.value || !hasContent">
           <ListChecks :size="14" />
           Clean & Format
+        </button>
+        <button class="ai-action-btn" :class="{ active: activeMode === 'format_json' }" @click="runFormatJson" :disabled="ai.loading.value || !hasContent">
+          <Braces :size="14" />
+          Format JSON
         </button>
         <button class="ai-action-btn" :class="{ active: activeMode === 'continue' }" @click="runContinue" :disabled="ai.loading.value || !hasContent">
           <PenLine :size="14" />

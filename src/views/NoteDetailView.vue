@@ -157,17 +157,23 @@ function toggleAiPanel() {
   showAiPanel.value = !showAiPanel.value
 }
 
+import { marked } from 'marked'
+
 function handleAiInsert(text: string, isHtml = false) {
   if (isHtml) {
     content.value += `\n${text}`
   } else {
-    content.value += `\n<p>${text.replace(/\n/g, '</p><p>')}</p>`
+    // Parse markdown so code blocks and formatting from AI render correctly in Tiptap
+    const html = marked.parse(text) as string
+    content.value += `\n${html}`
   }
   ui.showToast('success', t('notes.ai.insert'))
 }
 
 function handleAiReplace(text: string) {
-  content.value = text
+  // Parse markdown so code blocks and formatting from AI render correctly
+  const html = marked.parse(text) as string
+  content.value = html
   ui.showToast('success', t('notes.ai.insert'))
   showAiPanel.value = false
 }
