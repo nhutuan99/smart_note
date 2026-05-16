@@ -10,6 +10,7 @@ import { usePortfolioSummary } from '@/composables/usePortfolioSummary'
 import { formatVNDShort } from '@/constants/finance'
 import { getWalletBrand } from '@/constants/walletBrands'
 import { useI18n } from 'vue-i18n'
+import { isAdminEmail } from '@/utils/adminCheck'
 import {
   LayoutDashboard,
   ArrowLeftRight,
@@ -59,7 +60,7 @@ const navGroups = computed<NavGroup[]>(() => {
     financeItems.push({ key: 'nav.stocks', icon: LineChart, route: '/stocks' })
   }
 
-  if (auth.user?.email === 'tintphcm@gmail.com') {
+  if (isAdminEmail(auth.user?.email)) {
     financeItems.push({ key: 'trading.title', icon: BookOpen, route: '/trading' })
   }
 
@@ -68,7 +69,7 @@ const navGroups = computed<NavGroup[]>(() => {
     { key: 'reminders.title',  icon: Bell,            route: '/reminders' },
   ]
 
-  if (auth.user?.email === 'tintphcm@gmail.com') {
+  if (isAdminEmail(auth.user?.email)) {
     workspaceItems.push({ key: 'aiTodo.title', icon: ListTodo, route: '/ai-todo' })
   }
   
@@ -79,7 +80,7 @@ const navGroups = computed<NavGroup[]>(() => {
     { key: 'nav.blog',         icon: Newspaper,       route: '/blog' },
   ]
 
-  if (auth.user?.email === 'tintphcm@gmail.com') {
+  if (isAdminEmail(auth.user?.email)) {
     systemItems.push({ key: 'blog.manageTitle', icon: PenLine, route: '/admin/blog' })
   }
 

@@ -39,8 +39,8 @@ const canSubmit = computed(
 function submitContact() {
   if (!canSubmit.value) return
 
-  // Compose mailto — admin email constructed in code, not in DOM
-  const recipient = ['admin', 'finnote.vn'].join('@')
+  // Compose mailto — email decoded from base64 env var at runtime
+  const recipient = atob(import.meta.env.VITE_CONTACT_EMAIL_B64 || '')
   const subjectLine = `[FinNote Contact] ${subject.value}`
   const body = [
     `From: ${name.value}`,

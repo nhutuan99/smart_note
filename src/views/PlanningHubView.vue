@@ -4,12 +4,13 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { Target, PieChart, Repeat, CreditCard, PiggyBank, ArrowRight, HandCoins, Bell, ListTodo } from 'lucide-vue-next'
+import { isAdminEmail } from '@/utils/adminCheck'
 
 const { t } = useI18n()
 const router = useRouter()
 const auth = useAuthStore()
 
-const isAdmin = computed(() => auth.user?.email === 'tintphcm@gmail.com')
+const isAdmin = computed(() => isAdminEmail(auth.user?.email))
 
 const features = computed(() => {
   const items = []
