@@ -1208,10 +1208,17 @@ export default {
       aiMessage: '"Hôm nay bạn chi 500k tiền cafe rồi đấy. Nếu bớt uống Starbucks lại thì tháng này để dành được dư sức mua PS5 nha!"',
       syncSms: 'Vừa đồng bộ SMS',
       coffee: 'Highland Coffee',
-      salary: 'Lương tháng 5'
+      salary: 'Lương tháng 5',
+      actionTitle: 'FinNote in Action',
+      actionDesc: 'Xem sự mượt mà khi quản lý tài chính'
+    },
+    stats: {
+      activeUsers: 'Người Dùng',
+      localPrivacy: 'Bảo mật Cục bộ'
     },
     features: {
       title: 'Có gì hay ho trong FinNote?',
+      subtitle: 'Trải nghiệm thế hệ ứng dụng quản lý tài chính tiếp theo.',
       sms: {
         title: 'Tự động đọc SMS Ngân hàng',
         desc: 'Không cần cặm cụi nhập từng đồng như thời tiền sử nữa. FinNote sử dụng Apple Shortcuts bắt thẳng thông báo biến động số dư và ghi nhận ngay lập tức.'
@@ -1236,7 +1243,10 @@ export default {
       starting: 'Đang thiết lập...'
     },
     footer: {
-      copyright: '© 2026 FinNote. Made with 🤍 for better financial freedom.'
+      copyright: '© 2026 FinNote. Made with 🤍 for better financial freedom.',
+      privacy: 'Bảo mật',
+      terms: 'Điều khoản',
+      contact: 'Liên hệ'
     }
   }
 }

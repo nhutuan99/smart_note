@@ -117,7 +117,9 @@ onMounted(async () => {
       Standalone pages (login, onboarding, etc.)
       Rendered via router-view directly — no AppLayout wrapper.
     -->
-    <router-view v-if="isStandalonePage" />
+    <div v-if="isStandalonePage" class="standalone-scroll">
+      <router-view />
+    </div>
 
     <!--
       Public pages (blog) — full-width, no sidebar, no auth required.
@@ -185,6 +187,16 @@ onMounted(async () => {
 #finnote-app {
   min-height: 100vh;
   min-height: 100dvh;
+}
+
+/* Standalone pages (landing, login, onboarding) — need their own scroll context */
+.standalone-scroll {
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: none;
 }
 
 /* ── Public Layout (Blog pages — no sidebar) ── */
@@ -297,6 +309,15 @@ onMounted(async () => {
     height: 100%;
     height: 100dvh;
     overflow: hidden;
+  }
+
+  /* In PWA mode, standalone-scroll overrides the body overflow:hidden */
+  .standalone-scroll {
+    height: 100%;
+    height: 100dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: none;
   }
 
   /* ── Hide scrollbar in PWA mode (native feel) ── */

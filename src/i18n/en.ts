@@ -1171,10 +1171,17 @@ export default {
       aiMessage: '"You spent $20 on coffee today. If you cut back on Starbucks, you can easily save enough for a PS5 this month!"',
       syncSms: 'SMS Synced',
       coffee: 'Highland Coffee',
-      salary: 'May Salary'
+      salary: 'May Salary',
+      actionTitle: 'FinNote in Action',
+      actionDesc: 'Watch how easy it is to manage your finances'
+    },
+    stats: {
+      activeUsers: 'Active Users',
+      localPrivacy: 'Local Privacy'
     },
     features: {
       title: 'What\'s cool in FinNote?',
+      subtitle: 'Experience the next generation of personal finance management.',
       sms: {
         title: 'Auto-read Bank SMS',
         desc: 'No more manual entry like the stone age. FinNote uses Apple Shortcuts to capture balance changes and log them instantly.'
@@ -1199,7 +1206,10 @@ export default {
       starting: 'Setting up...'
     },
     footer: {
-      copyright: '© 2026 FinNote. Made with 🤍 for better financial freedom.'
+      copyright: '© 2026 FinNote. Made with 🤍 for better financial freedom.',
+      privacy: 'Privacy',
+      terms: 'Terms',
+      contact: 'Contact'
     }
   }
 }
