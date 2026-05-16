@@ -1264,7 +1264,7 @@ export default {
       desc: 'Có câu hỏi hay ý tưởng? Gửi tin nhắn cho đội ngũ FinNote — chúng mình sẽ phản hồi sớm nhất.',
       name: 'Họ tên',
       namePlaceholder: 'Nhập họ tên của bạn',
-      emailPlaceholder: 'email@example.com',
+      emailPlaceholder: "email{'@'}example.com",
       subject: 'Tiêu đề',
       subjectPlaceholder: 'VD: Hỏi về tính năng, Góp ý giao diện...',
       message: 'Nội dung',

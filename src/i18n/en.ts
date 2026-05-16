@@ -1227,7 +1227,7 @@ export default {
       desc: 'Got a question or idea? Send a message to the FinNote team — we\'ll get back to you shortly.',
       name: 'Full name',
       namePlaceholder: 'Enter your name',
-      emailPlaceholder: 'email@example.com',
+      emailPlaceholder: "email{'@'}example.com",
       subject: 'Subject',
       subjectPlaceholder: 'e.g. Feature question, UI feedback...',
       message: 'Message',
