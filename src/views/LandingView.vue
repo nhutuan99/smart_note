@@ -179,7 +179,7 @@ onUnmounted(() => {
           <span>{{ t('landing.hero.badge') }}</span>
         </div>
         
-        <h1 class="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-white via-gray-100 to-gray-500 leading-[1.1] min-h-[140px] sm:min-h-[160px] md:min-h-[200px] whitespace-pre-line drop-shadow-2xl px-2">
+        <h1 class="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-white via-gray-100 to-gray-500 leading-[1.15] min-h-[140px] sm:min-h-[160px] md:min-h-[200px] whitespace-pre-line drop-shadow-2xl px-2 pb-3">
           {{ typeWriterText }}<span v-if="isTyping" class="animate-pulse text-white">|</span>
         </h1>
         
@@ -263,7 +263,7 @@ onUnmounted(() => {
     <section id="features" class="py-32 px-4 sm:px-6 relative">
       <div class="max-w-7xl mx-auto">
         <div class="text-center mb-20 reveal-on-scroll">
-            <h2 class="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">{{ t('landing.features.title') }}</h2>
+            <h2 class="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 pb-2 text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">{{ t('landing.features.title') }}</h2>
             <p class="text-xl text-gray-400 max-w-2xl mx-auto">{{ t('landing.features.subtitle') }}</p>
         </div>
         
