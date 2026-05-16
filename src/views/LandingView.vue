@@ -6,6 +6,8 @@ import { setLocale } from '@/i18n'
 import { ArrowRight, ShieldCheck, Sparkles, Smartphone, PenTool, LayoutDashboard, Zap, Volume2, VolumeX, Menu, X, CheckCircle2, ChevronRight } from 'lucide-vue-next'
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useWindowScroll } from '@vueuse/core'
+import LandingDashboardShowcase from '@/components/landing/LandingDashboardShowcase.vue'
+import LandingContactModal from '@/components/landing/LandingContactModal.vue'
 
 const { t, locale } = useI18n()
 const router = useRouter()
@@ -16,6 +18,7 @@ const isMuted = ref(true)
 const demoVideoRef = ref<HTMLVideoElement | null>(null)
 const isMobileMenuOpen = ref(false)
 const isScrolled = ref(false)
+const showContactModal = ref(false)
 
 function toggleMute() {
   if (demoVideoRef.value) {
@@ -258,6 +261,8 @@ onUnmounted(() => {
       </div>
     </main>
 
+    <!-- Dashboard Showcase -->
+    <LandingDashboardShowcase />
 
     <!-- Bento Grid Features -->
     <section id="features" class="py-32 px-4 sm:px-6 relative">
@@ -361,10 +366,13 @@ onUnmounted(() => {
                 <span class="font-bold opacity-80">{{ t('landing.footer.copyright') }}</span>
             </div>
             <div class="flex gap-6">
-                <a href="mailto:admin@finnote.vn" class="hover:text-white transition-colors">{{ t('landing.footer.contact') }}</a>
+                <button @click="showContactModal = true" class="hover:text-white transition-colors cursor-pointer">{{ t('landing.footer.contact') }}</button>
             </div>
         </div>
     </footer>
+
+    <!-- Contact Modal -->
+    <LandingContactModal :show="showContactModal" @close="showContactModal = false" />
   </div>
 </template>
 

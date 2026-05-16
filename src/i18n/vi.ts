@@ -1242,6 +1242,39 @@ export default {
       button: 'Dùng thử 7 ngày không cần thẻ',
       starting: 'Đang thiết lập...'
     },
+    showcase: {
+      title: 'Dashboard thực tế',
+      subtitle: 'Mọi thứ bạn cần, trên một màn hình — trực quan, mượt mà, không rối.',
+      balance: 'Tổng số dư',
+      income: 'Thu nhập',
+      expense: 'Chi tiêu',
+      weeklyChart: 'Biểu đồ 7 ngày',
+      walletBreakdown: 'Phân bổ theo ví',
+      recentTx: 'Giao dịch gần đây',
+      ago: 'trước',
+      tx: {
+        salary: 'Lương tháng 5',
+        food: 'Highland Coffee',
+        shopping: 'Shopee',
+        electricity: 'Tiền điện'
+      }
+    },
+    contactModal: {
+      title: 'Liên hệ với FinNote',
+      desc: 'Có câu hỏi hay ý tưởng? Gửi tin nhắn cho đội ngũ FinNote — chúng mình sẽ phản hồi sớm nhất.',
+      name: 'Họ tên',
+      namePlaceholder: 'Nhập họ tên của bạn',
+      emailPlaceholder: 'email@example.com',
+      subject: 'Tiêu đề',
+      subjectPlaceholder: 'VD: Hỏi về tính năng, Góp ý giao diện...',
+      message: 'Nội dung',
+      messagePlaceholder: 'Viết nội dung bạn muốn gửi...',
+      submit: 'Gửi liên hệ',
+      cancel: 'Hủy',
+      successTitle: 'Đã mở ứng dụng Email!',
+      successDesc: 'Vui lòng nhấn Gửi trong ứng dụng email để hoàn tất liên hệ.',
+      close: 'Đóng'
+    },
     footer: {
       copyright: '© 2026 FinNote. Made with 🤍 for better financial freedom.',
       privacy: 'Bảo mật',

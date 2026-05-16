@@ -1205,6 +1205,39 @@ export default {
       button: 'Try 7 days without card',
       starting: 'Setting up...'
     },
+    showcase: {
+      title: 'Real Dashboard',
+      subtitle: 'Everything you need on one screen — visual, smooth, no clutter.',
+      balance: 'Total Balance',
+      income: 'Income',
+      expense: 'Expense',
+      weeklyChart: '7-Day Chart',
+      walletBreakdown: 'Wallet Breakdown',
+      recentTx: 'Recent Transactions',
+      ago: 'ago',
+      tx: {
+        salary: 'May Salary',
+        food: 'Highland Coffee',
+        shopping: 'Shopee',
+        electricity: 'Electricity Bill'
+      }
+    },
+    contactModal: {
+      title: 'Contact FinNote',
+      desc: 'Got a question or idea? Send a message to the FinNote team — we\'ll get back to you shortly.',
+      name: 'Full name',
+      namePlaceholder: 'Enter your name',
+      emailPlaceholder: 'email@example.com',
+      subject: 'Subject',
+      subjectPlaceholder: 'e.g. Feature question, UI feedback...',
+      message: 'Message',
+      messagePlaceholder: 'Write your message...',
+      submit: 'Send Message',
+      cancel: 'Cancel',
+      successTitle: 'Email app opened!',
+      successDesc: 'Please tap Send in your email app to complete the message.',
+      close: 'Close'
+    },
     footer: {
       copyright: '© 2026 FinNote. Made with 🤍 for better financial freedom.',
       privacy: 'Privacy',
