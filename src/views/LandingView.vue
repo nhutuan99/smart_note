@@ -3,7 +3,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
 import { setLocale } from '@/i18n'
-import { ArrowRight, ShieldCheck, Sparkles, Smartphone, PenTool, LayoutDashboard, Zap, Volume2, VolumeX, Menu, X, CheckCircle2, ChevronRight, Star } from 'lucide-vue-next'
+import { ArrowRight, ShieldCheck, Sparkles, Smartphone, PenTool, LayoutDashboard, Zap, Volume2, VolumeX, Menu, X, CheckCircle2, ChevronRight } from 'lucide-vue-next'
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useWindowScroll } from '@vueuse/core'
 
@@ -220,7 +220,7 @@ onUnmounted(() => {
             </div>
             <div class="mx-auto flex items-center gap-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-md sm:rounded-full bg-black/40 border border-white/5 text-[10px] sm:text-xs text-gray-400 font-medium truncate max-w-[200px] sm:max-w-xs">
               <ShieldCheck :size="12" class="text-accent/80 flex-shrink-0" />
-              <span class="truncate">app.finnote.vn</span>
+              <span class="truncate">finnote-f4n.pages.dev</span>
             </div>
             <div class="w-12 sm:w-[54px]"></div>
           </div>
@@ -258,25 +258,6 @@ onUnmounted(() => {
       </div>
     </main>
 
-    <!-- Social Proof / Stats -->
-    <section class="py-10 border-y border-white/5 bg-white/[0.02]">
-        <div class="max-w-7xl mx-auto px-6 flex flex-wrap justify-center gap-12 sm:gap-24 opacity-80">
-            <div class="flex flex-col items-center">
-                <div class="text-3xl font-extrabold text-white">10k+</div>
-                <div class="text-sm text-gray-400 font-medium mt-1">{{ t('landing.stats.activeUsers') }}</div>
-            </div>
-            <div class="flex flex-col items-center">
-                <div class="text-3xl font-extrabold text-white">4.9/5</div>
-                <div class="flex text-warning mt-1 gap-0.5">
-                    <Star v-for="i in 5" :key="i" :size="14" fill="currentColor" />
-                </div>
-            </div>
-            <div class="flex flex-col items-center">
-                <div class="text-3xl font-extrabold text-white">100%</div>
-                <div class="text-sm text-gray-400 font-medium mt-1">{{ t('landing.stats.localPrivacy') }}</div>
-            </div>
-        </div>
-    </section>
 
     <!-- Bento Grid Features -->
     <section id="features" class="py-32 px-4 sm:px-6 relative">
@@ -380,8 +361,6 @@ onUnmounted(() => {
                 <span class="font-bold opacity-80">{{ t('landing.footer.copyright') }}</span>
             </div>
             <div class="flex gap-6">
-                <a href="#" class="hover:text-white transition-colors">{{ t('landing.footer.privacy') }}</a>
-                <a href="#" class="hover:text-white transition-colors">{{ t('landing.footer.terms') }}</a>
                 <a href="mailto:admin@finnote.vn" class="hover:text-white transition-colors">{{ t('landing.footer.contact') }}</a>
             </div>
         </div>
