@@ -79,81 +79,115 @@ const wallets = [
 const transactions = [
   { cat: 'salary', icon: 'salary', type: 'income', amount: 12000000, wallet: 'TPBank', time: '2h' },
   { cat: 'food', icon: 'food', type: 'expense', amount: 85000, wallet: 'MoMo', time: '4h' },
-  { cat: 'shopping', icon: 'shopping', type: 'expense', amount: 450000, wallet: 'TPBank', time: '6h' },
-  { cat: 'electricity', icon: 'electricity', type: 'expense', amount: 320000, wallet: 'Cash', time: '1d' }
+  {
+    cat: 'shopping',
+    icon: 'shopping',
+    type: 'expense',
+    amount: 450000,
+    wallet: 'TPBank',
+    time: '6h'
+  },
+  {
+    cat: 'electricity',
+    icon: 'electricity',
+    type: 'expense',
+    amount: 320000,
+    wallet: 'Cash',
+    time: '1d'
+  }
 ]
 
 function getCatIcon(icon: string) {
   switch (icon) {
-    case 'salary': return Banknote
-    case 'food': return Coffee
-    case 'shopping': return ShoppingCart
-    case 'electricity': return Zap
-    default: return Wallet
+    case 'salary':
+      return Banknote
+    case 'food':
+      return Coffee
+    case 'shopping':
+      return ShoppingCart
+    case 'electricity':
+      return Zap
+    default:
+      return Wallet
   }
 }
 
 function getCatColor(icon: string) {
   switch (icon) {
-    case 'salary': return '#10b981'
-    case 'food': return '#f59e0b'
-    case 'shopping': return '#ec4899'
-    case 'electricity': return '#3b82f6'
-    default: return '#7c6ff7'
+    case 'salary':
+      return '#10b981'
+    case 'food':
+      return '#f59e0b'
+    case 'shopping':
+      return '#ec4899'
+    case 'electricity':
+      return '#3b82f6'
+    default:
+      return '#7c6ff7'
   }
 }
 </script>
 
 <template>
-  <section ref="sectionRef" class="py-28 px-4 sm:px-6 relative overflow-hidden">
+  <section
+    ref="sectionRef"
+    class="relative overflow-hidden px-4 py-28 sm:px-6"
+  >
     <!-- Background glow -->
     <div
-      class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] max-w-[700px] max-h-[700px] bg-accent/10 blur-[120px] rounded-full pointer-events-none -z-10"
+      class="bg-accent/10 pointer-events-none absolute top-1/2 left-1/2 -z-10 h-[60vw] max-h-[700px] w-[60vw] max-w-[700px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[120px]"
     ></div>
 
-    <div class="max-w-7xl mx-auto">
+    <div class="mx-auto max-w-7xl">
       <!-- Section header -->
-      <div class="text-center mb-16 reveal-on-scroll">
+      <div class="reveal-on-scroll mb-16 text-center">
         <h2
-          class="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 pb-2 text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400"
+          class="mb-6 bg-gradient-to-r from-white to-gray-400 bg-clip-text pb-2 text-4xl font-extrabold text-transparent md:text-5xl lg:text-6xl"
         >
           {{ t('landing.showcase.title') }}
         </h2>
-        <p class="text-xl text-gray-400 max-w-2xl mx-auto">
+        <p class="mx-auto max-w-2xl text-xl text-gray-400">
           {{ t('landing.showcase.subtitle') }}
         </p>
       </div>
 
       <!-- Dashboard mock grid -->
-      <div class="max-w-6xl mx-auto">
+      <div class="mx-auto max-w-6xl">
         <!-- Row 1: Overview cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+        <div class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
           <!-- Balance card -->
           <div
             :class="[
-              'relative overflow-hidden rounded-2xl p-5 border transition-all duration-700',
-              isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+              'relative overflow-hidden rounded-2xl border p-5 transition-all duration-700',
+              isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
             ]"
             style="
               border-color: rgba(124, 111, 247, 0.3);
-              background: linear-gradient(135deg, rgba(124, 111, 247, 0.08) 0%, rgba(15, 15, 25, 0.9) 100%);
+              background: linear-gradient(
+                135deg,
+                rgba(124, 111, 247, 0.08) 0%,
+                rgba(15, 15, 25, 0.9) 100%
+              );
               box-shadow: 0 4px 24px rgba(124, 111, 247, 0.08);
             "
           >
             <div
-              class="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full blur-3xl"
+              class="pointer-events-none absolute -top-8 -right-8 h-28 w-28 rounded-full blur-3xl"
               style="background: rgba(124, 111, 247, 0.15)"
             ></div>
-            <div class="flex items-center gap-2 mb-3 relative z-10">
+            <div class="relative z-10 mb-3 flex items-center gap-2">
               <div
-                class="flex h-9 w-9 items-center justify-center rounded-lg shrink-0"
+                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
                 style="background: rgba(124, 111, 247, 0.15)"
               >
-                <Wallet :size="18" class="text-[#7c6ff7]" />
+                <Wallet
+                  :size="18"
+                  class="text-[#7c6ff7]"
+                />
               </div>
-              <span class="text-gray-400 text-sm">{{ t('landing.showcase.balance') }}</span>
+              <span class="text-sm text-gray-400">{{ t('landing.showcase.balance') }}</span>
             </div>
-            <div class="text-3xl font-bold tracking-tight text-white relative z-10">
+            <div class="relative z-10 text-3xl font-bold tracking-tight text-white">
               {{ formatVND(animatedBalance) }}đ
             </div>
           </div>
@@ -161,16 +195,21 @@ function getCatColor(icon: string) {
           <!-- Income card -->
           <div
             :class="[
-              'relative overflow-hidden rounded-2xl p-5 border border-white/10 transition-all duration-700 delay-100',
-              isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+              'relative overflow-hidden rounded-2xl border border-white/10 p-5 transition-all delay-100 duration-700',
+              isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
             ]"
             style="background: rgba(15, 15, 25, 0.8)"
           >
-            <div class="flex items-center gap-2 mb-3">
-              <div class="bg-emerald-500/10 flex h-9 w-9 items-center justify-center rounded-lg shrink-0">
-                <TrendingUp :size="18" class="text-emerald-400" />
+            <div class="mb-3 flex items-center gap-2">
+              <div
+                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10"
+              >
+                <TrendingUp
+                  :size="18"
+                  class="text-emerald-400"
+                />
               </div>
-              <span class="text-gray-400 text-sm">{{ t('landing.showcase.income') }}</span>
+              <span class="text-sm text-gray-400">{{ t('landing.showcase.income') }}</span>
             </div>
             <div class="text-2xl font-bold tracking-tight text-emerald-400">
               +{{ formatVND(animatedIncome) }}đ
@@ -180,16 +219,21 @@ function getCatColor(icon: string) {
           <!-- Expense card -->
           <div
             :class="[
-              'relative overflow-hidden rounded-2xl p-5 border border-white/10 transition-all duration-700 delay-200',
-              isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+              'relative overflow-hidden rounded-2xl border border-white/10 p-5 transition-all delay-200 duration-700',
+              isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
             ]"
             style="background: rgba(15, 15, 25, 0.8)"
           >
-            <div class="flex items-center gap-2 mb-3">
-              <div class="bg-red-500/10 flex h-9 w-9 items-center justify-center rounded-lg shrink-0">
-                <TrendingDown :size="18" class="text-red-400" />
+            <div class="mb-3 flex items-center gap-2">
+              <div
+                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-500/10"
+              >
+                <TrendingDown
+                  :size="18"
+                  class="text-red-400"
+                />
               </div>
-              <span class="text-gray-400 text-sm">{{ t('landing.showcase.expense') }}</span>
+              <span class="text-sm text-gray-400">{{ t('landing.showcase.expense') }}</span>
             </div>
             <div class="text-2xl font-bold tracking-tight text-red-400">
               -{{ formatVND(animatedExpense) }}đ
@@ -198,33 +242,42 @@ function getCatColor(icon: string) {
         </div>
 
         <!-- Row 2: Chart + Wallet breakdown -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+        <div class="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
           <!-- SVG Animated Line Chart -->
           <div
             :class="[
-              'rounded-2xl border border-white/10 p-5 transition-all duration-700 delay-300',
-              isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+              'rounded-2xl border border-white/10 p-5 transition-all delay-300 duration-700',
+              isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
             ]"
             style="background: rgba(15, 15, 25, 0.8)"
           >
-            <div class="flex items-center gap-2 mb-1">
-              <BarChart3 :size="16" class="text-gray-500" />
-              <h3 class="text-sm font-semibold text-white">{{ t('landing.showcase.weeklyChart') }}</h3>
+            <div class="mb-1 flex items-center gap-2">
+              <BarChart3
+                :size="16"
+                class="text-gray-500"
+              />
+              <h3 class="text-sm font-semibold text-white">
+                {{ t('landing.showcase.weeklyChart') }}
+              </h3>
             </div>
             <!-- Legend -->
-            <div class="flex items-center gap-4 mb-3">
+            <div class="mb-3 flex items-center gap-4">
               <div class="flex items-center gap-1.5">
                 <span class="h-[3px] w-3 rounded-full bg-violet-400"></span>
-                <span class="text-gray-500 text-[11px]">{{ t('landing.showcase.income') }}</span>
+                <span class="text-[11px] text-gray-500">{{ t('landing.showcase.income') }}</span>
               </div>
               <div class="flex items-center gap-1.5">
                 <span class="h-[3px] w-3 rounded-full bg-red-400"></span>
-                <span class="text-gray-500 text-[11px]">{{ t('landing.showcase.expense') }}</span>
+                <span class="text-[11px] text-gray-500">{{ t('landing.showcase.expense') }}</span>
               </div>
             </div>
             <!-- SVG Chart -->
             <div class="relative h-[180px] w-full">
-              <svg viewBox="0 0 400 160" class="w-full h-full" preserveAspectRatio="none">
+              <svg
+                viewBox="0 0 400 160"
+                class="h-full w-full"
+                preserveAspectRatio="none"
+              >
                 <!-- Grid lines -->
                 <line
                   v-for="i in 4"
@@ -238,13 +291,37 @@ function getCatColor(icon: string) {
                 />
                 <!-- Income line (gradient fill) -->
                 <defs>
-                  <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="rgba(124,111,247,0.25)" />
-                    <stop offset="100%" stop-color="rgba(124,111,247,0)" />
+                  <linearGradient
+                    id="incomeGrad"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop
+                      offset="0%"
+                      stop-color="rgba(124,111,247,0.25)"
+                    />
+                    <stop
+                      offset="100%"
+                      stop-color="rgba(124,111,247,0)"
+                    />
                   </linearGradient>
-                  <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="rgba(239,68,68,0.15)" />
-                    <stop offset="100%" stop-color="rgba(239,68,68,0)" />
+                  <linearGradient
+                    id="expenseGrad"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop
+                      offset="0%"
+                      stop-color="rgba(239,68,68,0.15)"
+                    />
+                    <stop
+                      offset="100%"
+                      stop-color="rgba(239,68,68,0)"
+                    />
                   </linearGradient>
                 </defs>
                 <!-- Income area fill -->
@@ -294,8 +371,12 @@ function getCatColor(icon: string) {
                 />
               </svg>
               <!-- X-axis labels -->
-              <div class="absolute bottom-0 left-0 right-0 flex justify-between px-1">
-                <span v-for="day in ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN']" :key="day" class="text-[10px] text-gray-600 font-medium">
+              <div class="absolute right-0 bottom-0 left-0 flex justify-between px-1">
+                <span
+                  v-for="day in ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN']"
+                  :key="day"
+                  class="text-[10px] font-medium text-gray-600"
+                >
                   {{ day }}
                 </span>
               </div>
@@ -305,15 +386,20 @@ function getCatColor(icon: string) {
           <!-- Wallet Breakdown -->
           <div
             :class="[
-              'rounded-2xl border border-white/10 p-5 transition-all duration-700 delay-[400ms]',
-              isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+              'rounded-2xl border border-white/10 p-5 transition-all delay-[400ms] duration-700',
+              isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
             ]"
             style="background: rgba(15, 15, 25, 0.8)"
           >
-            <h3 class="text-sm font-semibold text-white mb-5">{{ t('landing.showcase.walletBreakdown') }}</h3>
+            <h3 class="mb-5 text-sm font-semibold text-white">
+              {{ t('landing.showcase.walletBreakdown') }}
+            </h3>
             <div class="space-y-4">
-              <div v-for="(w, idx) in wallets" :key="w.name">
-                <div class="flex items-center gap-3 mb-2">
+              <div
+                v-for="(w, idx) in wallets"
+                :key="w.name"
+              >
+                <div class="mb-2 flex items-center gap-3">
                   <!-- Wallet icon -->
                   <div
                     class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[9px] font-bold text-white"
@@ -321,18 +407,18 @@ function getCatColor(icon: string) {
                   >
                     {{ w.name.substring(0, 2).toUpperCase() }}
                   </div>
-                  <span class="text-gray-300 text-sm font-medium flex-1">{{ w.name }}</span>
-                  <span class="text-white text-sm font-bold tabular-nums">{{ w.pct }}%</span>
+                  <span class="flex-1 text-sm font-medium text-gray-300">{{ w.name }}</span>
+                  <span class="text-sm font-bold text-white tabular-nums">{{ w.pct }}%</span>
                 </div>
                 <!-- Progress bar -->
-                <div class="h-2 bg-white/5 rounded-full overflow-hidden">
+                <div class="h-2 overflow-hidden rounded-full bg-white/5">
                   <div
                     class="h-full rounded-full transition-all ease-out"
                     :style="{
                       width: isVisible ? w.pct + '%' : '0%',
                       backgroundColor: w.color,
-                      transitionDuration: (1000 + idx * 300) + 'ms',
-                      transitionDelay: (500 + idx * 150) + 'ms'
+                      transitionDuration: 1000 + idx * 300 + 'ms',
+                      transitionDelay: 500 + idx * 150 + 'ms'
                     }"
                   ></div>
                 </div>
@@ -344,35 +430,47 @@ function getCatColor(icon: string) {
         <!-- Row 3: Recent transactions -->
         <div
           :class="[
-            'rounded-2xl border border-white/10 overflow-hidden transition-all duration-700 delay-500',
-            isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+            'overflow-hidden rounded-2xl border border-white/10 transition-all delay-500 duration-700',
+            isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
           ]"
           style="background: rgba(15, 15, 25, 0.8)"
         >
-          <div class="px-5 py-3.5 border-b border-white/5 flex items-center justify-between">
+          <div class="flex items-center justify-between border-b border-white/5 px-5 py-3.5">
             <h3 class="text-sm font-semibold text-white">{{ t('landing.showcase.recentTx') }}</h3>
           </div>
           <div class="divide-y divide-white/5">
             <div
               v-for="(tx, i) in transactions"
               :key="i"
-              class="flex items-center gap-3 px-5 py-3.5 hover:bg-white/[0.02] transition-colors"
-              :class="{ 'opacity-0 translate-y-4': !isVisible }"
-              :style="isVisible ? { opacity: 1, transform: 'translateY(0)', transition: `all 0.5s ease ${600 + i * 100}ms` } : {}"
+              class="flex items-center gap-3 px-5 py-3.5 transition-colors hover:bg-white/[0.02]"
+              :class="{ 'translate-y-4 opacity-0': !isVisible }"
+              :style="
+                isVisible
+                  ? {
+                      opacity: 1,
+                      transform: 'translateY(0)',
+                      transition: `all 0.5s ease ${600 + i * 100}ms`
+                    }
+                  : {}
+              "
             >
               <!-- Category icon -->
               <div
                 class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
                 :style="{ backgroundColor: getCatColor(tx.icon) + '18' }"
               >
-                <component :is="getCatIcon(tx.icon)" :size="18" :style="{ color: getCatColor(tx.icon) }" />
+                <component
+                  :is="getCatIcon(tx.icon)"
+                  :size="18"
+                  :style="{ color: getCatColor(tx.icon) }"
+                />
               </div>
               <!-- Info -->
               <div class="min-w-0 flex-1">
-                <span class="text-sm font-semibold text-white block truncate">
+                <span class="block truncate text-sm font-semibold text-white">
                   {{ t('landing.showcase.tx.' + tx.cat) }}
                 </span>
-                <div class="text-gray-500 text-[11px] flex items-center gap-1.5 mt-0.5">
+                <div class="mt-0.5 flex items-center gap-1.5 text-[11px] text-gray-500">
                   <span>{{ tx.wallet }}</span>
                   <span class="opacity-40">·</span>
                   <span>{{ tx.time }} {{ t('landing.showcase.ago') }}</span>
@@ -380,11 +478,17 @@ function getCatColor(icon: string) {
               </div>
               <!-- Amount -->
               <div
-                class="text-sm font-bold whitespace-nowrap tabular-nums flex items-center gap-0.5"
+                class="flex items-center gap-0.5 text-sm font-bold whitespace-nowrap tabular-nums"
                 :class="tx.type === 'income' ? 'text-emerald-400' : 'text-red-400'"
               >
-                <ArrowUpRight v-if="tx.type === 'income'" :size="14" />
-                <ArrowDownRight v-else :size="14" />
+                <ArrowUpRight
+                  v-if="tx.type === 'income'"
+                  :size="14"
+                />
+                <ArrowDownRight
+                  v-else
+                  :size="14"
+                />
                 {{ tx.type === 'income' ? '+' : '-' }}{{ formatVND(tx.amount) }}đ
               </div>
             </div>
@@ -430,7 +534,14 @@ function getCatColor(icon: string) {
 }
 
 @keyframes dot-pulse {
-  0%, 100% { r: 8; opacity: 0.3; }
-  50% { r: 14; opacity: 0; }
+  0%,
+  100% {
+    r: 8;
+    opacity: 0.3;
+  }
+  50% {
+    r: 14;
+    opacity: 0;
+  }
 }
 </style>

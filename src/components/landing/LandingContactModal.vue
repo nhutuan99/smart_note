@@ -42,12 +42,7 @@ function submitContact() {
   // Compose mailto — email decoded from base64 env var at runtime
   const recipient = atob(import.meta.env.VITE_CONTACT_EMAIL_B64 || '')
   const subjectLine = `[FinNote Contact] ${subject.value}`
-  const body = [
-    `From: ${name.value}`,
-    `Reply Email: ${email.value}`,
-    '',
-    message.value
-  ].join('\n')
+  const body = [`From: ${name.value}`, `Reply Email: ${email.value}`, '', message.value].join('\n')
 
   const mailtoUrl =
     'mailto:' +
@@ -68,104 +63,138 @@ function close() {
 
 <template>
   <transition name="modal-fade">
-    <div v-if="show" class="fixed inset-0 z-[100] flex items-center justify-center px-4">
+    <div
+      v-if="show"
+      class="fixed inset-0 z-[100] flex items-center justify-center px-4"
+    >
       <!-- Backdrop -->
-      <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" @click="close"></div>
+      <div
+        class="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        @click="close"
+      ></div>
 
       <!-- Modal -->
-      <div class="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl ring-1 ring-white/10 bg-[#0f0f18]">
+      <div
+        class="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-[#0f0f18] shadow-2xl ring-1 ring-white/10"
+      >
         <!-- Header -->
-        <div class="flex items-center justify-between border-b border-white/10 px-6 py-4 bg-white/[0.02] sticky top-0 z-10 backdrop-blur-md">
+        <div
+          class="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-white/[0.02] px-6 py-4 backdrop-blur-md"
+        >
           <div class="flex items-center gap-3">
-            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-accent/10 text-[#7c6ff7]">
+            <div
+              class="bg-accent/10 flex h-10 w-10 items-center justify-center rounded-full text-[#7c6ff7]"
+            >
               <MessageSquare class="h-5 w-5" />
             </div>
             <h3 class="text-lg font-semibold text-white">{{ t('landing.contactModal.title') }}</h3>
           </div>
-          <button @click="close" class="rounded-full p-2 text-gray-400 hover:bg-white/10 transition-colors">
+          <button
+            @click="close"
+            class="rounded-full p-2 text-gray-400 transition-colors hover:bg-white/10"
+          >
             <X class="h-5 w-5" />
           </button>
         </div>
 
         <!-- Success state -->
-        <div v-if="showSuccess" class="p-10 text-center">
-          <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10">
-            <CheckCircle2 :size="32" class="text-emerald-400" />
+        <div
+          v-if="showSuccess"
+          class="p-10 text-center"
+        >
+          <div
+            class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10"
+          >
+            <CheckCircle2
+              :size="32"
+              class="text-emerald-400"
+            />
           </div>
-          <h4 class="text-xl font-bold text-white mb-2">{{ t('landing.contactModal.successTitle') }}</h4>
-          <p class="text-gray-400 text-sm mb-8">{{ t('landing.contactModal.successDesc') }}</p>
-          <button @click="close" class="bg-white text-black font-bold px-8 py-3 rounded-full hover:bg-gray-100 transition-colors">
+          <h4 class="mb-2 text-xl font-bold text-white">
+            {{ t('landing.contactModal.successTitle') }}
+          </h4>
+          <p class="mb-8 text-sm text-gray-400">{{ t('landing.contactModal.successDesc') }}</p>
+          <button
+            @click="close"
+            class="rounded-full bg-white px-8 py-3 font-bold text-black transition-colors hover:bg-gray-100"
+          >
             {{ t('landing.contactModal.close') }}
           </button>
         </div>
 
         <!-- Form -->
         <template v-else>
-          <div class="p-6 space-y-5">
+          <div class="space-y-5 p-6">
             <p class="text-sm text-gray-400">
               {{ t('landing.contactModal.desc') }}
             </p>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <!-- Name -->
               <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1.5">
-                  {{ t('landing.contactModal.name') }} <span class="text-red-400">*</span>
+                <label class="mb-1.5 block text-sm font-medium text-gray-300">
+                  {{ t('landing.contactModal.name') }}
+                  <span class="text-red-400">*</span>
                 </label>
                 <input
                   v-model="name"
                   type="text"
                   :placeholder="t('landing.contactModal.namePlaceholder')"
-                  class="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white placeholder:text-gray-600 focus:bg-white/[0.08] focus:border-[#7c6ff7]/50 focus:outline-none focus:ring-1 focus:ring-[#7c6ff7]/50 transition-all"
+                  class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white transition-all placeholder:text-gray-600 focus:border-[#7c6ff7]/50 focus:bg-white/[0.08] focus:ring-1 focus:ring-[#7c6ff7]/50 focus:outline-none"
                 />
               </div>
 
               <!-- Email -->
               <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1.5">
-                  Email <span class="text-red-400">*</span>
+                <label class="mb-1.5 block text-sm font-medium text-gray-300">
+                  Email
+                  <span class="text-red-400">*</span>
                 </label>
                 <input
                   v-model="email"
                   type="email"
                   :placeholder="t('landing.contactModal.emailPlaceholder')"
-                  class="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white placeholder:text-gray-600 focus:bg-white/[0.08] focus:border-[#7c6ff7]/50 focus:outline-none focus:ring-1 focus:ring-[#7c6ff7]/50 transition-all"
+                  class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white transition-all placeholder:text-gray-600 focus:border-[#7c6ff7]/50 focus:bg-white/[0.08] focus:ring-1 focus:ring-[#7c6ff7]/50 focus:outline-none"
                 />
               </div>
             </div>
 
             <!-- Subject -->
             <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1.5">
-                {{ t('landing.contactModal.subject') }} <span class="text-red-400">*</span>
+              <label class="mb-1.5 block text-sm font-medium text-gray-300">
+                {{ t('landing.contactModal.subject') }}
+                <span class="text-red-400">*</span>
               </label>
               <input
                 v-model="subject"
                 type="text"
                 :placeholder="t('landing.contactModal.subjectPlaceholder')"
-                class="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white placeholder:text-gray-600 focus:bg-white/[0.08] focus:border-[#7c6ff7]/50 focus:outline-none focus:ring-1 focus:ring-[#7c6ff7]/50 transition-all"
+                class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white transition-all placeholder:text-gray-600 focus:border-[#7c6ff7]/50 focus:bg-white/[0.08] focus:ring-1 focus:ring-[#7c6ff7]/50 focus:outline-none"
               />
             </div>
 
             <!-- Message -->
             <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1.5">
-                {{ t('landing.contactModal.message') }} <span class="text-red-400">*</span>
+              <label class="mb-1.5 block text-sm font-medium text-gray-300">
+                {{ t('landing.contactModal.message') }}
+                <span class="text-red-400">*</span>
               </label>
               <textarea
                 v-model="message"
                 rows="5"
                 :placeholder="t('landing.contactModal.messagePlaceholder')"
-                class="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder:text-gray-600 focus:bg-white/[0.08] focus:border-[#7c6ff7]/50 focus:outline-none focus:ring-1 focus:ring-[#7c6ff7]/50 transition-all resize-none"
+                class="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white transition-all placeholder:text-gray-600 focus:border-[#7c6ff7]/50 focus:bg-white/[0.08] focus:ring-1 focus:ring-[#7c6ff7]/50 focus:outline-none"
               ></textarea>
             </div>
           </div>
 
           <!-- Footer -->
-          <div class="flex items-center justify-end gap-3 border-t border-white/10 px-6 py-4 bg-white/[0.02] sticky bottom-0">
+          <div
+            class="sticky bottom-0 flex items-center justify-end gap-3 border-t border-white/10 bg-white/[0.02] px-6 py-4"
+          >
             <button
               @click="close"
-              class="px-5 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:text-white hover:bg-white/10 transition-all"
+              class="rounded-xl px-5 py-2.5 text-sm font-medium text-gray-400 transition-all hover:bg-white/10 hover:text-white"
             >
               {{ t('landing.contactModal.cancel') }}
             </button>
@@ -173,10 +202,10 @@ function close() {
               @click="submitContact"
               :disabled="!canSubmit"
               :class="[
-                'flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all',
+                'flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-bold transition-all',
                 canSubmit
-                  ? 'bg-gradient-to-r from-[#7c6ff7] to-[#9381ff] text-white shadow-lg shadow-[#7c6ff7]/20 hover:shadow-[#7c6ff7]/40 hover:-translate-y-0.5'
-                  : 'bg-white/5 text-gray-600 cursor-not-allowed'
+                  ? 'bg-gradient-to-r from-[#7c6ff7] to-[#9381ff] text-white shadow-lg shadow-[#7c6ff7]/20 hover:-translate-y-0.5 hover:shadow-[#7c6ff7]/40'
+                  : 'cursor-not-allowed bg-white/5 text-gray-600'
               ]"
             >
               <Send :size="14" />
