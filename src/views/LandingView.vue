@@ -231,10 +231,7 @@ onUnmounted(() => {
       >
         <div class="flex items-center rounded-full border border-white/20 bg-white/10 p-1">
           <button
-            @click="
-              setLocale('vi')
-              isMobileMenuOpen = false
-            "
+            @click="setLocale('vi'); isMobileMenuOpen = false"
             :class="[
               'rounded-full px-6 py-2 text-sm font-semibold',
               locale === 'vi' ? 'bg-accent text-white' : 'text-gray-400'
@@ -243,10 +240,7 @@ onUnmounted(() => {
             VI
           </button>
           <button
-            @click="
-              setLocale('en')
-              isMobileMenuOpen = false
-            "
+            @click="setLocale('en'); isMobileMenuOpen = false"
             :class="[
               'rounded-full px-6 py-2 text-sm font-semibold',
               locale === 'en' ? 'bg-accent text-white' : 'text-gray-400'
@@ -256,19 +250,13 @@ onUnmounted(() => {
           </button>
         </div>
         <button
-          @click="
-            goToLogin()
-            isMobileMenuOpen = false
-          "
+          @click="goToLogin(); isMobileMenuOpen = false"
           class="text-2xl font-bold text-gray-300 hover:text-white"
         >
           {{ t('landing.nav.login') }}
         </button>
         <button
-          @click="
-            startGuest()
-            isMobileMenuOpen = false
-          "
+          @click="startGuest(); isMobileMenuOpen = false"
           class="bg-accent w-[80%] max-w-[300px] rounded-full px-8 py-4 text-xl font-bold text-white shadow-[0_0_30px_rgba(124,111,247,0.4)]"
         >
           {{ isStarting ? t('landing.nav.starting') : t('landing.nav.tryNow') }}
