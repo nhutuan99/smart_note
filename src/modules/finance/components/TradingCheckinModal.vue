@@ -10,14 +10,13 @@ import { useUiStore } from '@/stores/ui'
 // 4. Types
 import type { TradingCheckinEntry } from '@/types'
 // 5. Utils
-import { formatVND } from '@/constants/finance'
 import { getWalletBrand } from '@/constants/walletBrands'
 // 6. Components & icons
 import CurrencyInput from '@/components/ui/CurrencyInput.vue'
 import { X, TrendingUp, TrendingDown, DollarSign, Percent, Check, ChevronRight, BookOpen } from 'lucide-vue-next'
 import { useCurrency } from '@/composables/useCurrency'
 
-const { exchangeRate, rateLoading: usdRateLoading, rateError: usdRateError, fetchExchangeRate } = useCurrency()
+const { exchangeRate, currency: globalCurrency, rateLoading: usdRateLoading, rateError: usdRateError, fetchExchangeRate, formatMoney, formatMoneyShort } = useCurrency()
 // exchangeRate = 1 VND in USD → 1 USD in VND = 1/exchangeRate
 const usdToVnd = computed(() => exchangeRate.value > 0 ? Math.round(1 / exchangeRate.value) : 0)
 
@@ -282,7 +281,7 @@ function close() { emit('update:modelValue', false) }
                   </div>
                   <div class="flex-1 min-w-0">
                     <div class="text-sm font-semibold text-text-primary truncate">{{ w.name }}</div>
-                    <div class="text-[11px] text-text-tertiary">{{ formatVND(w.balance) }}</div>
+                    <div class="text-[11px] text-text-tertiary">{{ formatMoney(w.balance) }}</div>
                   </div>
                   <div
                     class="h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors"
@@ -324,11 +323,11 @@ function close() { emit('update:modelValue', false) }
                     </div>
                     <div class="flex-1 min-w-0">
                       <div class="text-sm font-bold text-text-primary">{{ drafts[walletStep].walletName }}</div>
-                      <div class="text-[11px] text-text-disabled">{{ t('trading.balanceBefore', { amount: formatVND(drafts[walletStep].balanceBefore) }) }}</div>
+                      <div class="text-[11px] text-text-disabled">{{ t('trading.balanceBefore', { amount: formatMoney(drafts[walletStep].balanceBefore) }) }}</div>
                     </div>
                     <!-- Live P&L preview -->
                     <div class="text-sm font-bold tabular-nums" :class="calcPnl(drafts[walletStep]) >= 0 ? 'text-success' : 'text-error'">
-                      {{ calcPnl(drafts[walletStep]) >= 0 ? '+' : '' }}{{ formatVND(calcPnl(drafts[walletStep])) }}
+                      {{ calcPnl(drafts[walletStep]) >= 0 ? '+' : '' }}{{ formatMoney(calcPnl(drafts[walletStep])) }}
                     </div>
                   </div>
 
@@ -392,9 +391,16 @@ function close() { emit('update:modelValue', false) }
                     <!-- USD live conversion hint -->
                     <div v-if="drafts[walletStep].inputMode === 'usd'" class="flex items-center text-[11px] px-1">
                       <span v-if="usdRateLoading" class="text-text-disabled italic">Đang tải tỷ giá...</span>
-                      <span v-else-if="usdToVnd > 0" class="text-emerald-400 font-medium">
-                        ≈ {{ formatVND(calcPnl(drafts[walletStep])) }} (1$ = {{ new Intl.NumberFormat('vi-VN').format(usdToVnd) }}₫)
-                      </span>
+                      <template v-else-if="usdToVnd > 0">
+                        <!-- If user is in VND mode → show VND equivalent -->
+                        <span v-if="globalCurrency === 'VND'" class="text-emerald-400 font-medium">
+                          ≈ {{ formatMoneyShort(calcPnl(drafts[walletStep])) }} &nbsp;·&nbsp; 1$ = {{ new Intl.NumberFormat('vi-VN').format(usdToVnd) }}₫
+                        </span>
+                        <!-- If user is in USD mode → just confirm the rate -->
+                        <span v-else class="text-emerald-400 font-medium">
+                          1$ = {{ new Intl.NumberFormat('vi-VN').format(usdToVnd) }}₫ (đang dùng USD)
+                        </span>
+                      </template>
                       <span v-else-if="usdRateError" class="text-error text-[10px]">{{ usdRateError }}</span>
                       <span v-else class="text-text-disabled text-[10px]">Chưa có tỷ giá</span>
                     </div>
@@ -410,7 +416,7 @@ function close() { emit('update:modelValue', false) }
                       <span class="inline-block transition-transform duration-200" :class="showDeposit[walletStep] ? 'rotate-90' : ''">&#9656;</span>
                       {{ t('trading.depositLabel') }}
                       <span class="text-text-disabled">{{ t('trading.depositHint') }}</span>
-                      <span v-if="drafts[walletStep].depositAmount !== 0" class="ml-1 text-accent font-semibold">{{ formatVND(drafts[walletStep].depositAmount) }}</span>
+                      <span v-if="drafts[walletStep].depositAmount !== 0" class="ml-1 text-accent font-semibold">{{ formatMoney(drafts[walletStep].depositAmount) }}</span>
                     </button>
                     <Transition
                       enter-active-class="transition-all duration-200 ease-out"
@@ -434,7 +440,7 @@ function close() { emit('update:modelValue', false) }
                   <div class="flex items-center justify-between text-[11px] rounded-lg bg-bg-surface px-3 py-2 border border-border-subtle">
                     <span class="text-text-tertiary">{{ t('trading.balanceAfter') }}</span>
                     <span class="font-bold tabular-nums" :class="calcBalanceAfter(drafts[walletStep]) >= 0 ? 'text-text-primary' : 'text-error'">
-                      {{ formatVND(calcBalanceAfter(drafts[walletStep])) }}
+                      {{ formatMoney(calcBalanceAfter(drafts[walletStep])) }}
                     </span>
                   </div>
                 </div>
@@ -469,10 +475,10 @@ function close() { emit('update:modelValue', false) }
                 >
                   <TrendingUp v-if="totalPnl >= 0" :size="20" />
                   <TrendingDown v-else :size="20" />
-                  {{ totalPnl >= 0 ? '+' : '' }}{{ formatVND(totalPnl) }}
+                  {{ totalPnl >= 0 ? '+' : '' }}{{ formatMoney(totalPnl) }}
                 </div>
                 <p v-if="totalDeposit > 0" class="mt-1 text-[11px] text-text-disabled">
-                  {{ t('trading.summaryDeposit', { amount: formatVND(totalDeposit) }) }}
+                  {{ t('trading.summaryDeposit', { amount: formatMoney(totalDeposit) }) }}
                 </p>
               </div>
 
@@ -496,15 +502,15 @@ function close() { emit('update:modelValue', false) }
                   <div class="flex-1 min-w-0">
                     <div class="text-sm font-semibold text-text-primary">{{ e.walletName }}</div>
                     <div class="text-[11px] text-text-disabled">
-                      {{ t('trading.balanceChange', { before: formatVND(e.balanceBefore), after: formatVND(e.balanceAfter) }) }}
+                      {{ t('trading.balanceChange', { before: formatMoney(e.balanceBefore), after: formatMoney(e.balanceAfter) }) }}
                     </div>
                   </div>
                   <div class="text-right shrink-0">
                     <div class="text-sm font-bold tabular-nums" :class="e.pnlAmount >= 0 ? 'text-success' : 'text-error'">
-                      {{ e.pnlAmount >= 0 ? '+' : '' }}{{ formatVND(e.pnlAmount) }}
+                      {{ e.pnlAmount >= 0 ? '+' : '' }}{{ formatMoney(e.pnlAmount) }}
                     </div>
                     <div v-if="e.depositAmount > 0" class="text-[10px] text-text-disabled">
-                      {{ t('trading.deposit', { amount: formatVND(e.depositAmount) }) }}
+                      {{ t('trading.deposit', { amount: formatMoney(e.depositAmount) }) }}
                     </div>
                   </div>
                 </div>

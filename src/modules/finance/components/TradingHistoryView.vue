@@ -7,10 +7,9 @@ import { useI18n } from 'vue-i18n'
 import { useTradingCheckin } from '@/composables/useTradingCheckin'
 import { useStockStore } from '@/stores/stock'
 import { useFundStore } from '@/stores/fund'
+import { useCurrency } from '@/composables/useCurrency'
 // 3. Types
 import type { TradingCheckin } from '@/types'
-// 4. Utils
-import { formatVND } from '@/constants/finance'
 // 5. Components & icons
 import { Line } from 'vue-chartjs'
 import {
@@ -36,6 +35,7 @@ const { t, locale } = useI18n()
 const { trading } = useTradingCheckin()
 const stockStore = useStockStore()
 const fundStore = useFundStore()
+const { formatMoney, formatMoneyShort } = useCurrency()
 
 // Auto-load stocks/funds on mount for homepage quick view
 onMounted(() => {
@@ -107,7 +107,7 @@ function externalTooltipHandler(context: { chart: ChartJS; tooltip: TooltipModel
         font-size:15px;font-weight:700;color:${color};
         font-variant-numeric:tabular-nums;letter-spacing:-0.02em;
         text-shadow: 0 0 12px ${glow};
-      ">${sign}${formatVND(rawVal)}</div>
+      ">${sign}${formatMoneyShort(rawVal)}</div>
     </div>
   `
 
@@ -307,7 +307,7 @@ function formatDateLabel(dateStr: string): string {
           class="text-lg font-bold tabular-nums"
           :class="statsInPeriod.totalPnl >= 0 ? 'text-success' : 'text-error'"
         >
-          {{ statsInPeriod.totalPnl >= 0 ? '+' : '' }}{{ formatVND(statsInPeriod.totalPnl) }}
+          {{ statsInPeriod.totalPnl >= 0 ? '+' : '' }}{{ formatMoney(statsInPeriod.totalPnl) }}
         </p>
       </div>
 
@@ -331,7 +331,7 @@ function formatDateLabel(dateStr: string): string {
           class="text-lg font-bold tabular-nums"
           :class="trading.totalPnlAllTime >= 0 ? 'text-success' : 'text-error'"
         >
-          {{ trading.totalPnlAllTime >= 0 ? '+' : '' }}{{ formatVND(trading.totalPnlAllTime) }}
+          {{ trading.totalPnlAllTime >= 0 ? '+' : '' }}{{ formatMoney(trading.totalPnlAllTime) }}
         </p>
       </div>
 
@@ -411,7 +411,7 @@ function formatDateLabel(dateStr: string): string {
           >
             <TrendingUp v-if="c.totalPnl >= 0" :size="14" />
             <TrendingDown v-else :size="14" />
-            {{ c.totalPnl >= 0 ? '+' : '' }}{{ formatVND(c.totalPnl) }}
+            {{ c.totalPnl >= 0 ? '+' : '' }}{{ formatMoney(c.totalPnl) }}
           </div>
 
           <!-- Deposit badge -->
@@ -419,7 +419,7 @@ function formatDateLabel(dateStr: string): string {
             v-if="c.totalDeposit > 0"
             class="hidden sm:block text-[10px] text-text-disabled bg-bg-elevated px-2 py-0.5 rounded-full border border-border-subtle"
           >
-            {{ t('trading.deposit', { amount: formatVND(c.totalDeposit) }) }}
+            {{ t('trading.deposit', { amount: formatMoney(c.totalDeposit) }) }}
           </div>
 
           <!-- Note snippet -->
