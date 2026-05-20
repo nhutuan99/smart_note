@@ -209,16 +209,39 @@ function handleEditorClick(event: MouseEvent) {
   const target = event.target as HTMLElement
   if (target.tagName === 'IMG') {
     const src = (target as HTMLImageElement).src
-    const container = target.closest('.editor-content')
-    if (container) {
-      const imgs = Array.from(container.querySelectorAll('img'))
-      const uniqueSrcs = Array.from(new Set(imgs.map(img => img.src)))
+    if (editor.value) {
+      const srcs: string[] = []
+      editor.value.state.doc.descendants((node) => {
+        if (node.type.name === 'image' && node.attrs.src) {
+          srcs.push(node.attrs.src)
+        }
+      })
+      
+      // Resolve relative/absolute differences to properly match target.src
+      const absoluteSrcs = srcs.map(s => {
+        try {
+          return new URL(s, window.location.href).href
+        } catch {
+          return s
+        }
+      })
+      
+      const uniqueSrcs = Array.from(new Set(absoluteSrcs))
       allImages.value = uniqueSrcs
       const idx = allImages.value.indexOf(src)
       zoomedImageIndex.value = idx !== -1 ? idx : 0
     } else {
-      allImages.value = [src]
-      zoomedImageIndex.value = 0
+      const container = target.closest('.editor-content')
+      if (container) {
+        const imgs = Array.from(container.querySelectorAll('img'))
+        const uniqueSrcs = Array.from(new Set(imgs.map(img => img.src)))
+        allImages.value = uniqueSrcs
+        const idx = allImages.value.indexOf(src)
+        zoomedImageIndex.value = idx !== -1 ? idx : 0
+      } else {
+        allImages.value = [src]
+        zoomedImageIndex.value = 0
+      }
     }
   }
 }
