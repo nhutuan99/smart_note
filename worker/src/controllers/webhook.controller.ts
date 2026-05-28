@@ -1,4 +1,4 @@
-import { Env, UserData, NoteData, TransactionData, WalletData, NotificationData, PendingNotification, BudgetData } from '../types'
+import { Env, UserData, NoteData, TransactionData, WalletData, NotificationData, PendingNotification, BudgetData, PendingTransfer } from '../types'
 import { errorResponse, jsonResponse } from '../utils/response'
 import { generateId, hashPassword } from '../utils/crypto'
 import { createJWT } from '../utils/jwt'
@@ -230,10 +230,19 @@ export async function handleNotificationWebhook(request: Request, env: Env): Pro
 
   // Send push notification to user's devices
   try {
-    const pushTitle = parsed.type === 'income' ? '💰 Tiền vào tài khoản' : '💸 Tiền ra tài khoản'
-    const pushBody = `${parsed.type === 'income' ? '+' : '-'}${parsed.amount.toLocaleString('vi-VN')}đ • ${walletName}`
+    let pushTitle = parsed.type === 'income' ? '💰 Tiền vào tài khoản' : '💸 Tiền ra tài khoản'
+    let pushBody = `${parsed.type === 'income' ? '+' : '-'}${parsed.amount.toLocaleString('vi-VN')}đ • ${walletName}`
+    let url = '/'
+
+    const pendingTransferId = await checkAndCreatePendingTransfer(userId, tx, walletName, env)
+    if (pendingTransferId) {
+      pushTitle = '⚠️ Xác nhận giao dịch lớn'
+      pushBody = `Bạn vừa chuyển đi -${tx.amount.toLocaleString('vi-VN')}đ từ ${walletName}. Nhấp để xác nhận nếu đây là chuyển khoản nội bộ.`
+      url = `/?confirm_transfer=${pendingTransferId}`
+    }
+
     const unreadCount = notiList.filter(n => !n.read).length
-    await sendPushToUser(userId, env, { title: pushTitle, body: pushBody, tag: `tx-${tx.id}`, url: '/', unreadCount })
+    await sendPushToUser(userId, env, { title: pushTitle, body: pushBody, tag: `tx-${tx.id}`, url, unreadCount })
   } catch { /* push is best-effort */ }
 
   return jsonResponse({
@@ -242,4 +251,257 @@ export async function handleNotificationWebhook(request: Request, env: Env): Pro
     message: `[Notification] ${tx.type === 'income' ? '+' : '-'}${tx.amount.toLocaleString('vi-VN')}đ → Ghi vào ví: ${walletName}`
   })
 }
+
+// ====== Telegram Trading Signal Webhook ======
+
+export async function handleTradingSignalWebhook(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url)
+  const secret = request.headers.get('X-Webhook-Secret') || url.searchParams.get('secret')
+
+  if (env.TELEGRAM_WEBHOOK_SECRET && secret !== env.TELEGRAM_WEBHOOK_SECRET) {
+    return errorResponse('Unauthorized webhook', 401)
+  }
+
+  let body: any = {}
+  try {
+    body = await request.json()
+  } catch (err) {
+    // If not JSON, try text body
+    try {
+      const textBody = await request.text()
+      if (textBody) {
+        body = { text: textBody }
+      }
+    } catch {
+      return errorResponse('Invalid request body', 400)
+    }
+  }
+
+  const userId = url.searchParams.get('userId') || body.userId
+  const text = body.text || body.message || body.content
+
+  if (!userId || !text) {
+    return errorResponse('Missing required fields: userId, text', 400)
+  }
+
+  let analyzedContent = ''
+  let modelUsed = 'gemini'
+
+  const systemPrompt = `Bạn là một chuyên gia phân tích kỹ thuật và cố vấn giao dịch tài chính chuyên nghiệp (Trading Assistant) tích hợp trong ứng dụng FinNote.
+Nhiệm vụ của bạn là nhận dữ liệu cảnh báo thị trường (Market Alert/Signal) thô từ tin nhắn Telegram của người dùng, phân tích và trích xuất ra các cơ hội giao dịch (Entry, Stop Loss, Take Profit) tối ưu nhất dựa trên các quy tắc giao dịch chuyên nghiệp và Playbook được cung cấp trong tin nhắn.
+
+## YÊU CẦU PHÂN TÍCH:
+1. Đọc và hiểu kỹ dữ liệu thô: Nhận diện danh sách CRYPTO, VNSTOCK, FOREX/GOLD cùng các thông số phần trăm thay đổi, điểm số sức mạnh (ví dụ: 82/100), và trạng thái xu hướng (xu thế) của tài sản (ví dụ: Pre Bull, Pre Bear, Accum, FOMO).
+2. Lọc ra các tài sản tiềm năng cao nhất:
+   - Ưu tiên các tài sản có trạng thái "Pre Bull" hoặc "Pre Bear" mới chớm hình thành, có điểm sức mạnh cao (ví dụ: > 75/100 đối với Bull) hoặc yếu nhất (đối với Bear) và có biến động phần trăm rõ ràng.
+   - Tránh các tài sản đang ở trạng thái cực đoan như "FOMO" hoặc "đuổi lệnh" trừ khi có setup cực đẹp.
+3. Tham chiếu Playbook (AI Recommend) từ chính tin nhắn thô để đưa ra các lời khuyên quản lý vốn và quản trị rủi ro phù hợp (ví dụ: giữ size nhỏ, chờ xác nhận, tránh đoán đáy).
+4. Đưa ra chi tiết kế hoạch giao dịch cho từng tài sản tiềm năng:
+   - Tên tài sản (Ví dụ: ALLO, PLUME, MSB, NZDUSD)
+   - Loại tài sản (Crypto / VNStock / Forex)
+   - Hành động đề xuất: Mua (Long/Buy), Bán (Short/Sell), Chờ thêm tín hiệu (Wait), hoặc Bỏ qua (Avoid).
+   - Vùng Entry (Vào lệnh) đề xuất.
+   - Điểm cắt lỗ (Stop Loss - SL) đề xuất.
+   - Điểm chốt lời (Take Profit - TP) đề xuất (tối thiểu 2 mục tiêu TP1, TP2).
+   - Phân tích/Lý do đề xuất ngắn gọn dựa trên chỉ số sức mạnh.
+
+## ĐỊNH DẠNG ĐẦU RA:
+- Trả về nội dung định dạng HTML sạch, chuyên nghiệp, đẹp mắt để hiển thị trực tiếp trong editor (Tiptap) của ứng dụng.
+- KHÔNG bao gồm các thẻ <html> hay <body>, chỉ dùng các thẻ tiêu đề (<h2>, <h3>), danh sách (<ul>, <li>), bảng (<table>, <tr>, <th>, <td>), chữ đậm (<strong>), khối trích dẫn (<blockquote>) và các thẻ cơ bản khác.
+- Thiết kế giao diện HTML bắt mắt:
+  - Dùng bảng (table) có viền nhẹ, khoảng đệm (padding) hợp lý, căn lề sạch sẽ.
+  - Sử dụng mã màu phù hợp: màu xanh lá (#10b981) cho Long/Buy/Bull, màu đỏ (#ef4444) cho Short/Sell/Bear, màu cam (#f59e0b) cho Accum/Wait.
+  - Tạo điểm nhấn thị giác bằng các màu nền nhẹ nhàng, hài hòa.
+- Mở đầu bằng một tóm tắt ngắn gọn về trạng thái thị trường tổng quan. Kết luận bằng các lưu ý quản trị vốn theo Playbook.`
+
+  if (env.GEMINI_API_KEY) {
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${env.GEMINI_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: systemPrompt }] },
+            contents: [{ parts: [{ text: `Dữ liệu tín hiệu thô nhận từ Telegram:\n\n${text}` }] }],
+            generationConfig: {
+              temperature: 0.5,
+            }
+          })
+        }
+      )
+
+      if (response.ok) {
+        const data: any = await response.json()
+        analyzedContent = data?.candidates?.[0]?.content?.parts?.[0]?.text || ''
+      } else {
+        const errObj = await response.json().catch(() => ({}))
+        console.warn('[TradingSignalAI] Gemini call failed, trying Cloudflare AI:', errObj)
+        modelUsed = 'cloudflare'
+      }
+    } catch (err) {
+      console.warn('[TradingSignalAI] Gemini fetch error, trying Cloudflare AI:', err)
+      modelUsed = 'cloudflare'
+    }
+  } else {
+    modelUsed = 'cloudflare'
+  }
+
+  // Fallback to Cloudflare AI if Gemini failed or wasn't configured
+  if (modelUsed === 'cloudflare') {
+    if (!env.AI) {
+      return errorResponse('AI service not configured on host', 503)
+    }
+
+    try {
+      const response = await env.AI.run('@cf/meta/llama-3.1-8b-instruct' as any, {
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: `Dữ liệu tín hiệu thô nhận từ Telegram:\n\n${text}` }
+        ],
+        max_tokens: 2048,
+        temperature: 0.5
+      }) as any
+
+      analyzedContent = response?.response || ''
+    } catch (err: any) {
+      return errorResponse(`AI analysis failed: ${err.message || err}`, 500)
+    }
+  }
+
+  if (!analyzedContent) {
+    return errorResponse('Failed to generate entry analysis from signal', 500)
+  }
+
+  // Clean markdown wrapping if present
+  let cleanHtml = analyzedContent
+  const htmlMatch = cleanHtml.match(/```html([\s\S]*?)```/)
+  if (htmlMatch) {
+    cleanHtml = htmlMatch[1].trim()
+  } else {
+    const mdMatch = cleanHtml.match(/```([\s\S]*?)```/)
+    if (mdMatch) {
+      cleanHtml = mdMatch[1].trim()
+    }
+  }
+
+  // 2. Create a new Note for the user
+  const noteId = generateId()
+  const now = new Date().toISOString()
+  
+  // Format Vietnam Date/Time for note title
+  const vnTime = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })
+  const title = `🤖 AI Entry Finder - ${vnTime}`
+
+  const note: NoteData = {
+    id: noteId,
+    title,
+    content: cleanHtml,
+    tags: ['ai-entry', 'trading-signal'],
+    pinned: true,
+    createdAt: now,
+    updatedAt: now
+  }
+
+  await putJSON(env.SMART_NOTE_KV, `users/${userId}/notes/${noteId}`, note)
+
+  // 3. Update the note index
+  const index = (await getJSON<{ notes: any[] }>(
+    env.SMART_NOTE_KV,
+    `users/${userId}/notes/_index`
+  )) || { notes: [] }
+
+  const cleanExcerpt = cleanHtml.replace(/<[^>]*>/g, '').substring(0, 120).trim()
+
+  index.notes.push({
+    id: note.id,
+    title: note.title,
+    excerpt: cleanExcerpt || 'Trading signal analysis details...',
+    tags: note.tags,
+    pinned: note.pinned,
+    updatedAt: note.updatedAt
+  })
+  
+  await putJSON(env.SMART_NOTE_KV, `users/${userId}/notes/_index`, index)
+
+  // 4. Create in-app notification
+  const notiList = (await getJSON<NotificationData[]>(env.SMART_NOTE_KV, `users/${userId}/notifications`)) || []
+  notiList.unshift({
+    id: generateId(),
+    type: 'system',
+    title: `🤖 AI Entry Finder`,
+    body: `Đã phân tích tín hiệu và tìm thấy entry giao dịch mới!`,
+    read: false,
+    createdAt: now
+  })
+  if (notiList.length > 100) notiList.splice(100)
+  await putJSON(env.SMART_NOTE_KV, `users/${userId}/notifications`, notiList)
+
+  // 5. Send push notification to user's devices
+  try {
+    const unreadCount = notiList.filter(n => !n.read).length
+    await sendPushToUser(userId, env, {
+      title: '🤖 AI Entry Finder',
+      body: 'Đã phân tích và tìm thấy entry giao dịch mới. Nhấp để xem chi tiết!',
+      tag: `trading-signal-${noteId}`,
+      url: `/notes/${noteId}`,
+      unreadCount
+    })
+  } catch (err) {
+    console.warn('[TradingSignalAI] Push notification failed:', err)
+  }
+
+  return jsonResponse({
+    success: true,
+    message: 'Tín hiệu đã được phân tích và lưu thành ghi chú mới.',
+    data: {
+      noteId,
+      title,
+      modelUsed
+    }
+  })
+}
+
+// ====== Large Transfer Pending Transfer Helper ======
+
+export async function checkAndCreatePendingTransfer(
+  userId: string,
+  tx: TransactionData,
+  walletName: string,
+  env: Env
+): Promise<string | null> {
+  if (tx.type !== 'expense' || tx.amount < 3000000) {
+    return null
+  }
+
+  const user = await getJSON<UserData>(env.SMART_NOTE_KV, `users/${userId}/profile`)
+  if (user?.disableLargeTransferConfirmation) {
+    return null
+  }
+
+  const pendingTransfers = (await getJSON<PendingTransfer[]>(
+    env.SMART_NOTE_KV,
+    `users/${userId}/finance/pending_transfers`
+  )) || []
+
+  const pendingId = generateId()
+  const pending: PendingTransfer = {
+    id: pendingId,
+    transactionId: tx.id,
+    amount: tx.amount,
+    walletId: tx.walletId,
+    walletName,
+    note: tx.note,
+    date: tx.date,
+    createdAt: new Date().toISOString(),
+    status: 'pending'
+  }
+
+  pendingTransfers.push(pending)
+  await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/pending_transfers`, pendingTransfers)
+
+  return pendingId
+}
+
+
 

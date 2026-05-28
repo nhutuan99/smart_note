@@ -1,10 +1,10 @@
-import { Env, UserData, NoteData, TransactionData, WalletData, NotificationData, PendingNotification, BudgetData } from '../types'
+import { Env, UserData, NoteData, TransactionData, WalletData, NotificationData, PendingNotification, BudgetData, PendingTransfer } from '../types'
 import { errorResponse, jsonResponse } from '../utils/response'
 import { generateId, hashPassword } from '../utils/crypto'
 import { createJWT } from '../utils/jwt'
 import { getJSON, putJSON } from '../services/kv.service'
 import { sendPushToUser } from './push.controller'
-import { parseNotification } from './webhook.controller'
+import { parseNotification, checkAndCreatePendingTransfer } from './webhook.controller'
 
 // ====== Notification Handlers ======
 
@@ -578,10 +578,19 @@ export async function processSmsTransaction(
 
   // Send push notification to user's devices
   try {
-    const pushTitle = parsed.type === 'income' ? '💰 Tiền vào tài khoản' : '💸 Tiền ra tài khoản'
-    const pushBody = `${parsed.type === 'income' ? '+' : '-'}${parsed.amount.toLocaleString('vi-VN')}đ • ${walletName}`
+    let pushTitle = parsed.type === 'income' ? '💰 Tiền vào tài khoản' : '💸 Tiền ra tài khoản'
+    let pushBody = `${parsed.type === 'income' ? '+' : '-'}${parsed.amount.toLocaleString('vi-VN')}đ • ${walletName}`
+    let url = '/'
+
+    const pendingTransferId = await checkAndCreatePendingTransfer(userId, tx, walletName, env)
+    if (pendingTransferId) {
+      pushTitle = '⚠️ Xác nhận giao dịch lớn'
+      pushBody = `Bạn vừa chuyển đi -${tx.amount.toLocaleString('vi-VN')}đ từ ${walletName}. Nhấp để xác nhận nếu đây là chuyển khoản nội bộ.`
+      url = `/?confirm_transfer=${pendingTransferId}`
+    }
+
     const unreadCount = notiList.filter(n => !n.read).length
-    await sendPushToUser(userId, env, { title: pushTitle, body: pushBody, tag: `sms-${tx.id}`, url: '/', unreadCount })
+    await sendPushToUser(userId, env, { title: pushTitle, body: pushBody, tag: `sms-${tx.id}`, url, unreadCount })
   } catch { /* push is best-effort */ }
 
   // Update latest_request and history with success details (awaited — ensures debug data is persisted)

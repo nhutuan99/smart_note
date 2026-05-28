@@ -528,6 +528,8 @@ export default {
     // Language
     language: 'Language',
     languageDesc: 'Choose display language',
+    confirmLargeTransfer: 'Confirm Large Transfers',
+    confirmLargeTransferDesc: 'Prompt to confirm transfer between wallets when an expense above 3M VND is detected',
     stocks: 'Stocks',
     enableStocks: 'Enable Stocks Module',
     enableStocksDesc: 'Manage your stock portfolio and track real-time prices (Vietnam market only)',

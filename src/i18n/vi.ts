@@ -546,6 +546,8 @@ export default {
     // Language
     language: 'Ngôn ngữ',
     languageDesc: 'Chọn ngôn ngữ hiển thị',
+    confirmLargeTransfer: 'Xác nhận chuyển khoản lớn',
+    confirmLargeTransferDesc: 'Hỏi xác nhận chuyển ví khi phát hiện giao dịch chi tiêu lớn trên 3 triệu',
     stocks: 'Chứng khoán',
     enableStocks: 'Bật module Chứng khoán',
     enableStocksDesc:

@@ -23,7 +23,21 @@ export interface UserData {
   pinHash?: string
   hasCompletedOnboarding?: boolean
   lastWeeklyEvent?: number
+  disableLargeTransferConfirmation?: boolean
 }
+
+export interface PendingTransfer {
+  id: string
+  transactionId: string
+  amount: number
+  walletId: string
+  walletName: string
+  note: string
+  date: string
+  createdAt: string
+  status: 'pending' | 'resolved'
+}
+
 
 export interface NoteData {
   id: string

@@ -19,6 +19,7 @@ import {
 import {
   handleTelegramWebhook,
   handleNotificationWebhook,
+  handleTradingSignalWebhook,
 } from './controllers/webhook.controller'
 
 import {
@@ -55,6 +56,8 @@ import {
   handleListTradingCheckins,
   handleCreateTradingCheckin,
   handleUpdateTradingCheckin,
+  handleListPendingTransfers,
+  handleResolvePendingTransfer,
 } from './controllers/finance.controller'
 
 import {
@@ -215,6 +218,9 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
       // Webhooks
       if (path === '/api/webhook/telegram' && request.method === 'POST') {
         return handleTelegramWebhook(request, env)
+      }
+      if (path === '/api/webhook/trading-signal' && request.method === 'POST') {
+        return handleTradingSignalWebhook(request, env)
       }
       if (path === '/api/webhook/notification' && request.method === 'POST') {
         return handleNotificationWebhook(request, env)
@@ -398,6 +404,15 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
       const txMatch = path.match(/^\/api\/transactions\/(.+)$/)
       if (txMatch && request.method === 'DELETE') {
         return handleDeleteTransaction(userId, txMatch[1], env)
+      }
+
+      // Finance: Pending Transfers
+      if (path === '/api/finance/pending-transfers' && request.method === 'GET') {
+        return handleListPendingTransfers(userId, env)
+      }
+      const resolvePendingTransferMatch = path.match(/^\/api\/finance\/pending-transfers\/(.+)\/resolve$/)
+      if (resolvePendingTransferMatch && request.method === 'POST') {
+        return handleResolvePendingTransfer(userId, resolvePendingTransferMatch[1], request, env)
       }
 
       // Finance: Budget

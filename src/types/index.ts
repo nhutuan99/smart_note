@@ -7,6 +7,7 @@ export interface User {
   avatarUrl?: string
   createdAt: string
   hasCompletedOnboarding?: boolean
+  disableLargeTransferConfirmation?: boolean
 }
 
 // ── Notes ──
@@ -275,5 +276,17 @@ export interface TradingCheckin {
   totalDeposit: number
   createdAt: string
   updatedAt: string
+}
+
+export interface PendingTransfer {
+  id: string
+  transactionId: string
+  amount: number
+  walletId: string
+  walletName: string
+  note: string
+  date: string
+  createdAt: string
+  status: 'pending' | 'resolved'
 }
 

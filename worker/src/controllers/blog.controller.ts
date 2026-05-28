@@ -79,10 +79,13 @@ export async function handleBlogView(slug: string, request: Request, env: Env): 
 }
 
 export async function handleGetImage(id: string, env: Env): Promise<Response> {
-  const { value: file, metadata } = await env.SMART_NOTE_KV.getWithMetadata<{ contentType?: string }>(
+  const result = (await env.SMART_NOTE_KV.getWithMetadata(
     `public/images/${id}`,
     'arrayBuffer'
-  )
+  )) as { value: ArrayBuffer | null, metadata: { contentType?: string } | null }
+  const file = result?.value
+  const metadata = result?.metadata
+
   if (!file) return new Response('Image not found', {
     status: 404,
     headers: {

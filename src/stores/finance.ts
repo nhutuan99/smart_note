@@ -7,7 +7,8 @@ import type {
   TransactionFilter,
   CategoryStat,
   DailyStat,
-  FinanceStats
+  FinanceStats,
+  PendingTransfer
 } from '@/types'
 import { getCategoryConfig } from '@/constants/finance'
 import { httpClient } from '@/shared/api/httpClient'
@@ -27,6 +28,7 @@ export const useFinanceStore = defineStore('finance', () => {
   // ── State ──
 
   const wallets = ref<Wallet[]>([])
+  const pendingTransfers = ref<PendingTransfer[]>([])
   const loading = ref(false)
   const filter = ref<TransactionFilter>({ type: 'all' })
   const selectedMonth = ref(
@@ -292,6 +294,40 @@ export const useFinanceStore = defineStore('finance', () => {
     }
   }
 
+  async function fetchPendingTransfers() {
+    if (!isLoggedIn()) return
+    try {
+      const data = await httpClient.get<PendingTransfer[]>('/api/finance/pending-transfers')
+      pendingTransfers.value = data || []
+    } catch (err) {
+      if (!isAbortError(err)) console.error('Failed to fetch pending transfers:', err)
+    }
+  }
+
+  async function resolvePendingTransfer(
+    id: string,
+    isTransfer: boolean,
+    targetWalletId?: string,
+    amount?: number,
+    disableFuture?: boolean
+  ) {
+    try {
+      await httpClient.post(`/api/finance/pending-transfers/${id}/resolve`, {
+        isTransfer,
+        targetWalletId,
+        amount,
+        disableFuture
+      })
+      // Cập nhật lại danh sách cục bộ
+      pendingTransfers.value = pendingTransfers.value.filter(p => p.id !== id)
+      // Refresh dữ liệu ví và stats
+      await fetchAll()
+    } catch (err) {
+      console.error('Failed to resolve pending transfer:', err)
+    }
+  }
+
+
   return {
     wallets,
     stats,
@@ -322,6 +358,9 @@ export const useFinanceStore = defineStore('finance', () => {
     fetchAll,
     silentRefresh,
     refreshOnVisible,
-    reset
+    reset,
+    pendingTransfers,
+    fetchPendingTransfers,
+    resolvePendingTransfer
   }
 })

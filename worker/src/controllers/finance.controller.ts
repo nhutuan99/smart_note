@@ -1,4 +1,4 @@
-import { Env, UserData, NoteData, TransactionData, WalletData, NotificationData, PendingNotification, BudgetData, TradingConfigData, TradingCheckinData, TradingCheckinEntry } from '../types'
+import { Env, UserData, NoteData, TransactionData, WalletData, NotificationData, PendingNotification, BudgetData, TradingConfigData, TradingCheckinData, TradingCheckinEntry, PendingTransfer } from '../types'
 import { errorResponse, jsonResponse } from '../utils/response'
 import { generateId, hashPassword } from '../utils/crypto'
 import { createJWT } from '../utils/jwt'
@@ -136,8 +136,8 @@ export async function handleGetFinanceStats(userId: string, request: Request, en
 
   const monthTransactions = txs.filter(t => t.date.startsWith(month!))
 
-  const monthIncome = monthTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0)
-  const monthExpense = monthTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0)
+  const monthIncome = monthTransactions.filter(t => t.type === 'income' && t.category !== 'transfer').reduce((sum, t) => sum + t.amount, 0)
+  const monthExpense = monthTransactions.filter(t => t.type === 'expense' && t.category !== 'transfer').reduce((sum, t) => sum + t.amount, 0)
 
   // Weekly stats (last 7 days)
   const weeklyStats = []
@@ -146,8 +146,8 @@ export async function handleGetFinanceStats(userId: string, request: Request, en
     d.setDate(d.getDate() - i)
     const dateStr = d.toISOString().substring(0, 10)
     const dayTx = txs.filter((t) => t.date === dateStr)
-    const income = dayTx.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0)
-    const expense = dayTx.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
+    const income = dayTx.filter((t) => t.type === 'income' && t.category !== 'transfer').reduce((s, t) => s + t.amount, 0)
+    const expense = dayTx.filter((t) => t.type === 'expense' && t.category !== 'transfer').reduce((s, t) => s + t.amount, 0)
     weeklyStats.push({
       date: dateStr,
       income,
@@ -159,7 +159,7 @@ export async function handleGetFinanceStats(userId: string, request: Request, en
   // Expense by category
   const expenseMap: Record<string, number> = {}
   let totalExpense = 0
-  monthTransactions.filter(t => t.type === 'expense').forEach(t => {
+  monthTransactions.filter(t => t.type === 'expense' && t.category !== 'transfer').forEach(t => {
     expenseMap[t.category] = (expenseMap[t.category] || 0) + t.amount
     totalExpense += t.amount
   })
@@ -176,7 +176,7 @@ export async function handleGetFinanceStats(userId: string, request: Request, en
   // Wallet Breakdown
   const expenseWalletMap: Record<string, number> = {}
   let totalWalletExpense = 0
-  monthTransactions.filter(t => t.type === 'expense').forEach(t => {
+  monthTransactions.filter(t => t.type === 'expense' && t.category !== 'transfer').forEach(t => {
     expenseWalletMap[t.walletId] = (expenseWalletMap[t.walletId] || 0) + t.amount
     totalWalletExpense += t.amount
   })
@@ -188,7 +188,7 @@ export async function handleGetFinanceStats(userId: string, request: Request, en
 
   const incomeWalletMap: Record<string, number> = {}
   let totalWalletIncome = 0
-  monthTransactions.filter(t => t.type === 'income').forEach(t => {
+  monthTransactions.filter(t => t.type === 'income' && t.category !== 'transfer').forEach(t => {
     incomeWalletMap[t.walletId] = (incomeWalletMap[t.walletId] || 0) + t.amount
     totalWalletIncome += t.amount
   })
@@ -197,6 +197,7 @@ export async function handleGetFinanceStats(userId: string, request: Request, en
     total: amount,
     percentage: totalWalletIncome > 0 ? (amount / totalWalletIncome) * 100 : 0
   })).sort((a, b) => b.total - a.total)
+
 
   // Recent transactions (last 10)
   const recentTransactions = [...txs]
@@ -682,5 +683,91 @@ export async function handleUpdateTradingCheckin(
   await putJSON(env.SMART_NOTE_KV, TRADING_CHECKINS_KEY(userId), checkins)
   return jsonResponse({ success: true, data: checkins[idx] })
 }
+
+// ====== Pending Transfers Handlers ======
+
+export async function handleListPendingTransfers(userId: string, env: Env): Promise<Response> {
+  const pending = (await getJSON<PendingTransfer[]>(
+    env.SMART_NOTE_KV,
+    `users/${userId}/finance/pending_transfers`
+  )) || []
+  // Trả về các giao dịch chưa xử lý (pending)
+  const active = pending.filter(p => p.status === 'pending')
+  return jsonResponse({ success: true, data: active })
+}
+
+export async function handleResolvePendingTransfer(
+  userId: string,
+  pendingId: string,
+  request: Request,
+  env: Env
+): Promise<Response> {
+  const body = (await request.json()) as { isTransfer: boolean; targetWalletId?: string; amount?: number; disableFuture?: boolean }
+  const pending = (await getJSON<PendingTransfer[]>(
+    env.SMART_NOTE_KV,
+    `users/${userId}/finance/pending_transfers`
+  )) || []
+
+  const idx = pending.findIndex(p => p.id === pendingId)
+  if (idx === -1) {
+    return errorResponse('Pending transfer not found', 404)
+  }
+
+  const record = pending[idx]
+  record.status = 'resolved'
+  await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/pending_transfers`, pending)
+
+  const txs = (await getJSON<TransactionData[]>(env.SMART_NOTE_KV, `users/${userId}/finance/transactions`)) || []
+  const wallets = (await getJSON<WalletData[]>(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`)) || []
+
+  // Tìm giao dịch chi gốc
+  const txIdx = txs.findIndex(t => t.id === record.transactionId)
+
+  if (body.isTransfer && body.targetWalletId) {
+    // 1. Chuyển category của giao dịch gốc sang 'transfer' để không bị tính vào chi tiêu
+    if (txIdx !== -1) {
+      txs[txIdx].category = 'transfer'
+      txs[txIdx].note = `[Chuyển khoản nội bộ] ${txs[txIdx].note}`
+    }
+
+    // 2. Tạo giao dịch nhận tiền (income, category 'transfer') vào ví nhận
+    const transferAmount = typeof body.amount === 'number' && body.amount > 0 ? body.amount : record.amount
+    const now = new Date().toISOString()
+    const targetWalletName = wallets.find(w => w.id === body.targetWalletId)?.name || 'Ví nhận'
+
+    const incomeTx: TransactionData = {
+      id: generateId(),
+      type: 'income',
+      amount: transferAmount,
+      category: 'transfer',
+      note: `[Nhận chuyển khoản nội bộ từ ${record.walletName}] ${record.note}`,
+      walletId: body.targetWalletId,
+      source: 'manual',
+      date: record.date || now.substring(0, 10),
+      createdAt: now
+    }
+    txs.push(incomeTx)
+    await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/transactions`, txs)
+
+    // 3. Cộng số dư cho ví nhận
+    const targetIdx = wallets.findIndex(w => w.id === body.targetWalletId)
+    if (targetIdx !== -1) {
+      wallets[targetIdx].balance += transferAmount
+      await putJSON(env.SMART_NOTE_KV, `users/${userId}/finance/wallets`, wallets)
+    }
+  }
+
+  // 4. Lưu tùy chọn tắt tính năng xác nhận này nếu user chọn
+  if (body.disableFuture) {
+    const user = await getJSON<UserData>(env.SMART_NOTE_KV, `users/${userId}/profile`)
+    if (user) {
+      user.disableLargeTransferConfirmation = true
+      await putJSON(env.SMART_NOTE_KV, `users/${userId}/profile`, user)
+    }
+  }
+
+  return jsonResponse({ success: true, message: 'Resolved successfully' })
+}
+
 
 

@@ -96,7 +96,7 @@ export async function handleLogin(request: Request, env: Env): Promise<Response>
 }
 
 export async function handleUpdateProfile(userId: string, request: Request, env: Env): Promise<Response> {
-  const { name, avatarUrl, hasCompletedOnboarding, lastWeeklyEvent } = (await request.json()) as any
+  const { name, avatarUrl, hasCompletedOnboarding, lastWeeklyEvent, disableLargeTransferConfirmation } = (await request.json()) as any
   const user = await getJSON<UserData>(env.SMART_NOTE_KV, `users/${userId}/profile`)
   if (!user) return errorResponse('User not found', 404)
 
@@ -114,6 +114,9 @@ export async function handleUpdateProfile(userId: string, request: Request, env:
   if (lastWeeklyEvent !== undefined) {
     user.lastWeeklyEvent = lastWeeklyEvent
   }
+  if (disableLargeTransferConfirmation !== undefined) {
+    user.disableLargeTransferConfirmation = disableLargeTransferConfirmation
+  }
 
   await putJSON(env.SMART_NOTE_KV, `users/${userId}/profile`, user)
 
@@ -126,7 +129,8 @@ export async function handleUpdateProfile(userId: string, request: Request, env:
       avatarUrl: user.avatarUrl || '',
       createdAt: user.createdAt,
       hasCompletedOnboarding: user.hasCompletedOnboarding,
-      lastWeeklyEvent: user.lastWeeklyEvent
+      lastWeeklyEvent: user.lastWeeklyEvent,
+      disableLargeTransferConfirmation: user.disableLargeTransferConfirmation
     }
   })
 }

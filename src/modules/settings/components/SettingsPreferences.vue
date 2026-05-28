@@ -1,16 +1,20 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Globe, DollarSign, FolderSync, Link, Unlink } from 'lucide-vue-next'
 import { setLocale, currentLocale } from '@/i18n'
 import { useCurrency, type CurrencyCode } from '@/composables/useCurrency'
 import { useNotesStore } from '@/stores/notes'
 import { useUiStore } from '@/stores/ui'
+import { useAuthStore } from '@/stores/auth'
+import { httpClient } from '@/shared/api/httpClient'
+import type { User } from '@/types'
 import LogoLoader from '@/components/ui/LogoLoader.vue'
 
 const { t } = useI18n()
 const notesStore = useNotesStore()
 const ui = useUiStore()
+const auth = useAuthStore()
 
 // Language
 const selectedLocale = ref(currentLocale())
@@ -26,6 +30,26 @@ const { currency, rateDisplay, rateLoading, rateError, setCurrency } = useCurren
 function changeCurrency(code: CurrencyCode) {
   setCurrency(code)
 }
+
+// Large Transfer Confirmation
+const confirmLargeTransfer = computed({
+  get: () => !auth.user?.disableLargeTransferConfirmation,
+  set: async (value: boolean) => {
+    if (!auth.user || auth.isGuest) return
+    const disabledVal = !value
+    try {
+      const data = await httpClient.put<{ data: User }>('/api/auth/profile', {
+        disableLargeTransferConfirmation: disabledVal
+      })
+      if (data && data.data) {
+        auth.updateUser(data.data)
+        ui.showToast('success', t('settings.profileUpdated'))
+      }
+    } catch (err: any) {
+      ui.showToast('error', err.message || 'Cập nhật thất bại')
+    }
+  }
+})
 </script>
 
 <template>
@@ -117,6 +141,31 @@ function changeCurrency(code: CurrencyCode) {
       </div>
     </div>
 
+    <!-- Large Transfer Confirmation Setting -->
+    <div v-if="auth.user && !auth.isGuest">
+      <div class="text-text-secondary mb-3 flex items-center gap-2">
+        <FolderSync :size="18" />
+        <h3 class="text-sm font-semibold">{{ t('settings.confirmLargeTransfer') }}</h3>
+      </div>
+      <div class="card-premium p-5">
+        <div class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+          <div>
+            <h4 class="mb-0.5 text-sm font-semibold">{{ t('settings.confirmLargeTransfer') }}</h4>
+            <p class="text-text-tertiary text-sm">{{ t('settings.confirmLargeTransferDesc') }}</p>
+          </div>
+          <div>
+            <label class="relative inline-flex cursor-pointer items-center">
+              <input
+                type="checkbox"
+                v-model="confirmLargeTransfer"
+                class="peer sr-only"
+              />
+              <div class="peer h-6 w-11 rounded-full bg-border-default after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-white after:bg-white after:transition-all after:content-[''] peer-checked:bg-accent peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none"></div>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Stock Management Module -->
     <div>
